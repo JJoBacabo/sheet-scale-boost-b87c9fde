@@ -148,13 +148,27 @@ export const AdminDashboard = () => {
         expiredSubscriptions
       });
 
-      // Tickets by status
+      // Tickets by status - normalize status values and handle null/undefined
       const statusCounts = {
-        active: ticketsList.filter(t => t.status === 'active').length,
-        waiting: ticketsList.filter(t => t.status === 'waiting').length,
-        resolved: ticketsList.filter(t => t.status === 'resolved').length
+        active: ticketsList.filter(t => {
+          const status = (t.status || '').toLowerCase().trim();
+          return status === 'active';
+        }).length,
+        waiting: ticketsList.filter(t => {
+          const status = (t.status || '').toLowerCase().trim();
+          return status === 'waiting';
+        }).length,
+        resolved: ticketsList.filter(t => {
+          const status = (t.status || '').toLowerCase().trim();
+          return status === 'resolved';
+        }).length
       };
 
+      // Debug: log status counts
+      console.log('Tickets by status:', statusCounts);
+      console.log('Total tickets:', ticketsList.length);
+      console.log('Sample ticket statuses:', ticketsList.slice(0, 5).map(t => ({ id: t.id, status: t.status })));
+      
       setTicketsByStatus([
         { name: isPortuguese ? 'Ativos' : 'Active', value: statusCounts.active },
         { name: isPortuguese ? 'Pendentes' : 'Waiting', value: statusCounts.waiting },
