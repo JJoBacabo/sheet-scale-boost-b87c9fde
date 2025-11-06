@@ -1,0 +1,73 @@
+project_id = "cygvvrtsdatdczswcrqj"
+
+[functions.facebook-campaigns]
+verify_jwt = true
+
+[functions.facebook-oauth-callback]
+verify_jwt = false
+
+[functions.profit-sheet-data]
+verify_jwt = true
+
+[functions.shopify-connect]
+verify_jwt = true
+
+[functions.shopify-sync-products]
+verify_jwt = true
+
+[functions.shopify-disconnect]
+verify_jwt = true
+
+[functions.shopify-webhook]
+verify_jwt = false
+
+[functions.stripe-create-checkout]
+verify_jwt = true
+
+[functions.stripe-create-portal]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.stripe-setup-products]
+verify_jwt = true
+
+[functions.stripe-get-prices]
+verify_jwt = false
+
+[functions.check-expired-subscriptions]
+verify_jwt = false
+
+[functions.subscription-state-manager]
+verify_jwt = false
+
+[functions.send-retention-emails]
+verify_jwt = false
+
+[functions.test-brevo-email]
+verify_jwt = true
+
+[functions.stripe-webhook-v2]
+verify_jwt = false
+
+[functions.get-entitlements]
+verify_jwt = true
+
+[functions.billing-upgrade]
+verify_jwt = true
+
+[functions.force-subscription-status]
+verify_jwt = true
+
+[functions.sync-subscription-to-profile]
+verify_jwt = false
+
+[functions.add-admin]
+verify_jwt = true
+
+[functions.get-users]
+verify_jwt = true
+
+[functions.get-admins]
+verify_jwt = true

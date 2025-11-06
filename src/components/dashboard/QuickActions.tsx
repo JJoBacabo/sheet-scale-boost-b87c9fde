@@ -1,0 +1,107 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Facebook, ShoppingBag, Plus, BarChart3, Zap, TrendingUp } from "lucide-react";
+
+interface QuickActionsProps {
+  onConnectFacebook: () => void;
+  onConnectShopify: () => void;
+  isConnectedFacebook: boolean;
+  isConnectedShopify: boolean;
+}
+
+export const QuickActions = ({ 
+  onConnectFacebook, 
+  onConnectShopify, 
+  isConnectedFacebook, 
+  isConnectedShopify 
+}: QuickActionsProps) => {
+  const navigate = useNavigate();
+
+  const actions = [
+    {
+      title: "Nova Campanha",
+      description: "Criar campanha publicitária",
+      icon: Plus,
+      onClick: () => navigate('/campaign-control'),
+      gradient: "from-primary/20 to-primary-glow/20",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      border: "border-primary/20",
+    },
+    {
+      title: "Facebook Ads",
+      description: isConnectedFacebook ? "✓ Conectado" : "Conectar agora",
+      icon: Facebook,
+      onClick: onConnectFacebook,
+      gradient: "from-blue-500/20 to-indigo-500/20",
+      iconBg: "bg-blue-500/10",
+      iconColor: "text-blue-500",
+      border: isConnectedFacebook ? "border-primary/20" : "border-blue-500/20",
+      connected: isConnectedFacebook,
+    },
+    {
+      title: "Shopify",
+      description: isConnectedShopify ? "✓ Conectado" : "Conectar loja",
+      icon: ShoppingBag,
+      onClick: onConnectShopify,
+      gradient: "from-emerald-500/20 to-teal-500/20",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+      border: isConnectedShopify ? "border-primary/20" : "border-emerald-500/20",
+      connected: isConnectedShopify,
+    },
+    {
+      title: "Ver Campanhas",
+      description: "Gerir campanhas ativas",
+      icon: BarChart3,
+      onClick: () => navigate('/campaign-control'),
+      gradient: "from-purple-500/20 to-pink-500/20",
+      iconBg: "bg-purple-500/10",
+      iconColor: "text-purple-500",
+      border: "border-purple-500/20",
+    },
+  ];
+
+  return (
+    <Card className="p-6 glass-card rounded-2xl border border-border/50">
+      <div className="flex items-center gap-2 mb-6">
+        <div className="p-2 rounded-xl bg-primary/10">
+          <Zap className="h-4 w-4 text-primary" />
+        </div>
+        <h3 className="text-lg font-semibold">Ações Rápidas</h3>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {actions.map((action, index) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={index}
+              onClick={action.onClick}
+              className={`group relative overflow-hidden glass-card rounded-xl border ${action.border} hover:border-primary/40 transition-all duration-300 hover:shadow-glow p-6 text-left w-full`}
+            >
+              {/* Gradient Background */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+              
+              {/* Content */}
+              <div className="relative flex flex-col items-center text-center gap-4">
+                <div className={`p-4 rounded-xl ${action.iconBg} group-hover:scale-110 transition-transform duration-300`}>
+                  <Icon className={`h-6 w-6 ${action.iconColor}`} />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1 text-foreground">{action.title}</h3>
+                  <p className="text-sm text-muted-foreground">{action.description}</p>
+                </div>
+                {action.connected && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+  );
+};
