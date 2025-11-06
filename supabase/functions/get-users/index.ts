@@ -9,33 +9,48 @@ const ALLOWED_ORIGINS = [
   'https://www.sheet-tools.com',
 ];
 
+// Patterns for dynamic origins (e.g., Lovable preview domains)
+const ALLOWED_PATTERNS = [
+  /^https:\/\/.*\.lovableproject\.com$/,
+  /^https:\/\/.*\.vercel\.app$/,
+  /^https:\/\/.*\.netlify\.app$/,
+];
+
+function isOriginAllowed(origin: string): boolean {
+  // Check exact match
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    return true;
+  }
+  
+  // Check pattern matches
+  for (const pattern of ALLOWED_PATTERNS) {
+    if (pattern.test(origin)) {
+      return true;
+    }
+  }
+  
+  // Check hostname match (for www variations)
+  try {
+    const originHost = new URL(origin).hostname.replace(/^www\./, '');
+    const matched = ALLOWED_ORIGINS.find(allowed => {
+      try {
+        const allowedHost = new URL(allowed).hostname.replace(/^www\./, '');
+        return originHost === allowedHost;
+      } catch {
+        return false;
+      }
+    });
+    return !!matched;
+  } catch {
+    return false;
+  }
+}
+
 function getCorsHeaders(origin: string | null): HeadersInit {
-  // Check if origin is in allowed list
   let allowedOrigin = '*';
   
-  if (origin) {
-    // Check exact match
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      allowedOrigin = origin;
-    } else {
-      // Check hostname match (for www variations)
-      try {
-        const originHost = new URL(origin).hostname.replace(/^www\./, '');
-        const matched = ALLOWED_ORIGINS.find(allowed => {
-          try {
-            const allowedHost = new URL(allowed).hostname.replace(/^www\./, '');
-            return originHost === allowedHost;
-          } catch {
-            return false;
-          }
-        });
-        if (matched) {
-          allowedOrigin = origin;
-        }
-      } catch {
-        // Invalid origin, use wildcard
-      }
-    }
+  if (origin && isOriginAllowed(origin)) {
+    allowedOrigin = origin;
   }
 
   return {
