@@ -50,14 +50,14 @@ export const useAdminSupport = (currentAdminId?: string) => {
   // Helper function to fetch profile with email
   const fetchProfileWithEmail = async (userId: string) => {
     try {
-      // Fetch profile
+      // Fetch profile (may not exist, that's ok)
       const { data: profile } = await supabase
         .from('profiles')
         .select('user_id, full_name')
         .eq('user_id', userId)
         .single();
 
-      // Try to get email from get-users edge function
+      // Always try to get email from get-users edge function
       let email: string | null = null;
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -77,9 +77,35 @@ export const useAdminSupport = (currentAdminId?: string) => {
         console.error('Error fetching email:', error);
       }
 
-      return profile ? { ...profile, email } : null;
+      // Return profile with email, or just email if no profile exists
+      if (profile) {
+        return { ...profile, email };
+      } else if (email) {
+        // If no profile but we have email, return a minimal profile object
+        return { user_id: userId, full_name: null, email };
+      }
+      return null;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      // Profile might not exist, try to get at least the email
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: usersData, error: usersError } = await supabase.functions.invoke('get-users', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+
+          if (!usersError && usersData?.users) {
+            const user = usersData.users.find((u: any) => u.id === userId);
+            if (user?.email) {
+              return { user_id: userId, full_name: null, email: user.email };
+            }
+          }
+        }
+      } catch (emailError) {
+        console.error('Error fetching email as fallback:', emailError);
+      }
       return null;
     }
   };
@@ -516,7 +542,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
   const markAsResolved = async (ticketId: string) => {
     try {
-      // Verify ticket exists
+      // Get fresh ticket data from database
       const { data: ticketData, error: fetchError } = await supabase
         .from('support_chats')
         .select('*')
@@ -527,21 +553,60 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Ticket not found');
       }
 
-      const { error } = await supabase
+      const { data: updatedTicket, error } = await supabase
         .from('support_chats')
         .update({
           status: 'resolved',
           resolved_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', ticketId);
+        .eq('id', ticketId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state immediately
+      if (updatedTicket) {
+        // Fetch profile with email for updated ticket
+        const profile = await fetchProfileWithEmail(updatedTicket.user_id);
+
+        const normalizedStatus = normalizeStatus(updatedTicket.status);
+        const validStatus = isValidStatus(normalizedStatus) ? normalizedStatus : 'waiting';
+        
+        const validatedMessages = Array.isArray(updatedTicket.messages) 
+          ? updatedTicket.messages.filter((msg: any) => 
+              msg && typeof msg === 'object' && msg.id && msg.content
+            )
+          : [];
+
+        const ticketWithProfile: SupportChat = {
+          ...updatedTicket,
+          status: validStatus as 'active' | 'waiting' | 'resolved',
+          messages: validatedMessages,
+          profiles: profile || undefined
+        };
+
+        // Update ticket in local state immediately
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = ticketWithProfile;
+            return newTickets;
+          }
+          return prev;
+        });
+
+        // Return the updated ticket so it can be used to update selectedTicket
+        return ticketWithProfile;
+      }
 
       toast({
         title: 'Ticket resolved',
         description: 'Ticket marked as resolved'
       });
+      return null;
     } catch (error: any) {
       console.error('Error resolving ticket:', error);
       toast({
@@ -549,12 +614,13 @@ export const useAdminSupport = (currentAdminId?: string) => {
         description: error.message || 'Failed to resolve ticket',
         variant: 'destructive'
       });
+      return null;
     }
   };
 
   const reopenTicket = async (ticketId: string) => {
     try {
-      // Verify ticket exists
+      // Get fresh ticket data from database
       const { data: ticketData, error: fetchError } = await supabase
         .from('support_chats')
         .select('*')
@@ -565,21 +631,60 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Ticket not found');
       }
 
-      const { error } = await supabase
+      const { data: updatedTicket, error } = await supabase
         .from('support_chats')
         .update({
           status: 'active',
           resolved_at: null, // Clear resolved_at when reopening
           updated_at: new Date().toISOString()
         })
-        .eq('id', ticketId);
+        .eq('id', ticketId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state immediately
+      if (updatedTicket) {
+        // Fetch profile with email for updated ticket
+        const profile = await fetchProfileWithEmail(updatedTicket.user_id);
+
+        const normalizedStatus = normalizeStatus(updatedTicket.status);
+        const validStatus = isValidStatus(normalizedStatus) ? normalizedStatus : 'waiting';
+        
+        const validatedMessages = Array.isArray(updatedTicket.messages) 
+          ? updatedTicket.messages.filter((msg: any) => 
+              msg && typeof msg === 'object' && msg.id && msg.content
+            )
+          : [];
+
+        const ticketWithProfile: SupportChat = {
+          ...updatedTicket,
+          status: validStatus as 'active' | 'waiting' | 'resolved',
+          messages: validatedMessages,
+          profiles: profile || undefined
+        };
+
+        // Update ticket in local state immediately
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = ticketWithProfile;
+            return newTickets;
+          }
+          return prev;
+        });
+
+        // Return the updated ticket so it can be used to update selectedTicket
+        return ticketWithProfile;
+      }
 
       toast({
         title: 'Ticket reopened',
         description: 'Ticket has been reopened'
       });
+      return null;
     } catch (error: any) {
       console.error('Error reopening ticket:', error);
       toast({

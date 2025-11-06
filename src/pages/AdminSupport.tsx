@@ -46,14 +46,17 @@ const AdminSupport = () => {
     if (selectedTicket && tickets.length > 0) {
       const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
       if (updatedTicket) {
-        // Only update if something actually changed
-        const hasChanged = 
-          updatedTicket.status !== selectedTicket.status ||
-          updatedTicket.admin_id !== selectedTicket.admin_id ||
-          updatedTicket.messages?.length !== selectedTicket.messages?.length ||
+        // Always update to ensure profile data (name/email) is fresh
+        // Check if anything meaningful changed to avoid unnecessary updates
+        const statusChanged = updatedTicket.status !== selectedTicket.status;
+        const adminIdChanged = updatedTicket.admin_id !== selectedTicket.admin_id;
+        const messagesChanged = updatedTicket.messages?.length !== selectedTicket.messages?.length ||
           JSON.stringify(updatedTicket.messages) !== JSON.stringify(selectedTicket.messages);
+        const profileChanged = 
+          updatedTicket.profiles?.full_name !== selectedTicket.profiles?.full_name ||
+          updatedTicket.profiles?.email !== selectedTicket.profiles?.email;
         
-        if (hasChanged) {
+        if (statusChanged || adminIdChanged || messagesChanged || profileChanged) {
           console.log('🔄 Updating selected ticket with fresh data');
           setSelectedTicket(updatedTicket);
         }
@@ -129,15 +132,21 @@ const AdminSupport = () => {
 
   const handleMarkAsResolved = async () => {
     if (selectedTicket) {
-      await markAsResolved(selectedTicket.id);
-      // Don't clear selected ticket, just update it
+      const updatedTicket = await markAsResolved(selectedTicket.id);
+      // Update selected ticket immediately with the returned updated ticket
+      if (updatedTicket) {
+        setSelectedTicket(updatedTicket);
+      }
     }
   };
 
   const handleReopenTicket = async () => {
     if (selectedTicket) {
-      await reopenTicket(selectedTicket.id);
-      // Don't clear selected ticket, just update it
+      const updatedTicket = await reopenTicket(selectedTicket.id);
+      // Update selected ticket immediately with the returned updated ticket
+      if (updatedTicket) {
+        setSelectedTicket(updatedTicket);
+      }
     }
   };
 

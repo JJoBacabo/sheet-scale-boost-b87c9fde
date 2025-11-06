@@ -157,7 +157,7 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">
-                        {ticket.profiles?.full_name || ticket.profiles?.email || 'User'}
+                        {ticket.profiles?.full_name?.trim() || ticket.profiles?.email || 'User'}
                       </h3>
                       {ticket.admin_id === currentAdminId && (
                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
