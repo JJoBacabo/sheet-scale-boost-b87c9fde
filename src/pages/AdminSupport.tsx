@@ -41,16 +41,25 @@ const AdminSupport = () => {
     checkAdminAccess();
   }, []);
 
-  // Update selected ticket when tickets change
+  // Update selected ticket when tickets change - use a ref to avoid infinite loops
   useEffect(() => {
     if (selectedTicket && tickets.length > 0) {
       const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
       if (updatedTicket) {
-        console.log('🔄 Updating selected ticket with fresh data');
-        setSelectedTicket(updatedTicket);
+        // Only update if something actually changed
+        const hasChanged = 
+          updatedTicket.status !== selectedTicket.status ||
+          updatedTicket.admin_id !== selectedTicket.admin_id ||
+          updatedTicket.messages?.length !== selectedTicket.messages?.length ||
+          JSON.stringify(updatedTicket.messages) !== JSON.stringify(selectedTicket.messages);
+        
+        if (hasChanged) {
+          console.log('🔄 Updating selected ticket with fresh data');
+          setSelectedTicket(updatedTicket);
+        }
       }
     }
-  }, [tickets]);
+  }, [tickets, selectedTicket?.id]);
 
   const checkAdminAccess = async () => {
     try {
@@ -85,11 +94,16 @@ const AdminSupport = () => {
   const handleSendMessage = async (message: string) => {
     if (selectedTicket && currentUser) {
       console.log('📤 Admin sending message:', message);
-      await sendMessage(selectedTicket.id, message, currentUser.id);
-      // Assign ticket if not already assigned
+      
+      // Assign ticket first if not already assigned (before sending message)
       if (!selectedTicket.admin_id) {
         await handleClaimTicket();
+        // Wait a bit for the claim to complete
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
+      
+      // Now send the message
+      await sendMessage(selectedTicket.id, message, currentUser.id);
     }
   };
 

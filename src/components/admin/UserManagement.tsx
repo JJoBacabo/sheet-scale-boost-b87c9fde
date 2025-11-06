@@ -300,7 +300,7 @@ export const UserManagement = () => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold">{user.full_name || 'Sem nome'}</h3>
+                    <h3 className="font-semibold">{user.full_name || user.email || 'Sem nome'}</h3>
                     <Badge variant="outline" className={getPlanColor(user.subscription_plan)}>
                       {user.subscription_plan.toUpperCase()}
                     </Badge>

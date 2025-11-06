@@ -17,6 +17,7 @@ export interface SupportChat {
   resolved_at?: string;
   profiles?: {
     full_name?: string;
+    email?: string;
   };
 }
 
@@ -46,6 +47,43 @@ export const useAdminSupport = (currentAdminId?: string) => {
     return ['active', 'waiting', 'resolved'].includes(normalized);
   };
 
+  // Helper function to fetch profile with email
+  const fetchProfileWithEmail = async (userId: string) => {
+    try {
+      // Fetch profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id, full_name')
+        .eq('user_id', userId)
+        .single();
+
+      // Try to get email from get-users edge function
+      let email: string | null = null;
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: usersData, error: usersError } = await supabase.functions.invoke('get-users', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+
+          if (!usersError && usersData?.users) {
+            const user = usersData.users.find((u: any) => u.id === userId);
+            email = user?.email || null;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching email:', error);
+      }
+
+      return profile ? { ...profile, email } : null;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  };
+
   const fetchTickets = async () => {
     try {
       setLoading(true);
@@ -71,6 +109,49 @@ export const useAdminSupport = (currentAdminId?: string) => {
           profiles = profilesData;
         } else if (profilesError) {
           console.error('Error fetching profiles:', profilesError);
+        }
+
+        // Fetch user emails from auth (only if we have session)
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            // Use edge function to get user emails
+            const { data: usersData, error: usersError } = await supabase.functions.invoke('get-users', {
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            });
+
+            if (!usersError && usersData?.users) {
+              // Map emails to existing profiles
+              profiles = profiles.map(profile => {
+                const user = usersData.users.find((u: any) => u.id === profile.user_id);
+                return {
+                  ...profile,
+                  email: user?.email || null
+                };
+              });
+
+              // Add profiles for users that don't have a profile entry but exist in auth
+              const existingProfileIds = new Set(profiles.map(p => p.user_id));
+              const missingProfiles = userIds
+                .filter(id => !existingProfileIds.has(id))
+                .map(userId => {
+                  const user = usersData.users.find((u: any) => u.id === userId);
+                  return user ? {
+                    user_id: userId,
+                    full_name: null,
+                    email: user.email || null
+                  } : null;
+                })
+                .filter(Boolean);
+              
+              profiles = [...profiles, ...missingProfiles];
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user emails:', error);
+          // Continue without emails if this fails
         }
       }
 
@@ -130,14 +211,10 @@ export const useAdminSupport = (currentAdminId?: string) => {
               // Fetch fresh data to get profiles
               await fetchTickets();
             } else if (payload.eventType === 'UPDATE') {
-              // Fetch profile for updated ticket
+              // Fetch profile with email for updated ticket
               const updatedTicket = payload.new as any;
               if (updatedTicket.user_id) {
-                const { data: profile } = await supabase
-                  .from('profiles')
-                  .select('user_id, full_name')
-                  .eq('user_id', updatedTicket.user_id)
-                  .single();
+                const profile = await fetchProfileWithEmail(updatedTicket.user_id);
                 
                 // Normalize status
                 const normalizedStatus = normalizeStatus(updatedTicket.status);
@@ -189,7 +266,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Invalid input parameters');
       }
 
-      // Verify ticket exists in database
+      // Get fresh ticket data from database to avoid stale state
       const { data: ticketData, error: fetchError } = await supabase
         .from('support_chats')
         .select('*')
@@ -198,13 +275,6 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
       if (fetchError || !ticketData) {
         throw new Error('Ticket not found');
-      }
-
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) {
-        // Ticket exists in DB but not in local state, fetch it
-        await fetchTickets();
-        return;
       }
 
       // Validate message structure
@@ -219,28 +289,82 @@ export const useAdminSupport = (currentAdminId?: string) => {
         timestamp: new Date().toISOString()
       };
 
-      // Validate existing messages
-      const existingMessages = Array.isArray(ticket.messages) 
-        ? ticket.messages.filter((msg: any) => msg && typeof msg === 'object' && msg.id)
+      // Use messages from database, not local state
+      const existingMessages = Array.isArray(ticketData.messages) 
+        ? ticketData.messages.filter((msg: any) => msg && typeof msg === 'object' && msg.id && msg.content)
         : [];
+
+      // Check if message already exists (avoid duplicates)
+      const messageExists = existingMessages.some((msg: any) => 
+        msg.content === message.trim() && 
+        msg.type === 'admin' &&
+        new Date(msg.timestamp).getTime() > Date.now() - 5000 // Within last 5 seconds
+      );
+
+      if (messageExists) {
+        console.warn('Message already exists, skipping duplicate');
+        return;
+      }
 
       const updatedMessages = [...existingMessages, newMessage];
 
       // Determine status: if resolved, keep resolved; otherwise set to active
-      const currentStatus = normalizeStatus(ticket.status);
+      const currentStatus = normalizeStatus(ticketData.status);
       const newStatus = currentStatus === 'resolved' ? 'resolved' : 'active';
 
-      const { error } = await supabase
+      // Only update admin_id if not already set
+      const updateData: any = {
+        messages: updatedMessages,
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+
+      // Only set admin_id if not already assigned
+      if (!ticketData.admin_id) {
+        updateData.admin_id = adminId;
+      }
+
+      const { data: updatedTicket, error } = await supabase
         .from('support_chats')
-        .update({
-          messages: updatedMessages,
-          admin_id: adminId,
-          status: newStatus,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', ticketId);
+        .update(updateData)
+        .eq('id', ticketId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state immediately
+      if (updatedTicket) {
+        // Fetch profile with email for updated ticket
+        const profile = await fetchProfileWithEmail(updatedTicket.user_id);
+
+        const normalizedStatus = normalizeStatus(updatedTicket.status);
+        const validStatus = isValidStatus(normalizedStatus) ? normalizedStatus : 'waiting';
+        
+        const validatedMessages = Array.isArray(updatedTicket.messages) 
+          ? updatedTicket.messages.filter((msg: any) => 
+              msg && typeof msg === 'object' && msg.id && msg.content
+            )
+          : [];
+
+        const ticketWithProfile: SupportChat = {
+          ...updatedTicket,
+          status: validStatus as 'active' | 'waiting' | 'resolved',
+          messages: validatedMessages,
+          profiles: profile || undefined
+        };
+
+        // Update ticket in local state immediately
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = ticketWithProfile;
+            return newTickets;
+          }
+          return prev;
+        });
+      }
 
       toast({
         title: 'Mensagem enviada',
@@ -275,7 +399,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         console.warn('Warning: User may not be an admin');
       }
 
-      // Verify ticket exists
+      // Get fresh ticket data from database
       const { data: ticketData, error: fetchError } = await supabase
         .from('support_chats')
         .select('*')
@@ -286,9 +410,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Ticket not found');
       }
 
-      const ticket = tickets.find(t => t.id === ticketId);
-      if (!ticket) {
-        await fetchTickets();
+      // Check if already assigned to this admin
+      if (ticketData.admin_id === adminId) {
+        console.log('Ticket already assigned to this admin');
         return;
       }
 
@@ -301,22 +425,33 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
       const adminDisplayName = adminProfile?.full_name || adminName || 'Admin';
 
-      // Add notification message to user
-      const notificationMessage = {
-        id: crypto.randomUUID(),
-        type: 'bot',
-        content: `🎯 ${adminDisplayName} está agora a tentar ajudar com o seu pedido.`,
-        timestamp: new Date().toISOString()
-      };
-
-      // Validate existing messages
-      const existingMessages = Array.isArray(ticket.messages) 
-        ? ticket.messages.filter((msg: any) => msg && typeof msg === 'object' && msg.id)
+      // Use messages from database, not local state
+      const existingMessages = Array.isArray(ticketData.messages) 
+        ? ticketData.messages.filter((msg: any) => 
+            msg && typeof msg === 'object' && msg.id && msg.content
+          )
         : [];
 
-      const updatedMessages = [...existingMessages, notificationMessage];
+      // Check if notification message already exists
+      const notificationExists = existingMessages.some((msg: any) => 
+        msg.type === 'bot' && 
+        msg.content?.includes(adminDisplayName) &&
+        msg.content?.includes('ajudar')
+      );
 
-      const { error } = await supabase
+      let updatedMessages = existingMessages;
+      if (!notificationExists) {
+        // Add notification message to user
+        const notificationMessage = {
+          id: crypto.randomUUID(),
+          type: 'bot',
+          content: `🎯 ${adminDisplayName} está agora a tentar ajudar com o seu pedido.`,
+          timestamp: new Date().toISOString()
+        };
+        updatedMessages = [...existingMessages, notificationMessage];
+      }
+
+      const { data: updatedTicket, error } = await supabase
         .from('support_chats')
         .update({
           admin_id: adminId,
@@ -324,9 +459,46 @@ export const useAdminSupport = (currentAdminId?: string) => {
           messages: updatedMessages,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ticketId);
+        .eq('id', ticketId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state immediately
+      if (updatedTicket) {
+        // Fetch profile with email for updated ticket
+        const profile = await fetchProfileWithEmail(updatedTicket.user_id);
+
+        const normalizedStatus = normalizeStatus(updatedTicket.status);
+        const validStatus = isValidStatus(normalizedStatus) ? normalizedStatus : 'waiting';
+        
+        const validatedMessages = Array.isArray(updatedTicket.messages) 
+          ? updatedTicket.messages.filter((msg: any) => 
+              msg && typeof msg === 'object' && msg.id && msg.content
+            )
+          : [];
+
+        const ticketWithProfile: SupportChat = {
+          ...updatedTicket,
+          status: validStatus as 'active' | 'waiting' | 'resolved',
+          messages: validatedMessages,
+          profiles: profile || undefined
+        };
+
+        // Update ticket in local state immediately
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = ticketWithProfile;
+            return newTickets;
+          } else {
+            // Ticket not in list, add it
+            return [ticketWithProfile, ...prev];
+          }
+        });
+      }
 
       toast({
         title: 'Ticket atribuído',

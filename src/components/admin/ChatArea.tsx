@@ -128,12 +128,12 @@ export const ChatArea = ({
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
-                {ticket.profiles?.full_name?.[0] || 'U'}
+                {(ticket.profiles?.full_name || ticket.profiles?.email || 'U')?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div>
               <h2 className="font-bold text-lg text-foreground">
-                {ticket.profiles?.full_name || 'User'}
+                {ticket.profiles?.full_name || ticket.profiles?.email || 'User'}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {ticket.language === 'pt' ? '🇵🇹 Português' : '🇬🇧 English'}
