@@ -286,25 +286,51 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newMessages = [...messages, adminMessage];
     setMessages(newMessages);
 
-    // Create chat in Supabase
+    // Create chat in Supabase - use 'waiting' status (matches database default behavior)
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data, error } = await supabase
-        .from('support_chats')
-        .insert({
-          user_id: user.id,
-          language,
-          category,
-          status: 'waiting',
-          messages: newMessages as any
-        })
-        .select()
-        .single();
+      try {
+        // Validate messages structure
+        const validMessages = newMessages.map(msg => ({
+          id: msg.id || crypto.randomUUID(),
+          type: msg.type || 'user',
+          content: msg.content || '',
+          timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString()
+        }));
 
-      if (data && !error) {
-        setChatId(data.id);
-      } else if (error) {
-        console.error('Error creating chat:', error);
+        const { data, error } = await supabase
+          .from('support_chats')
+          .insert({
+            user_id: user.id,
+            language: language || 'pt',
+            category: category || null,
+            status: 'waiting', // Explicitly set to waiting
+            messages: validMessages as any
+          })
+          .select()
+          .single();
+
+        if (data && !error) {
+          setChatId(data.id);
+        } else if (error) {
+          console.error('Error creating chat:', error);
+          toast({
+            title: language === 'pt' ? 'Erro' : 'Error',
+            description: language === 'pt' 
+              ? 'Falha ao criar ticket de suporte' 
+              : 'Failed to create support ticket',
+            variant: 'destructive'
+          });
+        }
+      } catch (error) {
+        console.error('Error in switchToAdmin:', error);
+        toast({
+          title: language === 'pt' ? 'Erro' : 'Error',
+          description: language === 'pt' 
+            ? 'Falha ao criar ticket de suporte' 
+            : 'Failed to create support ticket',
+          variant: 'destructive'
+        });
       }
     }
 
@@ -320,10 +346,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!chatId) return;
 
     try {
+      // Validate messages structure before saving
+      const validMessages = msgs.map(msg => ({
+        id: msg.id || crypto.randomUUID(),
+        type: msg.type || 'user',
+        content: msg.content || '',
+        timestamp: msg.timestamp ? new Date(msg.timestamp).toISOString() : new Date().toISOString()
+      })).filter(msg => msg.content.trim().length > 0); // Only save messages with content
+
       const { error } = await supabase
         .from('support_chats')
         .update({
-          messages: msgs as any,
+          messages: validMessages as any,
           updated_at: new Date().toISOString()
         })
         .eq('id', chatId);

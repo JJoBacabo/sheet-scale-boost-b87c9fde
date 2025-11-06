@@ -72,35 +72,67 @@ export const AdminDashboard = () => {
       const usersList = users || [];
       const subsList = subscriptions || [];
 
-      // Calculate stats
+      // Helper function to normalize status
+      const normalizeStatus = (status: string | null | undefined): string => {
+        if (!status) return '';
+        return status.toLowerCase().trim();
+      };
+
+      // Helper function to check if status is valid
+      const isValidStatus = (status: string): boolean => {
+        const normalized = normalizeStatus(status);
+        return ['active', 'waiting', 'resolved'].includes(normalized);
+      };
+
+      // Calculate stats with normalized status
       const totalUsers = usersList.length;
       const activeUsers = usersList.filter(u => u.subscription_status === 'active').length;
       const totalTickets = ticketsList.length;
-      const openTickets = ticketsList.filter(t => t.status === 'active' || t.status === 'waiting').length;
-      const resolvedTickets = ticketsList.filter(t => t.status === 'resolved').length;
-      const pendingTickets = ticketsList.filter(t => t.status === 'waiting').length;
+      
+      // Count tickets by status with normalization
+      const activeTicketsCount = ticketsList.filter(t => normalizeStatus(t.status) === 'active').length;
+      const waitingTicketsCount = ticketsList.filter(t => normalizeStatus(t.status) === 'waiting').length;
+      const resolvedTicketsCount = ticketsList.filter(t => normalizeStatus(t.status) === 'resolved').length;
+      
+      const openTickets = activeTicketsCount + waitingTicketsCount;
+      const resolvedTickets = resolvedTicketsCount;
+      const pendingTickets = waitingTicketsCount;
 
       const ticketsToday = ticketsList.filter(t => new Date(t.created_at) >= today).length;
       const ticketsThisWeek = ticketsList.filter(t => new Date(t.created_at) >= weekAgo).length;
       const ticketsThisMonth = ticketsList.filter(t => new Date(t.created_at) >= monthAgo).length;
 
-      // Calculate average response time (simplified)
-      const activeTickets = ticketsList.filter(t => t.status === 'active' && t.admin_id);
-      const avgResponseTime = activeTickets.length > 0 
-        ? activeTickets.reduce((acc, t) => {
-            const created = new Date(t.created_at);
-            const updated = new Date(t.updated_at);
-            return acc + (updated.getTime() - created.getTime()) / (1000 * 60); // minutes
-          }, 0) / activeTickets.length
+      // Calculate average response time (simplified) - only for active tickets with admin
+      const activeTicketsWithAdmin = ticketsList.filter(t => 
+        normalizeStatus(t.status) === 'active' && t.admin_id
+      );
+      const avgResponseTime = activeTicketsWithAdmin.length > 0 
+        ? activeTicketsWithAdmin.reduce((acc, t) => {
+            try {
+              const created = new Date(t.created_at);
+              const updated = new Date(t.updated_at);
+              if (isNaN(created.getTime()) || isNaN(updated.getTime())) return acc;
+              return acc + (updated.getTime() - created.getTime()) / (1000 * 60); // minutes
+            } catch {
+              return acc;
+            }
+          }, 0) / activeTicketsWithAdmin.length
         : 0;
 
-      // Calculate average resolution time
-      const resolvedTicketsList = ticketsList.filter(t => t.status === 'resolved' && t.resolved_at);
+      // Calculate average resolution time - only for resolved tickets with resolved_at
+      const resolvedTicketsList = ticketsList.filter(t => 
+        normalizeStatus(t.status) === 'resolved' && t.resolved_at
+      );
       const avgResolutionTime = resolvedTicketsList.length > 0
         ? resolvedTicketsList.reduce((acc, t) => {
-            const created = new Date(t.created_at);
-            const resolved = new Date(t.resolved_at);
-            return acc + (resolved.getTime() - created.getTime()) / (1000 * 60 * 60); // hours
+            try {
+              const created = new Date(t.created_at);
+              const resolved = new Date(t.resolved_at);
+              if (isNaN(created.getTime()) || isNaN(resolved.getTime())) return acc;
+              return acc + (resolved.getTime() - created.getTime()) / (1000 * 60 * 60); // hours
+            } catch {
+              return acc;
+            }
           }, 0) / resolvedTicketsList.length
         : 0;
 
@@ -148,37 +180,26 @@ export const AdminDashboard = () => {
         expiredSubscriptions
       });
 
-      // Tickets by status - normalize status values and handle null/undefined
+      // Tickets by status - use already calculated counts
       const statusCounts = {
-        active: ticketsList.filter(t => {
-          const status = (t.status || '').toLowerCase().trim();
-          return status === 'active';
-        }).length,
-        waiting: ticketsList.filter(t => {
-          const status = (t.status || '').toLowerCase().trim();
-          return status === 'waiting';
-        }).length,
-        resolved: ticketsList.filter(t => {
-          const status = (t.status || '').toLowerCase().trim();
-          return status === 'resolved';
-        }).length
+        active: activeTicketsCount,
+        waiting: waitingTicketsCount,
+        resolved: resolvedTicketsCount
       };
 
-      // Debug: log status counts
-      console.log('Tickets by status:', statusCounts);
-      console.log('Total tickets:', ticketsList.length);
-      console.log('Sample ticket statuses:', ticketsList.slice(0, 5).map(t => ({ id: t.id, status: t.status })));
-      
-      setTicketsByStatus([
+      // Only show statuses with tickets > 0, or all if total is 0
+      const statusData = [
         { name: isPortuguese ? 'Ativos' : 'Active', value: statusCounts.active },
         { name: isPortuguese ? 'Pendentes' : 'Waiting', value: statusCounts.waiting },
         { name: isPortuguese ? 'Resolvidos' : 'Resolved', value: statusCounts.resolved }
-      ]);
+      ].filter(item => item.value > 0 || totalTickets === 0);
+      
+      setTicketsByStatus(statusData);
 
-      // Tickets by category
+      // Tickets by category - handle null/undefined categories
       const categoryCounts: Record<string, number> = {};
       ticketsList.forEach(t => {
-        const cat = t.category || (isPortuguese ? 'Sem categoria' : 'No category');
+        const cat = t.category?.trim() || (isPortuguese ? 'Sem categoria' : 'No category');
         categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
       });
 
@@ -195,7 +216,14 @@ export const AdminDashboard = () => {
 
       setTicketsOverTime(
         last7Days.map(date => {
-          const count = ticketsList.filter(t => t.created_at.startsWith(date)).length;
+          const count = ticketsList.filter(t => {
+            if (!t.created_at) return false;
+            try {
+              return t.created_at.startsWith(date);
+            } catch {
+              return false;
+            }
+          }).length;
           return {
             date: new Date(date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }),
             tickets: count
@@ -332,7 +360,11 @@ export const AdminDashboard = () => {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ name, percent, value }) => {
+                  // Only show percentage if there are tickets
+                  if (value === 0) return `${name} 0%`;
+                  return `${name} ${(percent * 100).toFixed(0)}%`;
+                }}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="value"

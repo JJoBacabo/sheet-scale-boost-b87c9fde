@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Trash2, Send, User, UserCog, FileText, Check, X, AlertTriangle } from 'lucide-react';
+import { CheckCircle, Trash2, Send, User, UserCog, FileText, Check, X, AlertTriangle, MessageSquare } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -32,6 +32,7 @@ interface ChatAreaProps {
   ticket: SupportChat | null;
   onSendMessage: (message: string) => void;
   onMarkAsResolved: () => void;
+  onReopenTicket?: () => void;
   onDelete: () => void;
   onUpdateNotes: (notes: string) => void;
   onUpdatePriority?: (priority: 'low' | 'medium' | 'high' | 'urgent') => void;
@@ -42,7 +43,8 @@ interface ChatAreaProps {
 export const ChatArea = ({ 
   ticket, 
   onSendMessage, 
-  onMarkAsResolved, 
+  onMarkAsResolved,
+  onReopenTicket,
   onDelete,
   onUpdateNotes,
   onUpdatePriority,
@@ -109,7 +111,7 @@ export const ChatArea = ({
     return (
       <div className="h-full flex items-center justify-center bg-background/50">
         <div className="text-center text-muted-foreground">
-          <MessageSquareIcon className="h-16 w-16 mx-auto mb-4 opacity-20" />
+          <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" />
           <p className="text-lg">
             {isPortuguese ? 'Selecione um ticket para começar' : 'Select a ticket to start'}
           </p>
@@ -159,16 +161,29 @@ export const ChatArea = ({
               <FileText className="h-4 w-4" />
               {isPortuguese ? 'Notas' : 'Notes'}
             </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={onMarkAsResolved}
-              disabled={ticket.status === 'resolved'}
-              className="gap-2"
-            >
-              <CheckCircle className="h-4 w-4" />
-              {isPortuguese ? 'Resolver' : 'Resolve'}
-            </Button>
+            {(ticket.status?.toLowerCase().trim() === 'resolved') ? (
+              onReopenTicket && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onReopenTicket}
+                  className="gap-2"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  {isPortuguese ? 'Reabrir' : 'Reopen'}
+                </Button>
+              )
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onMarkAsResolved}
+                className="gap-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                {isPortuguese ? 'Resolver' : 'Resolve'}
+              </Button>
+            )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="sm" className="gap-2">
@@ -278,11 +293,15 @@ export const ChatArea = ({
             </Select>
           </div>
           <Badge variant="outline" className={cn(
-            ticket.status === 'resolved' && "bg-blue-500/10 text-blue-500",
-            ticket.status === 'active' && "bg-green-500/10 text-green-500",
-            ticket.status === 'waiting' && "bg-yellow-500/10 text-yellow-500"
+            (ticket.status?.toLowerCase().trim() === 'resolved') && "bg-blue-500/10 text-blue-500",
+            (ticket.status?.toLowerCase().trim() === 'active') && "bg-green-500/10 text-green-500",
+            (ticket.status?.toLowerCase().trim() === 'waiting' || !ticket.status) && "bg-yellow-500/10 text-yellow-500"
           )}>
-            {ticket.status}
+            {ticket.status?.toLowerCase().trim() === 'resolved' 
+              ? (isPortuguese ? 'Resolvido' : 'Resolved')
+              : ticket.status?.toLowerCase().trim() === 'active'
+              ? (isPortuguese ? 'Ativo' : 'Active')
+              : (isPortuguese ? 'Pendente' : 'Waiting')}
           </Badge>
           {ticket.category && (
             <Badge variant="secondary">
@@ -294,63 +313,78 @@ export const ChatArea = ({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {Array.isArray(ticket.messages) && ticket.messages.map((msg: any, idx: number) => {
-          const isAdmin = msg.type === 'admin' || msg.sender === 'admin';
-          const isUser = msg.type === 'user' || msg.sender === 'user';
-          const isBot = msg.type === 'bot';
-          
-          // Skip rendering bot options in admin view
-          if (msg.options) return null;
-          
-          return (
-            <div
-              key={`${msg.id || idx}-${msg.timestamp}`}
-              className={cn(
-                "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                isAdmin ? "justify-end" : "justify-start"
-              )}
-            >
-              {!isAdmin && (
-                <Avatar className="shrink-0">
-                  <AvatarFallback className="bg-muted">
-                    <User className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-              <div className={cn(
-                "max-w-[70%] space-y-1",
-                isAdmin && "items-end"
-              )}>
+        {Array.isArray(ticket.messages) && ticket.messages
+          .filter((msg: any) => msg && typeof msg === 'object' && (msg.content || msg.message)) // Validate message structure
+          .map((msg: any, idx: number) => {
+            const isAdmin = msg.type === 'admin' || msg.sender === 'admin';
+            const isUser = msg.type === 'user' || msg.sender === 'user';
+            const isBot = msg.type === 'bot';
+            
+            // Skip rendering bot options in admin view
+            if (msg.options) return null;
+            
+            const messageContent = msg.content || msg.message || '';
+            const messageTimestamp = msg.timestamp || new Date().toISOString();
+            
+            return (
+              <div
+                key={msg.id || `msg-${idx}-${messageTimestamp}`}
+                className={cn(
+                  "flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                  isAdmin ? "justify-end" : "justify-start"
+                )}
+              >
+                {!isAdmin && (
+                  <Avatar className="shrink-0">
+                    <AvatarFallback className="bg-muted">
+                      <User className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
                 <div className={cn(
-                  "rounded-2xl px-4 py-3",
-                  isAdmin 
-                    ? "bg-primary text-primary-foreground rounded-br-none" 
-                    : "bg-muted text-foreground rounded-bl-none"
+                  "max-w-[70%] space-y-1",
+                  isAdmin && "items-end"
                 )}>
-                  <p className="whitespace-pre-wrap break-words">{msg.content || msg.message}</p>
+                  <div className={cn(
+                    "rounded-2xl px-4 py-3",
+                    isAdmin 
+                      ? "bg-primary text-primary-foreground rounded-br-none" 
+                      : isBot
+                      ? "bg-muted/50 text-muted-foreground rounded-bl-none"
+                      : "bg-muted text-foreground rounded-bl-none"
+                  )}>
+                    <p className="whitespace-pre-wrap break-words">{messageContent}</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground px-2">
+                    {(() => {
+                      try {
+                        const date = new Date(messageTimestamp);
+                        if (isNaN(date.getTime())) return '';
+                        return formatDistanceToNow(date, {
+                          addSuffix: true,
+                          locale: isPortuguese ? pt : enUS
+                        });
+                      } catch {
+                        return '';
+                      }
+                    })()}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground px-2">
-                  {formatDistanceToNow(new Date(msg.timestamp), {
-                    addSuffix: true,
-                    locale: isPortuguese ? pt : enUS
-                  })}
-                </p>
+                {isAdmin && (
+                  <Avatar className="shrink-0">
+                    <AvatarFallback className="bg-primary text-primary-foreground">
+                      <UserCog className="h-4 w-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                )}
               </div>
-              {isAdmin && (
-                <Avatar className="shrink-0">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
-                    <UserCog className="h-4 w-4" />
-                  </AvatarFallback>
-                </Avatar>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      {ticket.status !== 'resolved' && (
+      {ticket.status?.toLowerCase().trim() !== 'resolved' && (
         <div className="p-4 border-t border-border bg-card">
           <div className="flex gap-2">
             <Textarea
@@ -374,8 +408,3 @@ export const ChatArea = ({
   );
 };
 
-const MessageSquareIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-  </svg>
-);

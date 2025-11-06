@@ -23,7 +23,7 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
   const [searchQuery, setSearchQuery] = useState('');
 
   // Sort tickets by priority (urgent first, then high, medium, low)
-  const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+  const priorityOrder: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
   
   const sortedTickets = [...tickets].sort((a, b) => {
     const aPriority = priorityOrder[a.priority || 'medium'] ?? 2;
@@ -32,7 +32,14 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
       return aPriority - bPriority;
     }
     // If same priority, sort by updated_at
-    return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    try {
+      const aTime = new Date(a.updated_at).getTime();
+      const bTime = new Date(b.updated_at).getTime();
+      if (isNaN(aTime) || isNaN(bTime)) return 0;
+      return bTime - aTime;
+    } catch {
+      return 0;
+    }
   });
 
   const filteredTickets = sortedTickets.filter(ticket => {
@@ -45,8 +52,10 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
     );
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (status: string | null | undefined) => {
+    if (!status) return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+    const normalizedStatus = status.toLowerCase().trim();
+    switch (normalizedStatus) {
       case 'active':
         return 'bg-green-500/10 text-green-500 border-green-500/20';
       case 'waiting':
@@ -58,17 +67,19 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string | null | undefined) => {
+    if (!status) return isPortuguese ? 'Pendente' : 'Waiting';
+    const normalizedStatus = status.toLowerCase().trim();
     const labels: Record<string, { pt: string; en: string }> = {
       active: { pt: 'Ativo', en: 'Active' },
       waiting: { pt: 'Pendente', en: 'Waiting' },
       resolved: { pt: 'Resolvido', en: 'Resolved' }
     };
-    return labels[status]?.[isPortuguese ? 'pt' : 'en'] || status;
+    return labels[normalizedStatus]?.[isPortuguese ? 'pt' : 'en'] || status;
   };
 
-  const getCategoryLabel = (category?: string) => {
-    if (!category) return isPortuguese ? 'Sem categoria' : 'No category';
+  const getCategoryLabel = (category?: string | null) => {
+    if (!category || !category.trim()) return isPortuguese ? 'Sem categoria' : 'No category';
     const labels: Record<string, { pt: string; en: string }> = {
       meta_integration: { pt: 'Integração Meta', en: 'Meta Integration' },
       login: { pt: 'Login/Acesso', en: 'Login/Access' },
@@ -76,7 +87,8 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
       payments: { pt: 'Pagamentos', en: 'Payments' },
       technical: { pt: 'Erros Técnicos', en: 'Technical Errors' }
     };
-    return labels[category]?.[isPortuguese ? 'pt' : 'en'] || category;
+    const normalizedCategory = category.trim().toLowerCase();
+    return labels[normalizedCategory]?.[isPortuguese ? 'pt' : 'en'] || category;
   };
 
   const getPriorityColor = (priority?: string) => {
@@ -159,7 +171,7 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground line-clamp-1">
-                      {getCategoryLabel(ticket.category)}
+                      {getCategoryLabel(ticket.category || null)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -174,10 +186,18 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(ticket.updated_at), {
-                      addSuffix: true,
-                      locale: isPortuguese ? pt : enUS
-                    })}
+                    {(() => {
+                      try {
+                        const date = new Date(ticket.updated_at);
+                        if (isNaN(date.getTime())) return isPortuguese ? 'Data inválida' : 'Invalid date';
+                        return formatDistanceToNow(date, {
+                          addSuffix: true,
+                          locale: isPortuguese ? pt : enUS
+                        });
+                      } catch {
+                        return isPortuguese ? 'Data inválida' : 'Invalid date';
+                      }
+                    })()}
                   </p>
                   {!ticket.admin_id && (
                     <Button

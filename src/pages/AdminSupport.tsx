@@ -32,6 +32,7 @@ const AdminSupport = () => {
     sendMessage,
     assignTicket,
     markAsResolved,
+    reopenTicket,
     updateNotes,
     deleteTicket
   } = useAdminSupport(currentUser?.id);
@@ -115,7 +116,14 @@ const AdminSupport = () => {
   const handleMarkAsResolved = async () => {
     if (selectedTicket) {
       await markAsResolved(selectedTicket.id);
-      setSelectedTicket(null);
+      // Don't clear selected ticket, just update it
+    }
+  };
+
+  const handleReopenTicket = async () => {
+    if (selectedTicket) {
+      await reopenTicket(selectedTicket.id);
+      // Don't clear selected ticket, just update it
     }
   };
 
@@ -136,6 +144,23 @@ const AdminSupport = () => {
     if (!selectedTicket) return;
     
     try {
+      // Verify ticket exists
+      const { data: ticketData, error: fetchError } = await supabase
+        .from('support_chats')
+        .select('*')
+        .eq('id', selectedTicket.id)
+        .single();
+
+      if (fetchError || !ticketData) {
+        throw new Error('Ticket not found');
+      }
+
+      // Validate priority
+      const validPriorities = ['low', 'medium', 'high', 'urgent'];
+      if (!validPriorities.includes(priority)) {
+        throw new Error('Invalid priority value');
+      }
+
       const { error } = await supabase
         .from('support_chats')
         .update({ 
@@ -148,8 +173,9 @@ const AdminSupport = () => {
 
       // Update local state
       setSelectedTicket({ ...selectedTicket, priority });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating priority:', error);
+      // Optionally show toast error
     }
   };
 
@@ -215,6 +241,7 @@ const AdminSupport = () => {
                 ticket={selectedTicket}
                 onSendMessage={handleSendMessage}
                 onMarkAsResolved={handleMarkAsResolved}
+                onReopenTicket={handleReopenTicket}
                 onDelete={handleDelete}
                 onUpdateNotes={handleUpdateNotes}
                 onUpdatePriority={handleUpdatePriority}
