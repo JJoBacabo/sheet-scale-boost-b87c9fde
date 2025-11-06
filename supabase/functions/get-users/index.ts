@@ -10,9 +10,33 @@ const ALLOWED_ORIGINS = [
 ];
 
 function getCorsHeaders(origin: string | null): HeadersInit {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) 
-    ? origin 
-    : ALLOWED_ORIGINS[0];
+  // Check if origin is in allowed list
+  let allowedOrigin = '*';
+  
+  if (origin) {
+    // Check exact match
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    } else {
+      // Check hostname match (for www variations)
+      try {
+        const originHost = new URL(origin).hostname.replace(/^www\./, '');
+        const matched = ALLOWED_ORIGINS.find(allowed => {
+          try {
+            const allowedHost = new URL(allowed).hostname.replace(/^www\./, '');
+            return originHost === allowedHost;
+          } catch {
+            return false;
+          }
+        });
+        if (matched) {
+          allowedOrigin = origin;
+        }
+      } catch {
+        // Invalid origin, use wildcard
+      }
+    }
+  }
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
@@ -23,15 +47,18 @@ function getCorsHeaders(origin: string | null): HeadersInit {
 }
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
-
+  // Handle CORS preflight - MUST return 200 status
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
+    const origin = req.headers.get('origin');
+    const corsHeaders = getCorsHeaders(origin);
+    return new Response('', { 
       status: 200,
       headers: corsHeaders 
     });
   }
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
