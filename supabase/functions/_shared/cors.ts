@@ -3,6 +3,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://cygvvrtsdatdczswcrqj.supabase.co',
+  'https://sheet-tools.com',
+  'https://www.sheet-tools.com',
   // Add your production domains here
 ];
 
