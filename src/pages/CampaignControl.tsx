@@ -138,7 +138,7 @@ const CampaignControl = () => {
   const [selectedDecision, setSelectedDecision] = useState<DailyROASData | null>(null);
   const [showDecisionModal, setShowDecisionModal] = useState(false);
   const [selectedDecisionData, setSelectedDecisionData] = useState<any>(null);
-  const [selectedDay, setSelectedDay] = useState<string>("today");
+  const [selectedDay, setSelectedDay] = useState<string>("total");
   const [showAddCampaign, setShowAddCampaign] = useState(false);
   const [isFetchingCampaigns, setIsFetchingCampaigns] = useState(false);
   const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
@@ -867,7 +867,7 @@ const CampaignControl = () => {
       for (const insights of insightsData) {
         // Get the date for this insight (if available, otherwise use current date)
         const insightDate = insights.date_start || insights.date_stop || 
-          (selectedDay === "today" ? new Date().toISOString().split('T')[0] : selectedDay);
+          (selectedDay === "total" || selectedDay === "today" ? new Date().toISOString().split('T')[0] : selectedDay);
 
         console.log(`📅 Processing data for date: ${insightDate}`);
 
@@ -1074,8 +1074,12 @@ const CampaignControl = () => {
   const uniqueDays = Array.from(new Set(dailyData.map(d => d.date))).sort().reverse();
   const todayDate = new Date().toISOString().split('T')[0];
   
-  // Get data for selected day
+  // Get data for selected day or total
   const getFilteredData = () => {
+    if (selectedDay === "total") {
+      // Return all data when "total" is selected - we'll aggregate by campaign
+      return dailyData;
+    }
     if (selectedDay === "today") {
       return dailyData.filter(d => d.date === todayDate);
     }
@@ -1084,16 +1088,117 @@ const CampaignControl = () => {
 
   const filteredData = getFilteredData();
   
+  // Aggregate data by campaign when "total" is selected
+  const getAggregatedCampaignData = () => {
+    if (selectedDay !== "total") {
+      // Return individual day data as-is, but ensure each entry has the necessary structure
+      return filteredData.map(data => ({
+        ...data,
+        aggregated: false,
+        total_days: undefined
+      }));
+    }
+    
+    // Group by campaign_id or campaign_name
+    const campaignMap = new Map<string, {
+      campaign_id: string;
+      campaign_name: string;
+      total_spent: number;
+      total_revenue: number;
+      total_units_sold: number;
+      total_atc: number;
+      total_purchases: number;
+      total_cog: number;
+      product_price: number;
+      dates: string[];
+      days: DailyROASData[];
+    }>();
+    
+    filteredData.forEach(data => {
+      const key = data.campaign_id || data.campaign_name;
+      if (!campaignMap.has(key)) {
+        campaignMap.set(key, {
+          campaign_id: data.campaign_id,
+          campaign_name: data.campaign_name,
+          total_spent: 0,
+          total_revenue: 0,
+          total_units_sold: 0,
+          total_atc: 0,
+          total_purchases: 0,
+          total_cog: 0,
+          product_price: data.product_price || 0,
+          dates: [],
+          days: []
+        });
+      }
+      
+      const campaign = campaignMap.get(key)!;
+      campaign.total_spent += data.total_spent || 0;
+      campaign.total_revenue += (data.units_sold || 0) * (data.product_price || 0);
+      campaign.total_units_sold += data.units_sold || 0;
+      campaign.total_atc += data.atc || 0;
+      campaign.total_purchases += data.purchases || 0;
+      campaign.total_cog += (data.units_sold || 0) * (data.cog || 0);
+      if (!campaign.dates.includes(data.date)) {
+        campaign.dates.push(data.date);
+      }
+      campaign.days.push(data);
+    });
+    
+    // Convert to array and calculate metrics
+    return Array.from(campaignMap.values()).map(campaign => {
+      const totalDays = campaign.dates.length;
+      const totalMarginEuros = campaign.total_revenue - campaign.total_spent - campaign.total_cog;
+      const totalMarginPerc = campaign.total_revenue > 0 
+        ? (totalMarginEuros / campaign.total_revenue) * 100 
+        : 0;
+      // Calculate average CPC (total spent / total clicks, where clicks = purchases + ATC)
+      const totalClicks = campaign.total_purchases + campaign.total_atc;
+      const avgCPC = totalClicks > 0 
+        ? campaign.total_spent / totalClicks 
+        : 0;
+      const roas = campaign.total_spent > 0 
+        ? campaign.total_revenue / campaign.total_spent 
+        : 0;
+      
+      // Create a synthetic DailyROASData object with aggregated values
+      return {
+        id: `aggregated-${campaign.campaign_id}`,
+        campaign_id: campaign.campaign_id,
+        campaign_name: campaign.campaign_name,
+        date: campaign.dates.sort()[0], // First date
+        total_spent: campaign.total_spent,
+        cpc: avgCPC,
+        atc: campaign.total_atc,
+        purchases: campaign.total_purchases,
+        product_price: campaign.product_price,
+        cog: campaign.total_cog > 0 && campaign.total_units_sold > 0 
+          ? campaign.total_cog / campaign.total_units_sold 
+          : 0,
+        units_sold: campaign.total_units_sold,
+        roas: roas,
+        margin_euros: totalMarginEuros,
+        margin_percentage: totalMarginPerc,
+        user_id: campaign.days[0]?.user_id || '',
+        total_days: totalDays, // Add total days for decision calculation
+        aggregated: true // Flag to indicate this is aggregated data
+      } as DailyROASData & { total_days: number; aggregated: boolean };
+    });
+  };
+  
+  const aggregatedData = getAggregatedCampaignData();
+  
   // Calculate KPIs for filtered data
   const calculateFilteredKPIs = () => {
-    const totalSpend = filteredData.reduce((sum, d) => sum + (d.total_spent || 0), 0);
-    const totalRevenue = filteredData.reduce((sum, d) => sum + ((d.units_sold || 0) * (d.product_price || 0)), 0);
+    const dataToUse = selectedDay === "total" ? aggregatedData : filteredData;
+    const totalSpend = dataToUse.reduce((sum: number, d: any) => sum + (d.total_spent || 0), 0);
+    const totalRevenue = dataToUse.reduce((sum: number, d: any) => sum + ((d.units_sold || 0) * (d.product_price || 0)), 0);
     const avgROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-    const totalMargemEuros = filteredData.reduce((sum, d) => sum + (d.margin_euros || 0), 0);
-    const avgMargemPerc = filteredData.length > 0 
-      ? filteredData.reduce((sum, d) => sum + (d.margin_percentage || 0), 0) / filteredData.length 
+    const totalMargemEuros = dataToUse.reduce((sum: number, d: any) => sum + (d.margin_euros || 0), 0);
+    const avgMargemPerc = dataToUse.length > 0 
+      ? dataToUse.reduce((sum: number, d: any) => sum + (d.margin_percentage || 0), 0) / dataToUse.length 
       : 0;
-    const totalVendas = filteredData.reduce((sum, d) => sum + (d.purchases || 0), 0);
+    const totalVendas = dataToUse.reduce((sum: number, d: any) => sum + (d.purchases || 0), 0);
 
     return { 
       totalSpend: totalSpend || 0, 
@@ -1107,7 +1212,7 @@ const CampaignControl = () => {
 
   const kpis = calculateFilteredKPIs();
 
-  const chartData = filteredData.map(d => ({
+  const chartData = aggregatedData.map(d => ({
     nome: (d.campaign_name || '').substring(0, 15),
     CPC: d.cpc || 0,
     ROAS: d.roas || 0,
@@ -1591,8 +1696,8 @@ const CampaignControl = () => {
 
             <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
               <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
-                <TabsTrigger value="today" className="text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2">
-                  {t('dailyRoas.today')} ({todayDate})
+                <TabsTrigger value="total" className="text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2">
+                  {t('dailyRoas.total')}
                 </TabsTrigger>
                 {uniqueDays.map((date: string) => (
                   <TabsTrigger key={date} value={date} className="text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2">
@@ -1632,7 +1737,7 @@ const CampaignControl = () => {
 
                 {/* Table for selected day */}
                 <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
-                  {t('dailyRoas.campaigns')} - {selectedDay === "today" ? t('dailyRoas.today') : new Date(selectedDay).toLocaleDateString()}
+                  {t('dailyRoas.campaigns')} - {selectedDay === "total" ? t('dailyRoas.total') : selectedDay === "today" ? t('dailyRoas.today') : new Date(selectedDay).toLocaleDateString()}
                 </h3>
                 <div className="overflow-x-auto -mx-4 md:mx-0">
                   <div className="inline-block min-w-full align-middle px-4 md:px-0">
@@ -1655,34 +1760,46 @@ const CampaignControl = () => {
                         </TableRow>
                       </TableHeader>
                     <TableBody>
-                      {filteredData.length === 0 ? (
+                      {aggregatedData.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs md:text-sm">
                             {t('dailyRoas.noDataForDay')}
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredData.map((data) => {
+                        aggregatedData.map((data) => {
                           const calculated = calculateMetrics(data);
                           
-                          // Calculate day number for this campaign
-                          const campaignEntries = dailyData.filter(d => 
-                            d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name
-                          ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                          // For aggregated data, use total_days; otherwise calculate day number
+                          let dayNumber: number;
+                          if ((data as any).aggregated && (data as any).total_days) {
+                            dayNumber = (data as any).total_days;
+                          } else {
+                            const campaignEntries = dailyData.filter(d => 
+                              d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name
+                            ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                            dayNumber = getCampaignDayNumber(campaignEntries, data.date);
+                          }
                           
-                          const dayNumber = getCampaignDayNumber(campaignEntries, data.date);
                           const { decisao, motivo } = determineDecision(calculated, dayNumber, marketType);
                           
                           return (
                             <TableRow key={data.id}>
-                              <TableCell className="font-medium text-xs md:text-sm">{data.campaign_name}</TableCell>
+                              <TableCell className="font-medium text-xs md:text-sm">
+                                {data.campaign_name}
+                                {(data as any).aggregated && (data as any).total_days && (
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    ({t('dailyRoas.total')}: {(data as any).total_days} {isPortuguese ? 'dias' : 'days'})
+                                  </span>
+                                )}
+                              </TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.total_spent || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.cpc || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{data.atc || 0}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{data.purchases || 0}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.product_price || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.cog || 0)).toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.purchases || 0}</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{data.units_sold || 0}</TableCell>
                               <TableCell className="font-semibold text-green-500 text-xs md:text-sm">{((calculated.roas || 0)).toFixed(2)}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_euros || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
@@ -1701,8 +1818,13 @@ const CampaignControl = () => {
                                       decisao,
                                       motivo,
                                       campaign_name: data.campaign_name,
-                                      dateRange: new Date(data.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
-                                      dayRange: `Day ${dayNumber}`
+                                      dateRange: (data as any).aggregated 
+                                        ? `${t('dailyRoas.total')}: ${(data as any).total_days} ${isPortuguese ? 'dias' : 'days'}`
+                                        : new Date(data.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
+                                      dayRange: (data as any).aggregated 
+                                        ? `${t('dailyRoas.total')} ${(data as any).total_days} ${isPortuguese ? 'dias' : 'days'}`
+                                        : `${t('dailyRoas.day')} ${dayNumber}`,
+                                      totalDays: (data as any).total_days || dayNumber
                                     });
                                     setShowDecisionModal(true);
                                   }}
@@ -1714,7 +1836,18 @@ const CampaignControl = () => {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => deleteCampaign(data.id)}
+                                  onClick={() => {
+                                    // For aggregated data, delete all entries for this campaign
+                                    if ((data as any).aggregated) {
+                                      // Delete all days for this campaign
+                                      const campaignDays = dailyData.filter(d => 
+                                        d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name
+                                      );
+                                      campaignDays.forEach(day => deleteCampaign(day.id));
+                                    } else {
+                                      deleteCampaign(data.id);
+                                    }
+                                  }}
                                   className="h-7 w-7 md:h-8 md:w-8 p-0"
                                 >
                                   <Trash2 className="w-3 h-3 md:w-4 md:h-4 text-destructive" />
