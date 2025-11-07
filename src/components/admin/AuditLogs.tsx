@@ -222,11 +222,12 @@ export const AuditLogs = () => {
       setLoading(true);
       
       // Fetch audit logs with explicit user_id check
+      // Melhorar query: adicionar filtros se necessário e garantir ordenação correta
       let query = supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(1000); // Increased limit for better filtering
+        .limit(2000); // Aumentar limite para garantir que não perdemos logs
       
       // Debug: Log query before execution
       console.log('Fetching audit logs...');
@@ -772,10 +773,10 @@ export const AuditLogs = () => {
               <SelectItem value="subscription_state_change">{isPortuguese ? 'Mudança de Assinatura' : 'Subscription Change'}</SelectItem>
               <SelectItem value="user_created">{isPortuguese ? 'Usuário Criado' : 'User Created'}</SelectItem>
               <SelectItem value="user_updated">{isPortuguese ? 'Usuário Atualizado' : 'User Updated'}</SelectItem>
-                <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
+              <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
                 <SelectItem value="admin_force_status">{isPortuguese ? 'Admin Forçou Status' : 'Admin Force Status'}</SelectItem>
-                <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
-                <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
+              <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
+              <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
                 <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
                 <SelectItem value="ticket_reopened">{isPortuguese ? 'Ticket Reaberto' : 'Ticket Reopened'}</SelectItem>
                 <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
