@@ -638,6 +638,31 @@ export const AuditLogs = () => {
       case 'ticket_priority_changed':
       case 'ticket_notes_updated':
         return <MessageSquare className="h-4 w-4" />;
+      case 'subscription_created':
+      case 'subscription_plan_changed':
+        return <CreditCard className="h-4 w-4" />;
+      case 'user_plan_updated':
+      case 'user_status_updated':
+        return <User className="h-4 w-4" />;
+      case 'admin_role_added':
+      case 'admin_role_removed':
+        return <Shield className="h-4 w-4" />;
+      case 'campaign_created':
+      case 'campaign_updated':
+      case 'campaign_deleted':
+        return <FileText className="h-4 w-4" />;
+      case 'product_created':
+      case 'product_updated':
+      case 'product_deleted':
+        return <FileText className="h-4 w-4" />;
+      case 'shopify_connected':
+      case 'shopify_disconnected':
+      case 'facebook_connected':
+      case 'facebook_disconnected':
+      case 'integration_created':
+      case 'integration_updated':
+      case 'integration_deleted':
+        return <FileText className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
@@ -680,6 +705,37 @@ export const AuditLogs = () => {
         return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 'ticket_notes_updated':
         return 'bg-teal-500/10 text-teal-500 border-teal-500/20';
+      case 'subscription_created':
+      case 'subscription_plan_changed':
+        return 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20';
+      case 'user_plan_updated':
+      case 'user_status_updated':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'admin_role_added':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'admin_role_removed':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'campaign_created':
+      case 'campaign_updated':
+        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'campaign_deleted':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'product_created':
+      case 'product_updated':
+        return 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
+      case 'product_deleted':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'shopify_connected':
+      case 'facebook_connected':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'shopify_disconnected':
+      case 'facebook_disconnected':
+        return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
+      case 'integration_created':
+      case 'integration_updated':
+        return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+      case 'integration_deleted':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -687,11 +743,21 @@ export const AuditLogs = () => {
 
   const getEventLabel = (eventType: string) => {
     const labels: Record<string, { pt: string; en: string }> = {
+      // Subscriptions
       subscription_state_change: { pt: 'Mudança de Estado de Assinatura', en: 'Subscription State Change' },
+      subscription_created: { pt: 'Assinatura Criada', en: 'Subscription Created' },
+      subscription_plan_changed: { pt: 'Plano Alterado', en: 'Plan Changed' },
+      // Users
       user_created: { pt: 'Usuário Criado', en: 'User Created' },
       user_updated: { pt: 'Usuário Atualizado', en: 'User Updated' },
+      user_plan_updated: { pt: 'Plano do Usuário Atualizado', en: 'User Plan Updated' },
+      user_status_updated: { pt: 'Status do Usuário Atualizado', en: 'User Status Updated' },
+      // Admin Actions
       admin_action: { pt: 'Ação de Admin', en: 'Admin Action' },
       admin_force_status: { pt: 'Admin Forçou Status', en: 'Admin Force Status' },
+      admin_role_added: { pt: 'Role de Admin Adicionado', en: 'Admin Role Added' },
+      admin_role_removed: { pt: 'Role de Admin Removido', en: 'Admin Role Removed' },
+      // Tickets
       ticket_created: { pt: 'Ticket Criado', en: 'Ticket Created' },
       ticket_updated: { pt: 'Ticket Atualizado', en: 'Ticket Updated' },
       ticket_resolved: { pt: 'Ticket Resolvido', en: 'Ticket Resolved' },
@@ -701,7 +767,23 @@ export const AuditLogs = () => {
       ticket_message_added: { pt: 'Mensagem Adicionada', en: 'Message Added' },
       ticket_deleted: { pt: 'Ticket Eliminado', en: 'Ticket Deleted' },
       ticket_priority_changed: { pt: 'Prioridade Alterada', en: 'Priority Changed' },
-      ticket_notes_updated: { pt: 'Notas Atualizadas', en: 'Notes Updated' }
+      ticket_notes_updated: { pt: 'Notas Atualizadas', en: 'Notes Updated' },
+      // Campaigns
+      campaign_created: { pt: 'Campanha Criada', en: 'Campaign Created' },
+      campaign_updated: { pt: 'Campanha Atualizada', en: 'Campaign Updated' },
+      campaign_deleted: { pt: 'Campanha Eliminada', en: 'Campaign Deleted' },
+      // Products
+      product_created: { pt: 'Produto Criado', en: 'Product Created' },
+      product_updated: { pt: 'Produto Atualizado', en: 'Product Updated' },
+      product_deleted: { pt: 'Produto Eliminado', en: 'Product Deleted' },
+      // Integrations
+      integration_created: { pt: 'Integração Criada', en: 'Integration Created' },
+      integration_updated: { pt: 'Integração Atualizada', en: 'Integration Updated' },
+      integration_deleted: { pt: 'Integração Eliminada', en: 'Integration Deleted' },
+      shopify_connected: { pt: 'Shopify Conectado', en: 'Shopify Connected' },
+      shopify_disconnected: { pt: 'Shopify Desconectado', en: 'Shopify Disconnected' },
+      facebook_connected: { pt: 'Facebook Conectado', en: 'Facebook Connected' },
+      facebook_disconnected: { pt: 'Facebook Desconectado', en: 'Facebook Disconnected' }
     };
     return labels[eventType]?.[isPortuguese ? 'pt' : 'en'] || eventType;
   };
@@ -771,20 +853,39 @@ export const AuditLogs = () => {
             <SelectContent>
               <SelectItem value="all">{isPortuguese ? 'Todos os tipos' : 'All types'}</SelectItem>
               <SelectItem value="subscription_state_change">{isPortuguese ? 'Mudança de Assinatura' : 'Subscription Change'}</SelectItem>
+              <SelectItem value="subscription_created">{isPortuguese ? 'Assinatura Criada' : 'Subscription Created'}</SelectItem>
+              <SelectItem value="subscription_plan_changed">{isPortuguese ? 'Plano Alterado' : 'Plan Changed'}</SelectItem>
               <SelectItem value="user_created">{isPortuguese ? 'Usuário Criado' : 'User Created'}</SelectItem>
               <SelectItem value="user_updated">{isPortuguese ? 'Usuário Atualizado' : 'User Updated'}</SelectItem>
+              <SelectItem value="user_plan_updated">{isPortuguese ? 'Plano do Usuário Atualizado' : 'User Plan Updated'}</SelectItem>
+              <SelectItem value="user_status_updated">{isPortuguese ? 'Status do Usuário Atualizado' : 'User Status Updated'}</SelectItem>
               <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
-                <SelectItem value="admin_force_status">{isPortuguese ? 'Admin Forçou Status' : 'Admin Force Status'}</SelectItem>
+              <SelectItem value="admin_force_status">{isPortuguese ? 'Admin Forçou Status' : 'Admin Force Status'}</SelectItem>
+              <SelectItem value="admin_role_added">{isPortuguese ? 'Role de Admin Adicionado' : 'Admin Role Added'}</SelectItem>
+              <SelectItem value="admin_role_removed">{isPortuguese ? 'Role de Admin Removido' : 'Admin Role Removed'}</SelectItem>
               <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
               <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
-                <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
-                <SelectItem value="ticket_reopened">{isPortuguese ? 'Ticket Reaberto' : 'Ticket Reopened'}</SelectItem>
-                <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
-                <SelectItem value="ticket_reassigned">{isPortuguese ? 'Ticket Reatribuído' : 'Ticket Reassigned'}</SelectItem>
-                <SelectItem value="ticket_message_added">{isPortuguese ? 'Mensagem Adicionada' : 'Message Added'}</SelectItem>
-                <SelectItem value="ticket_priority_changed">{isPortuguese ? 'Prioridade Alterada' : 'Priority Changed'}</SelectItem>
-                <SelectItem value="ticket_notes_updated">{isPortuguese ? 'Notas Atualizadas' : 'Notes Updated'}</SelectItem>
-                <SelectItem value="ticket_deleted">{isPortuguese ? 'Ticket Eliminado' : 'Ticket Deleted'}</SelectItem>
+              <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
+              <SelectItem value="ticket_reopened">{isPortuguese ? 'Ticket Reaberto' : 'Ticket Reopened'}</SelectItem>
+              <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
+              <SelectItem value="ticket_reassigned">{isPortuguese ? 'Ticket Reatribuído' : 'Ticket Reassigned'}</SelectItem>
+              <SelectItem value="ticket_message_added">{isPortuguese ? 'Mensagem Adicionada' : 'Message Added'}</SelectItem>
+              <SelectItem value="ticket_priority_changed">{isPortuguese ? 'Prioridade Alterada' : 'Priority Changed'}</SelectItem>
+              <SelectItem value="ticket_notes_updated">{isPortuguese ? 'Notas Atualizadas' : 'Notes Updated'}</SelectItem>
+              <SelectItem value="ticket_deleted">{isPortuguese ? 'Ticket Eliminado' : 'Ticket Deleted'}</SelectItem>
+              <SelectItem value="campaign_created">{isPortuguese ? 'Campanha Criada' : 'Campaign Created'}</SelectItem>
+              <SelectItem value="campaign_updated">{isPortuguese ? 'Campanha Atualizada' : 'Campaign Updated'}</SelectItem>
+              <SelectItem value="campaign_deleted">{isPortuguese ? 'Campanha Eliminada' : 'Campaign Deleted'}</SelectItem>
+              <SelectItem value="product_created">{isPortuguese ? 'Produto Criado' : 'Product Created'}</SelectItem>
+              <SelectItem value="product_updated">{isPortuguese ? 'Produto Atualizado' : 'Product Updated'}</SelectItem>
+              <SelectItem value="product_deleted">{isPortuguese ? 'Produto Eliminado' : 'Product Deleted'}</SelectItem>
+              <SelectItem value="shopify_connected">{isPortuguese ? 'Shopify Conectado' : 'Shopify Connected'}</SelectItem>
+              <SelectItem value="shopify_disconnected">{isPortuguese ? 'Shopify Desconectado' : 'Shopify Disconnected'}</SelectItem>
+              <SelectItem value="facebook_connected">{isPortuguese ? 'Facebook Conectado' : 'Facebook Connected'}</SelectItem>
+              <SelectItem value="facebook_disconnected">{isPortuguese ? 'Facebook Desconectado' : 'Facebook Disconnected'}</SelectItem>
+              <SelectItem value="integration_created">{isPortuguese ? 'Integração Criada' : 'Integration Created'}</SelectItem>
+              <SelectItem value="integration_updated">{isPortuguese ? 'Integração Atualizada' : 'Integration Updated'}</SelectItem>
+              <SelectItem value="integration_deleted">{isPortuguese ? 'Integração Eliminada' : 'Integration Deleted'}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterUser} onValueChange={setFilterUser}>

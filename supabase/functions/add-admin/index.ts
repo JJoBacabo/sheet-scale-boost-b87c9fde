@@ -99,7 +99,7 @@ serve(async (req) => {
       );
     }
 
-    // Add admin role
+    // Add admin role (trigger will log automatically)
     const { error: insertError } = await supabase
       .from('user_roles')
       .insert({
@@ -112,6 +112,22 @@ serve(async (req) => {
         JSON.stringify({ error: insertError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Additional log (trigger should handle it, but ensure it's logged)
+    try {
+      await supabase.from('audit_logs').insert({
+        user_id: targetUserId,
+        event_type: 'admin_role_added',
+        event_data: {
+          role: 'admin',
+          added_by: user.id,
+          added_by_email: user.email
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log admin role addition:', logError);
+      // Don't fail if logging fails
     }
 
     return new Response(
