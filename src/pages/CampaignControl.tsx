@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   Plus, 
   Download, 
@@ -100,6 +101,7 @@ interface Product {
 const CampaignControl = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -463,7 +465,7 @@ const CampaignControl = () => {
       setDailyData((data || []) as DailyROASData[]);
     } catch (error: any) {
       toast({
-        title: "Erro ao carregar dados",
+        title: t("settings.errorLoadingData"),
         description: error.message,
         variant: "destructive"
       });
@@ -1232,31 +1234,31 @@ const CampaignControl = () => {
           <AppSidebar />
           <main className="flex-1 p-6 overflow-auto">
             <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto mt-20 border-2 border-border/50">
-              <h2 className="text-2xl font-bold mb-4">Integrações Necessárias</h2>
+              <h2 className="text-2xl font-bold mb-4">{t("dailyRoas.integrationsNeeded")}</h2>
               <p className="text-muted-foreground mb-6">
-                Para usar o Daily ROAS Control, precisas de ter as seguintes integrações ativas:
+                {t("dailyRoas.integrationsDesc")}
               </p>
               <div className="space-y-4">
                 <div className={`p-4 rounded-lg border ${hasFacebookIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
                   <h3 className="font-semibold mb-1">
-                    {hasFacebookIntegration ? '✅ Facebook Ads' : '❌ Facebook Ads'}
+                    {hasFacebookIntegration ? '✅ ' : '❌ '}{t("dailyRoas.facebookAds")}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {hasFacebookIntegration ? 'Integração ativa' : 'Necessária para buscar campanhas e métricas'}
+                    {hasFacebookIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForCampaigns")}
                   </p>
                 </div>
                 <div className={`p-4 rounded-lg border ${hasShopifyIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
                   <h3 className="font-semibold mb-1">
-                    {hasShopifyIntegration ? '✅ Shopify' : '❌ Shopify'}
+                    {hasShopifyIntegration ? '✅ ' : '❌ '}{t("dailyRoas.shopify")}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {hasShopifyIntegration ? 'Integração ativa' : 'Necessária para dados de produtos e vendas'}
+                    {hasShopifyIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForProducts")}
                   </p>
                 </div>
               </div>
               <div className="mt-6">
                 <Button onClick={() => navigate("/settings")} className="w-full">
-                  Ir para Configurações
+                  {t("dailyRoas.goToSettings")}
                 </Button>
               </div>
             </Card>
@@ -1701,11 +1703,11 @@ const CampaignControl = () => {
                       {selectedDecisionData.decisao === "KILL" && <X className="w-6 h-6 md:w-8 md:h-8" />}
                       {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-6 h-6 md:w-8 md:h-8" />}
                       {selectedDecisionData.decisao === "MANTER" && <Minus className="w-6 h-6 md:w-8 md:h-8" />}
-                      <h3 className="text-xl md:text-2xl font-bold">Decisão: {selectedDecisionData.decisao}</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">{t("dailyRoas.decision")}: {selectedDecisionData.decisao}</h3>
                     </div>
                     
                     <div className="bg-background/50 p-3 md:p-4 rounded-lg mb-4 text-center">
-                      <h5 className="font-semibold mb-2 text-sm md:text-base">💡 Razão da Decisão</h5>
+                      <h5 className="font-semibold mb-2 text-sm md:text-base">💡 {t("dailyRoas.reason")}</h5>
                       <p className="text-xs md:text-sm">
                         {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: Margem ${selectedDecisionData.margin_percentage.toFixed(1)}%`}
                       </p>
@@ -1737,7 +1739,7 @@ const CampaignControl = () => {
                         </div>
                         <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
                           <p className="text-xs text-center">
-                            ℹ️ As decisões são calculadas com base nos <strong>dados acumulados de 2 dias consecutivos</strong>
+                            ℹ️ {t("dailyRoas.decisionDetails")}
                           </p>
                         </div>
                       </div>

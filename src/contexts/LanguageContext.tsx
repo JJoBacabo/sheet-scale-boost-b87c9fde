@@ -959,6 +959,7 @@ const translations = {
       quoteUpdated: 'Cotação atualizada',
       quoteUpdatedDesc: 'Preço de fornecedor e Daily ROAS atualizados com sucesso',
       errorUpdatingQuoteDesc: 'Falha ao atualizar a cotação',
+      errorLoadingData: 'Erro ao carregar dados',
     },
   },
   en: {
@@ -1871,6 +1872,7 @@ const translations = {
       quoteUpdated: 'Quote updated',
       quoteUpdatedDesc: 'Supplier price and Daily ROAS updated successfully',
       errorUpdatingQuoteDesc: 'Failed to update quote',
+      errorLoadingData: 'Error loading data',
     },
   },
 };
