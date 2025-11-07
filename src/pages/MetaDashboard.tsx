@@ -1062,9 +1062,9 @@ const MetaDashboard = () => {
                             </div>
                           </div>
 
-                          {/* Active/Paused status in bottom-right */}
+                          {/* Active/Paused status in bottom-right corner */}
                           <Badge
-                            className={`absolute bottom-6 right-6 ${
+                            className={`absolute bottom-2 right-2 ${
                               campaign.status === "ACTIVE"
                                 ? "bg-success/20 text-success border-success/30"
                                 : campaign.status === "PAUSED"
