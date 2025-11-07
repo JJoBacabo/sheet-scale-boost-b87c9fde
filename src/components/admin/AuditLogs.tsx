@@ -155,15 +155,63 @@ export const AuditLogs = () => {
 
   const fetchUsers = async () => {
     try {
+      // First try to get from profiles
       const { data: profiles } = await supabase
         .from('profiles')
         .select('user_id, email, full_name')
         .not('user_id', 'is', null)
         .order('full_name', { ascending: true });
       
+      let usersList: Array<{ user_id: string; email: string; full_name: string }> = [];
+      
       if (profiles) {
-        setUsers(profiles as Array<{ user_id: string; email: string; full_name: string }>);
+        usersList = profiles.map(p => ({
+          user_id: p.user_id,
+          email: p.email || '',
+          full_name: p.full_name || ''
+        }));
       }
+      
+      // Try to enrich with emails from edge function if we have session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const { data: usersData } = await supabase.functions.invoke('get-users', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`
+            }
+          });
+          
+          if (usersData?.users) {
+            // Merge edge function data with profiles
+            const usersMap = new Map(usersList.map(u => [u.user_id, u]));
+            usersData.users.forEach((user: any) => {
+              const existing = usersMap.get(user.id);
+              if (existing) {
+                // Update email if missing
+                if (!existing.email && user.email) {
+                  existing.email = user.email;
+                }
+                if (!existing.full_name && user.full_name) {
+                  existing.full_name = user.full_name;
+                }
+              } else {
+                // Add user if not in profiles
+                usersList.push({
+                  user_id: user.id,
+                  email: user.email || '',
+                  full_name: user.full_name || ''
+                });
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching users from edge function:', error);
+        // Continue with profiles only
+      }
+      
+      setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -173,11 +221,15 @@ export const AuditLogs = () => {
     try {
       setLoading(true);
       
+      // Fetch audit logs with explicit user_id check
       let query = supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1000); // Increased limit for better filtering
+      
+      // Debug: Log query before execution
+      console.log('Fetching audit logs...');
 
       if (filterDateFrom) {
         query = query.gte('created_at', startOfDay(filterDateFrom).toISOString());
@@ -188,23 +240,190 @@ export const AuditLogs = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching audit logs:', error);
+        throw error;
+      }
+      
+      // Debug: Log fetched data - MUITO DETALHADO
+      console.log(`📊 Total de logs buscados: ${data?.length || 0}`);
+      const ticketLogs = (data || []).filter(log => log.event_type?.startsWith('ticket_'));
+      console.log(`🎫 Logs de tickets encontrados: ${ticketLogs.length}`);
+      
+      ticketLogs.forEach((log, index) => {
+        const userIdFromLog = log.user_id;
+        const userIdFromEventData = (log.event_data as any)?.created_by || (log.event_data as any)?.user_id || (log.event_data as any)?.creator_id || null;
+        const finalUserId = userIdFromLog || userIdFromEventData;
+        
+        console.log(`🎫 Ticket Log #${index + 1}:`, {
+          id: log.id,
+          event_type: log.event_type,
+          'user_id (campo)': userIdFromLog || '❌ NULL/Vazio',
+          'created_by (event_data)': userIdFromEventData || '❌ NULL/Vazio',
+          'user_id FINAL': finalUserId || '❌ SEM USER_ID',
+          'TEM user_id?': !!finalUserId,
+          event_data: log.event_data,
+          created_at: log.created_at
+        });
+        
+        if (!finalUserId) {
+          console.error(`❌❌❌ LOG SEM USER_ID:`, log);
+        }
+      });
 
       // Fetch user profiles for logs with user_id
-      const userIds = [...new Set((data || []).map(log => log.user_id).filter(Boolean))];
-      const { data: profiles } = await supabase
+      const userIds = [...new Set((data || []).map(log => {
+        // Get user_id from log or from event_data.created_by as fallback
+        return log.user_id || (log.event_data as any)?.created_by || null;
+      }).filter((id): id is string => Boolean(id)))];
+      
+      // Fetch profiles from database
+      let profiles: Array<{ user_id: string; email: string | null; full_name: string | null }> = [];
+      
+      if (userIds.length > 0) {
+        // Get from profiles table
+        const { data: profilesData } = await supabase
         .from('profiles')
-        .select('user_id, email, full_name')
+          .select('user_id, email, full_name')
         .in('user_id', userIds);
+
+        profiles = (profilesData || []).map(p => ({
+          user_id: p.user_id,
+          email: p.email || null,
+          full_name: p.full_name || null
+        }));
+        
+        // Try to get missing emails from edge function
+        const usersWithoutEmail = userIds.filter(id => {
+          const profile = profiles.find(p => p.user_id === id);
+          return !profile || !profile.email;
+        });
+        
+        if (usersWithoutEmail.length > 0) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              const { data: usersData } = await supabase.functions.invoke('get-users', {
+                headers: {
+                  Authorization: `Bearer ${session.access_token}`
+                }
+              });
+              
+              if (usersData?.users && Array.isArray(usersData.users)) {
+                // Create a map for quick lookup
+                const usersMap = new Map(
+                  (usersData.users as Array<{ id: string; email?: string; full_name?: string }>)
+                    .map((user) => [user.id, user])
+                );
+                
+                // Update existing profiles or add new ones
+                usersWithoutEmail.forEach((userId: string) => {
+                  const authUser = usersMap.get(userId);
+                  if (authUser) {
+                    const existingProfile = profiles.find(p => p.user_id === userId);
+                    if (existingProfile) {
+                      // Update email if missing
+                      if (!existingProfile.email && authUser.email) {
+                        existingProfile.email = authUser.email;
+                      }
+                      if (!existingProfile.full_name && authUser.full_name) {
+                        existingProfile.full_name = authUser.full_name;
+                      }
+                    } else {
+                      // Add new profile entry
+                      profiles.push({
+                        user_id: userId,
+                        email: authUser.email || null,
+                        full_name: authUser.full_name || null
+                      });
+                    }
+                  } else {
+                    // User not found in auth, but we still create entry with user_id
+                    if (!profiles.find(p => p.user_id === userId)) {
+                      profiles.push({
+                        user_id: userId,
+                        email: null,
+                        full_name: null
+                      });
+                    }
+                  }
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Error fetching users from edge function:', error);
+            // Add missing users without email
+            userIds.forEach((userId: string) => {
+              if (!profiles.find(p => p.user_id === userId)) {
+                profiles.push({
+                  user_id: userId,
+                  email: null,
+                  full_name: null
+                });
+              }
+            });
+          }
+        }
+        
+        // Ensure all userIds have an entry (even without email/name)
+        userIds.forEach((userId: string) => {
+          if (!profiles.find(p => p.user_id === userId)) {
+            profiles.push({
+              user_id: userId,
+              email: null,
+              full_name: null
+            });
+          }
+        });
+      }
 
       const { favorites, comments } = loadLocalData();
       
-      const logsWithUsers = (data || []).map(log => ({
-        ...log,
-        user: profiles?.find(p => p.user_id === log.user_id),
-        isFavorite: favorites.includes(log.id),
-        comment: comments[log.id] || ''
-      }));
+      const logsWithUsers = (data || []).map(log => {
+        // BUSCAR USER_ID EM TODAS AS FONTES POSSÍVEIS
+        const userIdFromLog = log.user_id;
+        const userIdFromEventDataCreatedBy = (log.event_data as any)?.created_by;
+        const userIdFromEventDataUserId = (log.event_data as any)?.user_id;
+        const userIdFromEventDataCreatorId = (log.event_data as any)?.creator_id;
+        
+        // Prioridade: log.user_id > event_data.created_by > event_data.user_id > event_data.creator_id
+        const userId = userIdFromLog || userIdFromEventDataCreatedBy || userIdFromEventDataUserId || userIdFromEventDataCreatorId || null;
+        
+        const profile = userId ? profiles.find(p => p.user_id === userId) : null;
+        
+        // Debug DETALHADO para tickets
+        if (log.event_type?.startsWith('ticket_')) {
+          console.log('🔄 Processando ticket log:', {
+            id: log.id,
+            event_type: log.event_type,
+            'user_id (campo)': userIdFromLog || '❌ NULL',
+            'created_by': userIdFromEventDataCreatedBy || '❌ NULL',
+            'user_id (event_data)': userIdFromEventDataUserId || '❌ NULL',
+            'creator_id': userIdFromEventDataCreatorId || '❌ NULL',
+            'USER_ID FINAL ESCOLHIDO': userId || '❌ SEM USER_ID',
+            profile_encontrado: !!profile,
+            profile_email: profile?.email || 'N/A',
+            profile_name: profile?.full_name || 'N/A'
+          });
+          
+          if (!userId) {
+            console.error('❌❌❌ TICKET LOG SEM USER_ID EM NENHUMA FONTE!', log);
+          }
+        }
+        
+        return {
+          ...log,
+          // GARANTIR que user_id seja sempre definido (mesmo que venha do event_data)
+          user_id: userId || log.user_id || null,
+          user: userId ? {
+            user_id: userId,
+            email: profile?.email || null,
+            full_name: profile?.full_name || null
+          } : undefined,
+          isFavorite: favorites.includes(log.id),
+          comment: comments[log.id] || ''
+        };
+      });
 
       setAllLogs(logsWithUsers);
       setLogs(logsWithUsers);
@@ -453,10 +672,10 @@ export const AuditLogs = () => {
   return (
     <div className="h-full overflow-y-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{isPortuguese ? 'Logs de Auditoria' : 'Audit Logs'}</h1>
-          <p className="text-muted-foreground">{isPortuguese ? 'Histórico de todas as ações do sistema' : 'History of all system actions'}</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">{isPortuguese ? 'Logs de Auditoria' : 'Audit Logs'}</h1>
+        <p className="text-muted-foreground">{isPortuguese ? 'Histórico de todas as ações do sistema' : 'History of all system actions'}</p>
+      </div>
         <Button onClick={exportToCSV} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-2" />
           {isPortuguese ? 'Exportar CSV' : 'Export CSV'}
@@ -485,28 +704,28 @@ export const AuditLogs = () => {
       {/* Filters */}
       <Card className="p-4">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={isPortuguese ? 'Pesquisar logs...' : 'Search logs...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select value={filterType} onValueChange={setFilterType}>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={isPortuguese ? 'Pesquisar logs...' : 'Search logs...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder={isPortuguese ? 'Todos os tipos' : 'All types'} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{isPortuguese ? 'Todos os tipos' : 'All types'}</SelectItem>
-                <SelectItem value="subscription_state_change">{isPortuguese ? 'Mudança de Assinatura' : 'Subscription Change'}</SelectItem>
-                <SelectItem value="user_created">{isPortuguese ? 'Usuário Criado' : 'User Created'}</SelectItem>
-                <SelectItem value="user_updated">{isPortuguese ? 'Usuário Atualizado' : 'User Updated'}</SelectItem>
-                <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
-                <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
-                <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
+              <SelectValue placeholder={isPortuguese ? 'Todos os tipos' : 'All types'} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{isPortuguese ? 'Todos os tipos' : 'All types'}</SelectItem>
+              <SelectItem value="subscription_state_change">{isPortuguese ? 'Mudança de Assinatura' : 'Subscription Change'}</SelectItem>
+              <SelectItem value="user_created">{isPortuguese ? 'Usuário Criado' : 'User Created'}</SelectItem>
+              <SelectItem value="user_updated">{isPortuguese ? 'Usuário Atualizado' : 'User Updated'}</SelectItem>
+              <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
+              <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
+              <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
                 <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
                 <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
                 <SelectItem value="ticket_message_added">{isPortuguese ? 'Mensagem Adicionada' : 'Message Added'}</SelectItem>
@@ -523,8 +742,8 @@ export const AuditLogs = () => {
                     {user.full_name || user.email}
                   </SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
+            </SelectContent>
+          </Select>
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 items-end">
@@ -628,9 +847,9 @@ export const AuditLogs = () => {
                 suspicious && !critical && "border-orange-500/30 bg-orange-500/5"
               )}
             >
-              <div className="flex items-start gap-4">
+            <div className="flex items-start gap-4">
                 <div className="mt-1 flex flex-col gap-2">
-                  {getEventIcon(log.event_type)}
+                {getEventIcon(log.event_type)}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -643,54 +862,91 @@ export const AuditLogs = () => {
                       <StarOff className="h-4 w-4" />
                     )}
                   </Button>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center justify-between">
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-1">
                         <Badge variant="outline" className={getEventColor(log.event_type, critical, suspicious)}>
-                          {getEventLabel(log.event_type)}
-                        </Badge>
+                      {getEventLabel(log.event_type)}
+                    </Badge>
                         {critical && <AlertCircle className="h-3 w-3 text-red-500" />}
                         {suspicious && !critical && <AlertTriangle className="h-3 w-3 text-orange-500" />}
                       </div>
-                      {log.user && (
-                        <button
-                          onClick={() => navigate(`/admin/users?userId=${log.user_id}`)}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          {log.user.full_name || log.user.email || 'Unknown User'}
-                        </button>
-                      )}
+                      {/* SEMPRE MOSTRAR QUEM CRIOU - PRIORIDADE ABSOLUTA */}
+                      {(() => {
+                        // Prioridade 1: user_id do log
+                        // Prioridade 2: created_by do event_data
+                        // Prioridade 3: user_id do support_chat (buscar se necessário)
+                        const userId = log.user_id || (log.event_data as any)?.created_by || null;
+                        
+                        if (userId) {
+                          const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 12)}...`;
+                          return (
+                            <div className="flex items-center gap-2 flex-wrap bg-blue-500/10 p-2 rounded border border-blue-500/20">
+                              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
+                                {isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}
+                              </span>
+                              <button
+                                onClick={() => navigate(`/admin/users?userId=${userId}`)}
+                                className="text-sm font-bold text-blue-700 dark:text-blue-300 hover:underline"
+                                title={`User ID completo: ${userId}`}
+                              >
+                                {displayName}
+                              </button>
+                              {!log.user?.email && !log.user?.full_name && (
+                                <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/40">
+                                  <div className="font-semibold">{isPortuguese ? 'Sem perfil - ID:' : 'No profile - ID:'} {userId.substring(0, 8)}...</div>
+                                </Badge>
+                              )}
+                              <code className="text-xs text-blue-600 dark:text-blue-400 opacity-80 font-mono" title={userId}>
+                                ({userId.substring(0, 16)}...)
+                              </code>
+                            </div>
+                          );
+                        }
+                        
+                        // Se não tem user_id, mostrar aviso bem visível
+                        return (
+                          <div className="flex items-center gap-2 flex-wrap bg-red-500/20 p-2 rounded border-2 border-red-500/50">
+                            <span className="text-xs font-bold text-red-600 dark:text-red-400">
+                              {isPortuguese ? '⚠️ AVISO: SEM USER_ID' : '⚠️ WARNING: NO USER_ID'}
+                            </span>
+                            <Badge variant="outline" className="text-xs bg-red-500/30 text-red-700 dark:text-red-300 border-red-500/60">
+                              <div className="font-bold">{isPortuguese ? 'Log sem identificação de usuário!' : 'Log without user identification!'}</div>
+                            </Badge>
+                          </div>
+                        );
+                      })()}
                       {log.comment && (
                         <div className="flex items-center gap-1">
                           <MessageSquare className="h-3 w-3 text-blue-500" />
                           <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                            {isPortuguese ? 'Comentário' : 'Comment'}
+                            <div>{isPortuguese ? 'Comentário' : 'Comment'}</div>
                           </Badge>
                         </div>
                       )}
-                    </div>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {formatDistanceToNow(new Date(log.created_at), {
-                        addSuffix: true,
-                        locale: isPortuguese ? pt : enUS
-                      })}
-                    </span>
                   </div>
-                  
-                  {log.old_state && log.new_state && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Badge variant="outline" className="bg-red-500/10 text-red-500">
-                        {log.old_state}
-                      </Badge>
-                      <span>→</span>
-                      <Badge variant="outline" className="bg-green-500/10 text-green-500">
-                        {log.new_state}
-                      </Badge>
-                    </div>
-                  )}
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {formatDistanceToNow(new Date(log.created_at), {
+                      addSuffix: true,
+                      locale: isPortuguese ? pt : enUS
+                    })}
+                  </span>
+                </div>
+                
+                {log.old_state && log.new_state && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Badge variant="outline" className="bg-red-500/10 text-red-500">
+                      {log.old_state}
+                    </Badge>
+                    <span>→</span>
+                    <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                      {log.new_state}
+                    </Badge>
+                  </div>
+                )}
 
                   {log.comment && (
                     <div className="text-sm p-2 bg-blue-500/10 rounded border border-blue-500/20">
@@ -701,29 +957,143 @@ export const AuditLogs = () => {
                     </div>
                   )}
 
-                  {log.event_data && Object.keys(log.event_data).length > 0 && (
-                    <div className="text-sm text-muted-foreground">
-                      <details className="cursor-pointer">
-                        <summary className="hover:text-foreground">
-                          {isPortuguese ? 'Ver detalhes' : 'View details'}
-                        </summary>
-                        <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                          {JSON.stringify(log.event_data, null, 2)}
-                        </pre>
-                      </details>
+                  {/* Show ticket info for ticket events */}
+                  {(log.event_type.startsWith('ticket_') && log.event_data?.ticket_id) && (
+                    <div className="text-sm p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                      <p className="font-semibold text-cyan-600 dark:text-cyan-400 mb-2 flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        {isPortuguese ? 'Informações do Ticket' : 'Ticket Information'}
+                      </p>
+                      <div className="space-y-1.5 text-cyan-700 dark:text-cyan-300">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium min-w-[100px]">{isPortuguese ? 'Ticket ID:' : 'Ticket ID:'}</span>
+                          <code className="text-xs bg-cyan-900/20 px-2 py-0.5 rounded">
+                            {log.event_data.ticket_id.substring(0, 8)}...
+                          </code>
+                        </div>
+                        {/* SEMPRE MOSTRAR QUEM CRIOU - PRIORIDADE ABSOLUTA */}
+                        {(() => {
+                          const userId = log.user_id || (log.event_data as any)?.created_by || null;
+                          
+                          if (userId) {
+                            const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 12)}...`;
+                            return (
+                              <div className="flex items-start gap-2 flex-wrap bg-cyan-500/20 p-2 rounded border border-cyan-500/40">
+                                <span className="font-bold text-cyan-700 dark:text-cyan-300 min-w-[100px]">{isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}</span>
+                                <div className="flex items-center gap-2 flex-wrap flex-1">
+                                  <button
+                                    onClick={() => navigate(`/admin/users?userId=${userId}`)}
+                                    className="font-bold text-lg text-cyan-800 dark:text-cyan-200 hover:underline"
+                                    title={`User ID completo: ${userId}`}
+                                  >
+                                    {displayName}
+                                  </button>
+                                  {!log.user?.email && !log.user?.full_name && (
+                                    <Badge variant="outline" className="text-xs bg-yellow-500/30 text-yellow-800 dark:text-yellow-300 border-yellow-500/60">
+                                      <div className="font-bold">{isPortuguese ? 'Sem perfil' : 'No profile'}</div>
+                                    </Badge>
+                                  )}
+                                  <code className="text-xs text-cyan-700 dark:text-cyan-300 opacity-90 font-mono bg-cyan-900/20 px-2 py-1 rounded" title={userId}>
+                                    ID: {userId.substring(0, 20)}...
+                                  </code>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div className="flex items-center gap-2 flex-wrap bg-red-500/30 p-3 rounded border-2 border-red-500/70">
+                              <span className="font-bold text-red-700 dark:text-red-300 min-w-[100px]">{isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}</span>
+                              <Badge variant="outline" className="text-sm bg-red-500/40 text-red-800 dark:text-red-200 border-red-500/80">
+                                <div className="font-bold">{isPortuguese ? '⚠️ ERRO: SEM USER_ID!' : '⚠️ ERROR: NO USER_ID!'}</div>
+                              </Badge>
+                            </div>
+                          );
+                        })()}
+                        {log.event_data.category && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Categoria:' : 'Category:'}</span>
+                            <Badge variant="outline" className="bg-cyan-900/20">
+                              <div>{String(log.event_data.category)}</div>
+                            </Badge>
+                          </div>
+                        )}
+                        {log.event_data.language && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Idioma:' : 'Language:'}</span>
+                            <Badge variant="outline">
+                              <div>{String(log.event_data.language).toUpperCase()}</div>
+                            </Badge>
+                          </div>
+                        )}
+                        {log.event_data.status && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Status:' : 'Status:'}</span>
+                            <Badge 
+                              variant="outline" 
+                              className={cn(
+                                log.event_data.status === 'resolved' && 'bg-green-900/20 text-green-400',
+                                log.event_data.status === 'waiting' && 'bg-yellow-900/20 text-yellow-400',
+                                log.event_data.status === 'active' && 'bg-blue-900/20 text-blue-400'
+                              )}
+                            >
+                              <div>{String(log.event_data.status)}</div>
+                            </Badge>
+                          </div>
+                        )}
+                        {log.event_data.message_count !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Mensagens:' : 'Messages:'}</span>
+                            <span>{log.event_data.message_count}</span>
+                          </div>
+                        )}
+                        {log.event_data.admin_id && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Atribuído a:' : 'Assigned to:'}</span>
+                            <code className="text-xs bg-cyan-900/20 px-2 py-0.5 rounded">
+                              Admin: {log.event_data.admin_id.substring(0, 8)}...
+                            </code>
+                          </div>
+                        )}
+                        {log.event_data.previous_status && log.event_data.new_status && (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Mudança:' : 'Change:'}</span>
+                            <Badge variant="outline" className="bg-red-900/20 text-red-400">
+                              <div>{String(log.event_data.previous_status)}</div>
+                            </Badge>
+                            <span>→</span>
+                            <Badge variant="outline" className="bg-green-900/20 text-green-400">
+                              <div>{String(log.event_data.new_status)}</div>
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
+                {log.event_data && Object.keys(log.event_data).length > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    <details className="cursor-pointer">
+                      <summary className="hover:text-foreground">
+                          {isPortuguese ? 'Ver detalhes completos' : 'View full details'}
+                      </summary>
+                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
+                        {JSON.stringify(log.event_data, null, 2)}
+                      </pre>
+                    </details>
+                  </div>
+                )}
+
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      {log.ip_address && (
-                        <span>IP: {log.ip_address}</span>
-                      )}
-                      {log.user_agent && (
-                        <span className="truncate max-w-xs" title={log.user_agent}>
-                          {log.user_agent}
-                        </span>
-                      )}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  {log.ip_address && (
+                    <span>IP: {log.ip_address}</span>
+                  )}
+                  {log.user_agent && (
+                    <span className="truncate max-w-xs" title={log.user_agent}>
+                      {log.user_agent}
+                    </span>
+                  )}
                     </div>
                     <Button
                       variant="ghost"
@@ -734,9 +1104,9 @@ export const AuditLogs = () => {
                       {isPortuguese ? 'Comentário' : 'Comment'}
                     </Button>
                   </div>
-                </div>
               </div>
-            </Card>
+            </div>
+          </Card>
           );
         })}
       </div>
