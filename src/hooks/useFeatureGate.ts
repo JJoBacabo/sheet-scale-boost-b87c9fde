@@ -74,12 +74,29 @@ export const useFeatureGate = () => {
             // Use trial limits (same as Standard)
             storesLimit = SUBSCRIPTION_LIMITS.TRIAL.stores;
             campaignsLimit = SUBSCRIPTION_LIMITS.TRIAL.campaigns;
-          } else if (profile.subscription_status === 'active' && profile.subscription_plan) {
-            // Use plan limits from profile
-            const planCode = (profile.subscription_plan || 'free').toUpperCase();
-            const planLimits = SUBSCRIPTION_LIMITS[planCode as keyof typeof SUBSCRIPTION_LIMITS] || SUBSCRIPTION_LIMITS.FREE;
-            storesLimit = planLimits.stores;
-            campaignsLimit = planLimits.campaigns;
+          } else if (profile.subscription_plan) {
+            // Use plan limits from profile if it's a paid plan
+            const planCode = (profile.subscription_plan || 'free').toLowerCase();
+            const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+            
+            if (isPaidPlan && (profile.subscription_status === 'active' || !subscription)) {
+              // If it's a paid plan and status is active OR no subscription record exists
+              const planCodeUpper = planCode.toUpperCase();
+              const planLimits = SUBSCRIPTION_LIMITS[planCodeUpper as keyof typeof SUBSCRIPTION_LIMITS] || SUBSCRIPTION_LIMITS.FREE;
+              
+              console.log('✅ useFeatureGate - Using limits from profile:', {
+                planCode,
+                subscriptionStatus: profile.subscription_status,
+                planLimits
+              });
+              
+              storesLimit = planLimits.stores;
+              campaignsLimit = planLimits.campaigns;
+            } else {
+              // Free plan or inactive
+              storesLimit = 0;
+              campaignsLimit = 0;
+            }
           } else {
             // Free plan
             storesLimit = 0;

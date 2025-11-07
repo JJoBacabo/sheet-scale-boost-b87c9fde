@@ -92,16 +92,26 @@ export const useSubscriptionState = () => {
           // If no subscription but profile has plan, use profile plan
           const planCode = (profile?.subscription_plan || 'free').toLowerCase();
           const planName = planCode.toUpperCase();
+          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+          const isActive = profile?.subscription_status === 'active' || (isPaidPlan && !profile?.subscription_status);
+          
+          console.log('🔍 useSubscriptionState - No subscription, using profile:', {
+            planCode,
+            planName,
+            subscriptionStatus: profile?.subscription_status,
+            isPaidPlan,
+            isActive
+          });
           
           setStateInfo({
             state: 'active',
-            readonly: profile?.subscription_status !== 'active',
+            readonly: !isActive,
             daysUntilSuspension: null,
             daysUntilArchive: null,
             planName,
             planCode,
-            showBanner: profile?.subscription_status !== 'active',
-            allowedPages: profile?.subscription_status === 'active' 
+            showBanner: !isActive,
+            allowedPages: isActive
               ? ['dashboard', 'campaign-control', 'meta-dashboard', 'product-research', 'products', 'settings', 'integrations', 'profit-sheet']
               : ['settings', 'products', 'integrations'],
           });

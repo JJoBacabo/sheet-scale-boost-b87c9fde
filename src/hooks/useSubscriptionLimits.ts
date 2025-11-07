@@ -74,6 +74,13 @@ export const useSubscriptionLimits = () => {
         const planCode = (profile.subscription_plan || 'free').toLowerCase();
         const subscriptionStatus = (profile.subscription_status || 'inactive').toLowerCase();
 
+        console.log('🔍 Subscription Limits Debug:', {
+          planCode,
+          subscriptionStatus,
+          trialEndsAt: profile.trial_ends_at,
+          profileData: profile
+        });
+
         // Check if trial is active (not expired)
         const isTrialActive = 
           planCode === 'trial' &&
@@ -96,12 +103,17 @@ export const useSubscriptionLimits = () => {
         }
 
         // Check paid subscription first (subscriptions table takes precedence)
-        const { data: subscription } = await supabase
+        const { data: subscription, error: subError } = await supabase
           .from('subscriptions')
           .select('store_limit, campaign_limit, features_enabled, plan_code, status')
           .eq('user_id', user.id)
-          .eq('status', 'active')
-          .maybeSingle();
+          .maybeSingle(); // Removed .eq('status', 'active') to see all subscriptions
+
+        console.log('🔍 Subscription table check:', {
+          subscription,
+          subError,
+          hasSubscription: !!subscription
+        });
 
         if (subscription && subscription.status === 'active') {
           // Use limits from subscriptions table if available
@@ -109,6 +121,12 @@ export const useSubscriptionLimits = () => {
             ? subscription.features_enabled.map(f => String(f))
             : [];
           
+          console.log('✅ Using limits from subscription table:', {
+            storeLimit: subscription.store_limit,
+            campaignLimit: subscription.campaign_limit,
+            features
+          });
+
           setLimits({
             storeLimit: subscription.store_limit ?? 0,
             campaignLimit: subscription.campaign_limit ?? 0, // 0 = unlimited for Expert
@@ -122,20 +140,35 @@ export const useSubscriptionLimits = () => {
 
         // If no active subscription, check profile subscription_plan
         // This handles cases where subscription hasn't synced yet but profile has plan
-        if (subscriptionStatus === 'active' && planCode !== 'free' && planCode !== 'trial') {
-          const planLimits = getLimitsForPlan(planCode);
-          setLimits({
-            storeLimit: planLimits.stores,
-            campaignLimit: planLimits.campaigns,
-            features: planLimits.features,
-            isTrialActive: false,
-            trialEndsAt: null,
-          });
-          setLoading(false);
-          return;
+        // IMPORTANT: Check if planCode is a valid paid plan and status is active
+        if (planCode && planCode !== 'free' && planCode !== 'trial') {
+          // Check if status is active OR if it's a paid plan (expert, standard, basic, beginner)
+          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+          
+          if (isPaidPlan && (subscriptionStatus === 'active' || !subscription)) {
+            // If it's a paid plan and status is active OR no subscription record exists
+            const planLimits = getLimitsForPlan(planCode);
+            
+            console.log('✅ Using limits from profile plan:', {
+              planCode,
+              subscriptionStatus,
+              planLimits
+            });
+
+            setLimits({
+              storeLimit: planLimits.stores,
+              campaignLimit: planLimits.campaigns,
+              features: planLimits.features,
+              isTrialActive: false,
+              trialEndsAt: null,
+            });
+            setLoading(false);
+            return;
+          }
         }
 
         // FREE plan (expired trial, inactive subscription, or no plan)
+        console.log('⚠️ Falling back to FREE plan limits');
         setLimits({
           storeLimit: 0,
           campaignLimit: 0,
