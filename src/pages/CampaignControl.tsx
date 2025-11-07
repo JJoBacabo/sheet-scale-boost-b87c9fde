@@ -102,7 +102,7 @@ interface Product {
 const CampaignControl = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -816,7 +816,7 @@ const CampaignControl = () => {
         return campaignLower.includes(productLower) || productLower.includes(campaignLower);
       });
 
-      console.log("📦 Matched product:", matchedProduct?.product_name || "Nenhum produto encontrado");
+      console.log("📦 Matched product:", matchedProduct?.product_name || t('products.noProducts'));
       
       if (!matchedProduct) {
         toast({
@@ -1304,7 +1304,7 @@ const CampaignControl = () => {
           <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Daily ROAS Control</h1>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">{t('dailyRoas.title')}</h1>
                 <p className="text-sm md:text-base text-muted-foreground">{t('dailyRoas.subtitle')}</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -1316,9 +1316,9 @@ const CampaignControl = () => {
                       <SelectValue placeholder={t('dailyRoas.selectMarket')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low Budget</SelectItem>
-                      <SelectItem value="mid">Mid Budget</SelectItem>
-                      <SelectItem value="high">High Budget</SelectItem>
+                      <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
+                      <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
+                      <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1367,7 +1367,7 @@ const CampaignControl = () => {
           {/* Daily Tabs */}
           <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <h2 className="text-lg md:text-xl font-bold">Daily ROAS - {t('dailyRoas.campaignsByDay')}</h2>
+              <h2 className="text-lg md:text-xl font-bold">{t('dailyRoas.title')} - {t('dailyRoas.campaignsByDay')}</h2>
               {!showAddCampaign && (
                 <Button onClick={() => setShowAddCampaign(true)} size="sm" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
@@ -1437,7 +1437,7 @@ const CampaignControl = () => {
                               <div>
                                 <span className="font-semibold">{t('dailyRoas.day')} {dayNumber}</span>
                                 <span className="text-xs text-muted-foreground ml-2">
-                                  {new Date(entry.date).toLocaleDateString('pt-PT')}
+                                  {new Date(entry.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB')}
                                 </span>
                               </div>
                               <span className={`px-2 py-1 rounded text-xs font-semibold ${
@@ -1518,11 +1518,11 @@ const CampaignControl = () => {
             <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
               <TabsList className="w-full justify-start flex-wrap h-auto gap-1 p-1">
                 <TabsTrigger value="today" className="text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2">
-                  Hoje ({todayDate})
+                  {t('dailyRoas.today')} ({todayDate})
                 </TabsTrigger>
-                {uniqueDays.map((date) => (
+                {uniqueDays.map((date: string) => (
                   <TabsTrigger key={date} value={date} className="text-xs md:text-sm px-2 md:px-3 py-1.5 md:py-2">
-                    {new Date(date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })}
+                    {new Date(date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB', { day: '2-digit', month: '2-digit' })}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -1531,7 +1531,7 @@ const CampaignControl = () => {
                 {/* KPIs for selected day */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-4 md:mb-6">
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">Spend Total</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
                     <p className="text-lg md:text-2xl font-bold">{kpis.totalSpend.toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
