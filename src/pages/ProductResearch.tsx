@@ -59,13 +59,13 @@ export default function ProductResearch() {
                   {/* Feature Preview Badge */}
                   <div className="flex flex-wrap gap-3 justify-center">
                     <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
-                      <span className="text-sm font-medium">🔍 Facebook Ads Library</span>
+                      <span className="text-sm font-medium">{t('productResearch.feature1')}</span>
                     </div>
                     <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
-                      <span className="text-sm font-medium">📊 Análise Avançada</span>
+                      <span className="text-sm font-medium">{t('productResearch.feature2')}</span>
                     </div>
                     <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
-                      <span className="text-sm font-medium">🎯 Filtros Personalizados</span>
+                      <span className="text-sm font-medium">{t('productResearch.feature3')}</span>
                     </div>
                   </div>
 
