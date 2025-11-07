@@ -44,7 +44,7 @@ export const useSubscriptionState = () => {
             .from('profiles')
             .select('subscription_plan, subscription_status, trial_ends_at')
             .eq('user_id', user.id)
-            .single()
+            .maybeSingle()
         ]);
 
         const subscription = subscriptionResult.data;
@@ -58,7 +58,53 @@ export const useSubscriptionState = () => {
           new Date(profile.trial_ends_at) > new Date();
 
         if (!subscription && !isTrialActive) {
-          // Free plan (no subscription and no active trial)
+          // Check if profile has a paid plan even without subscription
+          const planCode = (profile?.subscription_plan || 'free').toLowerCase();
+          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+          
+          if (isPaidPlan) {
+            // Has paid plan in profile, treat as active
+            const planName = planCode.toUpperCase();
+            
+            // Determine allowed pages based on plan
+            let allowedPages: string[] = [];
+            switch (planCode) {
+              case 'expert':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'product-research', 'settings', 'integrations'];
+                break;
+              case 'standard':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
+                break;
+              case 'basic':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
+                break;
+              case 'beginner':
+                allowedPages = ['dashboard', 'products', 'settings', 'integrations', 'campaign-control'];
+                break;
+              default:
+                allowedPages = ['settings', 'products', 'integrations'];
+            }
+            
+            console.log('✅ useSubscriptionState - Paid plan in profile (no subscription):', {
+              planCode,
+              planName,
+              allowedPages
+            });
+            
+            setStateInfo({
+              state: 'active',
+              readonly: false,
+              daysUntilSuspension: null,
+              daysUntilArchive: null,
+              planName,
+              planCode,
+              showBanner: false,
+              allowedPages,
+            });
+            return;
+          }
+          
+          // Free plan (no subscription, no trial, no paid plan in profile)
           setStateInfo({
             state: 'active',
             readonly: false,
@@ -92,16 +138,42 @@ export const useSubscriptionState = () => {
           // If no subscription but profile has plan, use profile plan
           const planCode = (profile?.subscription_plan || 'free').toLowerCase();
           const planName = planCode.toUpperCase();
-          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
-          const isActive = profile?.subscription_status === 'active' || (isPaidPlan && !profile?.subscription_status);
+          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner', 'trial'].includes(planCode);
+          // If it's a paid plan, assume it's active even if subscription_status is null/empty
+          const isActive = profile?.subscription_status === 'active' || (isPaidPlan && (profile?.subscription_status === null || profile?.subscription_status === undefined || profile?.subscription_status === ''));
           
           console.log('🔍 useSubscriptionState - No subscription, using profile:', {
             planCode,
             planName,
             subscriptionStatus: profile?.subscription_status,
             isPaidPlan,
-            isActive
+            isActive,
+            profileData: profile
           });
+          
+          // Determine allowed pages based on plan
+          let allowedPages: string[] = [];
+          if (isActive) {
+            switch (planCode) {
+              case 'expert':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'product-research', 'settings', 'integrations'];
+                break;
+              case 'standard':
+              case 'trial':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
+                break;
+              case 'basic':
+                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
+                break;
+              case 'beginner':
+                allowedPages = ['dashboard', 'products', 'settings', 'integrations', 'campaign-control'];
+                break;
+              default:
+                allowedPages = ['settings', 'products', 'integrations'];
+            }
+          } else {
+            allowedPages = ['settings', 'products', 'integrations'];
+          }
           
           setStateInfo({
             state: 'active',
@@ -111,9 +183,7 @@ export const useSubscriptionState = () => {
             planName,
             planCode,
             showBanner: !isActive,
-            allowedPages: isActive
-              ? ['dashboard', 'campaign-control', 'meta-dashboard', 'product-research', 'products', 'settings', 'integrations', 'profit-sheet']
-              : ['settings', 'products', 'integrations'],
+            allowedPages,
           });
           return;
         }

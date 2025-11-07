@@ -213,13 +213,29 @@ export const useFeatureGate = () => {
       'basic': ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'],
       'standard': ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'],
       'expert': ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'product-research', 'settings', 'integrations'],
+      'trial': ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'], // Trial = Standard
       'free': ['dashboard', 'products', 'integrations', 'settings'],
     };
     
-    const planCode = stateInfo.planCode || 'free';
+    const planCode = (stateInfo.planCode || 'free').toLowerCase();
     const allowedFeatures = featuresByPlan[planCode] || featuresByPlan['free'];
     
-    return allowedFeatures.includes(feature);
+    const hasAccess = allowedFeatures.includes(feature);
+    
+    console.log('🔍 checkFeature:', {
+      feature,
+      planCode,
+      allowedFeatures,
+      hasAccess,
+      stateInfo: {
+        planCode: stateInfo.planCode,
+        planName: stateInfo.planName,
+        state: stateInfo.state,
+        readonly: stateInfo.readonly
+      }
+    });
+    
+    return hasAccess;
   };
 
   return {
