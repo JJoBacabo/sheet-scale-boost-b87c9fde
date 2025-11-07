@@ -57,8 +57,10 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
   const filteredTickets = sortedTickets.filter(ticket => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const displayName = getDisplayName(ticket.profiles?.full_name, ticket.profiles?.email);
     return (
-      ticket.profiles?.full_name?.toLowerCase().includes(query) ||
+      displayName.toLowerCase().includes(query) ||
+      ticket.profiles?.email?.toLowerCase().includes(query) ||
       ticket.category?.toLowerCase().includes(query) ||
       ticket.id.toLowerCase().includes(query)
     );

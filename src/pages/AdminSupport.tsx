@@ -12,16 +12,19 @@ import { AuditLogs } from '@/components/admin/AuditLogs';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const AdminSupport = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const isPortuguese = language === 'pt';
+  const { toast } = useToast();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState<'dashboard' | 'tickets' | 'users' | 'admins' | 'logs'>('dashboard');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   const {
     tickets,
@@ -34,6 +37,7 @@ const AdminSupport = () => {
     markAsResolved,
     reopenTicket,
     updateNotes,
+    updatePriority,
     deleteTicket
   } = useAdminSupport(currentUser?.id);
 
@@ -50,13 +54,15 @@ const AdminSupport = () => {
         // Check if anything meaningful changed to avoid unnecessary updates
         const statusChanged = updatedTicket.status !== selectedTicket.status;
         const adminIdChanged = updatedTicket.admin_id !== selectedTicket.admin_id;
+        const priorityChanged = updatedTicket.priority !== selectedTicket.priority;
+        const notesChanged = updatedTicket.notes !== selectedTicket.notes;
         const messagesChanged = updatedTicket.messages?.length !== selectedTicket.messages?.length ||
           JSON.stringify(updatedTicket.messages) !== JSON.stringify(selectedTicket.messages);
         const profileChanged = 
           updatedTicket.profiles?.full_name !== selectedTicket.profiles?.full_name ||
           updatedTicket.profiles?.email !== selectedTicket.profiles?.email;
         
-        if (statusChanged || adminIdChanged || messagesChanged || profileChanged) {
+        if (statusChanged || adminIdChanged || messagesChanged || profileChanged || priorityChanged || notesChanged) {
           console.log('🔄 Updating selected ticket with fresh data');
           setSelectedTicket(updatedTicket);
         }
@@ -95,18 +101,45 @@ const AdminSupport = () => {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (selectedTicket && currentUser) {
+    if (!selectedTicket || !currentUser || sendingMessage) return;
+    
+    if (!message.trim()) {
+      toast({
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: isPortuguese ? 'A mensagem não pode estar vazia' : 'Message cannot be empty',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setSendingMessage(true);
       console.log('📤 Admin sending message:', message);
       
       // Assign ticket first if not already assigned (before sending message)
       if (!selectedTicket.admin_id) {
         await handleClaimTicket();
-        // Wait a bit for the claim to complete
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // Wait for the claim to complete and update
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Refresh selected ticket after claim
+        const updatedTicket = tickets.find(t => t.id === selectedTicket.id);
+        if (updatedTicket) {
+          setSelectedTicket(updatedTicket);
+        }
       }
       
       // Now send the message
-      await sendMessage(selectedTicket.id, message, currentUser.id);
+      const updatedTicket = await sendMessage(selectedTicket.id, message, currentUser.id);
+      
+      // Update selected ticket if message was sent successfully
+      if (updatedTicket) {
+        setSelectedTicket(updatedTicket);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -166,39 +199,34 @@ const AdminSupport = () => {
   const handleUpdatePriority = async (priority: 'low' | 'medium' | 'high' | 'urgent') => {
     if (!selectedTicket) return;
     
+    // Save original ticket for potential revert
+    const originalTicket = selectedTicket;
+    
     try {
-      // Verify ticket exists
-      const { data: ticketData, error: fetchError } = await supabase
-        .from('support_chats')
-        .select('*')
-        .eq('id', selectedTicket.id)
-        .single();
-
-      if (fetchError || !ticketData) {
-        throw new Error('Ticket not found');
-      }
-
-      // Validate priority
-      const validPriorities = ['low', 'medium', 'high', 'urgent'];
-      if (!validPriorities.includes(priority)) {
-        throw new Error('Invalid priority value');
-      }
-
-      const { error } = await supabase
-        .from('support_chats')
-        .update({ 
-          priority,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedTicket.id);
-
-      if (error) throw error;
-
-      // Update local state
+      // Update optimistically in UI for immediate feedback
       setSelectedTicket({ ...selectedTicket, priority });
+
+      // Update through the hook (which updates both DB and local state)
+      const updatedTicket = await updatePriority(selectedTicket.id, priority);
+      
+      // Update selected ticket with the returned updated ticket
+      if (updatedTicket) {
+        setSelectedTicket(updatedTicket);
+        toast({
+          title: isPortuguese ? 'Prioridade atualizada' : 'Priority updated',
+          description: isPortuguese 
+            ? `Prioridade alterada para ${priority === 'low' ? 'Baixa' : priority === 'medium' ? 'Média' : priority === 'high' ? 'Alta' : 'Urgente'}`
+            : `Priority changed to ${priority}`,
+          variant: 'default'
+        });
+      } else {
+        // Revert on error
+        setSelectedTicket(originalTicket);
+      }
     } catch (error: any) {
       console.error('Error updating priority:', error);
-      // Optionally show toast error
+      // Revert on error
+      setSelectedTicket(originalTicket);
     }
   };
 

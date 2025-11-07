@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +26,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'waiting' | 'resolved' | 'mine'>('all');
   const { toast } = useToast();
+  
+  // Cache for profiles to avoid repeated fetches - use useRef for mutable cache
+  const profileCacheRef = useRef<Map<string, { user_id: string; full_name?: string | null; email?: string | null }>>(new Map());
 
   useEffect(() => {
     fetchTickets();
@@ -47,8 +50,14 @@ export const useAdminSupport = (currentAdminId?: string) => {
     return ['active', 'waiting', 'resolved'].includes(normalized);
   };
 
-  // Helper function to fetch profile with email
+  // Helper function to fetch profile with email (with caching)
   const fetchProfileWithEmail = async (userId: string) => {
+      // Check cache first
+      const cached = profileCacheRef.current.get(userId);
+      if (cached) {
+        return cached;
+      }
+
     try {
       // Fetch profile (may not exist, that's ok)
       const { data: profile } = await supabase
@@ -78,13 +87,20 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       // Return profile with email, or just email if no profile exists
+      let result = null;
       if (profile) {
-        return { ...profile, email };
+        result = { ...profile, email };
       } else if (email) {
         // If no profile but we have email, return a minimal profile object
-        return { user_id: userId, full_name: null, email };
+        result = { user_id: userId, full_name: null, email };
       }
-      return null;
+      
+      // Cache the result
+      if (result) {
+        profileCacheRef.current.set(userId, result);
+      }
+      
+      return result;
     } catch (error) {
       // Profile might not exist, try to get at least the email
       try {
@@ -99,7 +115,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
           if (!usersError && usersData?.users) {
             const user = usersData.users.find((u: any) => u.id === userId);
             if (user?.email) {
-              return { user_id: userId, full_name: null, email: user.email };
+              const result = { user_id: userId, full_name: null, email: user.email };
+              profileCacheRef.current.set(userId, result);
+              return result;
             }
           }
         }
@@ -191,15 +209,24 @@ export const useAdminSupport = (currentAdminId?: string) => {
         let messages = [];
         if (Array.isArray(chat.messages)) {
           messages = chat.messages.filter(msg => 
-            msg && typeof msg === 'object' && msg.id && msg.content
+            msg && typeof msg === 'object' && msg.id && (msg.content || msg.message)
           );
+        }
+
+        const profile = profiles.find(p => p.user_id === chat.user_id);
+        
+        // Cache the profile for future use
+        if (profile) {
+          profileCacheRef.current.set(chat.user_id, profile);
         }
 
         return {
           ...chat,
           status: validStatus as 'active' | 'waiting' | 'resolved',
           messages,
-          profiles: profiles.find(p => p.user_id === chat.user_id)
+          priority: chat.priority || undefined,
+          notes: chat.notes || undefined,
+          profiles: profile
         };
       });
 
@@ -250,7 +277,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
                 let messages = [];
                 if (Array.isArray(updatedTicket.messages)) {
                   messages = updatedTicket.messages.filter((msg: any) => 
-                    msg && typeof msg === 'object' && msg.id && msg.content
+                    msg && typeof msg === 'object' && msg.id && (msg.content || msg.message)
                   );
                 }
                 
@@ -258,6 +285,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
                   ...updatedTicket,
                   status: validStatus as 'active' | 'waiting' | 'resolved',
                   messages,
+                  priority: updatedTicket.priority || undefined,
+                  notes: updatedTicket.notes || undefined,
                   profiles: profile || undefined
                 };
                 
@@ -268,13 +297,22 @@ export const useAdminSupport = (currentAdminId?: string) => {
                     const newTickets = [...prev];
                     newTickets[index] = ticketWithProfile;
                     return newTickets;
+                  } else {
+                    // Ticket might have been deleted and recreated, add it
+                    return [ticketWithProfile, ...prev];
                   }
-                  return prev;
                 });
               }
             }
           } else if (payload.eventType === 'DELETE') {
-            setTickets(prev => prev.filter(t => t.id !== payload.old.id));
+            const deletedId = payload.old?.id;
+            if (deletedId) {
+              setTickets(prev => prev.filter(t => t.id !== deletedId));
+              toast({
+                title: 'Ticket eliminado',
+                description: 'O ticket foi eliminado'
+              });
+            }
           }
         }
       )
@@ -320,16 +358,30 @@ export const useAdminSupport = (currentAdminId?: string) => {
         ? ticketData.messages.filter((msg: any) => msg && typeof msg === 'object' && msg.id && msg.content)
         : [];
 
-      // Check if message already exists (avoid duplicates)
-      const messageExists = existingMessages.some((msg: any) => 
-        msg.content === message.trim() && 
-        msg.type === 'admin' &&
-        new Date(msg.timestamp).getTime() > Date.now() - 5000 // Within last 5 seconds
-      );
+      // Check if message already exists (avoid duplicates) - improved check
+      const trimmedMessage = message.trim();
+      const now = Date.now();
+      const messageExists = existingMessages.some((msg: any) => {
+        if (msg.type !== 'admin') return false;
+        if (msg.content !== trimmedMessage) return false;
+        
+        try {
+          const msgTime = new Date(msg.timestamp).getTime();
+          // Check if message was sent in the last 10 seconds
+          return !isNaN(msgTime) && (now - msgTime) < 10000;
+        } catch {
+          return false;
+        }
+      });
 
       if (messageExists) {
         console.warn('Message already exists, skipping duplicate');
-        return;
+        toast({
+          title: 'Mensagem duplicada',
+          description: 'Esta mensagem já foi enviada recentemente',
+          variant: 'default'
+        });
+        return null;
       }
 
       const updatedMessages = [...existingMessages, newMessage];
@@ -396,6 +448,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
         title: 'Mensagem enviada',
         description: 'A sua mensagem foi enviada com sucesso'
       });
+      
+      // Return the updated ticket
+      return ticketWithProfile;
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
@@ -403,6 +458,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         description: error.message || 'Falha ao enviar mensagem',
         variant: 'destructive'
       });
+      return null;
     }
   };
 
@@ -458,12 +514,15 @@ export const useAdminSupport = (currentAdminId?: string) => {
           )
         : [];
 
-      // Check if notification message already exists
-      const notificationExists = existingMessages.some((msg: any) => 
-        msg.type === 'bot' && 
-        msg.content?.includes(adminDisplayName) &&
-        msg.content?.includes('ajudar')
-      );
+      // Check if notification message already exists - improved check
+      const notificationExists = existingMessages.some((msg: any) => {
+        if (msg.type !== 'bot') return false;
+        const content = msg.content || '';
+        // Check for various forms of the notification
+        return content.includes('ajudar') || 
+               content.includes('tentando ajudar') ||
+               content.includes(adminDisplayName);
+      });
 
       let updatedMessages = existingMessages;
       if (!notificationExists) {
@@ -692,6 +751,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         description: error.message || 'Failed to reopen ticket',
         variant: 'destructive'
       });
+      return null;
     }
   };
 
@@ -708,15 +768,38 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Ticket not found');
       }
 
-      const { error } = await supabase
+      const { data: updatedTicket, error } = await supabase
         .from('support_chats')
         .update({
           notes: notes || null,
           updated_at: new Date().toISOString()
         })
-        .eq('id', ticketId);
+        .eq('id', ticketId)
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Update local state immediately
+      if (updatedTicket) {
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = {
+              ...newTickets[index],
+              notes: updatedTicket.notes || undefined
+            };
+            return newTickets;
+          }
+          return prev;
+        });
+      }
+
+      toast({
+        title: 'Notas atualizadas',
+        description: 'As notas foram atualizadas com sucesso'
+      });
     } catch (error: any) {
       console.error('Error updating notes:', error);
       toast({
@@ -724,6 +807,80 @@ export const useAdminSupport = (currentAdminId?: string) => {
         description: error.message || 'Failed to update notes',
         variant: 'destructive'
       });
+    }
+  };
+
+  const updatePriority = async (ticketId: string, priority: 'low' | 'medium' | 'high' | 'urgent') => {
+    try {
+      // Validate priority
+      const validPriorities = ['low', 'medium', 'high', 'urgent'];
+      if (!validPriorities.includes(priority)) {
+        throw new Error('Invalid priority value');
+      }
+
+      // Verify ticket exists
+      const { data: ticketData, error: fetchError } = await supabase
+        .from('support_chats')
+        .select('*')
+        .eq('id', ticketId)
+        .single();
+
+      if (fetchError || !ticketData) {
+        throw new Error('Ticket not found');
+      }
+
+      const { data: updatedTicket, error } = await supabase
+        .from('support_chats')
+        .update({ 
+          priority,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Update local state immediately and get the updated ticket
+      let updatedTicketWithProfile: SupportChat | null = null;
+      if (updatedTicket) {
+        // Find the current ticket in state to preserve profile and other data
+        const currentTicket = tickets.find(t => t.id === ticketId);
+        
+        setTickets(prev => {
+          const index = prev.findIndex(t => t.id === ticketId);
+          if (index !== -1) {
+            const newTickets = [...prev];
+            newTickets[index] = {
+              ...newTickets[index],
+              priority: updatedTicket.priority
+            };
+            
+            // Store the updated ticket for return
+            updatedTicketWithProfile = newTickets[index];
+            return newTickets;
+          }
+          return prev;
+        });
+        
+        // If we found the ticket, return it with updated priority
+        if (currentTicket) {
+          updatedTicketWithProfile = {
+            ...currentTicket,
+            priority: updatedTicket.priority
+          };
+        }
+      }
+
+      return updatedTicketWithProfile;
+    } catch (error: any) {
+      console.error('Error updating priority:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update priority',
+        variant: 'destructive'
+      });
+      return null;
     }
   };
 
@@ -746,6 +903,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
         .eq('id', ticketId);
 
       if (error) throw error;
+
+      // Update local state immediately
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
 
       toast({
         title: 'Ticket deleted',
@@ -797,6 +957,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
     markAsResolved,
     reopenTicket,
     updateNotes,
+    updatePriority,
     deleteTicket
   };
 };

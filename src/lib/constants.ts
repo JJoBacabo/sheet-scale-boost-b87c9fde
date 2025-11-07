@@ -30,7 +30,7 @@ export const SUBSCRIPTION_LIMITS = {
   TRIAL: {
     stores: 2,
     campaigns: 40,
-    features: ['basic_analytics', 'product_sync', 'campaign_management', 'ai_cotacao'],
+    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'], // Same as Standard
     duration: 10, // days
   },
   BEGINNER: {
@@ -50,7 +50,7 @@ export const SUBSCRIPTION_LIMITS = {
   },
   EXPERT: {
     stores: 4,
-    campaigns: 0, // 0 = unlimited
+    campaigns: 0, // 0 = unlimited (special handling needed)
     features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao', 'product_research'],
   },
 } as const;

@@ -92,11 +92,13 @@ export const ChatArea = ({
     return () => clearTimeout(timer);
   }, [ticket?.messages, ticket?.messages?.length]);
 
-  const handleSend = () => {
-    if (message.trim()) {
-      onSendMessage(message);
-      setMessage('');
-    }
+  const handleSend = async () => {
+    if (!message.trim()) return;
+    
+    const messageToSend = message.trim();
+    setMessage(''); // Clear input immediately for better UX
+    
+    await onSendMessage(messageToSend);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -411,7 +413,7 @@ export const ChatArea = ({
             />
             <Button 
               onClick={handleSend}
-              disabled={!message.trim()}
+              disabled={!message.trim() || ticket.status?.toLowerCase().trim() === 'resolved'}
               className="shrink-0 h-[60px] w-[60px]"
             >
               <Send className="h-5 w-5" />

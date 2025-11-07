@@ -33,14 +33,32 @@ export const useSubscriptionState = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { data: subscription } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+        // Check both subscription and profile
+        const [subscriptionResult, profileResult] = await Promise.all([
+          supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle(),
+          supabase
+            .from('profiles')
+            .select('subscription_plan, subscription_status, trial_ends_at')
+            .eq('user_id', user.id)
+            .single()
+        ]);
 
-        if (!subscription) {
-          // Free plan
+        const subscription = subscriptionResult.data;
+        const profile = profileResult.data;
+
+        // Check if trial is active
+        const isTrialActive = 
+          profile?.subscription_plan === 'trial' &&
+          profile?.subscription_status === 'active' &&
+          profile?.trial_ends_at &&
+          new Date(profile.trial_ends_at) > new Date();
+
+        if (!subscription && !isTrialActive) {
+          // Free plan (no subscription and no active trial)
           setStateInfo({
             state: 'active',
             readonly: false,
@@ -50,6 +68,42 @@ export const useSubscriptionState = () => {
             planCode: 'free',
             showBanner: false,
             allowedPages: ['settings', 'products', 'integrations'],
+          });
+          return;
+        }
+
+        // If trial is active but no subscription, use trial plan info
+        if (isTrialActive && !subscription) {
+          setStateInfo({
+            state: 'active',
+            readonly: false,
+            daysUntilSuspension: null,
+            daysUntilArchive: null,
+            planName: 'TRIAL',
+            planCode: 'trial',
+            showBanner: false,
+            allowedPages: ['dashboard', 'campaign-control', 'meta-dashboard', 'products', 'settings', 'integrations', 'profit-sheet'],
+          });
+          return;
+        }
+
+        // Use subscription data if available
+        if (!subscription) {
+          // If no subscription but profile has plan, use profile plan
+          const planCode = (profile?.subscription_plan || 'free').toLowerCase();
+          const planName = planCode.toUpperCase();
+          
+          setStateInfo({
+            state: 'active',
+            readonly: profile?.subscription_status !== 'active',
+            daysUntilSuspension: null,
+            daysUntilArchive: null,
+            planName,
+            planCode,
+            showBanner: profile?.subscription_status !== 'active',
+            allowedPages: profile?.subscription_status === 'active' 
+              ? ['dashboard', 'campaign-control', 'meta-dashboard', 'product-research', 'products', 'settings', 'integrations', 'profit-sheet']
+              : ['settings', 'products', 'integrations'],
           });
           return;
         }

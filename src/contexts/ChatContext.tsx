@@ -67,22 +67,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
 
           if (Array.isArray(newMessages)) {
-            console.log('📨 Realtime update received');
-            console.log('Current messages count:', messages.length);
-            console.log('New messages count:', newMessages.length);
+            // Validate messages structure
+            const validMessages = newMessages.filter((msg: any) => 
+              msg && typeof msg === 'object' && (msg.content || msg.message)
+            );
             
-            // Update if different count or different last message
-            if (newMessages.length !== messages.length) {
-              console.log('✅ Updating messages - count changed');
-              setMessages(newMessages);
-            } else if (newMessages.length > 0 && messages.length > 0) {
-              const lastNew = newMessages[newMessages.length - 1];
-              const lastCurrent = messages[messages.length - 1];
-              
-              if (lastNew.content !== lastCurrent.content || lastNew.type !== lastCurrent.type) {
-                console.log('✅ Updating messages - last message changed');
-                setMessages(newMessages);
-              }
+            // Always update if messages are different (using JSON comparison for deep equality)
+            const currentMessagesStr = JSON.stringify(messages);
+            const newMessagesStr = JSON.stringify(validMessages);
+            
+            if (currentMessagesStr !== newMessagesStr) {
+              console.log('📨 Realtime update received - updating messages');
+              setMessages(validMessages);
             }
           }
 
@@ -113,7 +109,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId, adminMode, messages.length]);
+  }, [chatId, adminMode, status]); // Remove messages.length from dependencies to avoid re-subscriptions
 
   // Update chat when language changes - reset completely
   useEffect(() => {
