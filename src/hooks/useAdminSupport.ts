@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface SupportChat {
   id: string;
@@ -26,6 +27,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'waiting' | 'resolved' | 'mine'>('all');
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isPortuguese = language === 'pt';
   
   // Cache for profiles to avoid repeated fetches - use useRef for mutable cache
   const profileCacheRef = useRef<Map<string, { user_id: string; full_name?: string | null; email?: string | null }>>(new Map());
@@ -382,8 +385,10 @@ export const useAdminSupport = (currentAdminId?: string) => {
       if (messageExists) {
         console.warn('Message already exists, skipping duplicate');
         toast({
-          title: 'Mensagem duplicada',
-          description: 'Esta mensagem já foi enviada recentemente',
+          title: isPortuguese ? 'Mensagem duplicada' : 'Duplicate message',
+          description: isPortuguese 
+            ? 'Esta mensagem já foi enviada recentemente' 
+            : 'This message was already sent recently',
           variant: 'default'
         });
         return null;
@@ -450,8 +455,10 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Mensagem enviada',
-        description: 'A sua mensagem foi enviada com sucesso'
+        title: isPortuguese ? 'Mensagem enviada' : 'Message sent',
+        description: isPortuguese 
+          ? 'A sua mensagem foi enviada com sucesso' 
+          : 'Your message has been sent successfully'
       });
       
       // Find and return the updated ticket from state
@@ -460,8 +467,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Falha ao enviar mensagem',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao enviar mensagem' : 'Failed to send message'),
         variant: 'destructive'
       });
       return null;
@@ -592,14 +599,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket atribuído',
-        description: `Ticket atribuído a ${adminDisplayName}`
+        title: isPortuguese ? 'Ticket atribuído' : 'Ticket assigned',
+        description: isPortuguese 
+          ? `Ticket atribuído a ${adminDisplayName}` 
+          : `Ticket assigned to ${adminDisplayName}`
       });
     } catch (error: any) {
       console.error('Error assigning ticket:', error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Falha ao atribuir ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao atribuir ticket' : 'Failed to assign ticket'),
         variant: 'destructive'
       });
     }
@@ -668,15 +677,17 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket resolved',
-        description: 'Ticket marked as resolved'
+        title: isPortuguese ? 'Ticket resolvido' : 'Ticket resolved',
+        description: isPortuguese 
+          ? 'Ticket marcado como resolvido' 
+          : 'Ticket marked as resolved'
       });
       return null;
     } catch (error: any) {
       console.error('Error resolving ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to resolve ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao resolver ticket' : 'Failed to resolve ticket'),
         variant: 'destructive'
       });
       return null;
@@ -746,15 +757,17 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket reopened',
-        description: 'Ticket has been reopened'
+        title: isPortuguese ? 'Ticket reaberto' : 'Ticket reopened',
+        description: isPortuguese 
+          ? 'Ticket foi reaberto' 
+          : 'Ticket has been reopened'
       });
       return null;
     } catch (error: any) {
       console.error('Error reopening ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to reopen ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao reabrir ticket' : 'Failed to reopen ticket'),
         variant: 'destructive'
       });
       return null;
@@ -803,14 +816,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Notas atualizadas',
-        description: 'As notas foram atualizadas com sucesso'
+        title: isPortuguese ? 'Notas atualizadas' : 'Notes updated',
+        description: isPortuguese 
+          ? 'As notas foram atualizadas com sucesso' 
+          : 'Notes have been updated successfully'
       });
     } catch (error: any) {
       console.error('Error updating notes:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update notes',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao atualizar notas' : 'Failed to update notes'),
         variant: 'destructive'
       });
     }
@@ -1004,14 +1019,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
       setTickets(prev => prev.filter(t => t.id !== ticketId));
 
       toast({
-        title: 'Ticket deleted',
-        description: 'Ticket has been deleted'
+        title: isPortuguese ? 'Ticket eliminado' : 'Ticket deleted',
+        description: isPortuguese 
+          ? 'Ticket foi eliminado' 
+          : 'Ticket has been deleted'
       });
     } catch (error: any) {
       console.error('Error deleting ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao eliminar ticket' : 'Failed to delete ticket'),
         variant: 'destructive'
       });
     }
