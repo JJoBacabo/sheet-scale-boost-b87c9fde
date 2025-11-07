@@ -133,62 +133,6 @@ export const useSubscriptionState = () => {
           return;
         }
 
-        // Use subscription data if available
-        if (!subscription) {
-          // If no subscription but profile has plan, use profile plan
-          const planCode = (profile?.subscription_plan || 'free').toLowerCase();
-          const planName = planCode.toUpperCase();
-          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
-          
-          // If it's a paid plan, always treat as active (don't check subscription_status)
-          // This ensures all paid plans work even if subscription_status is null/empty/inactive
-          const isActive = isPaidPlan || profile?.subscription_status === 'active';
-          
-          console.log('🔍 useSubscriptionState - No subscription, using profile:', {
-            planCode,
-            planName,
-            subscriptionStatus: profile?.subscription_status,
-            isPaidPlan,
-            isActive,
-            profileData: profile
-          });
-          
-          // Determine allowed pages based on plan
-          let allowedPages: string[] = [];
-          if (isActive && isPaidPlan) {
-            switch (planCode) {
-              case 'expert':
-                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'product-research', 'settings', 'integrations'];
-                break;
-              case 'standard':
-                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
-                break;
-              case 'basic':
-                allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
-                break;
-              case 'beginner':
-                allowedPages = ['dashboard', 'products', 'settings', 'integrations', 'campaign-control'];
-                break;
-              default:
-                allowedPages = ['settings', 'products', 'integrations'];
-            }
-          } else {
-            allowedPages = ['settings', 'products', 'integrations'];
-          }
-          
-          setStateInfo({
-            state: 'active',
-            readonly: !isActive,
-            daysUntilSuspension: null,
-            daysUntilArchive: null,
-            planName,
-            planCode,
-            showBanner: !isActive,
-            allowedPages,
-          });
-          return;
-        }
-
         const now = new Date();
         const state = subscription.state as SubscriptionState;
         let daysUntilSuspension = null;

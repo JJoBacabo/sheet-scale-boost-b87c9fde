@@ -56,7 +56,7 @@ export const useSubscriptionLimits = () => {
           .from('profiles')
           .select('subscription_plan, subscription_status, trial_ends_at')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (!profile) {
           // No profile = FREE plan
