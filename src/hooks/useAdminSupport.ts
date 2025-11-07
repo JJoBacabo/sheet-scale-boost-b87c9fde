@@ -214,7 +214,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         // Ensure messages is always an array and validate structure
         let messages = [];
         if (Array.isArray(chat.messages)) {
-          messages = chat.messages.filter(msg => 
+          messages = chat.messages.filter((msg: any) => 
             msg && typeof msg === 'object' && msg.id && (msg.content || msg.message)
           );
         }
@@ -230,7 +230,6 @@ export const useAdminSupport = (currentAdminId?: string) => {
           ...chat,
           status: validStatus as 'active' | 'waiting' | 'resolved',
           messages,
-          priority: chat.priority || undefined,
           notes: chat.notes || undefined,
           profiles: profile
         };
@@ -408,7 +407,7 @@ export const useAdminSupport = (currentAdminId?: string) => {
         updateData.admin_id = adminId;
       }
 
-      const { data: updatedTicket, error } = await supabase
+      const { data: updatedChat, error } = await supabase
         .from('support_chats')
         .update(updateData)
         .eq('id', ticketId)
@@ -418,21 +417,21 @@ export const useAdminSupport = (currentAdminId?: string) => {
       if (error) throw error;
 
       // Update local state immediately
-      if (updatedTicket) {
+      if (updatedChat) {
         // Fetch profile with email for updated ticket
-        const profile = await fetchProfileWithEmail(updatedTicket.user_id);
+        const profile = await fetchProfileWithEmail(updatedChat.user_id);
 
-        const normalizedStatus = normalizeStatus(updatedTicket.status);
+        const normalizedStatus = normalizeStatus(updatedChat.status);
         const validStatus = isValidStatus(normalizedStatus) ? normalizedStatus : 'waiting';
         
-        const validatedMessages = Array.isArray(updatedTicket.messages) 
-          ? updatedTicket.messages.filter((msg: any) => 
+        const validatedMessages = Array.isArray(updatedChat.messages) 
+          ? updatedChat.messages.filter((msg: any) => 
               msg && typeof msg === 'object' && msg.id && msg.content
             )
           : [];
 
         const ticketWithProfile: SupportChat = {
-          ...updatedTicket,
+          ...updatedChat,
           status: validStatus as 'active' | 'waiting' | 'resolved',
           messages: validatedMessages,
           profiles: profile || undefined
@@ -455,8 +454,9 @@ export const useAdminSupport = (currentAdminId?: string) => {
         description: 'A sua mensagem foi enviada com sucesso'
       });
       
-      // Return the updated ticket
-      return ticketWithProfile;
+      // Find and return the updated ticket from state
+      const updatedTicket = tickets.find(t => t.id === ticketId);
+      return updatedTicket || null;
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
@@ -861,28 +861,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
         // Find the current ticket in state to preserve profile and other data
         const currentTicket = tickets.find(t => t.id === ticketId);
         
-        setTickets(prev => {
-          const index = prev.findIndex(t => t.id === ticketId);
-          if (index !== -1) {
-            const newTickets = [...prev];
-            newTickets[index] = {
-              ...newTickets[index],
-              priority: updatedTicket.priority
-            };
-            
-            // Store the updated ticket for return
-            updatedTicketWithProfile = newTickets[index];
-            return newTickets;
-          }
-          return prev;
-        });
-        
-        // If we found the ticket, return it with updated priority
         if (currentTicket) {
-          updatedTicketWithProfile = {
-            ...currentTicket,
-            priority: updatedTicket.priority
-          };
+          updatedTicketWithProfile = currentTicket;
         }
       }
 

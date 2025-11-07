@@ -25,32 +25,32 @@ export const SUBSCRIPTION_LIMITS = {
   FREE: {
     stores: 0,
     campaigns: 0,
-    features: [],
+    features: [] as string[],
   },
   TRIAL: {
     stores: 2,
     campaigns: 40,
-    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'], // Same as Standard
+    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'] as string[], // Same as Standard
     duration: 10, // days
   },
   BEGINNER: {
     stores: 1,
     campaigns: 0,
-    features: ['daily_roas'],
+    features: ['daily_roas'] as string[],
   },
   BASIC: {
     stores: 1,
     campaigns: 15,
-    features: ['daily_roas', 'profit_sheet'],
+    features: ['daily_roas', 'profit_sheet'] as string[],
   },
   STANDARD: {
     stores: 2,
     campaigns: 40,
-    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'],
+    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'] as string[],
   },
   EXPERT: {
     stores: 4,
     campaigns: 0, // 0 = unlimited (special handling needed)
-    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao', 'product_research'],
+    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao', 'product_research'] as string[],
   },
-} as const;
+};
