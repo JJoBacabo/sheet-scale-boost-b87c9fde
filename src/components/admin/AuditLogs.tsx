@@ -868,64 +868,31 @@ export const AuditLogs = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-1">
                         <Badge variant="outline" className={getEventColor(log.event_type, critical, suspicious)}>
-                      {getEventLabel(log.event_type)}
-                    </Badge>
+                          {getEventLabel(log.event_type)}
+                        </Badge>
                         {critical && <AlertCircle className="h-3 w-3 text-red-500" />}
                         {suspicious && !critical && <AlertTriangle className="h-3 w-3 text-orange-500" />}
                       </div>
-                      {/* SEMPRE MOSTRAR QUEM CRIOU - PRIORIDADE ABSOLUTA */}
+                      {/* Informação simplificada - apenas quem criou */}
                       {(() => {
-                        // Prioridade 1: user_id do log
-                        // Prioridade 2: created_by do event_data
-                        // Prioridade 3: user_id do support_chat (buscar se necessário)
                         const userId = log.user_id || (log.event_data as any)?.created_by || null;
-                        
                         if (userId) {
-                          const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 12)}...`;
+                          const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 8)}...`;
                           return (
-                            <div className="flex items-center gap-2 flex-wrap bg-blue-500/10 p-2 rounded border border-blue-500/20">
-                              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
-                                {isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}
-                              </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">{isPortuguese ? 'Por:' : 'By:'}</span>
                               <button
                                 onClick={() => navigate(`/admin/users?userId=${userId}`)}
-                                className="text-sm font-bold text-blue-700 dark:text-blue-300 hover:underline"
-                                title={`User ID completo: ${userId}`}
+                                className="text-xs text-primary hover:underline"
+                                title={userId}
                               >
                                 {displayName}
                               </button>
-                              {!log.user?.email && !log.user?.full_name && (
-                                <Badge variant="outline" className="text-xs bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/40">
-                                  <div className="font-semibold">{isPortuguese ? 'Sem perfil - ID:' : 'No profile - ID:'} {userId.substring(0, 8)}...</div>
-                                </Badge>
-                              )}
-                              <code className="text-xs text-blue-600 dark:text-blue-400 opacity-80 font-mono" title={userId}>
-                                ({userId.substring(0, 16)}...)
-                              </code>
                             </div>
                           );
                         }
-                        
-                        // Se não tem user_id, mostrar aviso bem visível
-                        return (
-                          <div className="flex items-center gap-2 flex-wrap bg-red-500/20 p-2 rounded border-2 border-red-500/50">
-                            <span className="text-xs font-bold text-red-600 dark:text-red-400">
-                              {isPortuguese ? '⚠️ AVISO: SEM USER_ID' : '⚠️ WARNING: NO USER_ID'}
-                            </span>
-                            <Badge variant="outline" className="text-xs bg-red-500/30 text-red-700 dark:text-red-300 border-red-500/60">
-                              <div className="font-bold">{isPortuguese ? 'Log sem identificação de usuário!' : 'Log without user identification!'}</div>
-                            </Badge>
-                          </div>
-                        );
+                        return null;
                       })()}
-                      {log.comment && (
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="h-3 w-3 text-blue-500" />
-                          <Badge variant="outline" className="bg-blue-500/10 text-blue-500">
-                            <div>{isPortuguese ? 'Comentário' : 'Comment'}</div>
-                          </Badge>
-                        </div>
-                      )}
                   </div>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
@@ -936,174 +903,176 @@ export const AuditLogs = () => {
                   </span>
                 </div>
                 
+                  {/* Indicador de comentário (pequeno) */}
+                  {log.comment && (
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <MessageSquare className="h-3 w-3" />
+                      <span>{isPortuguese ? 'Tem comentário' : 'Has comment'}</span>
+                    </div>
+                  )}
+                
+                  {/* Detalhes completos em um único lugar */}
+                  {log.event_data && Object.keys(log.event_data).length > 0 && (
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-primary hover:underline font-medium">
+                        {isPortuguese ? 'Ver detalhes' : 'View details'}
+                      </summary>
+                      <div className="mt-2 space-y-2 p-3 bg-muted/50 rounded border">
+                        {/* Mudança de estado */}
                 {log.old_state && log.new_state && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Badge variant="outline" className="bg-red-500/10 text-red-500">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-xs">{isPortuguese ? 'Mudança:' : 'Change:'}</span>
+                            <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
                       {log.old_state}
                     </Badge>
                     <span>→</span>
-                    <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
                       {log.new_state}
                     </Badge>
                   </div>
                 )}
 
-                  {log.comment && (
-                    <div className="text-sm p-2 bg-blue-500/10 rounded border border-blue-500/20">
-                      <p className="font-semibold text-blue-600 dark:text-blue-400 mb-1">
-                        {isPortuguese ? 'Comentário:' : 'Comment:'}
-                      </p>
-                      <p className="text-blue-700 dark:text-blue-300">{log.comment}</p>
-                    </div>
-                  )}
-
-                  {/* Show ticket info for ticket events */}
-                  {(log.event_type.startsWith('ticket_') && log.event_data?.ticket_id) && (
-                    <div className="text-sm p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                      <p className="font-semibold text-cyan-600 dark:text-cyan-400 mb-2 flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        {isPortuguese ? 'Informações do Ticket' : 'Ticket Information'}
-                      </p>
-                      <div className="space-y-1.5 text-cyan-700 dark:text-cyan-300">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium min-w-[100px]">{isPortuguese ? 'Ticket ID:' : 'Ticket ID:'}</span>
-                          <code className="text-xs bg-cyan-900/20 px-2 py-0.5 rounded">
-                            {log.event_data.ticket_id.substring(0, 8)}...
-                          </code>
-                        </div>
-                        {/* SEMPRE MOSTRAR QUEM CRIOU - PRIORIDADE ABSOLUTA */}
-                        {(() => {
-                          const userId = log.user_id || (log.event_data as any)?.created_by || null;
-                          
-                          if (userId) {
-                            const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 12)}...`;
-                            return (
-                              <div className="flex items-start gap-2 flex-wrap bg-cyan-500/20 p-2 rounded border border-cyan-500/40">
-                                <span className="font-bold text-cyan-700 dark:text-cyan-300 min-w-[100px]">{isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}</span>
-                                <div className="flex items-center gap-2 flex-wrap flex-1">
-                                  <button
-                                    onClick={() => navigate(`/admin/users?userId=${userId}`)}
-                                    className="font-bold text-lg text-cyan-800 dark:text-cyan-200 hover:underline"
-                                    title={`User ID completo: ${userId}`}
-                                  >
-                                    {displayName}
-                                  </button>
-                                  {!log.user?.email && !log.user?.full_name && (
-                                    <Badge variant="outline" className="text-xs bg-yellow-500/30 text-yellow-800 dark:text-yellow-300 border-yellow-500/60">
-                                      <div className="font-bold">{isPortuguese ? 'Sem perfil' : 'No profile'}</div>
-                                    </Badge>
-                                  )}
-                                  <code className="text-xs text-cyan-700 dark:text-cyan-300 opacity-90 font-mono bg-cyan-900/20 px-2 py-1 rounded" title={userId}>
-                                    ID: {userId.substring(0, 20)}...
-                                  </code>
+                        {/* Informações do ticket */}
+                        {(log.event_type.startsWith('ticket_') && log.event_data?.ticket_id) && (
+                          <div className="space-y-1.5">
+                            <p className="font-semibold text-sm mb-2">{isPortuguese ? 'Informações do Ticket' : 'Ticket Information'}</p>
+                            
+                            {(() => {
+                              const userId = log.user_id || (log.event_data as any)?.created_by || null;
+                              if (userId) {
+                                const displayName = log.user?.full_name || log.user?.email || `ID: ${userId.substring(0, 12)}...`;
+                                return (
+                                  <div className="text-xs">
+                                    <span className="font-medium">{isPortuguese ? 'Criado por:' : 'Created by:'}</span>{' '}
+                                    <button
+                                      onClick={() => navigate(`/admin/users?userId=${userId}`)}
+                                      className="text-primary hover:underline"
+                                      title={userId}
+                                    >
+                                      {displayName}
+                                    </button>
+                                    {!log.user?.email && !log.user?.full_name && (
+                                      <span className="text-muted-foreground ml-1">({isPortuguese ? 'ID:' : 'ID:'} {userId.substring(0, 8)}...)</span>
+                                    )}
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div className="text-xs text-red-600 dark:text-red-400">
+                                  {isPortuguese ? '⚠️ Sem user_id' : '⚠️ No user_id'}
                                 </div>
+                              );
+                            })()}
+                            
+                            {log.event_data.ticket_id && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Ticket ID:' : 'Ticket ID:'}</span>{' '}
+                                <code className="text-xs bg-muted px-1 py-0.5 rounded">{log.event_data.ticket_id.substring(0, 8)}...</code>
                               </div>
-                            );
-                          }
-                          
-                          return (
-                            <div className="flex items-center gap-2 flex-wrap bg-red-500/30 p-3 rounded border-2 border-red-500/70">
-                              <span className="font-bold text-red-700 dark:text-red-300 min-w-[100px]">{isPortuguese ? 'CRIADO POR:' : 'CREATED BY:'}</span>
-                              <Badge variant="outline" className="text-sm bg-red-500/40 text-red-800 dark:text-red-200 border-red-500/80">
-                                <div className="font-bold">{isPortuguese ? '⚠️ ERRO: SEM USER_ID!' : '⚠️ ERROR: NO USER_ID!'}</div>
-                              </Badge>
-                            </div>
-                          );
-                        })()}
-                        {log.event_data.category && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Categoria:' : 'Category:'}</span>
-                            <Badge variant="outline" className="bg-cyan-900/20">
-                              <div>{String(log.event_data.category)}</div>
-                            </Badge>
+                            )}
+                            {log.event_data.category && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Categoria:' : 'Category:'}</span>{' '}
+                                {String(log.event_data.category)}
+                              </div>
+                            )}
+                            {log.event_data.language && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Idioma:' : 'Language:'}</span>{' '}
+                                {String(log.event_data.language).toUpperCase()}
+                              </div>
+                            )}
+                            {log.event_data.status && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Status:' : 'Status:'}</span>{' '}
+                                {String(log.event_data.status)}
+                              </div>
+                            )}
+                            {log.event_data.message_count !== undefined && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Mensagens:' : 'Messages:'}</span>{' '}
+                                {log.event_data.message_count}
+                              </div>
+                            )}
+                            {log.event_data.admin_id && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Atribuído a:' : 'Assigned to:'}</span>{' '}
+                                <code className="text-xs bg-muted px-1 py-0.5 rounded">Admin: {log.event_data.admin_id.substring(0, 8)}...</code>
+                              </div>
+                            )}
+                            {log.event_data.previous_status && log.event_data.new_status && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Mudança de status:' : 'Status change:'}</span>{' '}
+                                {String(log.event_data.previous_status)} → {String(log.event_data.new_status)}
+                              </div>
+                            )}
                           </div>
                         )}
-                        {log.event_data.language && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Idioma:' : 'Language:'}</span>
-                            <Badge variant="outline">
-                              <div>{String(log.event_data.language).toUpperCase()}</div>
-                            </Badge>
+                        
+                        {/* Comentário */}
+                        {log.comment && (
+                          <div className="text-xs">
+                            <span className="font-medium">{isPortuguese ? 'Comentário:' : 'Comment:'}</span>
+                            <p className="mt-1 text-muted-foreground">{log.comment}</p>
                           </div>
                         )}
-                        {log.event_data.status && (
+                        
+                        {/* Dados brutos do evento */}
+                        <div className="mt-2 pt-2 border-t">
+                          <p className="font-medium text-xs mb-1">{isPortuguese ? 'Dados do evento:' : 'Event data:'}</p>
+                          <pre className="text-xs p-2 bg-muted rounded overflow-x-auto max-h-40 overflow-y-auto">
+                            {JSON.stringify(log.event_data, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </details>
+                  )}
+                  
+                  {/* Se não tiver event_data mas tiver outras informações */}
+                  {(!log.event_data || Object.keys(log.event_data).length === 0) && (log.old_state || log.new_state || log.comment) && (
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-primary hover:underline font-medium">
+                        {isPortuguese ? 'Ver detalhes' : 'View details'}
+                      </summary>
+                      <div className="mt-2 space-y-2 p-3 bg-muted/50 rounded border">
+                        {log.old_state && log.new_state && (
                           <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Status:' : 'Status:'}</span>
-                            <Badge 
-                              variant="outline" 
-                              className={cn(
-                                log.event_data.status === 'resolved' && 'bg-green-900/20 text-green-400',
-                                log.event_data.status === 'waiting' && 'bg-yellow-900/20 text-yellow-400',
-                                log.event_data.status === 'active' && 'bg-blue-900/20 text-blue-400'
-                              )}
-                            >
-                              <div>{String(log.event_data.status)}</div>
-                            </Badge>
-                          </div>
-                        )}
-                        {log.event_data.message_count !== undefined && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Mensagens:' : 'Messages:'}</span>
-                            <span>{log.event_data.message_count}</span>
-                          </div>
-                        )}
-                        {log.event_data.admin_id && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Atribuído a:' : 'Assigned to:'}</span>
-                            <code className="text-xs bg-cyan-900/20 px-2 py-0.5 rounded">
-                              Admin: {log.event_data.admin_id.substring(0, 8)}...
-                            </code>
-                          </div>
-                        )}
-                        {log.event_data.previous_status && log.event_data.new_status && (
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium min-w-[100px]">{isPortuguese ? 'Mudança:' : 'Change:'}</span>
-                            <Badge variant="outline" className="bg-red-900/20 text-red-400">
-                              <div>{String(log.event_data.previous_status)}</div>
+                            <span className="font-medium text-xs">{isPortuguese ? 'Mudança:' : 'Change:'}</span>
+                            <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
+                              {log.old_state}
                             </Badge>
                             <span>→</span>
-                            <Badge variant="outline" className="bg-green-900/20 text-green-400">
-                              <div>{String(log.event_data.new_status)}</div>
+                            <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+                              {log.new_state}
                             </Badge>
+                          </div>
+                        )}
+                        {log.comment && (
+                          <div className="text-xs">
+                            <span className="font-medium">{isPortuguese ? 'Comentário:' : 'Comment:'}</span>
+                            <p className="mt-1 text-muted-foreground">{log.comment}</p>
                           </div>
                         )}
                       </div>
-                    </div>
-                  )}
-
-                {log.event_data && Object.keys(log.event_data).length > 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    <details className="cursor-pointer">
-                      <summary className="hover:text-foreground">
-                          {isPortuguese ? 'Ver detalhes completos' : 'View full details'}
-                      </summary>
-                      <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-x-auto">
-                        {JSON.stringify(log.event_data, null, 2)}
-                      </pre>
                     </details>
-                  </div>
                 )}
 
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pt-2 border-t">
                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                   {log.ip_address && (
-                    <span>IP: {log.ip_address}</span>
-                  )}
-                  {log.user_agent && (
-                    <span className="truncate max-w-xs" title={log.user_agent}>
-                      {log.user_agent}
-                    </span>
-                  )}
+                        <span title={log.ip_address}>IP: {log.ip_address.substring(0, 15)}...</span>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => openCommentDialog(log)}
+                      className="text-xs"
                     >
                       <MessageSquare className="h-3 w-3 mr-1" />
                       {isPortuguese ? 'Comentário' : 'Comment'}
                     </Button>
-                  </div>
+                </div>
               </div>
             </div>
           </Card>
