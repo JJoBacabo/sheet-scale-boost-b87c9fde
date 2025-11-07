@@ -163,7 +163,7 @@ const MetaDashboard = () => {
 
       if (data.error) {
         toast({
-          title: "Erro ao carregar contas",
+          title: t("metaDashboard.errorLoadingAccounts"),
           description: data.error,
           variant: "destructive",
         });
@@ -179,8 +179,8 @@ const MetaDashboard = () => {
         await fetchCampaigns(firstAccount);
       } else {
         toast({
-          title: "Nenhuma conta encontrada",
-          description: "Não foram encontradas contas de anúncios na tua conta Meta.",
+          title: t("metaDashboard.noAccountsFound"),
+          description: t("metaDashboard.noAccountsFoundDesc"),
           variant: "destructive",
         });
         setLoading(false);
@@ -188,8 +188,8 @@ const MetaDashboard = () => {
     } catch (error: any) {
       console.error("Error fetching ad accounts:", error);
       toast({
-        title: "Erro ao carregar contas",
-        description: error.message || "Erro desconhecido ao carregar contas",
+        title: t("metaDashboard.errorLoadingAccounts"),
+        description: error.message || t("metaDashboard.unknownErrorLoadingAccounts"),
         variant: "destructive",
       });
       setLoading(false);
@@ -230,7 +230,7 @@ const MetaDashboard = () => {
 
       if (data.error) {
         toast({
-          title: "Erro ao carregar campanhas",
+          title: t("metaDashboard.errorLoadingCampaigns"),
           description: data.error,
           variant: "destructive",
         });
@@ -242,8 +242,8 @@ const MetaDashboard = () => {
     } catch (error: any) {
       console.error("Error fetching campaigns:", error);
       toast({
-        title: "Erro ao carregar campanhas",
-        description: error.message || "Erro desconhecido ao carregar campanhas",
+        title: t("metaDashboard.errorLoadingCampaigns"),
+        description: error.message || t("metaDashboard.unknownErrorLoadingCampaigns"),
         variant: "destructive",
       });
     } finally {
@@ -275,8 +275,8 @@ const MetaDashboard = () => {
   const handlePauseCampaign = async (campaignId: string) => {
     if (!campaignId) {
       toast({
-        title: "Erro",
-        description: "ID da campanha inválido",
+        title: t("metaDashboard.error"),
+        description: t("metaDashboard.invalidCampaignId"),
         variant: "destructive",
       });
       return;
@@ -297,16 +297,16 @@ const MetaDashboard = () => {
         fetchCampaigns();
       } else {
         toast({
-          title: "Erro ao pausar",
-          description: data.error || "Erro desconhecido",
+          title: t("metaDashboard.errorPausing"),
+          description: data.error || t("metaDashboard.unknownError"),
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Error pausing campaign:", error);
       toast({
-        title: "Erro ao pausar campanha",
-        description: error.message || "Erro desconhecido",
+        title: t("metaDashboard.errorPausingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
         variant: "destructive",
       });
     } finally {
@@ -317,8 +317,8 @@ const MetaDashboard = () => {
   const handleActivateCampaign = async (campaignId: string) => {
     if (!campaignId) {
       toast({
-        title: "Erro",
-        description: "ID da campanha inválido",
+        title: t("metaDashboard.error"),
+        description: t("metaDashboard.invalidCampaignId"),
         variant: "destructive",
       });
       return;
@@ -339,16 +339,16 @@ const MetaDashboard = () => {
         fetchCampaigns();
       } else {
         toast({
-          title: "Erro ao ativar",
-          description: data.error || "Erro desconhecido",
+          title: t("metaDashboard.errorActivating"),
+          description: data.error || t("metaDashboard.unknownError"),
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Error activating campaign:", error);
       toast({
-        title: "Erro ao ativar campanha",
-        description: error.message || "Erro desconhecido",
+        title: t("metaDashboard.errorActivatingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
         variant: "destructive",
       });
     } finally {
@@ -359,8 +359,8 @@ const MetaDashboard = () => {
   const handleDeleteCampaign = async (campaignId: string) => {
     if (!campaignId) {
       toast({
-        title: "Erro",
-        description: "ID da campanha inválido",
+        title: t("metaDashboard.error"),
+        description: t("metaDashboard.invalidCampaignId"),
         variant: "destructive",
       });
       return;
@@ -381,16 +381,16 @@ const MetaDashboard = () => {
         fetchCampaigns();
       } else {
         toast({
-          title: "Erro ao deletar",
-          description: data.error || "Erro desconhecido",
+          title: t("metaDashboard.errorDeleting"),
+          description: data.error || t("metaDashboard.unknownError"),
           variant: "destructive",
         });
       }
     } catch (error: any) {
       console.error("Error deleting campaign:", error);
       toast({
-        title: "Erro ao deletar campanha",
-        description: error.message || "Erro desconhecido",
+        title: t("metaDashboard.errorDeletingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
         variant: "destructive",
       });
     } finally {
@@ -726,7 +726,7 @@ const MetaDashboard = () => {
                 <div className="flex items-center justify-between flex-1">
                   <div>
                     <h1 className="text-2xl font-bold">{t("metaDashboard.title")}</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Conecte o Facebook Ads para começar</p>
+                    <p className="text-sm text-muted-foreground mt-1">{t("metaDashboard.connectFacebookDesc")}</p>
                   </div>
                   <LanguageToggle />
                 </div>
@@ -1038,7 +1038,7 @@ const MetaDashboard = () => {
                                         : "bg-muted/50 text-muted-foreground border-muted"
                                   }
                                 >
-                                  {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "Paused" : campaign.status}
+                                  {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
                                 </Badge>
                                 {campaign.status === "ACTIVE" ? (
                                   <Button
@@ -1046,7 +1046,7 @@ const MetaDashboard = () => {
                                     onClick={() => setCampaignToPause(campaign.id)}
                                   >
                                     <Pause className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">Pausar</span>
+                                    <span className="text-sm">{t("metaDashboard.pause")}</span>
                                   </Button>
                                 ) : (
                                   <Button
@@ -1054,7 +1054,7 @@ const MetaDashboard = () => {
                                     onClick={() => setCampaignToActivate(campaign.id)}
                                   >
                                     <Play className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">Ativar</span>
+                                    <span className="text-sm">{t("metaDashboard.activate")}</span>
                                   </Button>
                                 )}
                               </div>
@@ -1062,12 +1062,12 @@ const MetaDashboard = () => {
 
                             {/* Budget Info */}
                             <div className="text-xs text-muted-foreground">
-                              <span>Orçamento: </span>
+                              <span>{t("metaDashboard.budget")}: </span>
                               <span className="font-medium">
                                 {campaign.daily_budget
-                                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}/dia`
+                                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
                                   : campaign.lifetime_budget
-                                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} total`
+                                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
                                     : "—"}
                               </span>
                             </div>
@@ -1227,7 +1227,7 @@ const MetaDashboard = () => {
                       }}
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Remover Campanha
+                      {t("metaDashboard.removeCampaign")}
                     </Button>
                   </div>
                 </div>
