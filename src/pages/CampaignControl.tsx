@@ -617,7 +617,7 @@ const CampaignControl = () => {
         setFacebookCampaigns([]);
         
         toast({
-          title: t('metaDashboard.noCampaigns'),
+          title: t('dailyRoas.noCampaignsFound'),
           description: t('dailyRoas.noActiveCampaigns'),
           variant: "destructive"
         });
@@ -649,17 +649,22 @@ const CampaignControl = () => {
   };
 
   const calculateMetrics = (data: DailyROASData): DailyROASData => {
-    const totalRevenue = data.units_sold * data.product_price;
-    const totalCOG = data.units_sold * data.cog;
-    const margin_euros = totalRevenue - data.total_spent - totalCOG;
+    const unitsSold = data.units_sold || 0;
+    const productPrice = data.product_price || 0;
+    const cog = data.cog || 0;
+    const totalSpent = data.total_spent || 0;
+    
+    const totalRevenue = unitsSold * productPrice;
+    const totalCOG = unitsSold * cog;
+    const margin_euros = totalRevenue - totalSpent - totalCOG;
     const margin_percentage = totalRevenue > 0 ? (margin_euros / totalRevenue) * 100 : 0;
-    const roas = data.total_spent > 0 ? totalRevenue / data.total_spent : 0;
+    const roas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
 
     return {
       ...data,
-      roas,
-      margin_euros,
-      margin_percentage,
+      roas: roas || 0,
+      margin_euros: margin_euros || 0,
+      margin_percentage: margin_percentage || 0,
     };
   };
 
@@ -727,7 +732,7 @@ const CampaignControl = () => {
         decisao: "MANTER", 
         motivo: t('dailyRoas.decisionDay1Waiting', { 
           market: market.toUpperCase(), 
-          spent: data.total_spent.toFixed(2) 
+          spent: ((data.total_spent || 0)).toFixed(2) 
         })
       };
     }
@@ -1056,27 +1061,34 @@ const CampaignControl = () => {
   
   // Calculate KPIs for filtered data
   const calculateFilteredKPIs = () => {
-    const totalSpend = filteredData.reduce((sum, d) => sum + d.total_spent, 0);
-    const totalRevenue = filteredData.reduce((sum, d) => sum + (d.units_sold * d.product_price), 0);
+    const totalSpend = filteredData.reduce((sum, d) => sum + (d.total_spent || 0), 0);
+    const totalRevenue = filteredData.reduce((sum, d) => sum + ((d.units_sold || 0) * (d.product_price || 0)), 0);
     const avgROAS = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-    const totalMargemEuros = filteredData.reduce((sum, d) => sum + d.margin_euros, 0);
+    const totalMargemEuros = filteredData.reduce((sum, d) => sum + (d.margin_euros || 0), 0);
     const avgMargemPerc = filteredData.length > 0 
-      ? filteredData.reduce((sum, d) => sum + d.margin_percentage, 0) / filteredData.length 
+      ? filteredData.reduce((sum, d) => sum + (d.margin_percentage || 0), 0) / filteredData.length 
       : 0;
-    const totalVendas = filteredData.reduce((sum, d) => sum + d.purchases, 0);
+    const totalVendas = filteredData.reduce((sum, d) => sum + (d.purchases || 0), 0);
 
-    return { totalSpend, totalRevenue, avgROAS, totalMargemEuros, avgMargemPerc, totalVendas };
+    return { 
+      totalSpend: totalSpend || 0, 
+      totalRevenue: totalRevenue || 0, 
+      avgROAS: avgROAS || 0, 
+      totalMargemEuros: totalMargemEuros || 0, 
+      avgMargemPerc: avgMargemPerc || 0, 
+      totalVendas: totalVendas || 0 
+    };
   };
 
   const kpis = calculateFilteredKPIs();
 
   const chartData = filteredData.map(d => ({
-    nome: d.campaign_name.substring(0, 15),
-    CPC: d.cpc,
-    ROAS: d.roas,
-    Margem: d.margin_percentage,
-    Gasto: d.total_spent,
-    Receita: d.units_sold * d.product_price,
+    nome: (d.campaign_name || '').substring(0, 15),
+    CPC: d.cpc || 0,
+    ROAS: d.roas || 0,
+    Margem: d.margin_percentage || 0,
+    Gasto: d.total_spent || 0,
+    Receita: (d.units_sold || 0) * (d.product_price || 0),
   }));
 
   // Helper function to get day number since campaign start
@@ -1154,15 +1166,15 @@ const CampaignControl = () => {
     // Calculate decision for each pair
     return pairs.map(({ days: pair, dayNumbers }) => {
       // Calculate cumulative metrics for the pair
-      const totalSpent = pair.reduce((sum, day) => sum + day.total_spent, 0);
-      const totalRevenue = pair.reduce((sum, day) => sum + (day.purchases * day.product_price), 0);
-      const totalCOG = pair.reduce((sum, day) => sum + (day.purchases * day.cog), 0);
+      const totalSpent = pair.reduce((sum, day) => sum + (day.total_spent || 0), 0);
+      const totalRevenue = pair.reduce((sum, day) => sum + ((day.purchases || 0) * (day.product_price || 0)), 0);
+      const totalCOG = pair.reduce((sum, day) => sum + ((day.purchases || 0) * (day.cog || 0)), 0);
       const marginEuros = totalRevenue - totalSpent - totalCOG;
       const marginPercentage = totalRevenue > 0 ? (marginEuros / totalRevenue) * 100 : 0;
       const roas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
-      const totalPurchases = pair.reduce((sum, day) => sum + day.purchases, 0);
-      const totalAtc = pair.reduce((sum, day) => sum + day.atc, 0);
-      const avgCpc = pair.reduce((sum, day) => sum + day.cpc, 0) / pair.length;
+      const totalPurchases = pair.reduce((sum, day) => sum + (day.purchases || 0), 0);
+      const totalAtc = pair.reduce((sum, day) => sum + (day.atc || 0), 0);
+      const avgCpc = pair.length > 0 ? pair.reduce((sum, day) => sum + (day.cpc || 0), 0) / pair.length : 0;
       
       // Get thresholds based on market type
       const thresholds = {
@@ -1474,33 +1486,33 @@ const CampaignControl = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                               <div>
                                 <span className="text-muted-foreground">{t('dailyRoas.spent')}:</span>
-                                <span className="ml-1 font-medium">{entry.total_spent.toFixed(2)}€</span>
+                                <span className="ml-1 font-medium">{((entry.total_spent || 0)).toFixed(2)}€</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">CPC:</span>
-                                <span className="ml-1 font-medium">{entry.cpc.toFixed(2)}€</span>
+                                <span className="ml-1 font-medium">{((entry.cpc || 0)).toFixed(2)}€</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">{t('dailyRoas.sales')}:</span>
-                                <span className="ml-1 font-medium">{entry.purchases}</span>
+                                <span className="ml-1 font-medium">{entry.purchases || 0}</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">{t('dailyRoas.atc')}:</span>
-                                <span className="ml-1 font-medium">{entry.atc}</span>
+                                <span className="ml-1 font-medium">{entry.atc || 0}</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">{t('dailyRoas.roas')}:</span>
-                                <span className="ml-1 font-medium">{entry.roas.toFixed(2)}x</span>
+                                <span className="ml-1 font-medium">{((entry.roas || 0)).toFixed(2)}x</span>
                               </div>
                               <div>
                                 <span className="text-muted-foreground">{t('dailyRoas.margin')}:</span>
-                                <span className={`ml-1 font-medium ${entry.margin_percentage > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                  {entry.margin_percentage.toFixed(1)}%
+                                <span className={`ml-1 font-medium ${(entry.margin_percentage || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                  {((entry.margin_percentage || 0)).toFixed(1)}%
                                 </span>
                               </div>
                               <div className="col-span-2">
                                 <span className="text-muted-foreground">{t('dailyRoas.revenue')}:</span>
-                                <span className="ml-1 font-medium">{(entry.units_sold * entry.product_price).toFixed(2)}€</span>
+                                <span className="ml-1 font-medium">{(((entry.units_sold || 0) * (entry.product_price || 0))).toFixed(2)}€</span>
                               </div>
                             </div>
                             <div className="mt-2 text-xs text-muted-foreground italic">
@@ -1554,23 +1566,23 @@ const CampaignControl = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-4 md:mb-6">
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.totalSpend.toFixed(2)}€</p>
+                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalSpend || 0)).toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
-                    <p className="text-lg md:text-2xl font-bold text-green-500">{kpis.totalRevenue.toFixed(2)}€</p>
+                    <p className="text-lg md:text-2xl font-bold text-green-500">{((kpis.totalRevenue || 0)).toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.avgROAS.toFixed(2)}</p>
+                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgROAS || 0)).toFixed(2)}</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.totalMargemEuros.toFixed(2)}€</p>
+                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalMargemEuros || 0)).toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.avgMargemPerc.toFixed(1)}%</p>
+                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgMargemPerc || 0)).toFixed(1)}%</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
                     <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
@@ -1624,16 +1636,16 @@ const CampaignControl = () => {
                           return (
                             <TableRow key={data.id}>
                               <TableCell className="font-medium text-xs md:text-sm">{data.campaign_name}</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.total_spent.toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.cpc.toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.atc}</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.purchases}</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.product_price.toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.cog.toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{data.purchases}</TableCell>
-                              <TableCell className="font-semibold text-green-500 text-xs md:text-sm">{calculated.roas.toFixed(2)}</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{calculated.margin_euros.toFixed(2)}€</TableCell>
-                              <TableCell className="font-semibold text-xs md:text-sm">{calculated.margin_percentage.toFixed(1)}%</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((data.total_spent || 0)).toFixed(2)}€</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((data.cpc || 0)).toFixed(2)}€</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{data.atc || 0}</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{data.purchases || 0}</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((data.product_price || 0)).toFixed(2)}€</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((data.cog || 0)).toFixed(2)}€</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{data.purchases || 0}</TableCell>
+                              <TableCell className="font-semibold text-green-500 text-xs md:text-sm">{((calculated.roas || 0)).toFixed(2)}</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_euros || 0)).toFixed(2)}€</TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
                               <TableCell>
                                 <div 
                                   className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
@@ -1693,50 +1705,50 @@ const CampaignControl = () => {
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.totalSpent')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.total_spent.toFixed(2)}€</p>
+                        <p className="font-bold text-lg">{((selectedDecisionData.total_spent || 0)).toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">CPC</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.cpc.toFixed(2)}€</p>
+                        <p className="font-bold text-lg">{((selectedDecisionData.cpc || 0)).toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">ATC</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.atc}</p>
+                        <p className="font-bold text-lg">{selectedDecisionData.atc || 0}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.purchases')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.purchases}</p>
+                        <p className="font-bold text-lg">{selectedDecisionData.purchases || 0}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.productPrice')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.product_price.toFixed(2)}€</p>
+                        <p className="font-bold text-lg">{((selectedDecisionData.product_price || 0)).toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">COG</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.cog.toFixed(2)}€</p>
+                        <p className="font-bold text-lg">{((selectedDecisionData.cog || 0)).toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.units')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.purchases}</p>
+                        <p className="font-bold text-lg">{selectedDecisionData.purchases || 0}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/30">
                         <p className="text-xs text-muted-foreground mb-1">ROAS</p>
-                        <p className="font-bold text-lg text-green-600 dark:text-green-400">{selectedDecisionData.roas.toFixed(2)}x</p>
+                        <p className="font-bold text-lg text-green-600 dark:text-green-400">{((selectedDecisionData.roas || 0)).toFixed(2)}x</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
                         <p className="text-xs text-muted-foreground mb-1">Margem €</p>
-                        <p className={`font-bold text-lg ${selectedDecisionData.margin_euros > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {selectedDecisionData.margin_euros.toFixed(2)}€
+                        <p className={`font-bold text-lg ${(selectedDecisionData.margin_euros || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {((selectedDecisionData.margin_euros || 0)).toFixed(2)}€
                         </p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30 col-span-2 md:col-span-3">
                         <p className="text-xs text-muted-foreground mb-1">Margem %</p>
                         <p className={`font-bold text-2xl ${
-                          selectedDecisionData.margin_percentage > 15 ? 'text-green-600 dark:text-green-400' : 
-                          selectedDecisionData.margin_percentage < 0 ? 'text-red-600 dark:text-red-400' : 
+                          (selectedDecisionData.margin_percentage || 0) > 15 ? 'text-green-600 dark:text-green-400' : 
+                          (selectedDecisionData.margin_percentage || 0) < 0 ? 'text-red-600 dark:text-red-400' : 
                           'text-yellow-600 dark:text-yellow-400'
                         }`}>
-                          {selectedDecisionData.margin_percentage.toFixed(1)}%
+                          {((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%
                         </p>
                       </div>
                     </div>
@@ -1758,7 +1770,7 @@ const CampaignControl = () => {
                     <div className="bg-background/50 p-3 md:p-4 rounded-lg mb-4 text-center">
                       <h5 className="font-semibold mb-2 text-sm md:text-base">💡 {t("dailyRoas.reason")}</h5>
                       <p className="text-xs md:text-sm">
-                        {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: Margem ${selectedDecisionData.margin_percentage.toFixed(1)}%`}
+                        {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: Margem ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
                       </p>
                       {selectedDecisionData.dayRange && (
                         <p className="text-xs text-muted-foreground mt-2">
