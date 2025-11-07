@@ -898,6 +898,44 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
       if (error) throw error;
 
+      // Log ticket deletion in audit_logs (fallback if trigger doesn't work)
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const adminUserId = currentUser?.id || null;
+
+        const { data: auditData, error: auditError } = await supabase
+          .from('audit_logs')
+          .insert({
+            user_id: ticketData.user_id, // User who created the ticket
+            event_type: 'ticket_deleted',
+            event_data: {
+              ticket_id: ticketData.id,
+              category: ticketData.category || null,
+              language: ticketData.language || 'pt',
+              status: ticketData.status || 'active',
+              message_count: Array.isArray(ticketData.messages) ? ticketData.messages.length : 0,
+              admin_id: ticketData.admin_id || null,
+              deleted_by: adminUserId, // Admin who deleted it
+              deleted_at: new Date().toISOString(),
+              created_by: ticketData.user_id
+            }
+          })
+          .select()
+          .single();
+
+        if (auditError) {
+          console.error('❌ ERRO ao inserir audit log de delete:', auditError);
+          console.error('Ticket ID:', ticketData.id);
+          console.error('User ID:', ticketData.user_id);
+        } else {
+          console.log('✅ Ticket deletion logged to audit_logs:', auditData);
+          console.log('✅ User ID saved:', auditData?.user_id);
+        }
+      } catch (auditError) {
+        console.error('❌ Exceção ao criar audit log de delete:', auditError);
+        // Don't fail ticket deletion if audit log fails
+      }
+
       // Update local state immediately
       setTickets(prev => prev.filter(t => t.id !== ticketId));
 

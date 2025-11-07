@@ -508,8 +508,21 @@ export const AuditLogs = () => {
   };
 
   const isCriticalEvent = (log: AuditLog) => {
-    return CRITICAL_STATES.includes(log.new_state || '') || 
-           CRITICAL_STATES.includes(log.old_state || '');
+    // Critical states
+    if (CRITICAL_STATES.includes(log.new_state || '') || 
+        CRITICAL_STATES.includes(log.old_state || '')) {
+      return true;
+    }
+    
+    // Critical event types
+    if (log.event_type === 'ticket_deleted' || 
+        log.event_type === 'admin_force_status' ||
+        (log.event_type === 'subscription_state_change' && 
+         CRITICAL_STATES.includes(log.new_state || ''))) {
+      return true;
+    }
+    
+    return false;
   };
 
   const isSuspiciousUser = (log: AuditLog) => {
@@ -598,12 +611,18 @@ export const AuditLogs = () => {
       case 'user_updated':
         return <User className="h-4 w-4" />;
       case 'admin_action':
+      case 'admin_force_status':
         return <Shield className="h-4 w-4" />;
       case 'ticket_created':
       case 'ticket_updated':
       case 'ticket_resolved':
+      case 'ticket_reopened':
       case 'ticket_assigned':
+      case 'ticket_reassigned':
       case 'ticket_message_added':
+      case 'ticket_deleted':
+      case 'ticket_priority_changed':
+      case 'ticket_notes_updated':
         return <MessageSquare className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
@@ -625,6 +644,7 @@ export const AuditLogs = () => {
       case 'user_updated':
         return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 'admin_action':
+      case 'admin_force_status':
         return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'ticket_created':
         return 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
@@ -632,10 +652,20 @@ export const AuditLogs = () => {
         return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
       case 'ticket_resolved':
         return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'ticket_reopened':
+        return 'bg-orange-500/10 text-orange-500 border-orange-500/20';
       case 'ticket_assigned':
         return 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20';
+      case 'ticket_reassigned':
+        return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
       case 'ticket_message_added':
         return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
+      case 'ticket_deleted':
+        return 'bg-red-500/10 text-red-500 border-red-500/20';
+      case 'ticket_priority_changed':
+        return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
+      case 'ticket_notes_updated':
+        return 'bg-teal-500/10 text-teal-500 border-teal-500/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -647,11 +677,17 @@ export const AuditLogs = () => {
       user_created: { pt: 'Usuário Criado', en: 'User Created' },
       user_updated: { pt: 'Usuário Atualizado', en: 'User Updated' },
       admin_action: { pt: 'Ação de Admin', en: 'Admin Action' },
+      admin_force_status: { pt: 'Admin Forçou Status', en: 'Admin Force Status' },
       ticket_created: { pt: 'Ticket Criado', en: 'Ticket Created' },
       ticket_updated: { pt: 'Ticket Atualizado', en: 'Ticket Updated' },
       ticket_resolved: { pt: 'Ticket Resolvido', en: 'Ticket Resolved' },
+      ticket_reopened: { pt: 'Ticket Reaberto', en: 'Ticket Reopened' },
       ticket_assigned: { pt: 'Ticket Atribuído', en: 'Ticket Assigned' },
-      ticket_message_added: { pt: 'Mensagem Adicionada', en: 'Message Added' }
+      ticket_reassigned: { pt: 'Ticket Reatribuído', en: 'Ticket Reassigned' },
+      ticket_message_added: { pt: 'Mensagem Adicionada', en: 'Message Added' },
+      ticket_deleted: { pt: 'Ticket Eliminado', en: 'Ticket Deleted' },
+      ticket_priority_changed: { pt: 'Prioridade Alterada', en: 'Priority Changed' },
+      ticket_notes_updated: { pt: 'Notas Atualizadas', en: 'Notes Updated' }
     };
     return labels[eventType]?.[isPortuguese ? 'pt' : 'en'] || eventType;
   };
@@ -723,12 +759,18 @@ export const AuditLogs = () => {
               <SelectItem value="subscription_state_change">{isPortuguese ? 'Mudança de Assinatura' : 'Subscription Change'}</SelectItem>
               <SelectItem value="user_created">{isPortuguese ? 'Usuário Criado' : 'User Created'}</SelectItem>
               <SelectItem value="user_updated">{isPortuguese ? 'Usuário Atualizado' : 'User Updated'}</SelectItem>
-              <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
-              <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
-              <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
+                <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
+                <SelectItem value="admin_force_status">{isPortuguese ? 'Admin Forçou Status' : 'Admin Force Status'}</SelectItem>
+                <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
+                <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
                 <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
+                <SelectItem value="ticket_reopened">{isPortuguese ? 'Ticket Reaberto' : 'Ticket Reopened'}</SelectItem>
                 <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
+                <SelectItem value="ticket_reassigned">{isPortuguese ? 'Ticket Reatribuído' : 'Ticket Reassigned'}</SelectItem>
                 <SelectItem value="ticket_message_added">{isPortuguese ? 'Mensagem Adicionada' : 'Message Added'}</SelectItem>
+                <SelectItem value="ticket_priority_changed">{isPortuguese ? 'Prioridade Alterada' : 'Priority Changed'}</SelectItem>
+                <SelectItem value="ticket_notes_updated">{isPortuguese ? 'Notas Atualizadas' : 'Notes Updated'}</SelectItem>
+                <SelectItem value="ticket_deleted">{isPortuguese ? 'Ticket Eliminado' : 'Ticket Deleted'}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterUser} onValueChange={setFilterUser}>
@@ -868,8 +910,8 @@ export const AuditLogs = () => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-1">
                         <Badge variant="outline" className={getEventColor(log.event_type, critical, suspicious)}>
-                          {getEventLabel(log.event_type)}
-                        </Badge>
+                      {getEventLabel(log.event_type)}
+                    </Badge>
                         {critical && <AlertCircle className="h-3 w-3 text-red-500" />}
                         {suspicious && !critical && <AlertTriangle className="h-3 w-3 text-orange-500" />}
                       </div>
@@ -932,10 +974,48 @@ export const AuditLogs = () => {
                   </div>
                 )}
 
+                        {/* Informações de admin action */}
+                        {(log.event_type === 'admin_force_status' && log.event_data) && (
+                          <div className="space-y-1.5">
+                            <p className="font-semibold text-sm mb-2 text-purple-600 dark:text-purple-400">
+                              {isPortuguese ? 'Ação Administrativa' : 'Admin Action'}
+                            </p>
+                            {log.event_data.admin_email && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Admin:' : 'Admin:'}</span>{' '}
+                                {log.event_data.admin_email}
+                              </div>
+                            )}
+                            {log.event_data.old_state && log.event_data.new_state && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Mudança forçada:' : 'Forced change:'}</span>{' '}
+                                <Badge variant="outline" className="bg-red-500/10 text-red-500 text-xs">
+                                  {String(log.event_data.old_state)}
+                                </Badge>
+                                <span> → </span>
+                                <Badge variant="outline" className="bg-green-500/10 text-green-500 text-xs">
+                                  {String(log.event_data.new_state)}
+                                </Badge>
+                              </div>
+                            )}
+                            {log.event_data.reason && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Motivo:' : 'Reason:'}</span>{' '}
+                                {String(log.event_data.reason)}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {/* Informações do ticket */}
                         {(log.event_type.startsWith('ticket_') && log.event_data?.ticket_id) && (
                           <div className="space-y-1.5">
-                            <p className="font-semibold text-sm mb-2">{isPortuguese ? 'Informações do Ticket' : 'Ticket Information'}</p>
+                            <p className="font-semibold text-sm mb-2">
+                              {isPortuguese ? 'Informações do Ticket' : 'Ticket Information'}
+                              {log.event_type === 'ticket_deleted' && (
+                                <span className="ml-2 text-red-600 dark:text-red-400">({isPortuguese ? 'ELIMINADO' : 'DELETED'})</span>
+                              )}
+                            </p>
                             
                             {(() => {
                               const userId = log.user_id || (log.event_data as any)?.created_by || null;
@@ -963,6 +1043,13 @@ export const AuditLogs = () => {
                                 </div>
                               );
                             })()}
+                            
+                            {log.event_data.deleted_by && (
+                              <div className="text-xs">
+                                <span className="font-medium text-red-600 dark:text-red-400">{isPortuguese ? 'Eliminado por:' : 'Deleted by:'}</span>{' '}
+                                <code className="text-xs bg-red-500/20 px-1 py-0.5 rounded">Admin: {String(log.event_data.deleted_by).substring(0, 8)}...</code>
+                              </div>
+                            )}
                             
                             {log.event_data.ticket_id && (
                               <div className="text-xs">
@@ -1000,10 +1087,36 @@ export const AuditLogs = () => {
                                 <code className="text-xs bg-muted px-1 py-0.5 rounded">Admin: {log.event_data.admin_id.substring(0, 8)}...</code>
                               </div>
                             )}
+                            {log.event_data.deleted_at && (
+                              <div className="text-xs">
+                                <span className="font-medium text-red-600 dark:text-red-400">{isPortuguese ? 'Eliminado em:' : 'Deleted at:'}</span>{' '}
+                                {new Date(log.event_data.deleted_at).toLocaleString()}
+                              </div>
+                            )}
                             {log.event_data.previous_status && log.event_data.new_status && (
                               <div className="text-xs">
                                 <span className="font-medium">{isPortuguese ? 'Mudança de status:' : 'Status change:'}</span>{' '}
                                 {String(log.event_data.previous_status)} → {String(log.event_data.new_status)}
+                              </div>
+                            )}
+                            {log.event_data.previous_priority && log.event_data.new_priority && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Mudança de prioridade:' : 'Priority change:'}</span>{' '}
+                                {String(log.event_data.previous_priority)} → {String(log.event_data.new_priority)}
+                              </div>
+                            )}
+                            {log.event_data.previous_admin_id && log.event_data.new_admin_id && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Reatribuição:' : 'Reassignment:'}</span>{' '}
+                                <code className="text-xs bg-muted px-1 py-0.5 rounded">Admin: {String(log.event_data.previous_admin_id).substring(0, 8)}...</code>
+                                <span> → </span>
+                                <code className="text-xs bg-muted px-1 py-0.5 rounded">Admin: {String(log.event_data.new_admin_id).substring(0, 8)}...</code>
+                              </div>
+                            )}
+                            {log.event_data.notes_changed && (
+                              <div className="text-xs">
+                                <span className="font-medium">{isPortuguese ? 'Notas:' : 'Notes:'}</span>{' '}
+                                {log.event_data.has_notes ? (isPortuguese ? 'Atualizadas' : 'Updated') : (isPortuguese ? 'Removidas' : 'Removed')}
                               </div>
                             )}
                           </div>
