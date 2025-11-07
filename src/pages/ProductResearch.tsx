@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { ArrowLeft, Construction } from "lucide-react";
 import logo from "@/assets/sheet-tools-logo.png";
 
@@ -18,13 +19,23 @@ export default function ProductResearch() {
         <AppSidebar />
 
         <SidebarInset className="flex-1 transition-all duration-300">
-          <main className="relative min-h-screen flex items-center justify-center p-6">
-            <div className="w-full max-w-2xl">
-              <div className="flex items-center gap-3 mb-8">
-                <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border-2 hover:border-primary/40 transition-all flex items-center justify-center" />
+          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
+              <div className="flex items-center justify-between flex-1">
+                <div>
+                  <h1 className="text-2xl font-bold">{t('productResearch.title')}</h1>
+                  <p className="text-sm text-muted-foreground">{t('productResearch.subtitle')}</p>
+                </div>
+                <LanguageToggle />
               </div>
+            </div>
+          </header>
 
-              <Card className="glass-card rounded-3xl border-2 border-border/50 p-12">
+          <main className="container mx-auto px-6 py-8 relative">
+            <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+              <div className="w-full max-w-2xl">
+                <Card className="glass-card rounded-3xl border-2 border-border/50 p-12">
                 <div className="flex flex-col items-center text-center space-y-8">
                   {/* Logo with animation */}
                   <div className="relative">
@@ -80,6 +91,7 @@ export default function ProductResearch() {
                 </div>
               </Card>
             </div>
+          </div>
           </main>
         </SidebarInset>
       </div>
