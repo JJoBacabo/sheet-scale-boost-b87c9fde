@@ -140,8 +140,18 @@ export const AuditLogs = () => {
   }, []);
 
   useEffect(() => {
+    if (filterDateFrom || filterDateTo) {
+      fetchLogs();
+    }
+  }, [filterDateFrom, filterDateTo]);
+
+  useEffect(() => {
     analyzeSuspiciousPatterns();
   }, [allLogs]);
+
+  useEffect(() => {
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [debouncedSearch, filterType, filterUser, showFavoritesOnly, filterDateFrom, filterDateTo]);
 
   const fetchUsers = async () => {
     try {
@@ -370,6 +380,12 @@ export const AuditLogs = () => {
         return <User className="h-4 w-4" />;
       case 'admin_action':
         return <Shield className="h-4 w-4" />;
+      case 'ticket_created':
+      case 'ticket_updated':
+      case 'ticket_resolved':
+      case 'ticket_assigned':
+      case 'ticket_message_added':
+        return <MessageSquare className="h-4 w-4" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
@@ -391,6 +407,16 @@ export const AuditLogs = () => {
         return 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20';
       case 'admin_action':
         return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
+      case 'ticket_created':
+        return 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20';
+      case 'ticket_updated':
+        return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+      case 'ticket_resolved':
+        return 'bg-green-500/10 text-green-500 border-green-500/20';
+      case 'ticket_assigned':
+        return 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20';
+      case 'ticket_message_added':
+        return 'bg-slate-500/10 text-slate-500 border-slate-500/20';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -404,7 +430,9 @@ export const AuditLogs = () => {
       admin_action: { pt: 'Ação de Admin', en: 'Admin Action' },
       ticket_created: { pt: 'Ticket Criado', en: 'Ticket Created' },
       ticket_updated: { pt: 'Ticket Atualizado', en: 'Ticket Updated' },
-      ticket_resolved: { pt: 'Ticket Resolvido', en: 'Ticket Resolved' }
+      ticket_resolved: { pt: 'Ticket Resolvido', en: 'Ticket Resolved' },
+      ticket_assigned: { pt: 'Ticket Atribuído', en: 'Ticket Assigned' },
+      ticket_message_added: { pt: 'Mensagem Adicionada', en: 'Message Added' }
     };
     return labels[eventType]?.[isPortuguese ? 'pt' : 'en'] || eventType;
   };
@@ -479,6 +507,9 @@ export const AuditLogs = () => {
                 <SelectItem value="admin_action">{isPortuguese ? 'Ação de Admin' : 'Admin Action'}</SelectItem>
                 <SelectItem value="ticket_created">{isPortuguese ? 'Ticket Criado' : 'Ticket Created'}</SelectItem>
                 <SelectItem value="ticket_updated">{isPortuguese ? 'Ticket Atualizado' : 'Ticket Updated'}</SelectItem>
+                <SelectItem value="ticket_resolved">{isPortuguese ? 'Ticket Resolvido' : 'Ticket Resolved'}</SelectItem>
+                <SelectItem value="ticket_assigned">{isPortuguese ? 'Ticket Atribuído' : 'Ticket Assigned'}</SelectItem>
+                <SelectItem value="ticket_message_added">{isPortuguese ? 'Mensagem Adicionada' : 'Message Added'}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterUser} onValueChange={setFilterUser}>
@@ -551,10 +582,6 @@ export const AuditLogs = () => {
             >
               <Star className={cn("h-4 w-4 mr-2", showFavoritesOnly && "fill-yellow-400")} />
               {isPortuguese ? 'Favoritos' : 'Favorites'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={fetchLogs}>
-              <Filter className="h-4 w-4 mr-2" />
-              {isPortuguese ? 'Aplicar Filtros' : 'Apply Filters'}
             </Button>
           </div>
         </div>

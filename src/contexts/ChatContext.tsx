@@ -308,6 +308,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data && !error) {
           setChatId(data.id);
+          
+          // Log ticket creation in audit_logs (fallback if trigger doesn't work)
+          try {
+            await supabase
+              .from('audit_logs')
+              .insert({
+                user_id: user.id,
+                event_type: 'ticket_created',
+                event_data: {
+                  ticket_id: data.id,
+                  category: category || null,
+                  language: language || 'pt',
+                  status: 'waiting',
+                  message_count: validMessages.length
+                }
+              });
+          } catch (auditError) {
+            console.error('Error logging ticket creation:', auditError);
+            // Don't fail ticket creation if audit log fails
+          }
         } else if (error) {
           console.error('Error creating chat:', error);
           toast({
