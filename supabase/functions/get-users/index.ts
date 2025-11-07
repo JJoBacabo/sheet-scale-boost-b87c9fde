@@ -6,17 +6,19 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'https://cygvvrtsdatdczswcrqj.supabase.co',
   'https://sheet-tools.com',
-  'https://www.sheet-tools.com',
+  'https://www.sheet-tools.com'
 ];
 
 // Patterns for dynamic origins (e.g., Lovable preview domains)
 const ALLOWED_PATTERNS = [
   /^https:\/\/.*\.lovableproject\.com$/,
   /^https:\/\/.*\.vercel\.app$/,
-  /^https:\/\/.*\.netlify\.app$/,
+  /^https:\/\/.*\.netlify\.app$/
 ];
 
-function isOriginAllowed(origin: string): boolean {
+function isOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  
   // Check exact match
   if (ALLOWED_ORIGINS.includes(origin)) {
     return true;
@@ -57,7 +59,7 @@ function getCorsHeaders(origin: string | null): HeadersInit {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Max-Age': '86400',
+    'Access-Control-Max-Age': '86400'
   };
 }
 
@@ -66,9 +68,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     const origin = req.headers.get('origin');
     const corsHeaders = getCorsHeaders(origin);
-    return new Response('', { 
+    return new Response('', {
       status: 200,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
 
@@ -84,7 +86,13 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'No authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
       );
     }
 
@@ -94,7 +102,13 @@ serve(async (req) => {
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
       );
     }
 
@@ -109,7 +123,13 @@ serve(async (req) => {
     if (!adminRole) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized - Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 403,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        }
       );
     }
 
@@ -125,7 +145,7 @@ serve(async (req) => {
           page,
           perPage: 1000
         });
-        
+
         if (listError) {
           // If page/perPage doesn't work, try without parameters
           if (page === 1) {
@@ -133,7 +153,13 @@ serve(async (req) => {
             if (allError) {
               return new Response(
                 JSON.stringify({ error: 'Failed to list users: ' + allError.message }),
-                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                {
+                  status: 500,
+                  headers: {
+                    ...corsHeaders,
+                    'Content-Type': 'application/json'
+                  }
+                }
               );
             }
             if (allData?.users) {
@@ -162,7 +188,13 @@ serve(async (req) => {
           if (allError) {
             return new Response(
               JSON.stringify({ error: 'Failed to list users: ' + allError.message }),
-              { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              {
+                status: 500,
+                headers: {
+                  ...corsHeaders,
+                  'Content-Type': 'application/json'
+                }
+              }
             );
           }
           if (allData?.users) {
@@ -271,7 +303,7 @@ serve(async (req) => {
     const usersWithData = users.map(authUser => {
       const profile = (profiles || []).find(p => p.user_id === authUser.id);
       const subscription = (subscriptions || []).find(s => s.user_id === authUser.id);
-      
+
       return {
         id: authUser.id,
         email: authUser.email || '',
@@ -295,20 +327,25 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ users: usersWithData }),
-      { 
+      {
         status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     );
   }
 });
-
