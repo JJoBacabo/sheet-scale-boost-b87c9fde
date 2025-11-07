@@ -578,8 +578,8 @@ const CampaignControl = () => {
 
       if (!integration) {
         toast({
-          title: "Integração Facebook não encontrada",
-          description: "Por favor, conecte sua conta do Facebook primeiro.",
+          title: t('dailyRoas.facebookIntegrationNotFound'),
+          description: t('dailyRoas.connectFacebookFirst'),
           variant: "destructive"
         });
         setIsFetchingCampaigns(false);
@@ -771,8 +771,8 @@ const CampaignControl = () => {
       
       if (insightsData.length === 0) {
         toast({
-          title: "Sem dados de insights",
-          description: "Esta campanha não tem dados de insights disponíveis.",
+          title: t('dailyRoas.noInsightsTitle'),
+          description: t('dailyRoas.noInsightsDesc'),
           variant: "destructive"
         });
         return;
@@ -1278,15 +1278,15 @@ const CampaignControl = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">Daily ROAS Control</h1>
-                <p className="text-sm md:text-base text-muted-foreground">Gestão Diária de Campanhas e Produtos</p>
+                <p className="text-sm md:text-base text-muted-foreground">{t('dailyRoas.subtitle')}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {/* Market Type Selector */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">Mercado</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.market')}</label>
                   <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Selecionar Mercado" />
+                      <SelectValue placeholder={t('dailyRoas.selectMarket')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">Low Budget</SelectItem>
@@ -1298,10 +1298,10 @@ const CampaignControl = () => {
 
                 {adAccounts.length > 0 && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-muted-foreground">Ad Account (Conta de Anúncios)</label>
+                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.adAccountLabel')}</label>
                     <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
                       <SelectTrigger className="w-[280px]">
-                        <SelectValue placeholder="Selecionar Ad Account" />
+                        <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
                       </SelectTrigger>
                       <SelectContent>
                         {adAccounts.map((account) => (
@@ -1316,7 +1316,7 @@ const CampaignControl = () => {
                 
                 {/* Ações - Empilhadas */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">Ações</label>
+                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.actions')}</label>
                   <div className="flex flex-col gap-1">
                     <Button
                       variant="outline"
@@ -1325,11 +1325,11 @@ const CampaignControl = () => {
                       className="h-9 text-sm"
                     >
                       <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
-                      Atualizar Campanhas
+                      {t('dailyRoas.updateCampaigns')}
                     </Button>
                     <Button variant="outline" onClick={exportToCSV} className="h-9 text-sm">
                       <Download className="w-4 h-4 mr-2" />
-                      Exportar Relatório
+                      {t('dailyRoas.exportReport')}
                     </Button>
                   </div>
                 </div>
@@ -1340,23 +1340,23 @@ const CampaignControl = () => {
           {/* Daily Tabs */}
           <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <h2 className="text-lg md:text-xl font-bold">Daily ROAS - Campanhas por Dia</h2>
+              <h2 className="text-lg md:text-xl font-bold">Daily ROAS - {t('dailyRoas.campaignsByDay')}</h2>
               {!showAddCampaign && (
                 <Button onClick={() => setShowAddCampaign(true)} size="sm" className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Campanha
+                  {t('dailyRoas.addCampaign')}
                 </Button>
               )}
             </div>
 
             {showAddCampaign && (
               <Card className="p-3 md:p-4 mb-4 border border-primary/30 bg-primary/5">
-                <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">Selecionar Campanha do Facebook</h3>
+                <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('dailyRoas.selectFacebookCampaign')}</h3>
                 
                 {/* Show selected Ad Account */}
                 {selectedAdAccount && (
                   <div className="mb-3 p-2 md:p-3 rounded-lg bg-muted/50 border border-border/50">
-                    <label className="text-xs font-medium text-muted-foreground block mb-1">Ad Account (Conta de Anúncios):</label>
+                    <label className="text-xs font-medium text-muted-foreground block mb-1">{t('dailyRoas.adAccountLabel')}:</label>
                     <p className="text-xs md:text-sm font-semibold">
                       {adAccounts.find(acc => acc.id === selectedAdAccount)?.name || selectedAdAccount}
                     </p>
@@ -1365,7 +1365,7 @@ const CampaignControl = () => {
 
                 {/* Campaign Selector */}
                 <div className="mb-3">
-                  <label className="text-xs md:text-sm font-medium mb-2 block">Campanha:</label>
+                  <label className="text-xs md:text-sm font-medium mb-2 block">{t('dailyRoas.campaign')}:</label>
                   {isFetchingCampaigns ? (
                     <div className="flex items-center justify-center p-3 md:p-4 text-muted-foreground text-xs md:text-sm">
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -1380,7 +1380,7 @@ const CampaignControl = () => {
                   ) : (
                     <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Escolher campanha..." />
+                        <SelectValue placeholder={t('dailyRoas.selectCampaignPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {facebookCampaigns
@@ -1398,7 +1398,7 @@ const CampaignControl = () => {
                 {/* Campaign History */}
                 {campaignHistory.length > 0 && (
                   <div className="mb-4 p-4 rounded-lg bg-muted/30 border border-primary/20">
-                    <h4 className="font-semibold mb-3 text-primary">📊 Histórico da Campanha ({campaignHistory.length} dias)</h4>
+                    <h4 className="font-semibold mb-3 text-primary">📊 {t('dailyRoas.campaignHistory')} ({campaignHistory.length} {t('common.days')})</h4>
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {campaignHistory.map((entry, index) => {
                         const dayNumber = campaignHistory.length - index;
@@ -1408,7 +1408,7 @@ const CampaignControl = () => {
                           <div key={entry.id} className="p-3 rounded-lg bg-background border border-border/50">
                             <div className="flex justify-between items-start mb-2">
                               <div>
-                                <span className="font-semibold">Dia {dayNumber}</span>
+                                <span className="font-semibold">{t('dailyRoas.day')} {dayNumber}</span>
                                 <span className="text-xs text-muted-foreground ml-2">
                                   {new Date(entry.date).toLocaleDateString('pt-PT')}
                                 </span>
@@ -1424,7 +1424,7 @@ const CampaignControl = () => {
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                               <div>
-                                <span className="text-muted-foreground">Gasto:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.spent')}:</span>
                                 <span className="ml-1 font-medium">{entry.total_spent.toFixed(2)}€</span>
                               </div>
                               <div>
@@ -1432,7 +1432,7 @@ const CampaignControl = () => {
                                 <span className="ml-1 font-medium">{entry.cpc.toFixed(2)}€</span>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Vendas:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.sales')}:</span>
                                 <span className="ml-1 font-medium">{entry.purchases}</span>
                               </div>
                               <div>
@@ -1444,13 +1444,13 @@ const CampaignControl = () => {
                                 <span className="ml-1 font-medium">{entry.roas.toFixed(2)}x</span>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">Margem:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.margin')}:</span>
                                 <span className={`ml-1 font-medium ${entry.margin_percentage > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                   {entry.margin_percentage.toFixed(1)}%
                                 </span>
                               </div>
                               <div className="col-span-2">
-                                <span className="text-muted-foreground">Receita:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.revenue')}:</span>
                                 <span className="ml-1 font-medium">{(entry.units_sold * entry.product_price).toFixed(2)}€</span>
                               </div>
                             </div>
@@ -1475,14 +1475,14 @@ const CampaignControl = () => {
                     }}
                     className="w-full sm:w-auto"
                   >
-                    Cancelar
+                    {t('dailyRoas.cancel')}
                   </Button>
                   <Button 
                     onClick={addCampaignToDay}
                     disabled={!selectedCampaign}
                     className="w-full sm:w-auto"
                   >
-                    Adicionar
+                    {t('dailyRoas.add')}
                   </Button>
                 </div>
               </Card>
@@ -1508,56 +1508,56 @@ const CampaignControl = () => {
                     <p className="text-lg md:text-2xl font-bold">{kpis.totalSpend.toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">Revenue Total</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
                     <p className="text-lg md:text-2xl font-bold text-green-500">{kpis.totalRevenue.toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">ROAS Médio</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
                     <p className="text-lg md:text-2xl font-bold">{kpis.avgROAS.toFixed(2)}</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">Margem Total</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
                     <p className="text-lg md:text-2xl font-bold">{kpis.totalMargemEuros.toFixed(2)}€</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">Margem Média</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
                     <p className="text-lg md:text-2xl font-bold">{kpis.avgMargemPerc.toFixed(1)}%</p>
                   </Card>
                   <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">Total Vendas</p>
+                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
                     <p className="text-lg md:text-2xl font-bold">{kpis.totalVendas}</p>
                   </Card>
                 </div>
 
                 {/* Table for selected day */}
                 <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4">
-                  Campanhas - {selectedDay === "today" ? "Hoje" : new Date(selectedDay).toLocaleDateString('pt-PT')}
+                  {t('dailyRoas.campaigns')} - {selectedDay === "today" ? t('dailyRoas.today') : new Date(selectedDay).toLocaleDateString()}
                 </h3>
                 <div className="overflow-x-auto -mx-4 md:mx-0">
                   <div className="inline-block min-w-full align-middle px-4 md:px-0">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="min-w-[160px] md:min-w-[200px] text-xs md:text-sm">Nome Campanha</TableHead>
-                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">Total Gasto €</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">CPC €</TableHead>
-                          <TableHead className="min-w-[60px] md:min-w-[80px] text-xs md:text-sm">ATC</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">Compras</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">Preço €</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">COG €</TableHead>
-                          <TableHead className="min-w-[80px] md:min-w-[100px] text-xs md:text-sm">Unidades</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">ROAS</TableHead>
-                          <TableHead className="min-w-[100px] md:min-w-[120px] text-xs md:text-sm">Margem €</TableHead>
-                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">Margem %</TableHead>
-                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">Decisão</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">Ações</TableHead>
+                          <TableHead className="min-w-[160px] md:min-w-[200px] text-xs md:text-sm">{t('dailyRoas.campaignName')}</TableHead>
+                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.totalSpentEur')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.cpcEur')}</TableHead>
+                          <TableHead className="min-w-[60px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.atc')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.purchases')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.price')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.cog')} €</TableHead>
+                          <TableHead className="min-w-[80px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.units')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.roas')}</TableHead>
+                          <TableHead className="min-w-[100px] md:min-w-[120px] text-xs md:text-sm">{t('dailyRoas.marginEur')}</TableHead>
+                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.marginPerc')}</TableHead>
+                          <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.decision')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.actionsTable')}</TableHead>
                         </TableRow>
                       </TableHeader>
                     <TableBody>
                       {filteredData.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs md:text-sm">
-                            Sem dados para este dia. Adiciona uma campanha acima.
+                            {t('dailyRoas.noDataForDay')}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -1625,9 +1625,9 @@ const CampaignControl = () => {
           <Dialog open={showDecisionModal} onOpenChange={setShowDecisionModal}>
             <DialogContent className="max-w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl md:text-2xl text-center">📊 Análise Detalhada da Campanha</DialogTitle>
+                <DialogTitle className="text-xl md:text-2xl text-center">📊 {t('dailyRoas.detailedAnalysis')}</DialogTitle>
                 <DialogDescription className="text-sm text-center">
-                  Todas as métricas e recomendações para esta campanha
+                  {t('dailyRoas.allMetricsAndRecommendations')}
                 </DialogDescription>
               </DialogHeader>
               {selectedDecisionData && (
@@ -1640,10 +1640,10 @@ const CampaignControl = () => {
 
                   {/* All Metrics - Centralized Grid */}
                   <div className="glass-card p-4 md:p-6 rounded-lg border-2 border-border/50">
-                    <h5 className="font-semibold mb-4 text-center text-base md:text-lg">📈 Todas as Métricas</h5>
+                    <h5 className="font-semibold mb-4 text-center text-base md:text-lg">📈 {t('dailyRoas.allMetrics')}</h5>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">Total Gasto</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.totalSpent')}</p>
                         <p className="font-bold text-lg">{selectedDecisionData.total_spent.toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
@@ -1655,11 +1655,11 @@ const CampaignControl = () => {
                         <p className="font-bold text-lg">{selectedDecisionData.atc}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">Compras</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.purchases')}</p>
                         <p className="font-bold text-lg">{selectedDecisionData.purchases}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">Preço Produto</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.productPrice')}</p>
                         <p className="font-bold text-lg">{selectedDecisionData.product_price.toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
@@ -1667,7 +1667,7 @@ const CampaignControl = () => {
                         <p className="font-bold text-lg">{selectedDecisionData.cog.toFixed(2)}€</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">Unidades</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.units')}</p>
                         <p className="font-bold text-lg">{selectedDecisionData.purchases}</p>
                       </div>
                       <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/30">
