@@ -36,7 +36,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -125,6 +124,61 @@ const CampaignControl = () => {
     if (decision === "SCALE") return t('dailyRoas.scale');
     if (decision === "DESCALE") return t('dailyRoas.descale') || 'DESCALE';
     return decision;
+  };
+  
+  // Helper function to extract BER (Break Even ROAS) from campaign name
+  // Looks for decimal numbers in the name (e.g., "2.5", "2,5", "1.2x", etc.)
+  const extractBER = (campaignName: string): { ber: number | null; cleanName: string } => {
+    if (!campaignName) return { ber: null, cleanName: campaignName };
+    
+    let ber: number | null = null;
+    let cleanName = campaignName;
+    
+    // First, try to find explicit BER mentions (case insensitive)
+    const explicitBERPattern = /\b(?:ber|break[_\s]?even[_\s]?roas?)\s*:?\s*(\d+[,.]\d+)/gi;
+    const explicitMatch = campaignName.match(explicitBERPattern);
+    if (explicitMatch) {
+      const numberMatch = explicitMatch[0].match(/(\d+[,.]\d+)/);
+      if (numberMatch) {
+        const numberStr = numberMatch[1].replace(',', '.');
+        const parsedBer = parseFloat(numberStr);
+        if (!isNaN(parsedBer) && parsedBer > 0 && parsedBer < 100) {
+          ber = parsedBer;
+          cleanName = campaignName
+            .replace(new RegExp(explicitMatch[0].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '')
+            .replace(/\s+/g, ' ')
+            .trim();
+          return { ber, cleanName };
+        }
+      }
+    }
+    
+    // Look for decimal numbers (with comma or dot) that could be BER
+    // Match patterns like: "2.5", "2,5", "1.2x", etc.
+    const decimalPattern = /\b(\d+[,.]\d+)\b/g;
+    const matches = campaignName.match(decimalPattern);
+    
+    if (matches && matches.length > 0) {
+      // Filter for reasonable BER values (typically between 0.5 and 20)
+      const candidates = matches.map(match => {
+        const numberStr = match.replace(',', '.');
+        return parseFloat(numberStr);
+      }).filter(num => !isNaN(num) && num >= 0.1 && num <= 50);
+      
+      if (candidates.length > 0) {
+        // Take the first candidate (most likely the BER)
+        ber = candidates[0];
+        const matchToRemove = matches[0];
+        
+        // Remove the BER number from the name, including any trailing 'x' or whitespace
+        cleanName = campaignName
+          .replace(new RegExp(matchToRemove.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*x?', 'gi'), '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
+    }
+    
+    return { ber, cleanName };
   };
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -974,8 +1028,8 @@ const CampaignControl = () => {
       setCampaignHistory([]);
       
       if (addedDays > 0) {
-        toast({
-          title: t('dailyRoas.campaignAdded'),
+      toast({
+        title: t('dailyRoas.campaignAdded'),
           description: t('dailyRoas.daysAdded', { count: addedDays })
         });
       } else if (skippedDays > 0) {
@@ -1161,11 +1215,15 @@ const CampaignControl = () => {
         ? campaign.total_revenue / campaign.total_spent 
         : 0;
       
+      // Extract BER from campaign name and clean it
+      const { ber: extractedBER, cleanName } = extractBER(campaign.campaign_name);
+      
       // Create a synthetic DailyROASData object with aggregated values
       return {
         id: `aggregated-${campaign.campaign_id}`,
         campaign_id: campaign.campaign_id,
-        campaign_name: campaign.campaign_name,
+        campaign_name: cleanName, // Use cleaned name
+        ber: extractedBER, // Store BER for later use
         date: campaign.dates.sort()[0], // First date
         total_spent: campaign.total_spent,
         cpc: avgCPC,
@@ -1595,6 +1653,9 @@ const CampaignControl = () => {
                         const dayNumber = campaignHistory.length - index;
                         const { decisao, motivo } = determineDecision(entry, dayNumber, marketType);
                         
+                        // Extract BER from campaign name
+                        const { ber, cleanName } = extractBER(entry.campaign_name);
+                        
                         return (
                           <div key={entry.id} className="p-3 rounded-lg bg-background border border-border/50">
                             <div className="flex justify-between items-start mb-2">
@@ -1603,21 +1664,27 @@ const CampaignControl = () => {
                                 <span className="text-xs text-muted-foreground ml-2">
                                   {new Date(entry.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB')}
                                 </span>
+                                {ber !== null && (
+                                  <span className="ml-2 text-xs font-semibold text-orange-600 dark:text-orange-400">
+                                    BER: {ber.toFixed(2)}
+                                  </span>
+                                )}
                               </div>
                               <span 
                                 className={`px-2 py-1 rounded text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${
-                                  decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
-                                  decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
-                                  decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
-                                  "bg-blue-500/20 text-blue-700 dark:text-blue-400"
-                                }`}
+                                decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
+                                decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
+                                decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
+                                "bg-blue-500/20 text-blue-700 dark:text-blue-400"
+                              }`}
                                 onClick={() => {
                                   const calculated = calculateMetrics(entry);
                                   setSelectedDecisionData({
                                     ...calculated,
                                     decisao,
                                     motivo,
-                                    campaign_name: entry.campaign_name,
+                                    campaign_name: cleanName,
+                                    ber: ber,
                                     dateRange: new Date(entry.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
                                     dayRange: `${t('dailyRoas.day')} ${dayNumber}`
                                   });
@@ -1745,6 +1812,7 @@ const CampaignControl = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="min-w-[160px] md:min-w-[200px] text-xs md:text-sm">{t('dailyRoas.campaignName')}</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">BER</TableHead>
                           <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.totalSpentEur')}</TableHead>
                           <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.cpcEur')}</TableHead>
                           <TableHead className="min-w-[60px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.atc')}</TableHead>
@@ -1762,7 +1830,7 @@ const CampaignControl = () => {
                     <TableBody>
                       {aggregatedData.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={13} className="text-center py-8 text-muted-foreground text-xs md:text-sm">
+                          <TableCell colSpan={14} className="text-center py-8 text-muted-foreground text-xs md:text-sm">
                             {t('dailyRoas.noDataForDay')}
                           </TableCell>
                         </TableRow>
@@ -1775,22 +1843,37 @@ const CampaignControl = () => {
                           if ((data as any).aggregated && (data as any).total_days) {
                             dayNumber = (data as any).total_days;
                           } else {
-                            const campaignEntries = dailyData.filter(d => 
-                              d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name
-                            ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                          const campaignEntries = dailyData.filter(d => 
+                            d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name
+                          ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                             dayNumber = getCampaignDayNumber(campaignEntries, data.date);
                           }
                           
                           const { decisao, motivo } = determineDecision(calculated, dayNumber, marketType);
                           
+                          // Extract BER from campaign name (or use stored BER if available)
+                          const storedBER = (data as any).ber;
+                          const { ber, cleanName } = storedBER !== undefined 
+                            ? { ber: storedBER, cleanName: data.campaign_name }
+                            : extractBER(data.campaign_name);
+                          
                           return (
                             <TableRow key={data.id}>
                               <TableCell className="font-medium text-xs md:text-sm">
-                                {data.campaign_name}
+                                {cleanName}
                                 {(data as any).aggregated && (data as any).total_days && (
                                   <span className="ml-2 text-xs text-muted-foreground">
                                     ({t('dailyRoas.total')}: {(data as any).total_days} {isPortuguese ? 'dias' : 'days'})
                                   </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-semibold text-xs md:text-sm">
+                                {ber !== null && ber !== undefined ? (
+                                  <span className="text-orange-600 dark:text-orange-400 font-bold">
+                                    {ber.toFixed(2)}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
                                 )}
                               </TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.total_spent || 0)).toFixed(2)}€</TableCell>
@@ -1817,7 +1900,8 @@ const CampaignControl = () => {
                                       ...calculated,
                                       decisao,
                                       motivo,
-                                      campaign_name: data.campaign_name,
+                                      campaign_name: cleanName, // Use cleaned name
+                                      ber: ber, // Include BER in modal data
                                       dateRange: (data as any).aggregated 
                                         ? `${t('dailyRoas.total')}: ${(data as any).total_days} ${isPortuguese ? 'dias' : 'days'}`
                                         : new Date(data.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
@@ -1868,127 +1952,148 @@ const CampaignControl = () => {
 
           {/* Decision Modal */}
           <Dialog open={showDecisionModal} onOpenChange={setShowDecisionModal}>
-            <DialogContent className="max-w-full sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl md:text-2xl text-center">📊 {t('dailyRoas.detailedAnalysis')}</DialogTitle>
-                <DialogDescription className="text-sm text-center">
-                  {t('dailyRoas.allMetricsAndRecommendations')}
-                </DialogDescription>
+                <DialogTitle className="text-2xl md:text-3xl font-bold text-center">
+                  {t('dailyRoas.decisionDetails')}
+                </DialogTitle>
               </DialogHeader>
               {selectedDecisionData && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Campaign Header */}
-                  <div className="text-center p-4 rounded-lg bg-muted/30 border border-border/50">
-                    <h4 className="font-bold text-lg md:text-xl mb-1">{selectedDecisionData.campaign_name}</h4>
-                    <p className="text-sm text-muted-foreground">📅 {selectedDecisionData.dateRange}</p>
-                  </div>
-
-                  {/* All Metrics - Centralized Grid */}
-                  <div className="glass-card p-4 md:p-6 rounded-lg border-2 border-border/50">
-                    <h5 className="font-semibold mb-4 text-center text-base md:text-lg">📈 {t('dailyRoas.allMetrics')}</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.totalSpent')}</p>
-                        <p className="font-bold text-lg">{((selectedDecisionData.total_spent || 0)).toFixed(2)}€</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">CPC</p>
-                        <p className="font-bold text-lg">{((selectedDecisionData.cpc || 0)).toFixed(2)}€</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">ATC</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.atc || 0}</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.purchases')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.purchases || 0}</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.productPrice')}</p>
-                        <p className="font-bold text-lg">{((selectedDecisionData.product_price || 0)).toFixed(2)}€</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">COG</p>
-                        <p className="font-bold text-lg">{((selectedDecisionData.cog || 0)).toFixed(2)}€</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">{t('dailyRoas.units')}</p>
-                        <p className="font-bold text-lg">{selectedDecisionData.purchases || 0}</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                        <p className="text-xs text-muted-foreground mb-1">ROAS</p>
-                        <p className="font-bold text-lg text-green-600 dark:text-green-400">{((selectedDecisionData.roas || 0)).toFixed(2)}x</p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30">
-                        <p className="text-xs text-muted-foreground mb-1">Margem €</p>
-                        <p className={`font-bold text-lg ${(selectedDecisionData.margin_euros || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {((selectedDecisionData.margin_euros || 0)).toFixed(2)}€
-                        </p>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-muted/50 border border-border/30 col-span-2 md:col-span-3">
-                        <p className="text-xs text-muted-foreground mb-1">Margem %</p>
-                        <p className={`font-bold text-2xl ${
-                          (selectedDecisionData.margin_percentage || 0) > 15 ? 'text-green-600 dark:text-green-400' : 
-                          (selectedDecisionData.margin_percentage || 0) < 0 ? 'text-red-600 dark:text-red-400' : 
-                          'text-yellow-600 dark:text-yellow-400'
-                        }`}>
-                          {((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Decision Card */}
-                  <div className={`p-4 md:p-6 rounded-lg border-2 ${
-                    selectedDecisionData.decisao === "KILL" ? "bg-red-500/20 border-red-500" :
-                    selectedDecisionData.decisao === "SCALE" ? "bg-green-500/20 border-green-500" :
-                    "bg-yellow-500/20 border-yellow-500"
-                  }`}>
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                      {selectedDecisionData.decisao === "KILL" && <X className="w-6 h-6 md:w-8 md:h-8" />}
-                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-6 h-6 md:w-8 md:h-8" />}
-                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-6 h-6 md:w-8 md:h-8" />}
-                      <h3 className="text-xl md:text-2xl font-bold">{t("dailyRoas.decision")}: {translateDecision(selectedDecisionData.decisao)}</h3>
-                    </div>
-                    
-                    <div className="bg-background/50 p-3 md:p-4 rounded-lg mb-4 text-center">
-                      <h5 className="font-semibold mb-2 text-sm md:text-base">💡 {t("dailyRoas.reason")}</h5>
-                      <p className="text-xs md:text-sm">
-                        {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: Margem ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
-                      </p>
+                  <div className="text-center p-5 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
+                    <h4 className="font-bold text-xl md:text-2xl mb-2 text-foreground">{selectedDecisionData.campaign_name}</h4>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <span>📅</span>
+                      <span>{selectedDecisionData.dateRange}</span>
                       {selectedDecisionData.dayRange && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {selectedDecisionData.dayRange}
-                        </p>
+                        <>
+                          <span>•</span>
+                          <span>{selectedDecisionData.dayRange}</span>
+                        </>
                       )}
                     </div>
+                  </div>
+
+                  {/* Decision Card - Main Focus */}
+                  <div className={`relative p-6 md:p-8 rounded-xl border-3 shadow-lg ${
+                    selectedDecisionData.decisao === "KILL" 
+                      ? "bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/50" :
+                    selectedDecisionData.decisao === "SCALE" 
+                      ? "bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/50" :
+                    "bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/50"
+                  }`}>
+                    {/* Decision Icon and Label */}
+                    <div className="flex flex-col items-center justify-center gap-4 mb-6">
+                      <div className={`p-4 rounded-full ${
+                        selectedDecisionData.decisao === "KILL" ? "bg-red-500/20" :
+                        selectedDecisionData.decisao === "SCALE" ? "bg-green-500/20" :
+                        "bg-yellow-500/20"
+                      }`}>
+                        {selectedDecisionData.decisao === "KILL" && <X className="w-10 h-10 md:w-12 md:h-12 text-red-600 dark:text-red-400" />}
+                        {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-10 h-10 md:w-12 md:h-12 text-green-600 dark:text-green-400" />}
+                        {selectedDecisionData.decisao === "MANTER" && <Minus className="w-10 h-10 md:w-12 md:h-12 text-yellow-600 dark:text-yellow-400" />}
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm md:text-base text-muted-foreground mb-2">{t("dailyRoas.decision")}</p>
+                        <h3 className={`text-3xl md:text-4xl font-bold ${
+                          selectedDecisionData.decisao === "KILL" ? "text-red-600 dark:text-red-400" :
+                          selectedDecisionData.decisao === "SCALE" ? "text-green-600 dark:text-green-400" :
+                          "text-yellow-600 dark:text-yellow-400"
+                        }`}>
+                          {translateDecision(selectedDecisionData.decisao)}
+                        </h3>
+                      </div>
+                      </div>
                     
-                    <div className="bg-background/50 p-3 md:p-4 rounded-lg">
-                      <h5 className="font-semibold mb-3 text-sm md:text-base text-center">🎯 {t("dailyRoas.decisionLogic")}</h5>
-                      <div className="space-y-3 text-xs md:text-sm">
-                        <div className="p-3 rounded-lg bg-muted/30">
-                          <p className="font-semibold mb-2">📅 {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}</p>
-                          <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-red-500 font-bold">{translateDecision("KILL")}:</span> {t("dailyRoas.killReason1")}</li>
-                            <li><span className="text-green-500 font-bold">{translateDecision("SCALE")}:</span> {t("dailyRoas.scaleReason1")}</li>
-                            <li><span className="text-yellow-500 font-bold">{translateDecision("MANTER")}:</span> {t("dailyRoas.keepReason1")}</li>
+                    {/* Reason */}
+                    <div className="bg-background/80 backdrop-blur-sm p-5 rounded-lg border border-border/50 mb-6">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
+                          <span className="text-xl">💡</span>
+                      </div>
+                        <div className="flex-1">
+                          <h5 className="font-semibold mb-2 text-base md:text-lg">{t("dailyRoas.reason")}</h5>
+                          <p className="text-sm md:text-base leading-relaxed text-foreground">
+                            {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: ${isPortuguese ? 'Margem' : 'Margin'} ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                    {/* Decision Logic */}
+                    <div className="bg-background/80 backdrop-blur-sm p-5 rounded-lg border border-border/50">
+                      <div className="flex items-start gap-3 mb-4">
+                        <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
+                          <span className="text-xl">🎯</span>
+                    </div>
+                        <div className="flex-1">
+                          <h5 className="font-semibold mb-4 text-base md:text-lg">{t("dailyRoas.decisionLogic")}</h5>
+                          <div className="space-y-4">
+                            <div className="p-4 rounded-lg bg-muted/40 border border-border/30">
+                              <p className="font-semibold mb-3 text-sm md:text-base flex items-center gap-2">
+                                <span>📅</span>
+                                <span>{t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}</span>
+                              </p>
+                              <ul className="space-y-2 ml-6 list-disc text-xs md:text-sm">
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "KILL" ? "text-red-500" : "text-red-400"}`}>
+                                    {translateDecision("KILL")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.killReason1")}</span>
+                                </li>
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "SCALE" ? "text-green-500" : "text-green-400"}`}>
+                                    {translateDecision("SCALE")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.scaleReason1")}</span>
+                                </li>
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "MANTER" ? "text-yellow-500" : "text-yellow-400"}`}>
+                                    {translateDecision("MANTER")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.keepReason1")}</span>
+                                </li>
                           </ul>
                         </div>
-                        <div className="p-3 rounded-lg bg-muted/30">
-                          <p className="font-semibold mb-2">📅 {t("dailyRoas.days3Plus")}</p>
-                          <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-green-500 font-bold">{translateDecision("SCALE")}:</span> {t("dailyRoas.scaleReason2")}</li>
-                            <li><span className="text-yellow-500 font-bold">{translateDecision("MANTER")}:</span> {t("dailyRoas.keepReason2")}</li>
-                            <li><span className="text-red-500 font-bold">{translateDecision("KILL")}:</span> {t("dailyRoas.killReason2")}</li>
+                            <div className="p-4 rounded-lg bg-muted/40 border border-border/30">
+                              <p className="font-semibold mb-3 text-sm md:text-base flex items-center gap-2">
+                                <span>📅</span>
+                                <span>{t("dailyRoas.days3Plus")}</span>
+                              </p>
+                              <ul className="space-y-2 ml-6 list-disc text-xs md:text-sm">
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "SCALE" ? "text-green-500" : "text-green-400"}`}>
+                                    {translateDecision("SCALE")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.scaleReason2")}</span>
+                                </li>
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "MANTER" ? "text-yellow-500" : "text-yellow-400"}`}>
+                                    {translateDecision("MANTER")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.keepReason2")}</span>
+                                </li>
+                                <li className="leading-relaxed">
+                                  <span className={`font-bold ${selectedDecisionData.decisao === "KILL" ? "text-red-500" : "text-red-400"}`}>
+                                    {translateDecision("KILL")}:
+                                  </span>{" "}
+                                  <span className="text-foreground">{t("dailyRoas.killReason2")}</span>
+                                </li>
                           </ul>
                         </div>
-                        <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
-                          <p className="text-xs text-center">
-                            ℹ️ {t("dailyRoas.decisionDetails")}
-                          </p>
                         </div>
                       </div>
                     </div>
+                    </div>
+                  </div>
+
+                  {/* Info Footer */}
+                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 text-center">
+                    <p className="text-xs md:text-sm text-muted-foreground flex items-center justify-center gap-2">
+                      <span>ℹ️</span>
+                      <span>{t("dailyRoas.decisionDetails")}</span>
+                    </p>
                   </div>
                 </div>
               )}
