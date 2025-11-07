@@ -1072,6 +1072,11 @@ const MetaDashboard = () => {
                               </span>
                             </div>
                           </div>
+
+                          {/* Active/Paused status in bottom-right */}
+                          <span className="absolute bottom-6 right-6 text-xs font-semibold uppercase tracking-wide">
+                            {campaign.status === "ACTIVE" ? "Active" : "Paused"}
+                          </span>
                         </div>
                       </Card>
                     );
