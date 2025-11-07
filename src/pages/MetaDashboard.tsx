@@ -999,11 +999,6 @@ const MetaDashboard = () => {
                             <Eye className="w-4 h-4" />
                           </Button>
 
-                          {/* Active/Paused status in bottom-right */}
-                          <span className="absolute bottom-6 right-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            {campaign.status === "ACTIVE" ? "Active" : "Paused"}
-                          </span>
-
                           {/* Campaign Info */}
                           <div className="flex-1 space-y-3">
                             <div className="flex items-start justify-between gap-4 pr-10">
@@ -1078,6 +1073,10 @@ const MetaDashboard = () => {
                             </div>
                           </div>
 
+                          {/* Active/Paused status in bottom-right */}
+                          <span className="absolute bottom-6 right-6 text-xs font-semibold uppercase tracking-wide">
+                            {campaign.status === "ACTIVE" ? "Active" : "Paused"}
+                          </span>
                         </div>
                       </Card>
                     );
