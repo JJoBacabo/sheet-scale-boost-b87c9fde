@@ -824,14 +824,19 @@ export const useAdminSupport = (currentAdminId?: string) => {
         throw new Error('Invalid priority value');
       }
 
-      // Verify ticket exists
+      // Verify ticket exists - use maybeSingle to avoid 400 errors
       const { data: ticketData, error: fetchError } = await supabase
         .from('support_chats')
-        .select('*')
+        .select('id, priority')
         .eq('id', ticketId)
-        .single();
+        .maybeSingle();
 
-      if (fetchError || !ticketData) {
+      if (fetchError) {
+        console.error('Error fetching ticket for priority update:', fetchError);
+        throw new Error(`Failed to fetch ticket: ${fetchError.message}`);
+      }
+
+      if (!ticketData) {
         throw new Error('Ticket not found');
       }
 
