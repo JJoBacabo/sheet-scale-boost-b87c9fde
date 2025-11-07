@@ -1020,7 +1020,7 @@ const MetaDashboard = () => {
                             </div>
 
                             {/* Key Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                               <div className="p-3 glass-card rounded-xl">
                                 <p className="text-xs text-muted-foreground mb-1">Investido</p>
                                 <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
@@ -1039,6 +1039,27 @@ const MetaDashboard = () => {
                                   {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
                                 </p>
                               </div>
+                              <div className="p-3 flex items-center justify-center">
+                                {campaign.status === "ACTIVE" ? (
+                                  <Button
+                                    size="lg"
+                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 hover:scale-110 font-bold w-full"
+                                    onClick={() => setCampaignToPause(campaign.id)}
+                                  >
+                                    <Pause className="w-5 h-5 mr-2" />
+                                    Pausar
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="lg"
+                                    className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-110 font-semibold w-full"
+                                    onClick={() => setCampaignToActivate(campaign.id)}
+                                  >
+                                    <Play className="w-5 h-5 mr-2" />
+                                    Ativar
+                                  </Button>
+                                )}
+                              </div>
                             </div>
 
                             {/* Budget Info */}
@@ -1054,34 +1075,6 @@ const MetaDashboard = () => {
                             </div>
                           </div>
 
-                          {/* Actions */}
-                          <div className="flex lg:flex-col gap-4 justify-end lg:justify-center items-center lg:items-stretch">
-                            <div className="lg:flex-1" />
-                            <div className="flex flex-col items-center gap-2">
-                              <span className="text-xs font-semibold uppercase tracking-wide">
-                                {campaign.status === "ACTIVE" ? "Active" : "Paused"}
-                              </span>
-                              {campaign.status === "ACTIVE" ? (
-                                <Button
-                                  size="lg"
-                                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 hover:scale-110 font-bold w-full"
-                                  onClick={() => setCampaignToPause(campaign.id)}
-                                >
-                                  <Pause className="w-5 h-5 mr-2" />
-                                  Pausar
-                                </Button>
-                              ) : (
-                                <Button
-                                  size="lg"
-                                  className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-110 font-semibold w-full"
-                                  onClick={() => setCampaignToActivate(campaign.id)}
-                                >
-                                  <Play className="w-5 h-5 mr-2" />
-                                  Ativar
-                                </Button>
-                              )}
-                            </div>
-                          </div>
                         </div>
                       </Card>
                     );
