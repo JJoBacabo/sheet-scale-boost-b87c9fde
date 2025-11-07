@@ -1006,17 +1006,6 @@ const MetaDashboard = () => {
                                 <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
                                 <p className="text-xs text-muted-foreground">{campaign.objective}</p>
                               </div>
-                              <Badge
-                                className={
-                                  campaign.status === "ACTIVE"
-                                    ? "bg-success/20 text-success border-success/30"
-                                    : campaign.status === "PAUSED"
-                                      ? "bg-warning/20 text-warning border-warning/30"
-                                      : "bg-muted/50 text-muted-foreground border-muted"
-                                }
-                              >
-                                {campaign.status}
-                              </Badge>
                             </div>
 
                             {/* Key Metrics */}
@@ -1074,9 +1063,17 @@ const MetaDashboard = () => {
                           </div>
 
                           {/* Active/Paused status in bottom-right */}
-                          <span className="absolute bottom-6 right-6 text-xs font-semibold uppercase tracking-wide">
-                            {campaign.status === "ACTIVE" ? "Active" : "Paused"}
-                          </span>
+                          <Badge
+                            className={`absolute bottom-6 right-6 ${
+                              campaign.status === "ACTIVE"
+                                ? "bg-success/20 text-success border-success/30"
+                                : campaign.status === "PAUSED"
+                                  ? "bg-warning/20 text-warning border-warning/30"
+                                  : "bg-muted/50 text-muted-foreground border-muted"
+                            }`}
+                          >
+                            {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "Paused" : campaign.status}
+                          </Badge>
                         </div>
                       </Card>
                     );
