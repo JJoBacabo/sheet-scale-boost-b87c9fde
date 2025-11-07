@@ -123,23 +123,6 @@ export function LoadingOverlay({ message, className }: LoadingOverlayProps) {
                        tracking-tight">
             {loadingMessage}
           </p>
-          
-          {/* Enhanced loading dots with glow */}
-          <div className="flex gap-2 mt-1">
-            {[0, 0.2, 0.4].map((delay, idx) => (
-              <div 
-                key={idx}
-                className="w-2.5 h-2.5 rounded-full 
-                         bg-gradient-to-br from-primary to-primary/60
-                         shadow-md shadow-primary/50
-                         animate-bounce" 
-                style={{ 
-                  animationDelay: `${delay}s`, 
-                  animationDuration: '1.4s' 
-                }} 
-              />
-            ))}
-          </div>
         </div>
       </div>
       
