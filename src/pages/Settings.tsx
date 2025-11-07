@@ -480,8 +480,8 @@ const Settings = () => {
 
     if (error || data?.error) {
       toast({
-        title: "Erro ao conectar",
-        description: error?.message || data?.error || "Verifique suas credenciais",
+        title: t("settings.errorConnecting"),
+        description: error?.message || data?.error || t("settings.checkCredentials"),
         variant: "destructive",
       });
     } else {
@@ -489,10 +489,10 @@ const Settings = () => {
       const storeChanged = data?.store_changed || false;
       
       toast({
-        title: "Shopify conectado!",
+        title: t("settings.shopifyConnected"),
         description: storeChanged 
-          ? `Nova loja "${data.shop.name}" conectada! Os produtos da loja anterior foram removidos. Sincronize para carregar os produtos desta loja.`
-          : `Loja "${data.shop.name}" conectada com sucesso.`,
+          ? t("settings.newStoreConnected").replace('{{storeName}}', data.shop.name)
+          : t("settings.storeConnectedSuccess").replace('{{storeName}}', data.shop.name),
         duration: storeChanged ? 8000 : 4000,
       });
       setShowShopifyDialog(false);
@@ -510,14 +510,17 @@ const Settings = () => {
     
     if (error || data?.error) {
       toast({
-        title: "Erro na sincronização",
-        description: error?.message || data?.error || "Tente novamente",
+        title: t("settings.errorSyncing"),
+        description: error?.message || data?.error || t("settings.tryAgain"),
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Produtos sincronizados!",
-        description: `${data.stats.created} novos, ${data.stats.updated} atualizados de ${data.stats.total} produtos`,
+        title: t("settings.productsSynced"),
+        description: t("settings.syncStats")
+          .replace('{{created}}', String(data.stats.created))
+          .replace('{{updated}}', String(data.stats.updated))
+          .replace('{{total}}', String(data.stats.total)),
       });
       setLastSync(new Date().toISOString());
     }
