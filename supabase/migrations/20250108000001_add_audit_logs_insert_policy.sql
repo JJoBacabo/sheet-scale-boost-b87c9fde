@@ -2,6 +2,9 @@
 -- ADD INSERT POLICY FOR AUDIT LOGS
 -- ============================================
 
+-- Drop policy if it exists to avoid errors
+DROP POLICY IF EXISTS "Admins can insert audit logs" ON public.audit_logs;
+
 -- Allow admins to insert audit logs manually (for fallback scenarios)
 CREATE POLICY "Admins can insert audit logs"
   ON public.audit_logs
