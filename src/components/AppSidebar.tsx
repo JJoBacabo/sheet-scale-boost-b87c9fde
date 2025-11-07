@@ -90,11 +90,12 @@ export function AppSidebar() {
       {/* Header with Logo */}
       <SidebarHeader className="p-6 flex items-center justify-center border-b border-primary/5">
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
+          <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse -z-10" />
           <img 
             src={logo} 
             alt="Sheet-Tools Logo" 
-            className={`relative transition-all duration-500 ${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} hover:scale-110`}
+            className={`relative z-10 transition-all duration-500 ${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} hover:scale-110`}
+            style={{ display: 'block', position: 'relative' }}
           />
         </div>
       </SidebarHeader>
