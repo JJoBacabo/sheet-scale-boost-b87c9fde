@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LanguageToggle } from "@/components/LanguageToggle";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { 
   Plus, 
@@ -1519,85 +1518,73 @@ const CampaignControl = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <h1 className="text-2xl font-bold">{t('dailyRoas.title')}</h1>
-                  <p className="text-sm text-muted-foreground">{t('dailyRoas.subtitle')}</p>
-                </div>
-                <LanguageToggle />
+        <main className="flex-1 p-6 overflow-auto">
+          {/* Header */}
+          <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">{t('dailyRoas.title')}</h1>
+                <p className="text-sm md:text-base text-muted-foreground">{t('dailyRoas.subtitle')}</p>
               </div>
-            </div>
-          </header>
+              <div className="flex flex-wrap gap-2">
+                {/* Market Type Selector */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.market')}</label>
+                  <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder={t('dailyRoas.selectMarket')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
+                      <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
+                      <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-          <main className="container mx-auto px-6 py-8 relative space-y-8">
-            {/* Controls Section */}
-            <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-border/50">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex flex-wrap gap-3">
-                  {/* Market Type Selector */}
+                {adAccounts.length > 0 && (
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.market')}</label>
-                    <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={t('dailyRoas.selectMarket')} />
+                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.adAccountLabel')}</label>
+                    <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
+                      <SelectTrigger className="w-[280px]">
+                        <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
-                        <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
-                        <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
+                        {adAccounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            {account.name}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-
-                  {adAccounts.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.adAccountLabel')}</label>
-                      <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
-                        <SelectTrigger className="w-[280px]">
-                          <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {adAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              {account.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  
-                  {/* Actions */}
+                )}
+                
+                {/* Ações - Empilhadas */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.actions')}</label>
                   <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.actions')}</label>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => fetchFacebookCampaigns()}
-                        disabled={isFetchingCampaigns || !selectedAdAccount}
-                        size="sm"
-                      >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
-                        {t('dailyRoas.updateCampaigns')}
-                      </Button>
-                      <Button variant="outline" onClick={exportToCSV} size="sm">
-                        <Download className="w-4 h-4 mr-2" />
-                        {t('dailyRoas.exportReport')}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchFacebookCampaigns()}
+                      disabled={isFetchingCampaigns || !selectedAdAccount}
+                      className="h-9 text-sm"
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
+                      {t('dailyRoas.updateCampaigns')}
+                    </Button>
+                    <Button variant="outline" onClick={exportToCSV} className="h-9 text-sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      {t('dailyRoas.exportReport')}
+                    </Button>
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
+          </div>
 
           {/* Daily Tabs */}
           <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
@@ -2053,8 +2040,7 @@ const CampaignControl = () => {
               )}
             </DialogContent>
           </Dialog>
-          </main>
-        </SidebarInset>
+        </main>
       </div>
     </SidebarProvider>
   );
