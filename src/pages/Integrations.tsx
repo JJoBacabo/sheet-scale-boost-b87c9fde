@@ -16,6 +16,7 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
+import { LoadingOverlay } from "@/components/ui/loading-spinner";
 
 interface Integration {
   id: string;
@@ -375,18 +376,7 @@ export default function Integrations() {
   };
 
   if (loading) {
-    return (
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <AppSidebar />
-          <SidebarInset className="flex-1">
-            <div className="flex items-center justify-center h-full">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
+    return <LoadingOverlay message={t('settings.loading')} />;
   }
 
   return (

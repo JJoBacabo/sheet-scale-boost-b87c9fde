@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { 
   Plus, 
   Download, 
@@ -608,8 +609,8 @@ const CampaignControl = () => {
         setFacebookCampaigns(data.campaigns);
         
         toast({
-          title: "Campanhas atualizadas!",
-          description: `${data.campaigns.length} campanhas carregadas.`
+          title: t('dailyRoas.campaignUpdated'),
+          description: `${data.campaigns.length} ${t('dailyRoas.campaignsLoaded')}`
         });
       } else {
         console.log("⚠️ No campaigns in response");
@@ -1220,11 +1221,7 @@ const CampaignControl = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingOverlay message={t('common.loading')} />;
   }
 
   if (!hasFacebookIntegration || !hasShopifyIntegration) {
@@ -1436,11 +1433,11 @@ const CampaignControl = () => {
                                 <span className="ml-1 font-medium">{entry.purchases}</span>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">ATC:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.atc')}:</span>
                                 <span className="ml-1 font-medium">{entry.atc}</span>
                               </div>
                               <div>
-                                <span className="text-muted-foreground">ROAS:</span>
+                                <span className="text-muted-foreground">{t('dailyRoas.roas')}:</span>
                                 <span className="ml-1 font-medium">{entry.roas.toFixed(2)}x</span>
                               </div>
                               <div>

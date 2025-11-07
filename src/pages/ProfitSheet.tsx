@@ -534,8 +534,8 @@ const ProfitSheet = () => {
       if (error) throw error;
 
       toast({
-        title: "Salvo com sucesso",
-        description: "Os valores foram atualizados",
+        title: t('common.success'),
+        description: t('profitSheet.savedSuccessfully'),
       });
 
       // Refresh data
@@ -611,7 +611,7 @@ const ProfitSheet = () => {
                               <SelectItem key={integration.id} value={integration.id}>
                                 {integration.metadata?.shop_name || 
                                  integration.metadata?.shop_domain || 
-                                 `Loja ${integration.id.slice(0, 8)}`}
+                                 `${t('products.store')} ${integration.id.slice(0, 8)}`}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -655,7 +655,7 @@ const ProfitSheet = () => {
                             {selectedAdAccount && (
                               <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/30">
                                 <CheckCircle2 className="w-3 h-3 mr-1" />
-                                Selecionada
+                                {t('profitSheet.selected')}
                               </Badge>
                             )}
                           </>
@@ -670,7 +670,7 @@ const ProfitSheet = () => {
                         className="btn-gradient h-12 px-8 text-base font-medium"
                       >
                         <CheckCircle2 className="w-5 h-5 mr-2" />
-                        Confirmar Seleção
+                        {t('profitSheet.confirmSelection')}
                       </Button>
                     </div>
                   </div>
@@ -686,10 +686,10 @@ const ProfitSheet = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="z-50 bg-card border-border">
-                        <SelectItem value="today">Hoje</SelectItem>
-                        <SelectItem value="last_7d">Últimos 7 dias</SelectItem>
-                        <SelectItem value="last_30d">Últimos 30 dias</SelectItem>
-                        <SelectItem value="all">Desde sempre</SelectItem>
+                        <SelectItem value="today">{t('profitSheet.today')}</SelectItem>
+                        <SelectItem value="last_7d">{t('profitSheet.last7Days')}</SelectItem>
+                        <SelectItem value="last_30d">{t('profitSheet.last30Days')}</SelectItem>
+                        <SelectItem value="all">{t('profitSheet.allPeriods')}</SelectItem>
                       </SelectContent>
                     </Select>
 
@@ -701,7 +701,7 @@ const ProfitSheet = () => {
                             {dateRange.from && dateRange.to ? (
                               `${format(dateRange.from, "dd/MM/yy")} - ${format(dateRange.to, "dd/MM/yy")}`
                             ) : (
-                              "Personalizar"
+                              t('profitSheet.customize')
                             )}
                           </span>
                         </Button>
@@ -729,7 +729,7 @@ const ProfitSheet = () => {
                     className="btn-glass h-11"
                     onClick={() => setIsConfirmed(false)}
                   >
-                    Alterar Seleção
+                    {t('profitSheet.changeSelection')}
                   </Button>
                 </div>
 
@@ -743,7 +743,7 @@ const ProfitSheet = () => {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Revenue Total</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalRevenue')}</p>
                       <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.revenue))}</h3>
                     </div>
                   </Card>
@@ -756,7 +756,7 @@ const ProfitSheet = () => {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Profit Total</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalProfit')}</p>
                       <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {formatAmount(convertFromEUR(totals.profit))}
                       </h3>
@@ -771,7 +771,7 @@ const ProfitSheet = () => {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground">Ad Spend Total</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalAdSpend')}</p>
                       <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.adSpend))}</h3>
                     </div>
                   </Card>
@@ -784,7 +784,7 @@ const ProfitSheet = () => {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground">ROAS Médio</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.avgRoas')}</p>
                       <h3 className="text-2xl sm:text-3xl font-bold">{totals.avgRoas.toFixed(2)}x</h3>
                     </div>
                   </Card>
@@ -794,7 +794,7 @@ const ProfitSheet = () => {
                 <Card className="p-3 sm:p-6 glass-card rounded-2xl sm:rounded-3xl border-2 border-border/50">
                   <div className="mb-3 sm:mb-4">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>💱 Todos os valores convertidos para {selectedCurrency.code} ({selectedCurrency.name})</span>
+                      <span>💱 {t('profitSheet.allValuesConverted')} {selectedCurrency.code} ({selectedCurrency.name})</span>
                     </div>
                   </div>
                   <div className="overflow-x-auto -mx-3 sm:mx-0">
@@ -802,18 +802,18 @@ const ProfitSheet = () => {
                       <table className="min-w-full divide-y divide-border/50">
                         <thead>
                           <tr className="border-b border-border/50">
-                            <th className="text-left p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap sticky left-0 bg-card z-10">Data</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Revenue</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">COG</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Ad Spend</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Outros</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Refunds</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Taxa</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Profit</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">ROAS</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">P%</th>
-                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">COG%</th>
-                            <th className="text-center p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">Ações</th>
+                            <th className="text-left p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap sticky left-0 bg-card z-10">{t('profitSheet.date')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.revenue')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.cog')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.adSpend')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.others')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.refunds')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.fee')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.profit')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.roas')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">{t('profitSheet.profitMargin')}</th>
+                            <th className="text-right p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">{t('profitSheet.cogPercentage')}</th>
+                            <th className="text-center p-2 sm:p-4 font-semibold text-xs sm:text-sm whitespace-nowrap">{t('profitSheet.actions')}</th>
                           </tr>
                         </thead>
                        <tbody>
@@ -829,7 +829,7 @@ const ProfitSheet = () => {
                          ) : profitData.length === 0 ? (
                            <tr>
                              <td colSpan={12} className="text-center p-8 sm:p-12 text-xs sm:text-sm text-muted-foreground">
-                               Nenhum dado disponível para o período selecionado
+                               {t('profitSheet.noDataForPeriod')}
                              </td>
                            </tr>
                          ) : (

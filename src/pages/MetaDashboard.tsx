@@ -659,7 +659,7 @@ const MetaDashboard = () => {
               onClick={() => setCampaignToPause(campaign.id)}
             >
               <Pause className="w-4 h-4 mr-1" />
-              Pausar
+              {t('metaDashboard.pause')}
             </Button>
           ) : (
             <Button
@@ -668,7 +668,7 @@ const MetaDashboard = () => {
               onClick={() => setCampaignToActivate(campaign.id)}
             >
               <Play className="w-4 h-4 mr-1" />
-              Ativar
+              {t('metaDashboard.activate')}
             </Button>
           )}
 
@@ -777,7 +777,7 @@ const MetaDashboard = () => {
                       {t("metaDashboard.connectedBadge")}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">Gestão de Campanhas do Facebook Ads</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t('metaDashboard.subtitle')}</p>
                 </div>
                 <LanguageToggle />
               </div>
@@ -927,7 +927,7 @@ const MetaDashboard = () => {
                     <button className="flex h-10 w-full md:w-48 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
                       <div className="flex items-center gap-2">
                         <Settings2 className="w-4 h-4" />
-                        <span>Personalizar</span>
+                        <span>{t('metaDashboard.customize')}</span>
                       </div>
                     </button>
                   </PopoverTrigger>
@@ -969,7 +969,7 @@ const MetaDashboard = () => {
             {/* Campaigns List - Simplified */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Campanhas ({filteredCampaigns.length})</h2>
+                <h2 className="text-xl font-bold">{t('metaDashboard.campaignsTitle')} ({filteredCampaigns.length})</h2>
               </div>
 
               {filteredCampaigns.length === 0 ? (
@@ -1011,11 +1011,11 @@ const MetaDashboard = () => {
                             {/* Key Metrics */}
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                               <div className="p-3 glass-card rounded-xl">
-                                <p className="text-xs text-muted-foreground mb-1">Investido</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
                                 <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
                               </div>
                               <div className="p-3 glass-card rounded-xl">
-                                <p className="text-xs text-muted-foreground mb-1">Resultados</p>
+                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
                                 <p className="text-lg font-bold">{insights.results}</p>
                               </div>
                               <div className="p-3 glass-card rounded-xl">

@@ -8,9 +8,11 @@ import { Check, Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Billing = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isAnnual, setIsAnnual] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
@@ -69,8 +71,8 @@ const Billing = () => {
       console.error('Error creating checkout:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro ao processar',
-        description: 'Não foi possível iniciar o checkout. Tente novamente.',
+        title: t('common.error'),
+        description: t('billing.checkoutError'),
       });
     } finally {
       setLoadingPlan(null);
@@ -86,8 +88,8 @@ const Billing = () => {
       console.error('Error opening portal:', error);
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível abrir o portal de faturação.',
+        title: t('common.error'),
+        description: t('billing.portalError'),
       });
     }
   };
@@ -103,14 +105,14 @@ const Billing = () => {
   return (
     <div className="container mx-auto p-6 max-w-7xl">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Escolha o Seu Plano</h1>
+        <h1 className="text-4xl font-bold mb-4">{t('billing.title')}</h1>
         <p className="text-muted-foreground text-lg mb-6">
-          Gerencie suas campanhas de Facebook Ads com inteligência e simplicidade
+          {t('billing.subtitle')}
         </p>
 
         <div className="flex items-center justify-center gap-4">
           <Label htmlFor="billing-toggle" className="text-base">
-            Mensal
+            {t('billing.monthly')}
           </Label>
           <Switch
             id="billing-toggle"
@@ -118,7 +120,7 @@ const Billing = () => {
             onCheckedChange={setIsAnnual}
           />
           <Label htmlFor="billing-toggle" className="text-base">
-            Anual
+            {t('billing.annual')}
             <Badge variant="secondary" className="ml-2">-17%</Badge>
           </Label>
         </div>
@@ -127,14 +129,14 @@ const Billing = () => {
       {currentSubscription && (
         <Card className="mb-8 border-primary">
           <CardHeader>
-            <CardTitle>Assinatura Atual</CardTitle>
+            <CardTitle>{t('billing.currentSubscription')}</CardTitle>
             <CardDescription>
-              Plano {currentSubscription.plan_name} - {currentSubscription.billing_period === 'annual' ? 'Anual' : 'Mensal'}
+              {t('billing.plan')} {currentSubscription.plan_name} - {currentSubscription.billing_period === 'annual' ? t('billing.annual') : t('billing.monthly')}
             </CardDescription>
           </CardHeader>
           <CardFooter>
             <Button variant="outline" onClick={handleManageBilling}>
-              Gerir Faturação
+              {t('billing.manageBilling')}
             </Button>
           </CardFooter>
         </Card>
@@ -157,7 +159,7 @@ const Billing = () => {
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <Badge className="bg-gradient-primary">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    Mais Popular
+                    {t('billing.mostPopular')}
                   </Badge>
                 </div>
               )}
@@ -169,7 +171,7 @@ const Billing = () => {
                     €{plan.price_amount.toFixed(0)}
                   </span>
                   <span className="text-muted-foreground">
-                    /{isAnnual ? 'ano' : 'mês'}
+                    /{isAnnual ? t('billing.perYear') : t('billing.perMonth')}
                   </span>
                 </div>
               </CardHeader>
@@ -178,11 +180,11 @@ const Billing = () => {
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{plan.store_limit} {plan.store_limit === 999 ? 'lojas ilimitadas' : 'lojas'}</span>
+                    <span className="text-sm">{plan.store_limit} {plan.store_limit === 999 ? t('billing.unlimitedStores') : t('billing.stores')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{plan.campaign_limit} {plan.campaign_limit === 999 ? 'campanhas ilimitadas' : 'campanhas'}</span>
+                    <span className="text-sm">{plan.campaign_limit} {plan.campaign_limit === 999 ? t('billing.unlimitedCampaigns') : t('billing.campaigns')}</span>
                   </div>
                   {features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-2">
@@ -205,7 +207,7 @@ const Billing = () => {
                   {loadingPlan === plan.code && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   )}
-                  {isCurrentPlan ? 'Plano Atual' : 'Escolher Plano'}
+                  {isCurrentPlan ? t('billing.currentPlan') : t('billing.choosePlan')}
                 </Button>
               </CardFooter>
             </Card>

@@ -95,15 +95,15 @@ const Settings = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('facebook_connected') === 'true') {
       toast({
-        title: "Sucesso",
-        description: "Facebook Ads conectado com sucesso!",
+        title: t('common.success'),
+        description: t('settings.integrationsPage.connectSuccess'),
       });
       window.history.replaceState({}, '', '/settings');
       if (user) fetchProfile(user.id, true);
     } else if (params.get('facebook_error')) {
       toast({
-        title: "Erro",
-        description: params.get('facebook_error') || "Erro ao conectar Facebook Ads",
+        title: t('common.error'),
+        description: params.get('facebook_error') || t('settings.facebookConnectionError'),
         variant: "destructive",
       });
       window.history.replaceState({}, '', '/settings');
@@ -149,8 +149,8 @@ const Settings = () => {
           if (payload.eventType === 'INSERT') {
             setIntegrations((prev) => [...prev, payload.new as Integration]);
             toast({
-              title: "✨ Integração conectada!",
-              description: "A integração foi adicionada com sucesso.",
+              title: t('common.success'),
+              description: t('settings.integrationsPage.connectSuccess'),
             });
           } else if (payload.eventType === 'UPDATE') {
             setIntegrations((prev) =>
@@ -227,8 +227,8 @@ const Settings = () => {
     if (error) {
       console.error("Error fetching subscription history:", error);
       toast({
-        title: "Erro",
-        description: "Erro ao carregar histórico de assinaturas",
+        title: t('common.error'),
+        description: t('settings.errorLoadingData'),
         variant: "destructive",
       });
     } else {
@@ -267,14 +267,14 @@ const Settings = () => {
 
     if (error) {
       toast({
-        title: "Erro ao guardar",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Perfil atualizado!",
-        description: "As alterações foram guardadas com sucesso.",
+        title: t('common.success'),
+        description: t('settings.profileUpdated'),
       });
       if (user) await fetchProfile(user.id, false);
     }
@@ -563,7 +563,7 @@ const Settings = () => {
 
     if (error) {
       toast({
-        title: "Erro ao desconectar",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -584,8 +584,8 @@ const Settings = () => {
   const handleSubscribe = async (planName: string, priceId: string) => {
     if (!user) {
       toast({
-        title: "Erro",
-        description: "Utilizador não autenticado",
+        title: t('common.error'),
+        description: t('settings.userNotAuthenticated'),
         variant: "destructive",
       });
       return;
@@ -609,8 +609,8 @@ const Settings = () => {
     } catch (error: any) {
       console.error('❌ Error creating checkout session:', error);
       toast({
-        title: "Erro",
-        description: error.message || "Erro ao criar sessão de pagamento",
+        title: t('common.error'),
+        description: error.message || t('settings.errorConnecting'),
         variant: "destructive",
       });
     } finally {
@@ -621,8 +621,8 @@ const Settings = () => {
   const handleManageSubscription = async () => {
     if (!user) {
       toast({
-        title: "Erro",
-        description: "Utilizador não autenticado",
+        title: t('common.error'),
+        description: t('settings.userNotAuthenticated'),
         variant: "destructive",
       });
       return;
@@ -639,8 +639,8 @@ const Settings = () => {
     } catch (error: any) {
       console.error('❌ Error creating portal session:', error);
       toast({
-        title: "Erro",
-        description: error.message || "Erro ao abrir portal de gestão",
+        title: t('common.error'),
+        description: error.message || t('billing.portalError'),
         variant: "destructive",
       });
     }

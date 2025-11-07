@@ -750,7 +750,7 @@ const Products = () => {
                       {products.length === 0
                         ? hasShopifyIntegration 
                           ? 'Sincronize as vendas da sua loja Shopify para ver os produtos vendidos'
-                          : 'Conecte sua loja Shopify para começar'
+                          : t('products.connectShopifyToStart')
                         : t('products.adjustSearch')}
                     </p>
                     {hasShopifyIntegration && products.length === 0 && (
