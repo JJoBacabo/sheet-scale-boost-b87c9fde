@@ -79,26 +79,27 @@ export const useFeatureGate = () => {
             const planCode = (profile.subscription_plan || 'free').toLowerCase();
             const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
             
-            if (isPaidPlan && (profile.subscription_status === 'active' || !subscription)) {
-              // If it's a paid plan and status is active OR no subscription record exists
+            // If it's a paid plan, always use its limits (don't check subscription_status)
+            if (isPaidPlan) {
               const planCodeUpper = planCode.toUpperCase();
               const planLimits = SUBSCRIPTION_LIMITS[planCodeUpper as keyof typeof SUBSCRIPTION_LIMITS] || SUBSCRIPTION_LIMITS.FREE;
               
-              console.log('✅ useFeatureGate - Using limits from profile:', {
+              console.log('✅ useFeatureGate - Using limits from profile (paid plan):', {
                 planCode,
                 subscriptionStatus: profile.subscription_status,
+                hasSubscription: !!subscription,
                 planLimits
               });
               
               storesLimit = planLimits.stores;
               campaignsLimit = planLimits.campaigns;
             } else {
-              // Free plan or inactive
+              // Free plan or trial (trial is handled above)
               storesLimit = 0;
               campaignsLimit = 0;
             }
           } else {
-            // Free plan
+            // Free plan - no plan in profile
             storesLimit = 0;
             campaignsLimit = 0;
           }

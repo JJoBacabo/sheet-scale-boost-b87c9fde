@@ -138,9 +138,11 @@ export const useSubscriptionState = () => {
           // If no subscription but profile has plan, use profile plan
           const planCode = (profile?.subscription_plan || 'free').toLowerCase();
           const planName = planCode.toUpperCase();
-          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner', 'trial'].includes(planCode);
-          // If it's a paid plan, assume it's active even if subscription_status is null/empty
-          const isActive = profile?.subscription_status === 'active' || (isPaidPlan && (profile?.subscription_status === null || profile?.subscription_status === undefined || profile?.subscription_status === ''));
+          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+          
+          // If it's a paid plan, always treat as active (don't check subscription_status)
+          // This ensures all paid plans work even if subscription_status is null/empty/inactive
+          const isActive = isPaidPlan || profile?.subscription_status === 'active';
           
           console.log('🔍 useSubscriptionState - No subscription, using profile:', {
             planCode,
@@ -153,13 +155,12 @@ export const useSubscriptionState = () => {
           
           // Determine allowed pages based on plan
           let allowedPages: string[] = [];
-          if (isActive) {
+          if (isActive && isPaidPlan) {
             switch (planCode) {
               case 'expert':
                 allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'product-research', 'settings', 'integrations'];
                 break;
               case 'standard':
-              case 'trial':
                 allowedPages = ['dashboard', 'campaign-control', 'profit-sheet', 'products', 'meta-dashboard', 'settings', 'integrations'];
                 break;
               case 'basic':

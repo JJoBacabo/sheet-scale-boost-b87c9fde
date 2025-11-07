@@ -140,18 +140,18 @@ export const useSubscriptionLimits = () => {
 
         // If no active subscription, check profile subscription_plan
         // This handles cases where subscription hasn't synced yet but profile has plan
-        // IMPORTANT: Check if planCode is a valid paid plan and status is active
+        // IMPORTANT: If it's a paid plan, always apply limits regardless of subscription_status
         if (planCode && planCode !== 'free' && planCode !== 'trial') {
-          // Check if status is active OR if it's a paid plan (expert, standard, basic, beginner)
           const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
           
-          if (isPaidPlan && (subscriptionStatus === 'active' || !subscription)) {
-            // If it's a paid plan and status is active OR no subscription record exists
+          // If it's a paid plan, always use its limits (don't check subscription_status)
+          if (isPaidPlan) {
             const planLimits = getLimitsForPlan(planCode);
             
-            console.log('✅ Using limits from profile plan:', {
+            console.log('✅ Using limits from profile plan (paid plan detected):', {
               planCode,
               subscriptionStatus,
+              hasSubscription: !!subscription,
               planLimits
             });
 
