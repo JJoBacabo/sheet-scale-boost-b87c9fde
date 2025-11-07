@@ -924,6 +924,14 @@ const CampaignControl = () => {
 
         if (error) {
           console.error(`❌ Error saving ${insightDate}:`, error);
+          // If it's a unique constraint violation, the day already exists
+          if (error.code === '23505') {
+            skippedDays++;
+            console.log(`⏭️ ${insightDate} already exists (unique constraint)`);
+          } else {
+            // Other errors should be reported
+            throw new Error(`Error saving ${insightDate}: ${error.message}`);
+          }
         } else {
           addedDays++;
           console.log(`✅ Successfully saved ${insightDate}`);
@@ -935,10 +943,24 @@ const CampaignControl = () => {
       setShowAddCampaign(false);
       setCampaignHistory([]);
       
-      toast({
-        title: t('dailyRoas.campaignAdded'),
-        description: t('dailyRoas.campaignsLoaded')
-      });
+      if (addedDays > 0) {
+        toast({
+          title: t('dailyRoas.campaignAdded'),
+          description: t('dailyRoas.daysAdded', { count: addedDays })
+        });
+      } else if (skippedDays > 0) {
+        toast({
+          title: t('dailyRoas.campaignAlreadyExists'),
+          description: t('dailyRoas.allDaysAlreadyExist', { count: skippedDays }),
+          variant: "default"
+        });
+      } else {
+        toast({
+          title: t('dailyRoas.errorAddingCampaign'),
+          description: t('dailyRoas.noDaysAdded'),
+          variant: "destructive"
+        });
+      }
     } catch (error: any) {
       toast({
         title: t('common.error'),
