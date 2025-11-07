@@ -60,11 +60,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
     try {
       // Fetch profile (may not exist, that's ok)
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('user_id, full_name')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+      
+      // If profile doesn't exist, that's ok - we'll try to get email
+      if (profileError && profileError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileError);
+      }
 
       // Always try to get email from get-users edge function
       let email: string | null = null;
@@ -147,7 +152,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
           .select('user_id, full_name')
-          .in('user_id', userIds);
+          .in('user_id', userIds)
+          .limit(1000); // Add limit to avoid timeout
         
         if (!profilesError && profilesData) {
           profiles = profilesData;
@@ -836,10 +842,13 @@ export const useAdminSupport = (currentAdminId?: string) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', ticketId)
-        .select()
+        .select('id, priority, updated_at')
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating priority:', error);
+        throw error;
+      }
 
       // Update local state immediately and get the updated ticket
       let updatedTicketWithProfile: SupportChat | null = null;

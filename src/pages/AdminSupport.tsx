@@ -151,7 +151,7 @@ const AdminSupport = () => {
         .from('profiles')
         .select('full_name')
         .eq('user_id', currentUser.id)
-        .single();
+        .maybeSingle();
       
       const adminName = profile?.full_name || currentUser.email?.split('@')[0] || 'Admin';
       await assignTicket(targetTicket.id, currentUser.id, adminName);
