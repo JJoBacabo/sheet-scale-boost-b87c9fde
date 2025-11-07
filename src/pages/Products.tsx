@@ -258,7 +258,7 @@ const Products = () => {
 
     if (error) {
       toast({
-        title: "Erro ao carregar produtos",
+        title: t("settings.errorLoadingProducts"),
         description: error.message,
         variant: "destructive",
       });
@@ -295,19 +295,19 @@ const Products = () => {
       });
       
       if (error || data?.error) {
-        const errorMsg = data?.error || error?.message || "Erro desconhecido";
+        const errorMsg = data?.error || error?.message || t("settings.unknownError");
         
         // Check if it's a permissions error (404 = endpoint not found or no permission)
         if (errorMsg.includes("404")) {
           toast({
-            title: "⚠️ Permissões insuficientes no Shopify",
-            description: "O Admin API token precisa das seguintes permissões: 1) Vá ao Shopify Admin → Settings → Apps and sales channels → Develop apps. 2) Selecione a sua app ou crie uma. 3) Em 'Admin API access scopes', ative: read_products, read_orders, write_webhooks. 4) Instale/reinstale a app para gerar novo token. 5) Copie o novo Admin API access token. 6) Reconecte o Shopify nas Definições.",
+            title: `⚠️ ${t("settings.insufficientShopifyPermissions")}`,
+            description: t("settings.shopifyPermissionsDesc"),
             variant: "destructive",
             duration: 15000,
           });
         } else {
           toast({
-            title: "Erro na sincronização",
+            title: t("settings.errorSyncing"),
             description: errorMsg,
             variant: "destructive",
           });
@@ -316,8 +316,8 @@ const Products = () => {
         // Check if it's the background sync message
         if (data.stats.message) {
           toast({
-            title: "✅ Sincronização iniciada!",
-            description: "Os produtos estão a ser sincronizados em background. Recarregue a página em alguns segundos para ver os resultados.",
+            title: `✅ ${t("settings.syncStarted")}`,
+            description: t("settings.syncStartedDesc"),
             duration: 6000,
           });
           
@@ -325,23 +325,26 @@ const Products = () => {
           setTimeout(async () => {
             await fetchProducts(user.id);
             toast({
-              title: "Lista atualizada",
-              description: "Produtos sincronizados com sucesso",
+              title: t("settings.listUpdated"),
+              description: t("settings.productsSyncedSuccess"),
             });
           }, 10000);
         } else {
           // Legacy response with detailed stats
           toast({
-            title: "✅ Produtos sincronizados!",
-            description: `${data.stats.created} criados, ${data.stats.updated} atualizados de ${data.stats.total} produtos totais`,
+            title: `✅ ${t("settings.productsSynced")}`,
+            description: t("settings.syncStats")
+              .replace('{{created}}', String(data.stats.created))
+              .replace('{{updated}}', String(data.stats.updated))
+              .replace('{{total}}', String(data.stats.total)),
           });
           await fetchProducts(user.id);
         }
       }
     } catch (err) {
       toast({
-        title: "Erro na sincronização",
-        description: "Falha ao conectar com o Shopify. Verifique a sua ligação à internet.",
+        title: t("settings.errorSyncing"),
+        description: t("settings.syncFailed"),
         variant: "destructive",
       });
     } finally {
@@ -407,8 +410,8 @@ const Products = () => {
     // Validate input
     if (isNaN(costValue) || costValue < 0) {
       toast({
-        title: "❌ Valor inválido",
-        description: "Por favor, insira um valor numérico válido",
+        title: `❌ ${t("settings.invalidValue")}`,
+        description: t("settings.enterValidNumber"),
         variant: "destructive",
       });
       return;
@@ -434,7 +437,7 @@ const Products = () => {
 
       if (error) {
         toast({
-          title: "Erro ao atualizar cotação",
+          title: t("settings.errorUpdatingQuote"),
           description: error.message,
           variant: "destructive",
         });
@@ -445,16 +448,16 @@ const Products = () => {
       await updateDailyROASForProduct(product.product_name, costValue, sellingPrice);
 
       toast({
-        title: "✅ Cotação atualizada",
-        description: "Preço de fornecedor e Daily ROAS atualizados com sucesso",
+        title: `✅ ${t("settings.quoteUpdated")}`,
+        description: t("settings.quoteUpdatedDesc"),
       });
       setEditingCost(null);
       setTempCostPrice("");
       await fetchProducts(user.id, true);
     } catch (err) {
       toast({
-        title: "Erro",
-        description: "Falha ao atualizar a cotação",
+        title: t("common.error"),
+        description: t("settings.errorUpdatingQuoteDesc"),
         variant: "destructive",
       });
     }
