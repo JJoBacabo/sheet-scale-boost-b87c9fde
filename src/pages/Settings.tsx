@@ -409,8 +409,8 @@ const Settings = () => {
   const handleSaveShopify = async () => {
     if (!user || !shopifyStoreName || !shopifyAccessToken) {
       toast({
-        title: "Erro",
-        description: "Preencha todos os campos.",
+        title: t("common.error"),
+        description: t("settings.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -568,10 +568,10 @@ const Settings = () => {
       if (user) await fetchProfile(user.id, true);
     } else {
       toast({
-        title: "Integração removida",
+        title: t("settings.integrationRemoved"),
         description: type === 'shopify' 
-          ? 'Shopify desconectado e todos os produtos foram removidos.'
-          : 'Facebook Ads foi desconectado.',
+          ? t("settings.shopifyDisconnected")
+          : t("settings.facebookDisconnected"),
       });
       // Force refresh to ensure clean state
       if (user) await fetchProfile(user.id, true);
@@ -951,9 +951,7 @@ const Settings = () => {
                     return (
                       <div className="p-4 rounded-lg glass-card border border-warning/30 bg-warning/5">
                         <p className="text-sm">
-                          <strong>Trial Expirado:</strong> Seu período de trial terminou em {new Date(profile.trial_ends_at).toLocaleDateString("pt-PT")}.
-                          Você está agora no plano FREE com funcionalidades limitadas. 
-                          Faça upgrade para continuar com acesso completo.
+                          <strong>{t('settings.trialExpiredTitle')}:</strong> {t('settings.trialExpiredMessage').replace('{{date}}', new Date(profile.trial_ends_at).toLocaleDateString())}
                         </p>
                       </div>
                     );

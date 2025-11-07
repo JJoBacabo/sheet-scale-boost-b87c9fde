@@ -928,7 +928,13 @@ const translations = {
         proceed: 'Continuar e Conectar'
       },
       userNotAuthenticated: 'Utilizador não autenticado',
-      facebookConnectionError: 'Erro ao iniciar conexão com Facebook'
+      facebookConnectionError: 'Erro ao iniciar conexão com Facebook',
+      trialExpiredTitle: 'Trial Expirado',
+      trialExpiredMessage: 'O seu período de trial terminou em {{date}}. Está agora no plano FREE com funcionalidades limitadas. Faça upgrade para continuar com acesso completo.',
+      fillAllFields: 'Preencha todos os campos.',
+      integrationRemoved: 'Integração removida',
+      shopifyDisconnected: 'Shopify desconectado e todos os produtos foram removidos.',
+      facebookDisconnected: 'Facebook Ads foi desconectado.',
     },
   },
   en: {
@@ -1810,7 +1816,13 @@ const translations = {
         proceed: 'Continue and Connect'
       },
       userNotAuthenticated: 'User not authenticated',
-      facebookConnectionError: 'Error initiating Facebook connection'
+      facebookConnectionError: 'Error initiating Facebook connection',
+      trialExpiredTitle: 'Trial Expired',
+      trialExpiredMessage: 'Your trial period ended on {{date}}. You are now on the FREE plan with limited features. Upgrade to continue with full access.',
+      fillAllFields: 'Please fill all fields.',
+      integrationRemoved: 'Integration removed',
+      shopifyDisconnected: 'Shopify disconnected and all products were removed.',
+      facebookDisconnected: 'Facebook Ads was disconnected.',
     },
   },
 };
