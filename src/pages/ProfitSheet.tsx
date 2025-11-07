@@ -213,8 +213,8 @@ const ProfitSheet = () => {
     } catch (error: any) {
       console.error("❌ Error fetching ad accounts:", error);
       toast({
-        title: "Erro ao buscar contas de anúncios",
-        description: error.message || "Não foi possível buscar as ad accounts.",
+        title: t('metaDashboard.errorLoadingAccounts'),
+        description: error.message || t('metaDashboard.noAccountsFound'),
         variant: "destructive"
       });
     }
@@ -381,8 +381,8 @@ const ProfitSheet = () => {
   const handleConfirm = async () => {
     if (!selectedShopify || !selectedAdAccount) {
       toast({
-        title: "Erro",
-        description: "Selecione uma loja Shopify e uma conta de anúncios",
+        title: t('common.error'),
+        description: t('profitSheet.selectStoreDesc'),
         variant: "destructive"
       });
       return;
@@ -473,8 +473,8 @@ const ProfitSheet = () => {
     } catch (error: any) {
       console.error('❌ Error fetching profit data:', error);
       toast({
-        title: "Erro ao buscar dados",
-        description: error.message || "Não foi possível buscar os dados da profit sheet",
+        title: t('settings.errorLoadingData'),
+        description: error.message || t('profitSheet.noData'),
         variant: "destructive"
       });
     } finally {
@@ -544,7 +544,7 @@ const ProfitSheet = () => {
     } catch (error: any) {
       console.error('Error saving row:', error);
       toast({
-        title: "Erro ao salvar",
+        title: t('settings.errorLoadingData'),
         description: error.message,
         variant: "destructive"
       });
@@ -556,7 +556,7 @@ const ProfitSheet = () => {
   };
 
   if (loading) {
-    return <LoadingOverlay message="A carregar..." />;
+    return <LoadingOverlay message={t('profitSheet.loading')} />;
   }
 
   return (
@@ -632,17 +632,17 @@ const ProfitSheet = () => {
                         </label>
                         {!hasFacebookIntegration ? (
                           <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                            Nenhuma integração do Facebook encontrada. Conecte sua conta nas Integrações.
+                            {t('metaDashboard.connectDesc')}
                           </div>
                         ) : adAccounts.length === 0 ? (
                           <div className="text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
-                            A carregar ad accounts...
+                            {t('common.loading')}
                           </div>
                         ) : (
                           <>
                             <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
                               <SelectTrigger className="w-full btn-glass h-12">
-                                <SelectValue placeholder="Selecionar Ad Account" />
+                                <SelectValue placeholder={t('profitSheet.selectAdAccount')} />
                               </SelectTrigger>
                               <SelectContent className="z-50 bg-card border-border">
                                 {adAccounts.map((account) => (
@@ -822,7 +822,7 @@ const ProfitSheet = () => {
                              <td colSpan={12} className="text-center p-8 sm:p-12">
                                <div className="flex items-center justify-center gap-2">
                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                 <span className="text-xs sm:text-sm text-muted-foreground">A carregar dados...</span>
+                                 <span className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.loading')}</span>
                                </div>
                              </td>
                            </tr>

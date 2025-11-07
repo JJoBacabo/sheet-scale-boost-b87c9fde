@@ -361,8 +361,8 @@ const CampaignControl = () => {
     } catch (error) {
       console.error('❌ Error in recalculateDailyROASForProduct:', error);
       toast({
-        title: "❌ Erro ao recalcular",
-        description: "Falha ao atualizar valores do Daily ROAS",
+        title: t('common.error'),
+        description: t('dailyRoas.errorUpdating'),
         variant: "destructive",
         duration: 3000,
       });
@@ -384,7 +384,7 @@ const CampaignControl = () => {
       if (error) {
         console.error("Error fetching integrations:", error);
         toast({
-          title: "Erro ao verificar integrações",
+          title: t('common.error'),
           description: error.message,
           variant: "destructive"
         });
@@ -539,8 +539,8 @@ const CampaignControl = () => {
     } catch (error: any) {
       console.error("❌ Error fetching ad accounts:", error);
       toast({
-        title: "Erro ao buscar contas de anúncios",
-        description: error.message || "Não foi possível buscar as ad accounts.",
+        title: t('metaDashboard.errorLoadingAccounts'),
+        description: error.message || t('metaDashboard.noAccountsFound'),
         variant: "destructive"
       });
     }
@@ -616,16 +616,16 @@ const CampaignControl = () => {
         setFacebookCampaigns([]);
         
         toast({
-          title: "Nenhuma campanha encontrada",
-          description: "Esta conta não tem campanhas ativas.",
+          title: t('metaDashboard.noCampaigns'),
+          description: t('dailyRoas.noActiveCampaigns'),
           variant: "destructive"
         });
       }
     } catch (error: any) {
       console.error("❌ Error fetching Facebook campaigns:", error);
       toast({
-        title: "Erro ao buscar campanhas",
-        description: error.message || "Não foi possível buscar campanhas do Facebook.",
+        title: t('metaDashboard.errorLoadingCampaigns'),
+        description: error.message || t('metaDashboard.unknownErrorLoadingCampaigns'),
         variant: "destructive"
       });
       setFacebookCampaigns([]);
@@ -642,8 +642,8 @@ const CampaignControl = () => {
     setSelectedCampaign("");
     
     toast({
-      title: "Conta de anúncios alterada",
-      description: "A carregar campanhas da nova conta..."
+      title: t('dailyRoas.accountChanged'),
+      description: t('dailyRoas.loadingNewAccount')
     });
   };
 
@@ -749,8 +749,8 @@ const CampaignControl = () => {
   const addCampaignToDay = async () => {
     if (!selectedCampaign) {
       toast({
-        title: "Selecione uma campanha",
-        description: "Por favor, selecione uma campanha do Facebook primeiro.",
+        title: t('dailyRoas.selectCampaign'),
+        description: t('dailyRoas.selectCampaignDesc'),
         variant: "destructive"
       });
       return;
@@ -789,8 +789,8 @@ const CampaignControl = () => {
       
       if (!matchedProduct) {
         toast({
-          title: "Produto não encontrado",
-          description: `Não foi possível encontrar um produto correspondente à campanha "${campaign.name}". Os dados de COG, preço e unidades não serão preenchidos.`,
+          title: t('products.noProducts'),
+          description: t('dailyRoas.productNotFound', { campaignName: campaign.name }),
           variant: "destructive"
         });
       }
@@ -905,12 +905,12 @@ const CampaignControl = () => {
       setCampaignHistory([]);
       
       toast({
-        title: "Campanha adicionada!",
-        description: `${addedDays} dia(s) adicionado(s)${skippedDays > 0 ? `, ${skippedDays} dia(s) já existiam` : ''}${matchedProduct ? ` com dados do produto "${matchedProduct.product_name}"` : ''}.`
+        title: t('dailyRoas.campaignAdded'),
+        description: t('dailyRoas.campaignsLoaded')
       });
     } catch (error: any) {
       toast({
-        title: "Erro ao adicionar campanha",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -927,10 +927,10 @@ const CampaignControl = () => {
       if (error) throw error;
 
       await fetchDailyData();
-      toast({ title: "Campanha removida!" });
+      toast({ title: t('metaDashboard.deletedSuccess') });
     } catch (error: any) {
       toast({
-        title: "Erro ao remover campanha",
+        title: t('metaDashboard.errorDeleting'),
         description: error.message,
         variant: "destructive"
       });
@@ -949,7 +949,7 @@ const CampaignControl = () => {
       await fetchDailyData();
     } catch (error: any) {
       toast({
-        title: "Erro ao atualizar dados",
+        title: t('settings.errorLoadingData'),
         description: error.message,
         variant: "destructive"
       });
@@ -971,7 +971,7 @@ const CampaignControl = () => {
     a.href = url;
     a.download = `daily-roas-report-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
-    toast({ title: "Relatório exportado!" });
+    toast({ title: t('dailyRoas.reportExported') });
   };
 
   const calculateKPIs = () => {
@@ -1369,13 +1369,13 @@ const CampaignControl = () => {
                   {isFetchingCampaigns ? (
                     <div className="flex items-center justify-center p-3 md:p-4 text-muted-foreground text-xs md:text-sm">
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      A carregar campanhas...
+                      {t('dailyRoas.loadingCampaigns')}
                     </div>
                   ) : facebookCampaigns.length === 0 ? (
                     <div className="p-3 md:p-4 text-center text-muted-foreground border border-dashed rounded text-xs md:text-sm">
                       {selectedAdAccount 
-                        ? "Nenhuma campanha encontrada. Clique em atualizar para recarregar."
-                        : "Selecione uma conta de anúncios primeiro."}
+                        ? t('dailyRoas.noCampaignsRefresh')
+                        : t('dailyRoas.selectAdAccountFirst')}
                     </div>
                   ) : (
                     <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
