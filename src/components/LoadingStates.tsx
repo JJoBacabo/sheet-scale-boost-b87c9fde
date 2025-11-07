@@ -3,16 +3,18 @@ import { Skeleton, SkeletonCard, SkeletonTable, SkeletonText } from "@/component
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function LoadingStatesDemo() {
   const [showOverlay, setShowOverlay] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold mb-4">Loading States</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('loadingStates.title')}</h2>
         <p className="text-muted-foreground mb-6">
-          Exemplos de spinners, skeleton loaders e overlays
+          {t('loadingStates.description')}
         </p>
       </div>
 
@@ -63,7 +65,7 @@ export function LoadingStatesDemo() {
 
       {/* Loading Overlay */}
       <Card className="p-6 glass-card">
-        <h3 className="text-xl font-semibold mb-4">Loading Overlay</h3>
+        <h3 className="text-xl font-semibold mb-4">{t('loadingStates.overlayTitle')}</h3>
         <Button 
           onClick={() => {
             setShowOverlay(true);
@@ -71,10 +73,10 @@ export function LoadingStatesDemo() {
           }}
           className="btn-gradient"
         >
-          Mostrar Overlay (3 segundos)
+          {t('loadingStates.showOverlay')}
         </Button>
         
-        {showOverlay && <LoadingOverlay message="Processando dados..." />}
+        {showOverlay && <LoadingOverlay message={t('loadingStates.processing')} />}
       </Card>
     </div>
   );

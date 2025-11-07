@@ -1719,22 +1719,22 @@ const CampaignControl = () => {
                     </div>
                     
                     <div className="bg-background/50 p-3 md:p-4 rounded-lg">
-                      <h5 className="font-semibold mb-3 text-sm md:text-base text-center">🎯 Lógica de Decisão Automática</h5>
+                      <h5 className="font-semibold mb-3 text-sm md:text-base text-center">🎯 {t("dailyRoas.decisionLogic")}</h5>
                       <div className="space-y-3 text-xs md:text-sm">
                         <div className="p-3 rounded-lg bg-muted/30">
-                          <p className="font-semibold mb-2">📅 Dias 1-2 (Mercado {marketType.toUpperCase()}):</p>
+                          <p className="font-semibold mb-2">📅 {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}</p>
                           <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-red-500 font-bold">KILL:</span> Gasto ≥ limite sem vendas, ou CPC alto sem conversões</li>
-                            <li><span className="text-green-500 font-bold">SCALE:</span> Margem &gt; 15% já nos primeiros dias</li>
-                            <li><span className="text-yellow-500 font-bold">MANTER:</span> Há vendas ou sinais positivos (ATC, CPC baixo)</li>
+                            <li><span className="text-red-500 font-bold">KILL:</span> {t("dailyRoas.killReason1")}</li>
+                            <li><span className="text-green-500 font-bold">SCALE:</span> {t("dailyRoas.scaleReason1")}</li>
+                            <li><span className="text-yellow-500 font-bold">MANTER:</span> {t("dailyRoas.keepReason1")}</li>
                           </ul>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/30">
-                          <p className="font-semibold mb-2">📅 Dias 3+:</p>
+                          <p className="font-semibold mb-2">📅 {t("dailyRoas.days3Plus")}</p>
                           <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-green-500 font-bold">SCALE:</span> Margem &gt; 15% (aumentar orçamento)</li>
-                            <li><span className="text-yellow-500 font-bold">MANTER:</span> Margem entre 0-15% (continuar a monitorizar)</li>
-                            <li><span className="text-red-500 font-bold">KILL:</span> Margem negativa ou gasto &gt;50€ sem vendas</li>
+                            <li><span className="text-green-500 font-bold">SCALE:</span> {t("dailyRoas.scaleReason2")}</li>
+                            <li><span className="text-yellow-500 font-bold">MANTER:</span> {t("dailyRoas.keepReason2")}</li>
+                            <li><span className="text-red-500 font-bold">KILL:</span> {t("dailyRoas.killReason2")}</li>
                           </ul>
                         </div>
                         <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
