@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ArrowLeft, Construction } from "lucide-react";
-import logo from "@/assets/sheet-tools-logo.png";
+import logo from "@/assets/logo.png";
 
 export default function ProductResearch() {
   const { t } = useLanguage();
