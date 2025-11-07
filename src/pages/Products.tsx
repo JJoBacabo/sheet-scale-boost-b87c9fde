@@ -645,21 +645,22 @@ const Products = () => {
         <AppSidebar />
 
         <SidebarInset className="flex-1 transition-all duration-300">
-          <main className="relative min-h-screen p-6 space-y-6">
-            {/* Hero Section with integrated controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border-2 hover:border-primary/40 transition-all flex items-center justify-center" />
+          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
+            <div className="flex items-center gap-4 px-6 py-4">
+              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
+              <div className="flex items-center justify-between flex-1">
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {t('products.title')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">{t('products.subtitle')}</p>
+                  <h1 className="text-2xl font-bold">{t('products.title')}</h1>
+                  <p className="text-sm text-muted-foreground">{t('products.subtitle')}</p>
                 </div>
+                <LanguageToggle />
               </div>
+            </div>
+          </header>
 
-              {/* Search Bar */}
-              <div className="relative">
+          <main className="container mx-auto px-6 py-8 relative space-y-8">
+            {/* Search Bar */}
+            <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                 <Input
                   placeholder={t('products.search')}

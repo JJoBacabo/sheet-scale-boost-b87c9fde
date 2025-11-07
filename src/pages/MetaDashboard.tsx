@@ -771,13 +771,13 @@ const MetaDashboard = () => {
               <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
               <div className="flex items-center justify-between flex-1">
                 <div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 mb-1">
                     <h1 className="text-2xl font-bold">{t("metaDashboard.title")}</h1>
                     <Badge className="bg-success/20 text-success border-success/30">
                       {t("metaDashboard.connectedBadge")}
                     </Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1">{t('metaDashboard.subtitle')}</p>
+                  <p className="text-sm text-muted-foreground">{t('metaDashboard.subtitle')}</p>
                 </div>
                 <LanguageToggle />
               </div>

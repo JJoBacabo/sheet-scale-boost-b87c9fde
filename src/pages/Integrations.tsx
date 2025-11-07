@@ -391,7 +391,7 @@ export default function Integrations() {
               <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
               <div className="flex items-center justify-between flex-1">
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold">
                     {t('settings.integrationsPage.title')}
                   </h1>
                   <p className="text-sm text-muted-foreground">
