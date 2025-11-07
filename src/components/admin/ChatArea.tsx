@@ -40,6 +40,18 @@ interface ChatAreaProps {
   currentAdminId: string;
 }
 
+// Helper function to get display name (name or email username)
+const getDisplayName = (fullName?: string | null, email?: string | null): string => {
+  if (fullName?.trim()) {
+    return fullName.trim();
+  }
+  if (email) {
+    // Extract username from email (part before @)
+    return email.split('@')[0];
+  }
+  return 'User';
+};
+
 export const ChatArea = ({ 
   ticket, 
   onSendMessage, 
@@ -129,14 +141,14 @@ export const ChatArea = ({
             <Avatar>
               <AvatarFallback className="bg-primary text-primary-foreground">
                 {(() => {
-                  const displayName = ticket.profiles?.full_name?.trim() || ticket.profiles?.email || 'U';
+                  const displayName = getDisplayName(ticket.profiles?.full_name, ticket.profiles?.email);
                   return displayName[0]?.toUpperCase() || 'U';
                 })()}
               </AvatarFallback>
             </Avatar>
             <div>
               <h2 className="font-bold text-lg text-foreground">
-                {ticket.profiles?.full_name?.trim() || ticket.profiles?.email || 'User'}
+                {getDisplayName(ticket.profiles?.full_name, ticket.profiles?.email)}
               </h2>
               <p className="text-sm text-muted-foreground">
                 {ticket.language === 'pt' ? '🇵🇹 Português' : '🇬🇧 English'}

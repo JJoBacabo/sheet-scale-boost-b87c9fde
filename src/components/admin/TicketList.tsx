@@ -17,6 +17,18 @@ interface TicketListProps {
   currentAdminId?: string;
 }
 
+// Helper function to get display name (name or email username)
+const getDisplayName = (fullName?: string | null, email?: string | null): string => {
+  if (fullName?.trim()) {
+    return fullName.trim();
+  }
+  if (email) {
+    // Extract username from email (part before @)
+    return email.split('@')[0];
+  }
+  return 'User';
+};
+
 export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimTicket, currentAdminId }: TicketListProps) => {
   const { language } = useLanguage();
   const isPortuguese = language === 'pt';
@@ -157,7 +169,7 @@ export const TicketList = ({ tickets, selectedTicketId, onSelectTicket, onClaimT
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">
-                        {ticket.profiles?.full_name?.trim() || ticket.profiles?.email || 'User'}
+                        {getDisplayName(ticket.profiles?.full_name, ticket.profiles?.email)}
                       </h3>
                       {ticket.admin_id === currentAdminId && (
                         <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
