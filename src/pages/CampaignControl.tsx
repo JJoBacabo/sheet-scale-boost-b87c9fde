@@ -1886,9 +1886,9 @@ const CampaignControl = () => {
                               <TableCell className="font-semibold text-xs md:text-sm">{data.units_sold || 0}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_euros || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
-                              <TableCell>
+                              <TableCell className="text-center">
                                 <div 
-                                  className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
+                                  className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
                                     decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
                                     decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
                                     decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
@@ -1963,74 +1963,74 @@ const CampaignControl = () => {
                   {/* Decision */}
                   <div className={`p-4 rounded-lg border ${
                     selectedDecisionData.decisao === "KILL" 
-                      ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800" :
+                      ? "bg-red-100 dark:bg-red-950/40 border-red-300 dark:border-red-800" :
                     selectedDecisionData.decisao === "SCALE" 
-                      ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" :
-                    "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800"
+                      ? "bg-green-100 dark:bg-green-950/40 border-green-300 dark:border-green-800" :
+                    "bg-yellow-100 dark:bg-yellow-950/40 border-yellow-300 dark:border-yellow-800"
                   }`}>
                     <div className="flex items-center gap-3 mb-3">
-                      {selectedDecisionData.decisao === "KILL" && <X className="w-5 h-5 text-red-600 dark:text-red-400" />}
-                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />}
-                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />}
+                      {selectedDecisionData.decisao === "KILL" && <X className="w-5 h-5 text-red-700 dark:text-red-400" />}
+                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-5 h-5 text-green-700 dark:text-green-400" />}
+                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-5 h-5 text-yellow-700 dark:text-yellow-400" />}
                       <h3 className={`text-lg font-semibold ${
-                        selectedDecisionData.decisao === "KILL" ? "text-red-600 dark:text-red-400" :
-                        selectedDecisionData.decisao === "SCALE" ? "text-green-600 dark:text-green-400" :
-                        "text-yellow-600 dark:text-yellow-400"
+                        selectedDecisionData.decisao === "KILL" ? "text-red-700 dark:text-red-400" :
+                        selectedDecisionData.decisao === "SCALE" ? "text-green-700 dark:text-green-400" :
+                        "text-yellow-700 dark:text-yellow-400"
                       }`}>
                         {translateDecision(selectedDecisionData.decisao)}
                       </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 font-medium">
                       {selectedDecisionData.dateRange}
                       {selectedDecisionData.dayRange && ` • ${selectedDecisionData.dayRange}`}
                     </p>
-                    <div className="mt-3 pt-3 border-t border-border/50">
-                      <p className="text-sm font-medium mb-1">{t("dailyRoas.reason")}</p>
-                      <p className="text-sm text-foreground">
+                    <div className="mt-3 pt-3 border-t border-gray-300 dark:border-gray-600">
+                      <p className="text-sm font-semibold mb-1 text-gray-800 dark:text-gray-200">{t("dailyRoas.reason")}</p>
+                      <p className="text-sm text-gray-900 dark:text-gray-100 font-medium">
                         {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: ${isPortuguese ? 'Margem' : 'Margin'} ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
                       </p>
                     </div>
                   </div>
 
                   {/* Decision Logic */}
-                  <div className="p-4 rounded-lg border border-border bg-muted/30">
-                    <h5 className="font-semibold mb-3 text-sm">{t("dailyRoas.decisionLogic")}</h5>
+                  <div className="p-4 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/50">
+                    <h5 className="font-semibold mb-3 text-sm text-gray-900 dark:text-gray-100">{t("dailyRoas.decisionLogic")}</h5>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                        <p className="text-xs font-semibold mb-2 text-gray-800 dark:text-gray-300">
                           {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}
                         </p>
                         <ul className="space-y-1 ml-4 list-disc text-xs">
                           <li>
-                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.killReason1")}</span>
+                            <span className="font-semibold text-red-700 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.killReason1")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.scaleReason1")}</span>
+                            <span className="font-semibold text-green-700 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.scaleReason1")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.keepReason1")}</span>
+                            <span className="font-semibold text-yellow-700 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.keepReason1")}</span>
                           </li>
                         </ul>
                       </div>
                       <div>
-                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                        <p className="text-xs font-semibold mb-2 text-gray-800 dark:text-gray-300">
                           {t("dailyRoas.days3Plus")}
                         </p>
                         <ul className="space-y-1 ml-4 list-disc text-xs">
                           <li>
-                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.scaleReason2")}</span>
+                            <span className="font-semibold text-green-700 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.scaleReason2")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.keepReason2")}</span>
+                            <span className="font-semibold text-yellow-700 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.keepReason2")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.killReason2")}</span>
+                            <span className="font-semibold text-red-700 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-gray-800 dark:text-gray-200">{t("dailyRoas.killReason2")}</span>
                           </li>
                         </ul>
                       </div>
