@@ -679,7 +679,11 @@ const CampaignControl = () => {
       if (data.total_spent >= spend1 && data.cpc > cpcThreshold && data.purchases === 0) {
         return { 
           decisao: "KILL", 
-          motivo: `Dia 1 (${market.toUpperCase()}): Gasto ≥ ${spend1}€, CPC > ${cpcThreshold}€ e sem vendas` 
+          motivo: t('dailyRoas.decisionDay1KillHighSpend', { 
+            market: market.toUpperCase(), 
+            spend1: spend1, 
+            cpc: cpcThreshold.toFixed(2) 
+          })
         };
       }
 
@@ -687,7 +691,10 @@ const CampaignControl = () => {
       if (data.total_spent >= spend1 && data.purchases >= 1) {
         return { 
           decisao: "MANTER", 
-          motivo: `Dia 1 (${market.toUpperCase()}): ${data.purchases} venda(s) - manter para dia 2` 
+          motivo: t('dailyRoas.decisionDay1KeepSales', { 
+            market: market.toUpperCase(), 
+            purchases: data.purchases 
+          })
         };
       }
 
@@ -695,7 +702,12 @@ const CampaignControl = () => {
       if (data.total_spent >= spend1 && data.cpc < cpcThreshold && data.atc >= 1 && data.total_spent < spend2) {
         return { 
           decisao: "MANTER", 
-          motivo: `Dia 1 (${market.toUpperCase()}): CPC < ${cpcThreshold}€ e ${data.atc} ATC - manter até ${spend2}€` 
+          motivo: t('dailyRoas.decisionDay1KeepLowCPC', { 
+            market: market.toUpperCase(), 
+            cpc: cpcThreshold.toFixed(2), 
+            atc: data.atc, 
+            spend2: spend2 
+          })
         };
       }
 
@@ -703,14 +715,20 @@ const CampaignControl = () => {
       if (data.total_spent >= spend2 && data.purchases === 0) {
         return { 
           decisao: "KILL", 
-          motivo: `Dia 1 (${market.toUpperCase()}): Gasto ≥ ${spend2}€ sem vendas` 
+          motivo: t('dailyRoas.decisionDay1KillNoSales', { 
+            market: market.toUpperCase(), 
+            spend2: spend2 
+          })
         };
       }
 
       // Default: keep gathering data
       return { 
         decisao: "MANTER", 
-        motivo: `Dia 1 (${market.toUpperCase()}): Aguardando mais dados (${data.total_spent.toFixed(2)}€ gastos)` 
+        motivo: t('dailyRoas.decisionDay1Waiting', { 
+          market: market.toUpperCase(), 
+          spent: data.total_spent.toFixed(2) 
+        })
       };
     }
 
@@ -720,7 +738,11 @@ const CampaignControl = () => {
       if (data.margin_percentage > 15) {
         return { 
           decisao: "SCALE", 
-          motivo: `Dia ${dayNumber} (${market.toUpperCase()}): Margem ${data.margin_percentage.toFixed(1)}% > 15% - aumentar orçamento` 
+          motivo: t('dailyRoas.decisionScaleHighMargin', { 
+            day: dayNumber, 
+            market: market.toUpperCase(), 
+            margin: data.margin_percentage.toFixed(1) 
+          })
         };
       }
 
@@ -728,7 +750,11 @@ const CampaignControl = () => {
       if (data.margin_percentage < 0) {
         return { 
           decisao: "KILL", 
-          motivo: `Dia ${dayNumber} (${market.toUpperCase()}): Margem negativa ${data.margin_percentage.toFixed(1)}%` 
+          motivo: t('dailyRoas.decisionKillNegativeMargin', { 
+            day: dayNumber, 
+            market: market.toUpperCase(), 
+            margin: data.margin_percentage.toFixed(1) 
+          })
         };
       }
 
@@ -736,14 +762,18 @@ const CampaignControl = () => {
       if (data.margin_percentage >= 0 && data.margin_percentage <= 15) {
         return { 
           decisao: "MANTER", 
-          motivo: `Dia ${dayNumber} (${market.toUpperCase()}): Margem ${data.margin_percentage.toFixed(1)}% (0-15%) - manter para próximo dia` 
+          motivo: t('dailyRoas.decisionKeepMediumMargin', { 
+            day: dayNumber, 
+            market: market.toUpperCase(), 
+            margin: data.margin_percentage.toFixed(1) 
+          })
         };
       }
     }
 
     return { 
       decisao: "MANTER", 
-      motivo: `Aguardando mais dados para decisão (${market.toUpperCase()})` 
+      motivo: t('dailyRoas.waitingForMoreData', { market: market.toUpperCase() }) 
     };
   };
 

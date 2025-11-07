@@ -735,7 +735,7 @@ const Settings = () => {
                     <Label htmlFor="fullname">{t('settings.fullName')}</Label>
                     <Input
                       id="fullname"
-                      placeholder="João Silva"
+                      placeholder={t('settings.fullNamePlaceholder')}
                       value={formData.full_name}
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                     />
@@ -745,7 +745,7 @@ const Settings = () => {
                     <Label htmlFor="company">{t('settings.company')}</Label>
                     <Input
                       id="company"
-                      placeholder="Minha Empresa Lda"
+                      placeholder={t('settings.companyPlaceholder')}
                       value={formData.company_name}
                       onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                     />

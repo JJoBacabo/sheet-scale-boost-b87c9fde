@@ -581,15 +581,24 @@ const Products = () => {
     
     if (soldProducts.length === 0) {
       toast({
-        title: "Sem produtos vendidos",
-        description: "Não há produtos com vendas para exportar",
+        title: t('products.noProductsSold'),
+        description: t('products.noProductsToExport'),
         variant: "destructive",
       });
       return;
     }
 
     // Create CSV content
-    const headers = ['Nome do Produto', 'SKU', 'Preço de Fornecedor', 'Preço de Venda', 'Unidades Vendidas', 'Receita Total', 'Margem de Lucro (%)', 'Data de Criação'];
+    const headers = [
+      t('products.exportHeaders.productName'),
+      t('products.exportHeaders.sku'),
+      t('products.exportHeaders.costPrice'),
+      t('products.exportHeaders.sellingPrice'),
+      t('products.exportHeaders.quantitySold'),
+      t('products.exportHeaders.totalRevenue'),
+      t('products.exportHeaders.profitMargin'),
+      t('products.exportHeaders.createdAt')
+    ];
     const rows = soldProducts.map(p => [
       p.product_name,
       p.sku || '-',
@@ -612,7 +621,7 @@ const Products = () => {
     const url = URL.createObjectURL(blob);
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `produtos_vendidos_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.setAttribute('download', `${t('products.exportFileName')}_${format(new Date(), 'yyyy-MM-dd')}.csv`);
     link.style.visibility = 'hidden';
     
     document.body.appendChild(link);
@@ -620,8 +629,8 @@ const Products = () => {
     document.body.removeChild(link);
 
     toast({
-      title: "✅ Exportação concluída",
-      description: `${soldProducts.length} produtos exportados com sucesso`,
+      title: t('products.exportCompleted'),
+      description: t('products.exportSuccess', { count: soldProducts.length }),
     });
   };
 
