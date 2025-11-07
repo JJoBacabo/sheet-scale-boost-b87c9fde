@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Package, Settings, LogOut, Sparkles, ChevronRight, BarChart3, Target, MessageCircle, MoreHorizontal, Shield, FileSpreadsheet } from "lucide-react";
+import { Home, TrendingUp, Package, Settings, LogOut, Sparkles, ChevronRight, BarChart3, Target, MessageCircle, MoreHorizontal, Shield, FileSpreadsheet, FileText, Lock } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import {
@@ -180,6 +180,7 @@ export function AppSidebar() {
                   align="end"
                   className="w-56 z-[100] bg-popover border-border shadow-lg"
                 >
+                  {/* Configurações */}
                   <DropdownMenuItem asChild>
                     <NavLink to="/integrations" className="cursor-pointer flex items-center">
                       <Sparkles className="w-4 h-4 mr-2" />
@@ -192,6 +193,24 @@ export function AppSidebar() {
                       {t('sidebar.settings')}
                     </NavLink>
                   </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator />
+                  
+                  {/* Legal */}
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/terms" className="cursor-pointer flex items-center">
+                      <FileText className="w-4 h-4 mr-2" />
+                      {t('sidebar.terms')}
+                    </NavLink>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/privacy" className="cursor-pointer flex items-center">
+                      <Lock className="w-4 h-4 mr-2" />
+                      {t('sidebar.privacy')}
+                    </NavLink>
+                  </DropdownMenuItem>
+                  
+                  {/* Administração */}
                   {isAdmin && (
                     <>
                       <DropdownMenuSeparator />
@@ -203,18 +222,10 @@ export function AppSidebar() {
                       </DropdownMenuItem>
                     </>
                   )}
+                  
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <NavLink to="/terms" className="cursor-pointer flex items-center">
-                      {t('sidebar.terms')}
-                    </NavLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <NavLink to="/privacy" className="cursor-pointer flex items-center">
-                      {t('sidebar.privacy')}
-                    </NavLink>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  
+                  {/* Ações */}
                   <DropdownMenuItem
                     onClick={handleSignOut}
                     className="cursor-pointer text-destructive focus:text-destructive flex items-center"
