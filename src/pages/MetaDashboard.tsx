@@ -983,14 +983,14 @@ const MetaDashboard = () => {
                     return (
                       <Card
                         key={campaign.id}
-                        className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:shadow-glow transition-all group"
+                        className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:shadow-glow transition-all group relative"
                       >
                         <div className="flex flex-col lg:flex-row gap-6 relative">
                           {/* Eye icon in top-right */}
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                            className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary z-10"
                             onClick={() => {
                               setSelectedCampaign(campaign);
                               setShowDetailsDialog(true);
@@ -998,6 +998,11 @@ const MetaDashboard = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
+
+                          {/* Active/Paused status in bottom-right */}
+                          <span className="absolute bottom-6 right-6 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            {campaign.status === "ACTIVE" ? "Active" : "Paused"}
+                          </span>
 
                           {/* Campaign Info */}
                           <div className="flex-1 space-y-3">
