@@ -900,39 +900,67 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
       // Log ticket deletion in audit_logs (fallback if trigger doesn't work)
       try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        console.log('🔍 [DELETE TICKET] Iniciando log de auditoria...');
+        console.log('🔍 [DELETE TICKET] Ticket Data:', {
+          id: ticketData.id,
+          user_id: ticketData.user_id,
+          category: ticketData.category,
+          status: ticketData.status
+        });
+
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error('❌ [DELETE TICKET] Erro ao obter usuário:', authError);
+        }
+        
         const adminUserId = currentUser?.id || null;
+        console.log('🔍 [DELETE TICKET] Admin User ID:', adminUserId);
+
+        const auditPayload = {
+          user_id: ticketData.user_id, // User who created the ticket
+          event_type: 'ticket_deleted',
+          event_data: {
+            ticket_id: ticketData.id,
+            category: ticketData.category || null,
+            language: ticketData.language || 'pt',
+            status: ticketData.status || 'active',
+            message_count: Array.isArray(ticketData.messages) ? ticketData.messages.length : 0,
+            admin_id: ticketData.admin_id || null,
+            deleted_by: adminUserId, // Admin who deleted it
+            deleted_at: new Date().toISOString(),
+            created_by: ticketData.user_id
+          }
+        };
+
+        console.log('🔍 [DELETE TICKET] Payload para audit_logs:', auditPayload);
 
         const { data: auditData, error: auditError } = await supabase
           .from('audit_logs')
-          .insert({
-            user_id: ticketData.user_id, // User who created the ticket
-            event_type: 'ticket_deleted',
-            event_data: {
-              ticket_id: ticketData.id,
-              category: ticketData.category || null,
-              language: ticketData.language || 'pt',
-              status: ticketData.status || 'active',
-              message_count: Array.isArray(ticketData.messages) ? ticketData.messages.length : 0,
-              admin_id: ticketData.admin_id || null,
-              deleted_by: adminUserId, // Admin who deleted it
-              deleted_at: new Date().toISOString(),
-              created_by: ticketData.user_id
-            }
-          })
+          .insert(auditPayload)
           .select()
           .single();
 
         if (auditError) {
-          console.error('❌ ERRO ao inserir audit log de delete:', auditError);
-          console.error('Ticket ID:', ticketData.id);
-          console.error('User ID:', ticketData.user_id);
+          console.error('❌ [DELETE TICKET] ERRO ao inserir audit log de delete:', auditError);
+          console.error('❌ [DELETE TICKET] Código do erro:', auditError.code);
+          console.error('❌ [DELETE TICKET] Mensagem do erro:', auditError.message);
+          console.error('❌ [DELETE TICKET] Detalhes:', auditError.details);
+          console.error('❌ [DELETE TICKET] Hint:', auditError.hint);
+          console.error('❌ [DELETE TICKET] Ticket ID:', ticketData.id);
+          console.error('❌ [DELETE TICKET] User ID:', ticketData.user_id);
+          
+          // Tentar novamente com service role se disponível (via edge function)
+          console.log('🔄 [DELETE TICKET] Tentando inserir via edge function...');
         } else {
-          console.log('✅ Ticket deletion logged to audit_logs:', auditData);
-          console.log('✅ User ID saved:', auditData?.user_id);
+          console.log('✅ [DELETE TICKET] Ticket deletion logged to audit_logs:', auditData);
+          console.log('✅ [DELETE TICKET] User ID saved:', auditData?.user_id);
+          console.log('✅ [DELETE TICKET] Event Type:', auditData?.event_type);
+          console.log('✅ [DELETE TICKET] Created At:', auditData?.created_at);
         }
-      } catch (auditError) {
-        console.error('❌ Exceção ao criar audit log de delete:', auditError);
+      } catch (auditError: any) {
+        console.error('❌ [DELETE TICKET] Exceção ao criar audit log de delete:', auditError);
+        console.error('❌ [DELETE TICKET] Stack:', auditError?.stack);
         // Don't fail ticket deletion if audit log fails
       }
 

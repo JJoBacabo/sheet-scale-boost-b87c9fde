@@ -250,6 +250,19 @@ export const AuditLogs = () => {
       const ticketLogs = (data || []).filter(log => log.event_type?.startsWith('ticket_'));
       console.log(`🎫 Logs de tickets encontrados: ${ticketLogs.length}`);
       
+      // Debug específico para ticket_deleted
+      const deletedLogs = (data || []).filter(log => log.event_type === 'ticket_deleted');
+      console.log(`🗑️ Logs de ticket_deleted encontrados: ${deletedLogs.length}`);
+      deletedLogs.forEach((log, index) => {
+        console.log(`🗑️ Ticket Deleted Log #${index + 1}:`, {
+          id: log.id,
+          event_type: log.event_type,
+          user_id: log.user_id,
+          event_data: log.event_data,
+          created_at: log.created_at
+        });
+      });
+      
       ticketLogs.forEach((log, index) => {
         const userIdFromLog = log.user_id;
         const userIdFromEventData = (log.event_data as any)?.created_by || (log.event_data as any)?.user_id || (log.event_data as any)?.creator_id || null;
