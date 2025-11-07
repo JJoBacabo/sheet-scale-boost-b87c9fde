@@ -913,7 +913,7 @@ const MetaDashboard = () => {
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full md:w-48">
                     <Filter className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder={t("metaDashboard.status")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("metaDashboard.filterAll")}</SelectItem>
