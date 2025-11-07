@@ -5,38 +5,35 @@
 -- 1. Melhorar função de delete para incluir mais informações
 CREATE OR REPLACE FUNCTION log_ticket_deleted()
 RETURNS TRIGGER AS $$
+DECLARE
+  current_user_id UUID;
 BEGIN
   IF (TG_OP = 'DELETE') THEN
     -- Tentar obter o usuário atual que está deletando (se disponível via session)
-    DECLARE
-      current_user_id UUID;
     BEGIN
-      -- Tentar obter o usuário atual (pode ser NULL se deletado via trigger automático)
-      BEGIN
-        current_user_id := auth.uid();
-      EXCEPTION WHEN OTHERS THEN
-        current_user_id := NULL;
-      END;
-      
-      INSERT INTO public.audit_logs (
-        user_id,
-        event_type,
-        event_data
-      ) VALUES (
-        OLD.user_id,
-        'ticket_deleted',
-        jsonb_build_object(
-          'ticket_id', OLD.id,
-          'category', OLD.category,
-          'language', OLD.language,
-          'status', OLD.status,
-          'message_count', COALESCE(jsonb_array_length(OLD.messages), 0),
-          'admin_id', OLD.admin_id,
-          'deleted_by', current_user_id, -- Tentar capturar quem deletou
-          'deleted_at', now()
-        )
-      );
+      current_user_id := auth.uid();
+    EXCEPTION WHEN OTHERS THEN
+      current_user_id := NULL;
     END;
+    
+    INSERT INTO public.audit_logs (
+      user_id,
+      event_type,
+      event_data
+    ) VALUES (
+      OLD.user_id,
+      'ticket_deleted',
+      jsonb_build_object(
+        'ticket_id', OLD.id,
+        'category', OLD.category,
+        'language', OLD.language,
+        'status', OLD.status,
+        'message_count', COALESCE(jsonb_array_length(OLD.messages), 0),
+        'admin_id', OLD.admin_id,
+        'deleted_by', current_user_id, -- Tentar capturar quem deletou
+        'deleted_at', now()
+      )
+    );
   END IF;
   
   RETURN OLD;
