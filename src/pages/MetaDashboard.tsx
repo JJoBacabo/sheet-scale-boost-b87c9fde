@@ -1028,7 +1028,18 @@ const MetaDashboard = () => {
                                   {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
                                 </p>
                               </div>
-                              <div className="p-3 flex items-center justify-center">
+                              <div className="p-3 flex flex-col items-center justify-center gap-2">
+                                <Badge
+                                  className={
+                                    campaign.status === "ACTIVE"
+                                      ? "bg-success/20 text-success border-success/30"
+                                      : campaign.status === "PAUSED"
+                                        ? "bg-warning/20 text-warning border-warning/30"
+                                        : "bg-muted/50 text-muted-foreground border-muted"
+                                  }
+                                >
+                                  {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "Paused" : campaign.status}
+                                </Badge>
                                 {campaign.status === "ACTIVE" ? (
                                   <Button
                                     className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 hover:scale-105 font-bold w-full h-auto py-2"
@@ -1061,19 +1072,6 @@ const MetaDashboard = () => {
                               </span>
                             </div>
                           </div>
-
-                          {/* Active/Paused status in bottom-right corner */}
-                          <Badge
-                            className={`absolute bottom-2 right-2 ${
-                              campaign.status === "ACTIVE"
-                                ? "bg-success/20 text-success border-success/30"
-                                : campaign.status === "PAUSED"
-                                  ? "bg-warning/20 text-warning border-warning/30"
-                                  : "bg-muted/50 text-muted-foreground border-muted"
-                            }`}
-                          >
-                            {campaign.status === "ACTIVE" ? "Active" : campaign.status === "PAUSED" ? "Paused" : campaign.status}
-                          </Badge>
                         </div>
                       </Card>
                     );
