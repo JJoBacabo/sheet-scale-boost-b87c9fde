@@ -600,6 +600,10 @@ const translations = {
         syncing: 'A sincronizar...',
         syncShopify: 'Sincronizar Shopify',
         connectShopifyToStart: 'Conecte sua loja Shopify para começar',
+        noProductsSold: 'Nenhum produto vendido',
+        syncSalesToSeeProducts: 'Sincronize as vendas da sua loja Shopify para ver os produtos vendidos',
+        syncingSales: 'A sincronizar vendas...',
+        syncShopifySales: 'Sincronizar Vendas Shopify',
       },
       productResearch: {
         title: 'Pesquisa de Produtos Virais',
@@ -919,11 +923,6 @@ const translations = {
         shopifyConnectError: 'Não foi possível conectar ao Shopify',
         storesUsage: 'Lojas',
         loginRequired: 'Por favor, faça login novamente',
-      },
-      billing: {
-        monthly: 'Mensal',
-        annual: 'Anual',
-        save3Months: 'POUPE 3 MESES',
       },
       plans: {
         beginner: {
@@ -1612,6 +1611,10 @@ const translations = {
         syncing: 'Syncing...',
         syncShopify: 'Sync Shopify',
         connectShopifyToStart: 'Connect your Shopify store to get started',
+        noProductsSold: 'No products sold',
+        syncSalesToSeeProducts: 'Sync your Shopify store sales to see sold products',
+        syncingSales: 'Syncing sales...',
+        syncShopifySales: 'Sync Shopify Sales',
       },
       productResearch: {
         title: 'Viral Product Research',

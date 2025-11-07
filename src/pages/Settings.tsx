@@ -706,7 +706,7 @@ const Settings = () => {
               <div className="flex items-center justify-between flex-1">
                 <div>
                   <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
-                  <p className="text-sm text-muted-foreground mt-1">Configurações e Integrações</p>
+                  <p className="text-sm text-muted-foreground mt-1">{t('settings.integrationsPage.subtitle')}</p>
                 </div>
                 <LanguageToggle />
               </div>

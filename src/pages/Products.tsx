@@ -744,12 +744,12 @@ const Products = () => {
                   <Package className="w-16 h-16 text-muted-foreground" />
                   <div>
                     <h3 className="text-xl font-semibold mb-2">
-                      {products.length === 0 ? 'Nenhum produto vendido' : t('products.noProducts')}
+                      {products.length === 0 ? t('products.noProductsSold') : t('products.noProducts')}
                     </h3>
                     <p className="text-muted-foreground mb-4">
                       {products.length === 0
                         ? hasShopifyIntegration 
-                          ? 'Sincronize as vendas da sua loja Shopify para ver os produtos vendidos'
+                          ? t('products.syncSalesToSeeProducts')
                           : t('products.connectShopifyToStart')
                         : t('products.adjustSearch')}
                     </p>
@@ -760,7 +760,7 @@ const Products = () => {
                         className="btn-gradient"
                       >
                         <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                        {syncing ? 'A sincronizar vendas...' : 'Sincronizar Vendas Shopify'}
+                        {syncing ? t('products.syncingSales') : t('products.syncShopifySales')}
                       </Button>
                     )}
                   </div>
