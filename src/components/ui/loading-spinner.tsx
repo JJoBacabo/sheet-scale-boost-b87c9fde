@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
-import logo from "@/assets/sheet-tools-logo.png";
+import logo from "@/assets/logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LoadingSpinnerProps {
