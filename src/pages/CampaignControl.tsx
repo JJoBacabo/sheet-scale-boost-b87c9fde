@@ -99,10 +99,33 @@ interface Product {
   quantity_sold: number;
 }
 
+// Helper function to safely convert to number
+const safeNumber = (value: any, defaultValue: number = 0): number => {
+  if (value === null || value === undefined || value === '') return defaultValue;
+  const num = typeof value === 'number' ? value : parseFloat(String(value));
+  return (isNaN(num) || !isFinite(num)) ? defaultValue : num;
+};
+
+// Helper function to safely format number with toFixed, handling null/undefined/NaN
+const safeToFixed = (value: any, decimals: number = 2): string => {
+  const num = safeNumber(value, 0);
+  return num.toFixed(decimals);
+};
+
 const CampaignControl = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, language } = useLanguage();
+  const isPortuguese = language === 'pt';
+  
+  // Helper function to translate decision labels
+  const translateDecision = (decision: string): string => {
+    if (decision === "KILL") return t('dailyRoas.kill');
+    if (decision === "MANTER") return t('dailyRoas.keep');
+    if (decision === "SCALE") return t('dailyRoas.scale');
+    if (decision === "DESCALE") return t('dailyRoas.descale') || 'DESCALE';
+    return decision;
+  };
   const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
@@ -610,7 +633,9 @@ const CampaignControl = () => {
         
         toast({
           title: t('dailyRoas.campaignUpdated'),
-          description: `${data.campaigns.length} ${t('dailyRoas.campaignsLoaded')}`
+          description: isPortuguese
+            ? `${data.campaigns.length} campanhas carregadas.`
+            : `${data.campaigns.length} campaigns loaded.`
         });
       } else {
         console.log("⚠️ No campaigns in response");
@@ -649,22 +674,22 @@ const CampaignControl = () => {
   };
 
   const calculateMetrics = (data: DailyROASData): DailyROASData => {
-    const unitsSold = data.units_sold || 0;
-    const productPrice = data.product_price || 0;
-    const cog = data.cog || 0;
-    const totalSpent = data.total_spent || 0;
+    const unitsSold = safeNumber(data.units_sold, 0);
+    const productPrice = safeNumber(data.product_price, 0);
+    const cog = safeNumber(data.cog, 0);
+    const totalSpent = safeNumber(data.total_spent, 0);
     
     const totalRevenue = unitsSold * productPrice;
     const totalCOG = unitsSold * cog;
     const margin_euros = totalRevenue - totalSpent - totalCOG;
-    const margin_percentage = totalRevenue > 0 ? (margin_euros / totalRevenue) * 100 : 0;
-    const roas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
+    const margin_percentage = totalRevenue > 0 && isFinite(totalRevenue) ? (margin_euros / totalRevenue) * 100 : 0;
+    const roas = totalSpent > 0 && isFinite(totalSpent) ? totalRevenue / totalSpent : 0;
 
     return {
       ...data,
-      roas: roas || 0,
-      margin_euros: margin_euros || 0,
-      margin_percentage: margin_percentage || 0,
+      roas: isFinite(roas) ? roas : 0,
+      margin_euros: isFinite(margin_euros) ? margin_euros : 0,
+      margin_percentage: isFinite(margin_percentage) ? margin_percentage : 0,
     };
   };
 
@@ -1474,13 +1499,28 @@ const CampaignControl = () => {
                                   {new Date(entry.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB')}
                                 </span>
                               </div>
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
-                                decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
-                                decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
-                                "bg-blue-500/20 text-blue-700 dark:text-blue-400"
-                              }`}>
-                                {decisao}
+                              <span 
+                                className={`px-2 py-1 rounded text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${
+                                  decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
+                                  decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
+                                  decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
+                                  "bg-blue-500/20 text-blue-700 dark:text-blue-400"
+                                }`}
+                                onClick={() => {
+                                  const calculated = calculateMetrics(entry);
+                                  setSelectedDecisionData({
+                                    ...calculated,
+                                    decisao,
+                                    motivo,
+                                    campaign_name: entry.campaign_name,
+                                    dateRange: new Date(entry.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
+                                    dayRange: `${t('dailyRoas.day')} ${dayNumber}`
+                                  });
+                                  setShowDecisionModal(true);
+                                }}
+                                title={motivo}
+                              >
+                                {translateDecision(decisao)}
                               </span>
                             </div>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
@@ -1648,15 +1688,26 @@ const CampaignControl = () => {
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
                               <TableCell>
                                 <div 
-                                  className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap ${
+                                  className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
                                     decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
                                     decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
                                     decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
                                     "bg-blue-500/20 text-blue-700 dark:text-blue-400"
                                   }`}
                                   title={motivo}
+                                  onClick={() => {
+                                    setSelectedDecisionData({
+                                      ...calculated,
+                                      decisao,
+                                      motivo,
+                                      campaign_name: data.campaign_name,
+                                      dateRange: new Date(data.date).toLocaleDateString(language === 'pt' ? 'pt-PT' : 'en-GB'),
+                                      dayRange: `Day ${dayNumber}`
+                                    });
+                                    setShowDecisionModal(true);
+                                  }}
                                 >
-                                  {decisao}
+                                  {translateDecision(decisao)}
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -1764,7 +1815,7 @@ const CampaignControl = () => {
                       {selectedDecisionData.decisao === "KILL" && <X className="w-6 h-6 md:w-8 md:h-8" />}
                       {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-6 h-6 md:w-8 md:h-8" />}
                       {selectedDecisionData.decisao === "MANTER" && <Minus className="w-6 h-6 md:w-8 md:h-8" />}
-                      <h3 className="text-xl md:text-2xl font-bold">{t("dailyRoas.decision")}: {selectedDecisionData.decisao}</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">{t("dailyRoas.decision")}: {translateDecision(selectedDecisionData.decisao)}</h3>
                     </div>
                     
                     <div className="bg-background/50 p-3 md:p-4 rounded-lg mb-4 text-center">
@@ -1785,17 +1836,17 @@ const CampaignControl = () => {
                         <div className="p-3 rounded-lg bg-muted/30">
                           <p className="font-semibold mb-2">📅 {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}</p>
                           <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-red-500 font-bold">KILL:</span> {t("dailyRoas.killReason1")}</li>
-                            <li><span className="text-green-500 font-bold">SCALE:</span> {t("dailyRoas.scaleReason1")}</li>
-                            <li><span className="text-yellow-500 font-bold">MANTER:</span> {t("dailyRoas.keepReason1")}</li>
+                            <li><span className="text-red-500 font-bold">{translateDecision("KILL")}:</span> {t("dailyRoas.killReason1")}</li>
+                            <li><span className="text-green-500 font-bold">{translateDecision("SCALE")}:</span> {t("dailyRoas.scaleReason1")}</li>
+                            <li><span className="text-yellow-500 font-bold">{translateDecision("MANTER")}:</span> {t("dailyRoas.keepReason1")}</li>
                           </ul>
                         </div>
                         <div className="p-3 rounded-lg bg-muted/30">
                           <p className="font-semibold mb-2">📅 {t("dailyRoas.days3Plus")}</p>
                           <ul className="space-y-1 ml-4 list-disc text-xs">
-                            <li><span className="text-green-500 font-bold">SCALE:</span> {t("dailyRoas.scaleReason2")}</li>
-                            <li><span className="text-yellow-500 font-bold">MANTER:</span> {t("dailyRoas.keepReason2")}</li>
-                            <li><span className="text-red-500 font-bold">KILL:</span> {t("dailyRoas.killReason2")}</li>
+                            <li><span className="text-green-500 font-bold">{translateDecision("SCALE")}:</span> {t("dailyRoas.scaleReason2")}</li>
+                            <li><span className="text-yellow-500 font-bold">{translateDecision("MANTER")}:</span> {t("dailyRoas.keepReason2")}</li>
+                            <li><span className="text-red-500 font-bold">{translateDecision("KILL")}:</span> {t("dailyRoas.killReason2")}</li>
                           </ul>
                         </div>
                         <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
