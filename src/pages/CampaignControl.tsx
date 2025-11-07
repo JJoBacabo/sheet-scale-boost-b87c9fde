@@ -1813,6 +1813,7 @@ const CampaignControl = () => {
                         <TableRow>
                           <TableHead className="min-w-[160px] md:min-w-[200px] text-xs md:text-sm">{t('dailyRoas.campaignName')}</TableHead>
                           <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">BER</TableHead>
+                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.roas')}</TableHead>
                           <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.totalSpentEur')}</TableHead>
                           <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.cpcEur')}</TableHead>
                           <TableHead className="min-w-[60px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.atc')}</TableHead>
@@ -1820,7 +1821,6 @@ const CampaignControl = () => {
                           <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.price')}</TableHead>
                           <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.cog')} €</TableHead>
                           <TableHead className="min-w-[80px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.units')}</TableHead>
-                          <TableHead className="min-w-[70px] md:min-w-[80px] text-xs md:text-sm">{t('dailyRoas.roas')}</TableHead>
                           <TableHead className="min-w-[100px] md:min-w-[120px] text-xs md:text-sm">{t('dailyRoas.marginEur')}</TableHead>
                           <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.marginPerc')}</TableHead>
                           <TableHead className="min-w-[90px] md:min-w-[100px] text-xs md:text-sm">{t('dailyRoas.decision')}</TableHead>
@@ -1876,6 +1876,7 @@ const CampaignControl = () => {
                                   <span className="text-muted-foreground">—</span>
                                 )}
                               </TableCell>
+                              <TableCell className="font-semibold text-green-500 text-xs md:text-sm">{((calculated.roas || 0)).toFixed(2)}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.total_spent || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.cpc || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{data.atc || 0}</TableCell>
@@ -1883,7 +1884,6 @@ const CampaignControl = () => {
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.product_price || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((data.cog || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{data.units_sold || 0}</TableCell>
-                              <TableCell className="font-semibold text-green-500 text-xs md:text-sm">{((calculated.roas || 0)).toFixed(2)}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_euros || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
                               <TableCell>
@@ -1952,148 +1952,89 @@ const CampaignControl = () => {
 
           {/* Decision Modal */}
           <Dialog open={showDecisionModal} onOpenChange={setShowDecisionModal}>
-            <DialogContent className="max-w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-full sm:max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-2xl md:text-3xl font-bold text-center">
-                  {t('dailyRoas.decisionDetails')}
+                <DialogTitle className="text-lg font-semibold">
+                  {selectedDecisionData?.campaign_name}
                 </DialogTitle>
               </DialogHeader>
               {selectedDecisionData && (
-                <div className="space-y-6">
-                  {/* Campaign Header */}
-                  <div className="text-center p-5 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary/20">
-                    <h4 className="font-bold text-xl md:text-2xl mb-2 text-foreground">{selectedDecisionData.campaign_name}</h4>
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <span>📅</span>
-                      <span>{selectedDecisionData.dateRange}</span>
-                      {selectedDecisionData.dayRange && (
-                        <>
-                          <span>•</span>
-                          <span>{selectedDecisionData.dayRange}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Decision Card - Main Focus */}
-                  <div className={`relative p-6 md:p-8 rounded-xl border-3 shadow-lg ${
+                <div className="space-y-4">
+                  {/* Decision */}
+                  <div className={`p-4 rounded-lg border ${
                     selectedDecisionData.decisao === "KILL" 
-                      ? "bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/50" :
+                      ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800" :
                     selectedDecisionData.decisao === "SCALE" 
-                      ? "bg-gradient-to-br from-green-500/20 to-green-600/10 border-green-500/50" :
-                    "bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border-yellow-500/50"
+                      ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" :
+                    "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800"
                   }`}>
-                    {/* Decision Icon and Label */}
-                    <div className="flex flex-col items-center justify-center gap-4 mb-6">
-                      <div className={`p-4 rounded-full ${
-                        selectedDecisionData.decisao === "KILL" ? "bg-red-500/20" :
-                        selectedDecisionData.decisao === "SCALE" ? "bg-green-500/20" :
-                        "bg-yellow-500/20"
+                    <div className="flex items-center gap-3 mb-3">
+                      {selectedDecisionData.decisao === "KILL" && <X className="w-5 h-5 text-red-600 dark:text-red-400" />}
+                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />}
+                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />}
+                      <h3 className={`text-lg font-semibold ${
+                        selectedDecisionData.decisao === "KILL" ? "text-red-600 dark:text-red-400" :
+                        selectedDecisionData.decisao === "SCALE" ? "text-green-600 dark:text-green-400" :
+                        "text-yellow-600 dark:text-yellow-400"
                       }`}>
-                        {selectedDecisionData.decisao === "KILL" && <X className="w-10 h-10 md:w-12 md:h-12 text-red-600 dark:text-red-400" />}
-                        {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-10 h-10 md:w-12 md:h-12 text-green-600 dark:text-green-400" />}
-                        {selectedDecisionData.decisao === "MANTER" && <Minus className="w-10 h-10 md:w-12 md:h-12 text-yellow-600 dark:text-yellow-400" />}
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm md:text-base text-muted-foreground mb-2">{t("dailyRoas.decision")}</p>
-                        <h3 className={`text-3xl md:text-4xl font-bold ${
-                          selectedDecisionData.decisao === "KILL" ? "text-red-600 dark:text-red-400" :
-                          selectedDecisionData.decisao === "SCALE" ? "text-green-600 dark:text-green-400" :
-                          "text-yellow-600 dark:text-yellow-400"
-                        }`}>
-                          {translateDecision(selectedDecisionData.decisao)}
-                        </h3>
-                      </div>
-                      </div>
-                    
-                    {/* Reason */}
-                    <div className="bg-background/80 backdrop-blur-sm p-5 rounded-lg border border-border/50 mb-6">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
-                          <span className="text-xl">💡</span>
-                      </div>
-                        <div className="flex-1">
-                          <h5 className="font-semibold mb-2 text-base md:text-lg">{t("dailyRoas.reason")}</h5>
-                          <p className="text-sm md:text-base leading-relaxed text-foreground">
-                            {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: ${isPortuguese ? 'Margem' : 'Margin'} ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
-                        </p>
-                      </div>
+                        {translateDecision(selectedDecisionData.decisao)}
+                      </h3>
                     </div>
-                  </div>
-
-                    {/* Decision Logic */}
-                    <div className="bg-background/80 backdrop-blur-sm p-5 rounded-lg border border-border/50">
-                      <div className="flex items-start gap-3 mb-4">
-                        <div className="p-2 rounded-lg bg-primary/10 mt-0.5">
-                          <span className="text-xl">🎯</span>
-                    </div>
-                        <div className="flex-1">
-                          <h5 className="font-semibold mb-4 text-base md:text-lg">{t("dailyRoas.decisionLogic")}</h5>
-                          <div className="space-y-4">
-                            <div className="p-4 rounded-lg bg-muted/40 border border-border/30">
-                              <p className="font-semibold mb-3 text-sm md:text-base flex items-center gap-2">
-                                <span>📅</span>
-                                <span>{t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}</span>
-                              </p>
-                              <ul className="space-y-2 ml-6 list-disc text-xs md:text-sm">
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "KILL" ? "text-red-500" : "text-red-400"}`}>
-                                    {translateDecision("KILL")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.killReason1")}</span>
-                                </li>
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "SCALE" ? "text-green-500" : "text-green-400"}`}>
-                                    {translateDecision("SCALE")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.scaleReason1")}</span>
-                                </li>
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "MANTER" ? "text-yellow-500" : "text-yellow-400"}`}>
-                                    {translateDecision("MANTER")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.keepReason1")}</span>
-                                </li>
-                          </ul>
-                        </div>
-                            <div className="p-4 rounded-lg bg-muted/40 border border-border/30">
-                              <p className="font-semibold mb-3 text-sm md:text-base flex items-center gap-2">
-                                <span>📅</span>
-                                <span>{t("dailyRoas.days3Plus")}</span>
-                              </p>
-                              <ul className="space-y-2 ml-6 list-disc text-xs md:text-sm">
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "SCALE" ? "text-green-500" : "text-green-400"}`}>
-                                    {translateDecision("SCALE")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.scaleReason2")}</span>
-                                </li>
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "MANTER" ? "text-yellow-500" : "text-yellow-400"}`}>
-                                    {translateDecision("MANTER")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.keepReason2")}</span>
-                                </li>
-                                <li className="leading-relaxed">
-                                  <span className={`font-bold ${selectedDecisionData.decisao === "KILL" ? "text-red-500" : "text-red-400"}`}>
-                                    {translateDecision("KILL")}:
-                                  </span>{" "}
-                                  <span className="text-foreground">{t("dailyRoas.killReason2")}</span>
-                                </li>
-                          </ul>
-                        </div>
-                        </div>
-                      </div>
-                    </div>
-                    </div>
-                  </div>
-
-                  {/* Info Footer */}
-                  <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 text-center">
-                    <p className="text-xs md:text-sm text-muted-foreground flex items-center justify-center gap-2">
-                      <span>ℹ️</span>
-                      <span>{t("dailyRoas.decisionDetails")}</span>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {selectedDecisionData.dateRange}
+                      {selectedDecisionData.dayRange && ` • ${selectedDecisionData.dayRange}`}
                     </p>
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <p className="text-sm font-medium mb-1">{t("dailyRoas.reason")}</p>
+                      <p className="text-sm text-foreground">
+                        {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: ${isPortuguese ? 'Margem' : 'Margin'} ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Decision Logic */}
+                  <div className="p-4 rounded-lg border border-border bg-muted/30">
+                    <h5 className="font-semibold mb-3 text-sm">{t("dailyRoas.decisionLogic")}</h5>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                          {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}
+                        </p>
+                        <ul className="space-y-1 ml-4 list-disc text-xs">
+                          <li>
+                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.killReason1")}</span>
+                          </li>
+                          <li>
+                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.scaleReason1")}</span>
+                          </li>
+                          <li>
+                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.keepReason1")}</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                          {t("dailyRoas.days3Plus")}
+                        </p>
+                        <ul className="space-y-1 ml-4 list-disc text-xs">
+                          <li>
+                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.scaleReason2")}</span>
+                          </li>
+                          <li>
+                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.keepReason2")}</span>
+                          </li>
+                          <li>
+                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-foreground">{t("dailyRoas.killReason2")}</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
