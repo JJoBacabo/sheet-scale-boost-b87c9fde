@@ -158,17 +158,17 @@ export const AuditLogs = () => {
       // First try to get from profiles
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('user_id, email, full_name')
+        .select('user_id')
         .not('user_id', 'is', null)
-        .order('full_name', { ascending: true });
+        .order('user_id', { ascending: true });
       
       let usersList: Array<{ user_id: string; email: string; full_name: string }> = [];
       
       if (profiles) {
         usersList = profiles.map(p => ({
           user_id: p.user_id,
-          email: p.email || '',
-          full_name: p.full_name || ''
+          email: '',
+          full_name: ''
         }));
       }
       
@@ -298,13 +298,13 @@ export const AuditLogs = () => {
         // Get from profiles table
         const { data: profilesData } = await supabase
         .from('profiles')
-          .select('user_id, email, full_name')
+          .select('user_id')
         .in('user_id', userIds);
 
         profiles = (profilesData || []).map(p => ({
           user_id: p.user_id,
-          email: p.email || null,
-          full_name: p.full_name || null
+          email: null,
+          full_name: null
         }));
         
         // Try to get missing emails from edge function

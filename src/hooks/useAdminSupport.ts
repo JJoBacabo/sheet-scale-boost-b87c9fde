@@ -955,17 +955,20 @@ export const useAdminSupport = (currentAdminId?: string) => {
               .eq('id', existingLog.id)
               .single();
             
-            if (currentLog && (!currentLog.event_data?.deleted_by || currentLog.event_data.deleted_by === null)) {
-              await supabase
-                .from('audit_logs')
-                .update({
-                  event_data: {
-                    ...currentLog.event_data,
-                    deleted_by: adminUserId
-                  }
-                })
-                .eq('id', existingLog.id);
-              console.log('✅ [DELETE TICKET] Atualizado deleted_by no log existente');
+            if (currentLog) {
+              const eventData = currentLog.event_data as Record<string, any> | null;
+              if (!eventData?.deleted_by) {
+                await supabase
+                  .from('audit_logs')
+                  .update({
+                    event_data: {
+                      ...(eventData || {}),
+                      deleted_by: adminUserId
+                    }
+                  })
+                  .eq('id', existingLog.id);
+                console.log('✅ [DELETE TICKET] Atualizado deleted_by no log existente');
+              }
             }
           }
         } else {
