@@ -120,55 +120,67 @@ function initCinematicScroll(sectionId: string) {
     });
 
     // Animar cada feature individualmente - apenas uma totalmente visível por vez
-    // Com gap muito maior entre features para garantir espaço entre tópicos
+    // Fluxo: Tópico → Fade out → Background preto → Fade in → Próximo tópico
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
-      // Gap muito maior para garantir que uma desaparece antes da próxima aparecer
-      const gap = 0.25; // 25% de gap entre features (espaço preto entre tópicos)
+      // Gap maior para garantir período de background preto entre tópicos
+      const gap = 0.2; // 20% de gap (período de background preto)
       const segmentSize = (1 - gap * (featureCount - 1)) / featureCount;
       
-      // Calcular pontos de transição com gap garantido
-      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer
-      const progressVisible = progressStart + segmentSize * 0.3; // Quando está totalmente visível (30% do segmento)
-      const progressEnd = progressStart + segmentSize * 0.7; // Quando desaparece (70% do segmento, deixa 30% para gap)
+      // Calcular pontos de transição
+      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer (após gap)
+      const progressVisible = progressStart + segmentSize * 0.4; // Quando está totalmente visível (40% do segmento)
+      const progressFadeOut = progressStart + segmentSize * 0.6; // Quando começa a desaparecer (60% do segmento)
+      const progressEnd = progressStart + segmentSize; // Quando desaparece completamente (100% do segmento, antes do gap)
 
-      // Garantir que feature anterior desapareceu COMPLETAMENTE antes desta começar
+      // FASE 1: Garantir que feature anterior desapareceu COMPLETAMENTE antes do gap
       if (index > 0) {
-        const previousEnd = (index - 1) * (segmentSize + gap) + segmentSize * 0.7;
-        // Fade out da anterior deve terminar ANTES do gap começar
+        const previousEnd = (index - 1) * (segmentSize + gap) + segmentSize;
+        
+        // Fade out completo da anterior - deve terminar ANTES do gap começar
         masterTimeline.to(
           featureElements[index - 1],
           {
             opacity: 0,
             pointerEvents: 'none',
-            duration: 0.5,
+            duration: 0.4,
             ease: 'power2.in',
           },
-          previousEnd
+          previousEnd - 0.4 // Começa a desaparecer antes do fim
         );
         
-        // Garantir que está invisível durante todo o gap
+        // Garantir invisível durante TODO o gap (background preto)
         masterTimeline.set(
           featureElements[index - 1],
           {
             opacity: 0,
             pointerEvents: 'none',
           },
-          progressStart - 0.01 // Antes desta começar
+          previousEnd // Início do gap
+        );
+        
+        // Manter invisível durante todo o gap até esta começar
+        masterTimeline.set(
+          featureElements[index - 1],
+          {
+            opacity: 0,
+            pointerEvents: 'none',
+          },
+          progressStart - 0.01 // Fim do gap, antes desta começar
         );
       }
 
-      // Garantir que esta feature está invisível antes de começar
+      // FASE 2: Garantir que esta feature está invisível antes de começar (durante gap)
       masterTimeline.set(
         feature,
         {
           opacity: 0,
           pointerEvents: 'none',
         },
-        progressStart - 0.01
+        progressStart - 0.01 // Durante o gap, antes de aparecer
       );
 
-      // Fade in completo (entrada) - aparece quando scroll atinge este ponto
+      // FASE 3: Fade in (entrada) - aparece APÓS o período de background preto
       masterTimeline.to(
         feature,
         {
@@ -176,7 +188,7 @@ function initCinematicScroll(sectionId: string) {
           y: 0,
           scale: 1,
           pointerEvents: 'auto',
-          duration: 0.6,
+          duration: 0.5,
           ease: 'power2.out',
         },
         progressStart
@@ -189,11 +201,11 @@ function initCinematicScroll(sectionId: string) {
             y: 0,
             scale: 1,
             pointerEvents: 'auto',
-            duration: 0.3,
+            duration: 0.2,
           },
           progressVisible
         )
-        // Fade out completo (saída) - desaparece completamente antes do gap
+        // FASE 4: Fade out (saída) - desaparece para mostrar background preto
         .to(
           feature,
           {
@@ -201,19 +213,28 @@ function initCinematicScroll(sectionId: string) {
             y: 0,
             scale: 1,
             pointerEvents: 'none',
-            duration: 0.6,
+            duration: 0.4,
             ease: 'power2.in',
           },
-          progressEnd
+          progressFadeOut
         )
-        // Garantir que está invisível durante todo o gap
+        // Garantir invisível no fim do segmento (antes do gap)
         .set(
           feature,
           {
             opacity: 0,
             pointerEvents: 'none',
           },
-          progressStart + segmentSize + gap - 0.01 // Fim do gap, antes da próxima
+          progressEnd
+        )
+        // Manter invisível durante TODO o gap (background preto)
+        .set(
+          feature,
+          {
+            opacity: 0,
+            pointerEvents: 'none',
+          },
+          progressStart + segmentSize + gap - 0.01 // Fim do gap
         );
     });
 
