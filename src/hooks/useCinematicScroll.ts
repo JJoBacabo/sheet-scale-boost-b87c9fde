@@ -83,11 +83,11 @@ function initCinematicScroll(sectionId: string) {
     // Usamos viewport height multiplicado pelo número de features
     const scrollHeight = viewportHeight * featureCount * 1.5; // 1.5x para transições suaves
 
-    // Configurar estado inicial: todas visíveis (remover animação que esconde)
-    // Não vamos esconder as features, apenas animar a transição suave
+    // Configurar estado inicial: todas visíveis
     gsap.set(featureElements, {
       opacity: 1,
       y: 0,
+      scale: 1,
     });
 
     // Criar timeline principal

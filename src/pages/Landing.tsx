@@ -26,8 +26,8 @@ const Landing = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   
-  // Hook para efeito cinematográfico de scroll nas features - DESABILITADO temporariamente
-  // useCinematicScroll('features');
+  // Hook para efeito cinematográfico de scroll nas features
+  useCinematicScroll('features');
   
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
@@ -318,9 +318,9 @@ const Landing = () => {
       </section>
 
       {/* Features Section - Full Page Scroll */}
-      <section id="features" className="relative py-12 sm:py-16 md:py-20">
-        {/* Section Title */}
-        <div className="text-center py-6 sm:py-8 mb-8 sm:mb-12">
+      <section id="features" className="relative">
+        {/* Section Title - Fixed at top */}
+        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
           <motion.h2 
             className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
             initial={{ opacity: 0, y: -20 }}
@@ -388,15 +388,78 @@ const Landing = () => {
           }].map((feature, index) => (
             <div
               key={index}
-              className="feature-item py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 relative"
+              className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 relative"
             >
               <div className="max-w-7xl mx-auto w-full">
-                {/* Nova disposição: Imagens em cima, conteúdo embaixo */}
-                <div className="space-y-8 md:space-y-12">
-                  {/* Images Section - Top */}
-                  <div className="space-y-4">
+                {/* Disposição alternada: texto-imagem (índice par) ou imagem-texto (índice ímpar) */}
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center ${
+                  index % 2 === 0 ? '' : 'lg:grid-flow-dense'
+                }`}>
+                  {/* Content Section */}
+                  <div className={`space-y-6 sm:space-y-8 ${
+                    index % 2 === 0 
+                      ? 'lg:order-1' 
+                      : 'lg:order-2 lg:col-start-2'
+                  }`}>
+                    {/* Icon */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                        <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                      </div>
+                      <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
+                      {t(`landing.features.${feature.key}.title`)}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
+                      {t(`landing.features.${feature.key}.description`)}
+                    </p>
+
+                    {/* Additional Features List */}
+                    <div className="space-y-3 pt-4">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Análise em tempo real de todas as suas campanhas
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Relatórios detalhados e insights acionáveis
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Integração automática com suas plataformas
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Scroll Indicator - Only on last feature */}
+                    {index === 5 && (
+                      <div className="pt-8 flex flex-col items-start gap-2">
+                        <div className="text-gray-400 text-sm">
+                          Continue scrolling
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-primary rotate-90" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Images Section */}
+                  <div className={`space-y-4 ${
+                    index % 2 === 0 
+                      ? 'lg:order-2' 
+                      : 'lg:order-1 lg:col-start-1 lg:row-start-1'
+                  }`}>
                     {/* Two Images Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 gap-4">
                       {feature.images.map((img, imgIndex) => (
                         <motion.div
                           key={imgIndex}
@@ -434,62 +497,10 @@ const Landing = () => {
                     </div>
                     
                     {/* Additional Info Below Images */}
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <CheckCircle2 className="w-4 h-4 text-primary" />
                       <span>Clique nas imagens para ampliar</span>
                     </div>
-                  </div>
-
-                  {/* Content Section - Bottom */}
-                  <div className="space-y-6 sm:space-y-8 text-center max-w-4xl mx-auto">
-                    {/* Icon */}
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                        <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                      </div>
-                    </div>
-
-                    {/* Title */}
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                      {t(`landing.features.${feature.key}.title`)}
-                    </h3>
-
-                    {/* Description */}
-                    <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                      {t(`landing.features.${feature.key}.description`)}
-                    </p>
-
-                    {/* Additional Features List */}
-                    <div className="space-y-3 pt-4">
-                      <div className="flex items-start gap-3 justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <p className="text-sm sm:text-base text-gray-400">
-                          Análise em tempo real de todas as suas campanhas
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3 justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <p className="text-sm sm:text-base text-gray-400">
-                          Relatórios detalhados e insights acionáveis
-                        </p>
-                      </div>
-                      <div className="flex items-start gap-3 justify-center">
-                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                        <p className="text-sm sm:text-base text-gray-400">
-                          Integração automática com suas plataformas
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Scroll Indicator - Only on last feature */}
-                    {index === 5 && (
-                      <div className="pt-8 flex flex-col items-center gap-2">
-                        <div className="text-gray-400 text-sm">
-                          Continue scrolling
-                        </div>
-                        <ArrowRight className="w-5 h-5 text-primary rotate-90" />
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
