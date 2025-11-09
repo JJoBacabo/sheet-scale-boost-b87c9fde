@@ -23,6 +23,9 @@ const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   
+  // Hook para efeito cinematográfico de scroll nas features
+  useCinematicScroll('features');
+  
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
     let mounted = true;
