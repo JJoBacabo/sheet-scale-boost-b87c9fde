@@ -93,13 +93,16 @@ export const Background3D = () => {
 
         // Apenas algumas partículas (as mais próximas) se conectam ao mouse
         if (distanceToMouse < 200) {
-          const opacity = 0.3 * (1 - distanceToMouse / 200);
+          const opacity = 0.7 * (1 - distanceToMouse / 200);
           ctx.beginPath();
           ctx.moveTo(particle.x, particle.y);
           ctx.lineTo(mousePos.x, mousePos.y);
           ctx.strokeStyle = `rgba(74, 233, 189, ${opacity})`;
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(74, 233, 189, 0.8)';
           ctx.stroke();
+          ctx.shadowBlur = 0;
         }
       });
 
