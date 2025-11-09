@@ -310,19 +310,32 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 sm:px-6 py-20 relative">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
+      {/* Features Section - Full Page Scroll */}
+      <section id="features" className="relative snap-start snap-always">
+        {/* Section Title - Fixed at top */}
+        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
+          <motion.h2 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
             {t('landing.features.title')}
-          </h2>
-          <p className="text-xl text-gray-400">
+          </motion.h2>
+          <motion.p 
+            className="text-base sm:text-lg md:text-xl text-gray-400"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
             {t('landing.features.subtitle')}
-          </p>
+          </motion.p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {[{
+        {/* Features with Full Page Scroll */}
+        {[{
           icon: Activity,
           key: 'integration'
         }, {
@@ -343,24 +356,94 @@ const Landing = () => {
         }].map((feature, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, y: 50, rotateX: -15 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+            className="snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+            transition={{ duration: 0.6 }}
           >
-            <Card3D intensity="medium" glow>
-              <motion.div
-                className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow"
-                whileHover={{ rotateY: 180, scale: 1.1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <feature.icon className="w-7 h-7 text-primary-foreground" />
-              </motion.div>
-              <h3 className="text-xl font-bold mb-3">{t(`landing.features.${feature.key}.title`)}</h3>
-              <p className="text-gray-400 leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
-            </Card3D>
+            <motion.div
+              className="max-w-4xl mx-auto w-full"
+              initial={{ opacity: 0, y: 80, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ 
+                duration: 0.7, 
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+              }}
+            >
+              <Card3D intensity="high" glow className="p-6 sm:p-10 md:p-14 lg:p-16">
+                <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 md:space-y-8">
+                  {/* Icon */}
+                  <motion.div
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
+                    whileInView={{ 
+                      rotateY: [0, 360],
+                      scale: [1, 1.15, 1]
+                    }}
+                    viewport={{ once: false }}
+                    transition={{ 
+                      duration: 1.2,
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  >
+                    <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 text-primary-foreground" />
+                  </motion.div>
+
+                  {/* Title */}
+                  <motion.h3 
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold gradient-text"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.2, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.title`)}
+                  </motion.h3>
+
+                  {/* Description */}
+                  <motion.p 
+                    className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto px-4"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.description`)}
+                  </motion.p>
+
+                  {/* Scroll Indicator - Only on last feature */}
+                  {index === 5 && (
+                    <motion.div
+                      className="mt-6 sm:mt-8 flex flex-col items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: false }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-gray-400 text-xs sm:text-sm"
+                      >
+                        Continue scrolling
+                      </motion.div>
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                      >
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary rotate-90" />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </div>
+              </Card3D>
+            </motion.div>
           </motion.div>
         ))}
-        </div>
       </section>
 
       {/* Pricing Section */}
