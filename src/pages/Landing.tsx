@@ -322,7 +322,7 @@ const Landing = () => {
         {/* Container para os tópicos - cada tópico será animado individualmente */}
         <div className="relative w-full">
           {/* Tópico 1: Facebook Ads Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-100">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
@@ -361,7 +361,7 @@ const Landing = () => {
           </div>
 
           {/* Tópico 2: Real-Time Analysis - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
                 {/* Imagens - Esquerda */}
@@ -400,7 +400,7 @@ const Landing = () => {
           </div>
 
           {/* Tópico 3: Campaign Insights - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
@@ -439,7 +439,7 @@ const Landing = () => {
           </div>
 
           {/* Tópico 4: Automatic Reports - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
                 {/* Imagens - Esquerda */}
@@ -478,7 +478,7 @@ const Landing = () => {
           </div>
 
           {/* Tópico 5: Cross-Platform Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
@@ -517,7 +517,7 @@ const Landing = () => {
           </div>
 
           {/* Tópico 6: Actionable Decisions - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none">
+          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
             <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
                 {/* Imagens - Esquerda */}

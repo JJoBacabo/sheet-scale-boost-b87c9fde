@@ -77,13 +77,23 @@ function initStorytellingScroll(sectionId: string) {
     // Scroll total = viewportHeight * topicCount (ex: 6 tópicos = 600vh)
     const scrollDistance = viewportHeight * topicCount;
 
-    // Configurar estado inicial: todos invisíveis
+    // Configurar estado inicial: primeiro visível, outros invisíveis
     topicElements.forEach((topic, index) => {
-      gsap.set(topic, {
-        opacity: 0,
-        y: 40, // Começa 40px abaixo
-        pointerEvents: 'none',
-      });
+      if (index === 0) {
+        // Primeiro tópico visível inicialmente
+        gsap.set(topic, {
+          opacity: 1,
+          y: 0,
+          pointerEvents: 'auto',
+        });
+      } else {
+        // Outros invisíveis
+        gsap.set(topic, {
+          opacity: 0,
+          y: 40, // Começa 40px abaixo
+          pointerEvents: 'none',
+        });
+      }
     });
 
     // Criar timeline principal
