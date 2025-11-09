@@ -79,15 +79,28 @@ function initCinematicScroll(sectionId: string) {
     const viewportHeight = window.innerHeight;
 
     // Calcular altura total da animação
-    // Cada feature precisa de espaço para aparecer, ficar visível e desaparecer
+    // Cada feature precisa de espaço suficiente para aparecer, ficar visível e desaparecer
     // Usamos viewport height multiplicado pelo número de features
-    const scrollHeight = viewportHeight * featureCount * 1.5; // 1.5x para transições suaves
+    // Aumentamos para 2x para dar mais espaço entre transições
+    const scrollHeight = viewportHeight * featureCount * 2;
 
-    // Configurar estado inicial: todas visíveis
-    gsap.set(featureElements, {
-      opacity: 1,
-      y: 0,
-      scale: 1,
+    // Configurar estado inicial: primeira feature visível, outras invisíveis
+    featureElements.forEach((feature, index) => {
+      if (index === 0) {
+        // Primeira feature totalmente visível
+        gsap.set(feature, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        });
+      } else {
+        // Outras features invisíveis
+        gsap.set(feature, {
+          opacity: 0,
+          y: 50,
+          scale: 0.95,
+        });
+      }
     });
 
     // Criar timeline principal
@@ -104,31 +117,26 @@ function initCinematicScroll(sectionId: string) {
       },
     });
 
-    // Animar cada feature individualmente - efeito mais suave
+    // Animar cada feature individualmente - apenas uma totalmente visível por vez
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
       const progressStart = index / featureCount; // Quando começa a aparecer
-      const progressCenter = (index + 0.5) / featureCount; // Centro da animação
-      const progressEnd = (index + 1) / featureCount; // Quando termina
+      const progressVisible = (index + 0.4) / featureCount; // Quando está totalmente visível
+      const progressEnd = (index + 1) / featureCount; // Quando desaparece
 
-      // Fade in suave (entrada)
-      masterTimeline.fromTo(
+      // Fade in suave (entrada) - aparece quando scroll atinge este ponto
+      masterTimeline.to(
         feature,
-        {
-          opacity: 0.3,
-          y: 30,
-          scale: 0.95,
-        },
         {
           opacity: 1,
           y: 0,
           scale: 1,
-          duration: 0.3,
+          duration: 0.5,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter no centro (destaque)
+        // Manter totalmente visível (plateau)
         .to(
           feature,
           {
@@ -137,16 +145,16 @@ function initCinematicScroll(sectionId: string) {
             scale: 1,
             duration: 0.2,
           },
-          progressCenter
+          progressVisible
         )
-        // Fade out suave (saída) - mas não completamente invisível
+        // Fade out suave (saída) - desaparece quando próxima aparece
         .to(
           feature,
           {
-            opacity: 0.3,
-            y: -30,
+            opacity: 0,
+            y: -50,
             scale: 0.95,
-            duration: 0.3,
+            duration: 0.5,
             ease: 'power2.in',
           },
           progressEnd
