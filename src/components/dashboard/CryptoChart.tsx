@@ -24,7 +24,7 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true }
 
     const resizeCanvas = () => {
       canvas.width = canvas.offsetWidth;
-      canvas.height = 200;
+      canvas.height = window.innerWidth < 640 ? 150 : 200; // Mobile: 150px, Desktop: 200px
     };
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
@@ -140,39 +140,39 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true }
   const isPositive = change >= 0;
 
   return (
-    <Card3D intensity="low" className="p-6 hover:border-primary/30 transition-all">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">{title}</h3>
+    <Card3D intensity="low" className="p-3 sm:p-4 md:p-6 hover:border-primary/30 transition-all">
+      <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+        <h3 className="text-sm sm:text-base md:text-lg font-semibold truncate flex-1">{title}</h3>
         {showTrend && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             {isPositive ? (
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
             ) : (
-              <TrendingDown className="w-4 h-4 text-red-500" />
+              <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
             )}
-            <span className={`text-sm font-medium ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+            <span className={`text-xs sm:text-sm font-medium ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
               {isPositive ? '+' : ''}{changePercent.toFixed(2)}%
             </span>
           </div>
         )}
       </div>
       <div className="relative">
-        <canvas ref={canvasRef} className="w-full" style={{ height: '200px' }} />
-        <div className="absolute bottom-2 left-0 right-0 flex justify-between text-xs text-muted-foreground px-2">
+        <canvas ref={canvasRef} className="w-full" style={{ height: '150px', maxHeight: '200px' }} />
+        <div className="absolute bottom-1 sm:bottom-2 left-0 right-0 flex justify-between text-[10px] sm:text-xs text-muted-foreground px-1 sm:px-2">
           <span>{data[0]?.date || ''}</span>
           <span>{data[data.length - 1]?.date || ''}</span>
         </div>
       </div>
-      <div className="mt-4 flex items-center justify-between">
-        <div>
-          <p className="text-xs text-muted-foreground">Valor Atual</p>
-          <p className="text-2xl font-bold" style={{ color }}>
+      <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Valor Atual</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-bold truncate" style={{ color }}>
             €{currentValue.toFixed(2)}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs text-muted-foreground">Variação</p>
-          <p className={`text-lg font-semibold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+        <div className="text-right flex-shrink-0">
+          <p className="text-[10px] sm:text-xs text-muted-foreground">Variação</p>
+          <p className={`text-sm sm:text-base md:text-lg font-semibold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
             {isPositive ? '+' : ''}€{change.toFixed(2)}
           </p>
         </div>

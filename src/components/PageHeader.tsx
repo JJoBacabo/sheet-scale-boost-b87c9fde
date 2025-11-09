@@ -25,22 +25,22 @@ export const PageHeader = ({
         className
       )}
     >
-      <div className="flex items-center gap-4 px-6 py-5">
-        <SidebarTrigger className="h-9 w-9 rounded-lg hover:bg-muted/50 transition-colors" />
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5">
+        <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg hover:bg-muted/50 transition-colors flex-shrink-0" />
         
-        <div className="flex items-center justify-between flex-1 min-w-0">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-semibold flex items-center gap-2 truncate">
-                {title}
+        <div className="flex items-center justify-between flex-1 min-w-0 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+            <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0 flex-1">
+              <h1 className="text-base sm:text-lg md:text-xl font-semibold flex items-center gap-1 sm:gap-2 truncate">
+                <span className="truncate">{title}</span>
                 {badge && (
-                  <span className="flex-shrink-0">
+                  <span className="flex-shrink-0 hidden sm:inline-block">
                     {badge}
                   </span>
                 )}
               </h1>
               {subtitle && (
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
                   {subtitle}
                 </p>
               )}
@@ -48,7 +48,7 @@ export const PageHeader = ({
           </div>
           
           {actions && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
               {actions}
             </div>
           )}

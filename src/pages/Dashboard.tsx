@@ -282,9 +282,11 @@ const Dashboard = () => {
           onClick={handleSyncFacebookData}
           disabled={syncing}
           glow
+          className="text-xs sm:text-sm"
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-          {syncing ? 'Sincronizando...' : 'Sincronizar Facebook'}
+          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 ${syncing ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar Facebook'}</span>
+          <span className="sm:hidden">{syncing ? 'Sync...' : 'Sync'}</span>
         </Button3D>
       }
     >
@@ -305,13 +307,13 @@ const Dashboard = () => {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-5 md:space-y-6">
         {/* Stats Overview */}
         {stats && <StatsOverview stats={stats} />}
 
         {/* Crypto Style Charts - Only show if has data */}
         {(revenueChartData.length > 0 || allCampaigns.length > 0) && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {revenueChartData.length > 0 && (
               <CryptoChart
                 data={revenueChartData}
@@ -369,47 +371,47 @@ const Dashboard = () => {
         )}
 
         {/* Top Products & Recent Campaigns */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
           {/* Top Products */}
-          <Card3D intensity="low" className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Package className="w-5 h-5 text-primary" />
+          <Card3D intensity="low" className="p-4 sm:p-5 md:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Package className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold">Top Produtos</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Top Produtos</h3>
             </div>
             {topProducts.length === 0 ? (
-              <div className="text-center py-8">
-                <Package className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">Conecte Shopify para ver produtos</p>
+              <div className="text-center py-6 sm:py-8">
+                <Package className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-muted-foreground opacity-50" />
+                <p className="text-sm sm:text-base text-muted-foreground">Conecte Shopify para ver produtos</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {topProducts.map((product, index) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+                    className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-xs font-bold text-primary">#{index + 1}</span>
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-[10px] sm:text-xs font-bold text-primary">#{index + 1}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate">{product.product_name}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm sm:text-base font-medium truncate">{product.product_name}</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           {product.quantity_sold || 0} vendas
                         </p>
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-4">
-                      <p className="font-bold text-emerald-500">
+                    <div className="text-right flex-shrink-0 ml-2 sm:ml-4">
+                      <p className="text-sm sm:text-base font-bold text-emerald-500">
                         €{(product.total_revenue || 0).toFixed(2)}
                       </p>
                       {product.profit_margin && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           {product.profit_margin.toFixed(1)}% margem
                         </p>
                       )}
@@ -421,21 +423,21 @@ const Dashboard = () => {
           </Card3D>
 
           {/* Recent Campaigns */}
-          <Card3D intensity="low" className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                <Target className="w-5 h-5 text-purple-500" />
+          <Card3D intensity="low" className="p-4 sm:p-5 md:p-6">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                <Target className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
               </div>
-              <h3 className="text-lg font-semibold">Campanhas Recentes</h3>
+              <h3 className="text-base sm:text-lg font-semibold">Campanhas Recentes</h3>
             </div>
             {recentCampaigns.length === 0 ? (
-              <div className="text-center py-8">
-                <Target className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground mb-2">Nenhuma campanha ativa</p>
-                <p className="text-xs text-muted-foreground">Sincronize seus dados do Facebook</p>
+              <div className="text-center py-6 sm:py-8">
+                <Target className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-muted-foreground opacity-50" />
+                <p className="text-sm sm:text-base text-muted-foreground mb-1 sm:mb-2">Nenhuma campanha ativa</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Sincronize seus dados do Facebook</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {recentCampaigns.map((campaign, index) => {
                   const roas = campaign.total_spent > 0 
                     ? (campaign.total_revenue || 0) / campaign.total_spent 
@@ -446,24 +448,24 @@ const Dashboard = () => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+                      className="flex items-center justify-between p-2.5 sm:p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className={`w-2 h-2 rounded-full ${
+                      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0 ${
                           campaign.status === 'active' ? 'bg-emerald-500' : 'bg-muted'
                         }`} />
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{campaign.campaign_name || 'Sem nome'}</p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-sm sm:text-base font-medium truncate">{campaign.campaign_name || 'Sem nome'}</p>
+                          <p className="text-[10px] sm:text-xs text-muted-foreground">
                             {campaign.platform || 'N/A'} • {format(new Date(campaign.created_at), 'dd/MM/yyyy')}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right flex-shrink-0 ml-4">
-                        <p className="font-bold text-primary">
+                      <div className="text-right flex-shrink-0 ml-2 sm:ml-4">
+                        <p className="text-sm sm:text-base font-bold text-primary">
                           {roas.toFixed(2)}x ROAS
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                           €{(campaign.total_revenue || 0).toFixed(2)}
                         </p>
                       </div>
@@ -477,23 +479,23 @@ const Dashboard = () => {
 
         {/* Charts Section - Bar and Pie - Only show if has campaigns */}
         {allCampaigns.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card3D intensity="medium" glow className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-gradient-primary/20 flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-primary" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+            <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-primary/20 flex items-center justify-center flex-shrink-0">
+                  <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">Performance de Campanhas Ativas</h3>
-                  <p className="text-sm text-muted-foreground">Gasto por campanha</p>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-sm sm:text-base md:text-lg truncate">Performance de Campanhas Ativas</h3>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Gasto por campanha</p>
                 </div>
               </div>
               {allCampaigns.length === 0 ? (
-                <div className="h-64 flex items-center justify-center text-muted-foreground">
+                <div className="h-48 sm:h-56 md:h-64 flex items-center justify-center text-muted-foreground text-sm">
                   Nenhuma campanha ativa
                 </div>
               ) : (
-                <div className="h-64 flex items-end justify-between gap-2">
+                <div className="h-48 sm:h-56 md:h-64 flex items-end justify-between gap-1 sm:gap-2 overflow-x-auto pb-2">
                   {allCampaigns.slice(0, 12).map((campaign, index) => {
                     const maxSpent = Math.max(...allCampaigns.map(c => Number(c.total_spent) || 0), 1);
                     const height = ((Number(campaign.total_spent) || 0) / maxSpent) * 100;
@@ -515,14 +517,14 @@ const Dashboard = () => {
               )}
             </Card3D>
 
-            <Card3D intensity="medium" glow className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-lg bg-gradient-primary/20 flex items-center justify-center">
-                  <PieChart className="w-5 h-5 text-primary" />
+            <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gradient-primary/20 flex items-center justify-center flex-shrink-0">
+                  <PieChart className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">ROAS das Campanhas</h3>
-                  <p className="text-sm text-muted-foreground">Distribuição por performance</p>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-sm sm:text-base md:text-lg truncate">ROAS das Campanhas</h3>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">Distribuição por performance</p>
                 </div>
               </div>
               <div className="space-y-4">
@@ -576,44 +578,46 @@ const Dashboard = () => {
 
         {/* Campaigns Table - Only Active */}
         {allCampaigns.length > 0 && (
-          <Card3D intensity="medium" glow className="p-6 overflow-hidden">
-            <div className="mb-4 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold gradient-text">Campanhas Ativas</h2>
-                <p className="text-sm text-muted-foreground mt-1">{filteredCampaigns.length} campanhas ativas</p>
-              </div>
-              <div className="relative flex-1 md:flex-initial md:w-64">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar campanhas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <Card3D intensity="medium" glow className="p-3 sm:p-4 md:p-6 overflow-hidden">
+            <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold gradient-text truncate">Campanhas Ativas</h2>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">{filteredCampaigns.length} campanhas ativas</p>
+                </div>
+                <div className="relative w-full sm:w-auto sm:flex-initial sm:min-w-[200px] md:w-64">
+                  <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar campanhas..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-8 sm:pl-10 h-9 sm:h-10 text-sm"
+                  />
+                </div>
               </div>
             </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-3 sm:-mx-4 md:-mx-6 px-3 sm:px-4 md:px-6">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/50">
-                  <TableHead className="font-semibold">Campanha</TableHead>
-                  <TableHead className="font-semibold">Plataforma</TableHead>
-                  <TableHead className="font-semibold text-right">Gasto</TableHead>
-                  <TableHead className="font-semibold text-right">Receita</TableHead>
-                  <TableHead className="font-semibold text-right">ROAS</TableHead>
-                  <TableHead className="font-semibold text-right">CPC</TableHead>
-                  <TableHead className="font-semibold text-right">Conversões</TableHead>
-                  <TableHead className="font-semibold text-center">Status</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm">Campanha</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm hidden sm:table-cell">Plataforma</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-right">Gasto</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-right">Receita</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-right">ROAS</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-right hidden md:table-cell">CPC</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-right hidden lg:table-cell">Conversões</TableHead>
+                  <TableHead className="font-semibold text-xs sm:text-sm text-center hidden sm:table-cell">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCampaigns.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={8} className="text-center py-6 sm:py-8">
                       <div className="flex flex-col items-center gap-2">
-                        <Target className="w-12 h-12 text-muted-foreground opacity-50" />
-                        <p className="text-muted-foreground">
+                        <Target className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground opacity-50" />
+                        <p className="text-xs sm:text-sm text-muted-foreground px-4">
                           {allCampaigns.length === 0 
                             ? "Nenhuma campanha ativa encontrada. Sincronize seus dados do Facebook."
                             : "Nenhuma campanha corresponde à busca."}
@@ -635,31 +639,37 @@ const Dashboard = () => {
                         transition={{ delay: index * 0.05 }}
                         className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                       >
-                        <TableCell className="font-medium">{campaign.campaign_name || 'Sem nome'}</TableCell>
-                        <TableCell className="text-muted-foreground">{campaign.platform || 'facebook'}</TableCell>
-                        <TableCell className="text-right font-semibold">€{(campaign.total_spent || 0).toFixed(2)}</TableCell>
-                        <TableCell className="text-right font-semibold text-emerald-500">
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="truncate max-w-[150px] sm:max-w-none">{campaign.campaign_name || 'Sem nome'}</span>
+                            <span className="text-[10px] text-muted-foreground sm:hidden">{campaign.platform || 'facebook'}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-xs sm:text-sm hidden sm:table-cell">{campaign.platform || 'facebook'}</TableCell>
+                        <TableCell className="text-right font-semibold text-xs sm:text-sm">€{(campaign.total_spent || 0).toFixed(2)}</TableCell>
+                        <TableCell className="text-right font-semibold text-emerald-500 text-xs sm:text-sm">
                           €{(campaign.total_revenue || 0).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                             {isPositive ? (
-                              <ArrowUp className="w-4 h-4 text-emerald-500" />
+                              <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                             ) : (
-                              <ArrowDown className="w-4 h-4 text-red-500" />
+                              <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                             )}
-                            <span className={`font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+                            <span className={`font-bold text-xs sm:text-sm ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                               {roas.toFixed(2)}x
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
+                        <TableCell className="text-right text-muted-foreground text-xs sm:text-sm hidden md:table-cell">
                           €{(campaign.cpc || 0).toFixed(2)}
                         </TableCell>
-                        <TableCell className="text-right">{campaign.conversions || 0}</TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-right text-xs sm:text-sm hidden lg:table-cell">{campaign.conversions || 0}</TableCell>
+                        <TableCell className="text-center hidden sm:table-cell">
                           <Badge 
                             variant={campaign.status === 'active' ? 'default' : 'secondary'}
+                            className="text-[10px] sm:text-xs"
                           >
                             {campaign.status || 'active'}
                           </Badge>
@@ -675,34 +685,34 @@ const Dashboard = () => {
         )}
 
         {/* Quick Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-4">
-          <Card3D intensity="low" className="p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <Activity className="w-5 h-5 text-primary" />
-              <p className="text-sm text-muted-foreground">Total Campanhas</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+              <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-primary flex-shrink-0" />
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Campanhas</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.totalCampaigns || 0}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.totalCampaigns || 0}</p>
           </Card3D>
-          <Card3D intensity="low" className="p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <Package className="w-5 h-5 text-emerald-500" />
-              <p className="text-sm text-muted-foreground">Total Produtos</p>
+          <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+              <Package className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 flex-shrink-0" />
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Produtos</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.totalProducts || 0}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.totalProducts || 0}</p>
           </Card3D>
-          <Card3D intensity="low" className="p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp className="w-5 h-5 text-purple-500" />
-              <p className="text-sm text-muted-foreground">Conversões</p>
+          <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 flex-shrink-0" />
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Conversões</p>
             </div>
-            <p className="text-2xl font-bold">{stats?.totalConversions || 0}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats?.totalConversions || 0}</p>
           </Card3D>
-          <Card3D intensity="low" className="p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <Target className="w-5 h-5 text-blue-500" />
-              <p className="text-sm text-muted-foreground">CPC Médio</p>
+          <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+            <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+              <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">CPC Médio</p>
             </div>
-            <p className="text-2xl font-bold">€{(stats?.averageCpc || 0).toFixed(2)}</p>
+            <p className="text-lg sm:text-xl md:text-2xl font-bold">€{(stats?.averageCpc || 0).toFixed(2)}</p>
           </Card3D>
         </div>
       </div>
