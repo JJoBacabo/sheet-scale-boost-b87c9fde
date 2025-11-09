@@ -14,8 +14,10 @@ import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { CryptoChart } from "@/components/dashboard/CryptoChart";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
-import { Package, Target, TrendingUp, Activity } from "lucide-react";
+import { Package, Target, TrendingUp, Activity, RefreshCw } from "lucide-react";
 import { format, subDays } from "date-fns";
+import { Button3D } from "@/components/ui/Button3D";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,6 +25,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
+  const { toast } = useToast();
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -100,10 +104,60 @@ const Dashboard = () => {
       value: item.margin_euros || 0,
     }));
 
+  const handleSyncFacebookData = async () => {
+    if (!user?.id) return;
+
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-facebook-campaigns', {
+        body: {
+          datePreset: 'last_30d',
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: 'Erro ao sincronizar',
+          description: data.error,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: '✅ Sincronização concluída',
+          description: `${data.campaignsSaved} campanhas e ${data.dailyDataSaved} registros diários salvos`,
+        });
+        // Refresh stats
+        window.location.reload();
+      }
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao sincronizar',
+        description: err.message || 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <PageLayout
       title={t('dashboard.title')}
       subtitle={t('dashboard.welcome')}
+      actions={
+        <Button3D
+          variant="gradient"
+          size="sm"
+          onClick={handleSyncFacebookData}
+          disabled={syncing}
+          glow
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+          {syncing ? 'Sincronizando...' : 'Sincronizar Facebook'}
+        </Button3D>
+      }
     >
       {stateInfo.showBanner && (
         <SubscriptionStateBanner
