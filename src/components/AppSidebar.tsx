@@ -1,6 +1,7 @@
 import { Home, TrendingUp, Package, Settings, LogOut, Sparkles, ChevronRight, BarChart3, Target, MessageCircle, MoreHorizontal, Shield, FileSpreadsheet, FileText, Lock } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { motion } from "framer-motion";
 import {
   Sidebar,
   SidebarContent,
@@ -89,14 +90,26 @@ export function AppSidebar() {
     >
       {/* Header with Logo */}
       <SidebarHeader className="p-6 flex items-center justify-center border-b border-primary/5">
-        <div className="relative">
+        <motion.div 
+          className="relative"
+          whileHover={{ scale: 1.1 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        >
           <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
-          <img 
+          <motion.img 
             src={logo} 
             alt="Sheet-Tools Logo" 
-            className={`relative transition-all duration-500 ${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'} hover:scale-110`}
+            className={`relative transition-all duration-500 ${isCollapsed ? 'w-10 h-10' : 'w-16 h-16'}`}
+            animate={{ 
+              filter: [
+                "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))",
+                "drop-shadow(0 0 16px rgba(74, 233, 189, 0.5))",
+                "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))"
+              ]
+            }}
+            transition={{ duration: 3, repeat: Infinity }}
           />
-        </div>
+        </motion.div>
       </SidebarHeader>
 
       {/* Main Navigation */}
@@ -104,47 +117,68 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
-              {menuItems.map((item) => {
+              {menuItems.map((item, index) => {
                 const isActive = location.pathname === item.url;
                 return (
                   <SidebarMenuItem key={item.title}>
-                    <NavLink 
-                      to={item.url} 
-                      className={`
-                        group relative flex items-center gap-4 px-4 py-3.5 rounded-xl
-                        transition-all duration-300 overflow-hidden
-                        ${isActive 
-                          ? 'bg-primary text-primary-foreground shadow-glow' 
-                          : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'
-                        }
-                      `}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
                     >
-                      {/* Background glow effect */}
-                      {isActive && (
-                        <div className="absolute inset-0 bg-gradient-primary opacity-90" />
-                      )}
-                      
-                      {/* Icon */}
-                      <div className={`
-                        relative z-10 w-5 h-5 shrink-0
-                        transition-transform duration-300
-                        ${isActive ? 'scale-110' : 'group-hover:scale-110'}
-                      `}>
-                        <item.icon className="w-full h-full" />
-                      </div>
-                      
-                      {/* Title */}
-                      {!isCollapsed && (
-                        <span className="relative z-10 font-medium text-sm flex-1">
-                          {item.title}
-                        </span>
-                      )}
-                      
-                      {/* Arrow indicator */}
-                      {!isCollapsed && isActive && (
-                        <ChevronRight className="relative z-10 w-4 h-4 shrink-0 animate-pulse" />
-                      )}
-                    </NavLink>
+                      <NavLink 
+                        to={item.url} 
+                        className={`
+                          group relative flex items-center gap-4 px-4 py-3.5 rounded-xl
+                          transition-all duration-300 overflow-hidden
+                          ${isActive 
+                            ? 'bg-primary text-primary-foreground shadow-glow' 
+                            : 'hover:bg-primary/10 text-muted-foreground hover:text-foreground'
+                          }
+                        `}
+                      >
+                        {/* Background glow effect */}
+                        {isActive && (
+                          <motion.div 
+                            className="absolute inset-0 bg-gradient-primary opacity-90"
+                            layoutId="activeBackground"
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          />
+                        )}
+                        
+                        {/* Icon */}
+                        <motion.div 
+                          className={`
+                            relative z-10 w-5 h-5 shrink-0
+                          `}
+                          whileHover={{ 
+                            rotateY: 5,
+                            scale: 1.1,
+                            z: 10
+                          }}
+                          style={{ transformStyle: 'preserve-3d' }}
+                        >
+                          <item.icon className="w-full h-full" />
+                        </motion.div>
+                        
+                        {/* Title */}
+                        {!isCollapsed && (
+                          <span className="relative z-10 font-medium text-sm flex-1">
+                            {item.title}
+                          </span>
+                        )}
+                        
+                        {/* Arrow indicator */}
+                        {!isCollapsed && isActive && (
+                          <motion.div
+                            animate={{ x: [0, 3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            <ChevronRight className="relative z-10 w-4 h-4 shrink-0" />
+                          </motion.div>
+                        )}
+                      </NavLink>
+                    </motion.div>
                   </SidebarMenuItem>
                 );
               })}
