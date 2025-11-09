@@ -23,24 +23,26 @@ export const PageLayout = ({
 }: PageLayoutProps) => {
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen}>
-      <div className="min-h-screen w-full flex bg-background relative overflow-hidden">
+      <div className="min-h-screen w-full flex relative overflow-hidden">
         {/* Background 3D - igual à home page */}
         <Background3D />
         
-        <AppSidebar />
+        <div className="flex flex-1 relative z-10">
+          <AppSidebar />
 
-        <SidebarInset className="flex-1 transition-all duration-300 relative z-10">
-          <PageHeader
-            title={title}
-            subtitle={subtitle}
-            badge={badge}
-            actions={actions}
-          />
+          <SidebarInset className="flex-1 transition-all duration-300 relative bg-background/20 backdrop-blur-[2px]">
+            <PageHeader
+              title={title}
+              subtitle={subtitle}
+              badge={badge}
+              actions={actions}
+            />
 
-          <main className="container mx-auto px-6 py-6 relative space-y-6">
-            {children}
-          </main>
-        </SidebarInset>
+            <main className="container mx-auto px-6 py-6 relative space-y-6">
+              {children}
+            </main>
+          </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );
