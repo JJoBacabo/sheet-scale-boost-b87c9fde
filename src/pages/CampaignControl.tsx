@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
 import { useToast } from "@/hooks/use-toast";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1515,81 +1517,99 @@ const CampaignControl = () => {
       title={t('dailyRoas.title')}
       subtitle={t('dailyRoas.subtitle')}
     >
-      <div className="space-y-6">
-        {/* Controls Section */}
-        <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-border/50">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
-              <div className="flex flex-wrap gap-2">
-                {/* Market Type Selector */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.market')}</label>
-                  <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={t('dailyRoas.selectMarket')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
-                      <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
-                      <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div className="space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Controls Section - Modern Design */}
+        <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            {/* Market Type Selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t('dailyRoas.market')}
+              </label>
+              <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
+                <SelectTrigger className="h-10 sm:h-11 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
+                  <SelectValue placeholder={t('dailyRoas.selectMarket')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
+                  <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
+                  <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                {adAccounts.length > 0 && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.adAccountLabel')}</label>
-                    <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
-                      <SelectTrigger className="w-[280px]">
-                        <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {adAccounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {/* Ações - Empilhadas */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.actions')}</label>
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      variant="outline"
-                      onClick={() => fetchFacebookCampaigns()}
-                      disabled={isFetchingCampaigns || !selectedAdAccount}
-                      className="h-9 text-sm"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
-                      {t('dailyRoas.updateCampaigns')}
-                    </Button>
-                    <Button variant="outline" onClick={exportToCSV} className="h-9 text-sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      {t('dailyRoas.exportReport')}
-                    </Button>
-                  </div>
-                </div>
+            {/* Ad Account Selector */}
+            {adAccounts.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t('dailyRoas.adAccountLabel')}
+                </label>
+                <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
+                  <SelectTrigger className="h-10 sm:h-11 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
+                    <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {adAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t('dailyRoas.actions')}
+              </label>
+              <div className="flex flex-col gap-2">
+                <Button3D
+                  variant="gradient"
+                  size="sm"
+                  onClick={() => fetchFacebookCampaigns()}
+                  disabled={isFetchingCampaigns || !selectedAdAccount}
+                  glow
+                  className="w-full"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
+                  {t('dailyRoas.updateCampaigns')}
+                </Button3D>
+                <Button3D
+                  variant="glass"
+                  size="sm"
+                  onClick={exportToCSV}
+                  className="w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {t('dailyRoas.exportReport')}
+                </Button3D>
               </div>
             </div>
           </div>
+        </Card3D>
 
           {/* Daily Tabs */}
-          <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
+          <Card3D intensity="low" className="p-4 sm:p-5 md:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
               <h2 className="text-lg md:text-xl font-bold">{t('dailyRoas.title')} - {t('dailyRoas.campaignsByDay')}</h2>
               {!showAddCampaign && (
-                <Button onClick={() => setShowAddCampaign(true)} size="sm" className="w-full sm:w-auto">
+                <Button3D 
+                  variant="gradient" 
+                  size="sm" 
+                  onClick={() => setShowAddCampaign(true)}
+                  glow
+                  className="w-full sm:w-auto"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('dailyRoas.addCampaign')}
-                </Button>
+                </Button3D>
               )}
             </div>
 
             {showAddCampaign && (
-              <Card className="p-3 md:p-4 mb-4 border border-primary/30 bg-primary/5">
+              <Card3D intensity="low" className="p-4 sm:p-5 md:p-6 mb-4 border-primary/30">
                 <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('dailyRoas.selectFacebookCampaign')}</h3>
                 
                 {/* Show selected Ad Account */}
@@ -1748,7 +1768,7 @@ const CampaignControl = () => {
                     {t('dailyRoas.add')}
                   </Button>
                 </div>
-              </Card>
+              </Card3D>
             )}
 
             <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
@@ -1766,30 +1786,30 @@ const CampaignControl = () => {
               <TabsContent value={selectedDay} className="mt-6">
                 {/* KPIs for selected day */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-4 md:mb-6">
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalSpend || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
-                    <p className="text-lg md:text-2xl font-bold text-green-500">{((kpis.totalRevenue || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgROAS || 0)).toFixed(2)}</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalMargemEuros || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgMargemPerc || 0)).toFixed(1)}%</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.totalVendas}</p>
-                  </Card>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold">{((kpis.totalSpend || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-500">{((kpis.totalRevenue || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{((kpis.avgROAS || 0)).toFixed(2)}</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-500">{((kpis.totalMargemEuros || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{((kpis.avgMargemPerc || 0)).toFixed(1)}%</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold">{kpis.totalVendas}</p>
+                  </Card3D>
                 </div>
 
                 {/* Table for selected day */}
@@ -1937,8 +1957,8 @@ const CampaignControl = () => {
                 </div>
 
               </TabsContent>
-            </Tabs>
-          </Card>
+              </Tabs>
+            </Card3D>
 
           {/* Decision Modal */}
           <Dialog open={showDecisionModal} onOpenChange={setShowDecisionModal}>
