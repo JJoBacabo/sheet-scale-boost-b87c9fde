@@ -29,6 +29,8 @@ import {
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -717,7 +719,7 @@ const MetaDashboard = () => {
         subtitle={t("metaDashboard.connectFacebookDesc")}
       >
         <div className="container max-w-4xl mx-auto">
-          <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
+          <Card3D intensity="low" className="p-8 text-center">
             <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-warning" />
             <h2 className="text-2xl font-bold mb-2">{t("metaDashboard.connectTitle")}</h2>
             <p className="text-muted-foreground mb-6">{t("metaDashboard.connectDesc")}</p>
@@ -725,7 +727,7 @@ const MetaDashboard = () => {
               <ExternalLink className="w-4 h-4 mr-2" />
               {t("metaDashboard.goToSettings")}
             </Button>
-          </Card>
+          </Card3D>
         </div>
       </PageLayout>
     );
@@ -751,7 +753,7 @@ const MetaDashboard = () => {
       }
     >
             {/* Ad Account Selector & Filters */}
-            <Card className="p-6 glass-card rounded-3xl border-2 border-border/50">
+            <Card3D intensity="low" className="p-5">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">{t("metaDashboard.adAccount")}</label>
@@ -860,10 +862,10 @@ const MetaDashboard = () => {
                   {t("metaDashboard.refresh")}
                 </Button>
               </div>
-            </Card>
+            </Card3D>
 
             {/* Search & Filter */}
-            <Card className="p-6 glass-card rounded-3xl border-2 border-border/50">
+            <Card3D intensity="low" className="p-5">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -929,7 +931,7 @@ const MetaDashboard = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-            </Card>
+            </Card3D>
 
             {/* Campaigns List - Simplified */}
             <div className="space-y-4">
@@ -938,17 +940,18 @@ const MetaDashboard = () => {
               </div>
 
               {filteredCampaigns.length === 0 ? (
-                <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
+                <Card3D intensity="low" className="p-8 text-center">
                   <p className="text-muted-foreground">{t("metaDashboard.noCampaigns")}</p>
-                </Card>
+                </Card3D>
               ) : (
                 <div className="grid gap-4">
                   {filteredCampaigns.map((campaign) => {
                     const insights = getInsightData(campaign);
                     return (
-                      <Card
+                      <Card3D
                         key={campaign.id}
-                        className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:shadow-glow transition-all group relative"
+                        intensity="low"
+                        className="p-5 hover:border-primary/30 transition-all group relative"
                       >
                         <div className="flex flex-col lg:flex-row gap-6 relative">
                           {/* Eye icon in top-right */}
@@ -975,19 +978,19 @@ const MetaDashboard = () => {
 
                             {/* Key Metrics */}
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                              <div className="p-3 glass-card rounded-xl">
+                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
                                 <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
                                 <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
                               </div>
-                              <div className="p-3 glass-card rounded-xl">
+                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
                                 <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
                                 <p className="text-lg font-bold">{insights.results}</p>
                               </div>
-                              <div className="p-3 glass-card rounded-xl">
+                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
                                 <p className="text-xs text-muted-foreground mb-1">CPC</p>
                                 <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
                               </div>
-                              <div className="p-3 glass-card rounded-xl">
+                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
                                 <p className="text-xs text-muted-foreground mb-1">ROAS</p>
                                 <p className="text-lg font-bold">
                                   {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
@@ -1038,7 +1041,7 @@ const MetaDashboard = () => {
                             </div>
                           </div>
                         </div>
-                      </Card>
+                      </Card3D>
                     );
                   })}
                 </div>

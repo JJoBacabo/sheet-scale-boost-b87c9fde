@@ -11,6 +11,8 @@ import type { User } from "@supabase/supabase-js";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { 
   Select, 
@@ -566,7 +568,7 @@ const ProfitSheet = () => {
             {!isConfirmed ? (
               <>
                 {/* Store and Ad Account Selection */}
-                <Card className="p-8 glass-card rounded-3xl border-2 border-border/50">
+                <Card3D intensity="low" className="p-6">
                   <div className="space-y-6">
                     <div className="text-center mb-8">
                       <h2 className="text-2xl font-bold mb-2">{t('profitSheet.selectStore')}</h2>
@@ -653,10 +655,10 @@ const ProfitSheet = () => {
                         {t('profitSheet.confirmSelection')}
                       </Button>
                     </div>
-                  </div>
-                </Card>
-              </>
-            ) : (
+                    </div>
+                  </Card3D>
+                </>
+              ) : (
               <>
                 {/* Date Range Filter */}
                 <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">

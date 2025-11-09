@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
@@ -383,7 +385,7 @@ export default function Integrations() {
       subtitle={t('settings.integrationsPage.subtitle')}
     >
             {/* Summary Card */}
-            <Card className="p-6 glass-card rounded-3xl border-2 border-primary/20 relative overflow-hidden">
+            <Card3D intensity="medium" glow className="p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-primary opacity-10 rounded-full blur-3xl" />
               <div className="relative z-10">
                 <h2 className="text-xl font-bold mb-2">{t('settings.integrationsPage.summary')}</h2>
@@ -391,12 +393,12 @@ export default function Integrations() {
                   {activeIntegrations} {activeIntegrations === 1 ? t('settings.integrationsPage.activeIntegrations') : t('settings.integrationsPage.activeIntegrationsPlural')}
                 </p>
               </div>
-            </Card>
+            </Card3D>
 
             {/* Integration Cards */}
             <div className="space-y-6">
               {/* Facebook Ads */}
-              <Card className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
+              <Card3D intensity="low" className="p-5 hover:border-primary/30 transition-all relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#1877F2]/10 rounded-full blur-3xl" />
                 <div className="relative z-10">
                   <div className="flex items-start justify-between mb-6">
@@ -433,7 +435,7 @@ export default function Integrations() {
                   {facebookIntegrations.length === 0 ? null : (
                     <div className="space-y-3">
                       {facebookIntegrations.map((fb) => (
-                        <Card key={fb.id} className="p-4 glass-card border border-border/30">
+                        <Card3D key={fb.id} intensity="low" className="p-4">
                           <div className="space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex-1">
@@ -471,12 +473,12 @@ export default function Integrations() {
                               {t('settings.integrationsPage.disconnect')}
                             </Button>
                           </div>
-                        </Card>
+                        </Card3D>
                       ))}
                     </div>
                   )}
                 </div>
-              </Card>
+              </Card3D>
 
               {/* Shopify Stores */}
               <div className="space-y-4">
@@ -507,7 +509,7 @@ export default function Integrations() {
                 </div>
 
                 {shopifyIntegrations.length === 0 ? (
-                  <Card className="p-8 glass-card rounded-3xl border-2 border-dashed border-border/50 text-center">
+                  <Card3D intensity="low" className="p-6 border-dashed text-center">
                     <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                     <p className="text-muted-foreground mb-4">{t('settings.integrationsPage.noStores')}</p>
                     {usageData && (
@@ -532,11 +534,11 @@ export default function Integrations() {
                         </>
                       )}
                     </Button>
-                  </Card>
+                  </Card3D>
                 ) : (
                   <div className="grid gap-4">
                     {shopifyIntegrations.map((shop) => (
-                      <Card key={shop.id} className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
+                      <Card3D key={shop.id} intensity="low" className="p-5 hover:border-primary/30 transition-all relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#96BF48]/10 rounded-full blur-3xl" />
                         <div className="relative z-10">
                           <div className="flex items-start justify-between mb-4">
@@ -579,7 +581,7 @@ export default function Integrations() {
                             </Button>
                           </div>
                         </div>
-                      </Card>
+                      </Card3D>
                     ))}
                   </div>
                 )}

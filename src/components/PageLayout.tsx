@@ -37,7 +37,7 @@ export const PageLayout = ({
             actions={actions}
           />
 
-          <main className="container mx-auto px-6 py-8 relative space-y-8">
+          <main className="container mx-auto px-6 py-6 relative space-y-6">
             {children}
           </main>
         </SidebarInset>

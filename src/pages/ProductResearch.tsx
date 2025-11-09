@@ -3,8 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PageLayout } from "@/components/PageLayout";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
 import { ArrowLeft, Construction } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { motion } from "framer-motion";
 
 export default function ProductResearch() {
   const { t } = useLanguage();
@@ -17,7 +20,7 @@ export default function ProductResearch() {
     >
             <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
               <div className="w-full max-w-2xl">
-                <Card className="glass-card rounded-3xl border-2 border-border/50 p-12">
+                <Card3D intensity="medium" glow className="p-8">
                 <div className="flex flex-col items-center text-center space-y-8">
                   {/* Logo with animation */}
                   <div className="relative">
@@ -51,27 +54,29 @@ export default function ProductResearch() {
 
                   {/* Feature Preview Badge */}
                   <div className="flex flex-wrap gap-3 justify-center">
-                    <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
+                    <div className="px-4 py-2 rounded-xl border border-primary/20 bg-background/30">
                       <span className="text-sm font-medium">{t('productResearch.feature1')}</span>
                     </div>
-                    <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
+                    <div className="px-4 py-2 rounded-xl border border-primary/20 bg-background/30">
                       <span className="text-sm font-medium">{t('productResearch.feature2')}</span>
                     </div>
-                    <div className="glass-card px-4 py-2 rounded-xl border-2 border-primary/20">
+                    <div className="px-4 py-2 rounded-xl border border-primary/20 bg-background/30">
                       <span className="text-sm font-medium">{t('productResearch.feature3')}</span>
                     </div>
                   </div>
 
                   {/* Back Button */}
-                  <Button
+                  <Button3D
+                    variant="gradient"
                     onClick={() => navigate("/dashboard")}
-                    className="btn-gradient h-12 px-8 font-medium text-base"
+                    size="lg"
+                    glow
                   >
                     <ArrowLeft className="w-5 h-5 mr-2" />
                     {t('productResearch.backToDashboard')}
-                  </Button>
+                  </Button3D>
                 </div>
-              </Card>
+              </Card3D>
             </div>
           </div>
     </PageLayout>

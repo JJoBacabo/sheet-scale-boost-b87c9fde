@@ -14,6 +14,8 @@ import type { User } from "@supabase/supabase-js";
 import { User as UserIcon, Building2, CreditCard, Facebook, ShoppingBag, Check, ExternalLink, Sparkles, X, RefreshCw, Calendar } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 import { profileSchema, shopifyIntegrationSchema } from "@/lib/validation";
 import { SubscriptionHistoryModal } from "@/components/SubscriptionHistoryModal";
 
@@ -696,9 +698,9 @@ const Settings = () => {
       title={t('settings.title')}
       subtitle={t('settings.integrationsPage.subtitle')}
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
               {/* Profile Section */}
-              <Card className="p-8 glass-card rounded-3xl border-2 border-border/50">
+              <Card3D intensity="low" className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
                     <UserIcon className="w-6 h-6 text-primary-foreground" />
@@ -741,10 +743,10 @@ const Settings = () => {
                     {saving ? t('settings.saving') : t('settings.save')}
                   </Button>
                 </div>
-              </Card>
+              </Card3D>
 
               {/* Subscription Section */}
-              <Card id="plans-section" className="p-8 glass-card rounded-3xl border-2 border-border/50">
+              <Card3D id="plans-section" intensity="low" className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
                     <CreditCard className="w-6 h-6 text-primary-foreground" />
@@ -798,11 +800,13 @@ const Settings = () => {
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                   {plans.map((plan) => (
-                    <Card
+                    <Card3D
                       key={plan.name}
-                      className={`p-6 glass-card rounded-3xl border-2 transition-all duration-300 flex flex-col relative ${
+                      intensity={plan.current ? "medium" : "low"}
+                      glow={plan.current}
+                      className={`p-6 transition-all duration-300 flex flex-col relative ${
                         plan.current
-                          ? "border-primary/40 shadow-glow"
+                          ? "border-primary/40"
                           : plan.popular
                           ? "border-primary scale-105 shadow-glow"
                           : "border-border/50 hover:border-primary/30"
@@ -868,7 +872,7 @@ const Settings = () => {
                           {subscribing ? t('settings.processing') : t('settings.upgrade')}
                         </Button>
                       )}
-                    </Card>
+                    </Card3D>
                   ))}
                 </div>
 
@@ -942,10 +946,10 @@ const Settings = () => {
                     );
                   }
                 })()}
-              </Card>
+              </Card3D>
 
               {/* Danger Zone */}
-              <Card className="p-8 glass-card rounded-3xl border-2 border-destructive/30">
+              <Card3D intensity="low" className="p-6 border-destructive/20">
                 <h2 className="text-2xl font-bold mb-4 text-destructive">{t('settings.dangerZone.title')}</h2>
                 <p className="text-muted-foreground mb-6">
                   {t('settings.dangerZone.description')}
@@ -964,7 +968,7 @@ const Settings = () => {
                     </Button>
                   </div>
                 </div>
-                </Card>
+                </Card3D>
               </div>
 
             {/* Shopify Dialog */}
