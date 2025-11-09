@@ -164,19 +164,33 @@ function initCinematicScroll(sectionId: string) {
     };
   };
 
-  // Executar quando DOM estiver pronto
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-    return () => {
-      document.removeEventListener('DOMContentLoaded', init);
+  // Executar quando DOM estiver pronto e React renderizar
+  // Aguardar mais tempo para garantir que React renderizou completamente
+  const timeout = setTimeout(() => {
+    // Tentar múltiplas vezes caso os elementos ainda não estejam prontos
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryInit = () => {
+      const section = document.getElementById(sectionId);
+      const container = section?.querySelector('.features-container');
+      const items = container?.querySelectorAll('.feature-item');
+      
+      if (section && container && items && items.length > 0) {
+        init();
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        setTimeout(tryInit, 200);
+      } else {
+        console.warn('Features section not ready after multiple attempts.');
+      }
     };
-  } else {
-    // DOM já está pronto, mas aguardar um pouco para garantir que React renderizou
-    const timeout = setTimeout(init, 100);
-    return () => {
-      clearTimeout(timeout);
-      // Cleanup será feito pela função init se necessário
-    };
-  }
+    
+    tryInit();
+  }, 500);
+
+  return () => {
+    clearTimeout(timeout);
+  };
 }
 
