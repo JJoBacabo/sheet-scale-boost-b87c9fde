@@ -316,7 +316,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 sm:px-6 pt-12 pb-0 relative">
+      <section id="features" className="container mx-auto px-4 sm:px-6 pt-0 pb-0 relative">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
