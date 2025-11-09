@@ -318,7 +318,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section - Full Page Scroll */}
-      <section id="features" className="relative">
+      <section id="features" className="relative" aria-label="Features section">
         {/* Section Title - Fixed at top */}
         <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
           <motion.h2 

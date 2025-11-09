@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -71,6 +72,7 @@ const Dashboard = () => {
   const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
 
   // Check Facebook integration and auto-sync
@@ -229,7 +231,7 @@ const Dashboard = () => {
 
   // Filter campaigns - only show active by default
   const filteredCampaigns = allCampaigns.filter(campaign => {
-    const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = campaign.campaign_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     // Only show active campaigns
     return matchesSearch && campaign.status === 'active';
   });
@@ -364,6 +366,7 @@ const Dashboard = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-8 sm:pl-10 h-9 sm:h-10 text-sm"
+                    aria-label="Buscar campanhas"
                   />
                 </div>
               </div>

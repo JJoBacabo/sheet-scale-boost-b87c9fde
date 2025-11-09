@@ -30,7 +30,22 @@ import Billing from "./pages/Billing";
 import TestBrevo from "./pages/TestBrevo";
 import TestPage from "./pages/TestPage";
 
-const queryClient = new QueryClient();
+// Configure React Query for optimal performance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+      gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      refetchOnMount: true, // Refetch on component mount
+      retry: 1, // Retry failed requests once
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    },
+    mutations: {
+      retry: 1, // Retry failed mutations once
+    },
+  },
+});
 
 const AppContent = () => {
   useSubscriptionCheck();
