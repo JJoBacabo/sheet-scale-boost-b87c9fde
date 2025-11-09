@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 
 /**
- * Hook para implementar efeito de scroll horizontal usando GSAP + ScrollTrigger
+ * Hook para implementar efeito de scroll cinematográfico usando GSAP + ScrollTrigger
  * 
  * Funcionalidade:
- * - Scroll horizontal através das features
  * - Fixa a seção durante o scroll (sticky/pin)
- * - Mostra uma feature por vez com transições suaves
+ * - Mostra apenas uma feature por vez
+ * - Transições suaves com fade (opacity) e translateY
  * - Detecta automaticamente quantos elementos .feature-item existem
- * - Calcula largura da animação baseado no número de features
+ * - Calcula altura da animação baseado no número de features
+ * - Não altera o layout ou HTML existente, apenas adiciona comportamento JS
  */
 export const useCinematicScroll = (sectionId: string) => {
   useEffect(() => {
@@ -39,7 +40,7 @@ export const useCinematicScroll = (sectionId: string) => {
 };
 
 /**
- * Função que inicializa o scroll horizontal
+ * Função que inicializa o efeito cinematográfico
  */
 function initCinematicScroll(sectionId: string) {
   const gsap = (window as any).gsap;
@@ -75,135 +76,77 @@ function initCinematicScroll(sectionId: string) {
     }
 
     const featureCount = featureElements.length;
-    const viewportWidth = window.innerWidth;
-    
-    // Debug: verificar quantas features foram encontradas
-    console.log(`[CinematicScroll] Found ${featureCount} features, viewport width: ${viewportWidth}px`);
+    const viewportHeight = window.innerHeight;
 
-    // Configurar layout horizontal
-    // Container deve ter largura suficiente para todas as features lado a lado
-    const containerWidth = viewportWidth * featureCount;
-    const containerEl = featuresContainer as HTMLElement;
-    containerEl.style.width = `${containerWidth}px`;
-    containerEl.style.display = 'flex';
-    containerEl.style.flexDirection = 'row';
-    containerEl.style.position = 'relative';
-    containerEl.style.left = '0';
-    containerEl.style.transition = 'none'; // Remover transições CSS que podem interferir
+    // Calcular altura total da animação
+    // Cada feature precisa de espaço para aparecer, ficar visível e desaparecer
+    // Usamos viewport height multiplicado pelo número de features
+    const scrollHeight = viewportHeight * featureCount * 1.5; // 1.5x para transições suaves
 
-    // Configurar estado inicial: features lado a lado
-    featureElements.forEach((feature, index) => {
-      feature.style.width = `${viewportWidth}px`;
-      feature.style.minWidth = `${viewportWidth}px`;
-      feature.style.flexShrink = '0';
-      feature.style.position = 'relative';
-      feature.style.left = '0';
-      feature.style.transition = 'none'; // Remover transições CSS
-      
-      gsap.set(feature, {
-        opacity: index === 0 ? 1 : 0, // Primeira visível, outras invisíveis
-        pointerEvents: index === 0 ? 'auto' : 'none',
-      });
+    // Configurar estado inicial: todas invisíveis
+    gsap.set(featureElements, {
+      opacity: 0,
+      y: 50,
     });
 
-    // Posição inicial do container
-    gsap.set(containerEl, {
-      x: 0,
+    // Primeira feature visível inicialmente
+    gsap.set(featureElements[0], {
+      opacity: 1,
+      y: 0,
     });
 
-    // Calcular scroll distance (vertical scroll = horizontal movement)
-    // Aumentar para dar mais espaço entre features
-    const scrollDistance = viewportWidth * featureCount * 2;
-
-    // Criar animação horizontal
-    const horizontalTimeline = gsap.timeline({
+    // Criar timeline principal
+    const masterTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: section,
-        start: 'top top',
-        end: `+=${scrollDistance}`,
-        scrub: 1, // Sincronizar com scroll
-        pin: true,
+        start: 'top top', // Quando o topo da seção atinge o topo da viewport
+        end: `+=${scrollHeight}`, // Termina após scrollHeight pixels
+        scrub: 1, // Sincronizar com scroll (1 segundo de delay para suavidade)
+        pin: true, // Fixar a seção durante o scroll
         anticipatePin: 1,
         pinSpacing: true,
-        markers: false,
-        invalidateOnRefresh: true,
+        markers: false, // Desativar marcadores de debug
       },
     });
 
-    // Animar movimento horizontal - scroll vertical move container horizontalmente
-    // Mover container de x: 0 até x: -(featureCount - 1) * viewportWidth
-    horizontalTimeline.to(
-      containerEl,
-      {
-        x: -(featureCount - 1) * viewportWidth, // Mover até a última feature
-        ease: 'none', // Movimento linear sincronizado com scroll
-      },
-      1 // Progresso completo (0 a 1)
-    );
-
-    // Animar fade de cada feature - todas devem aparecer durante o scroll
+    // Animar cada feature individualmente
     featureElements.forEach((feature, index) => {
-      // Calcular progresso baseado na posição no scroll
-      // Cada feature ocupa uma parte igual do scroll total
-      const progressStart = index / featureCount; // Quando começa a aparecer (0, 0.166, 0.333, 0.5, 0.666, 0.833)
-      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
+      // Calcular progresso no timeline (0 a 1)
+      const progressStart = index / featureCount; // Quando começa a aparecer
+      const progressVisible = (index + 0.3) / featureCount; // Quando está totalmente visível
       const progressEnd = (index + 1) / featureCount; // Quando desaparece
-      
-      // Debug: log para cada feature
-      console.log(`[CinematicScroll] Feature ${index + 1}: start=${progressStart.toFixed(3)}, center=${progressCenter.toFixed(3)}, end=${progressEnd.toFixed(3)}`);
 
-      // Estado inicial: primeira visível, outras invisíveis
-      if (index > 0) {
-        horizontalTimeline.set(
-          feature,
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
-          progressStart - 0.01 // Antes de começar
-        );
-      }
-
-      // Fade in quando entra no viewport
-      horizontalTimeline.to(
+      // Fade in e slide up (entrada)
+      masterTimeline.to(
         feature,
         {
           opacity: 1,
-          pointerEvents: 'auto',
-          duration: 0.15,
+          y: 0,
+          duration: 0.2,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter totalmente visível no centro
+        // Manter visível (plateau)
         .to(
           feature,
           {
             opacity: 1,
-            pointerEvents: 'auto',
-            duration: 0.2,
+            y: 0,
+            duration: 0.1,
           },
-          progressCenter
+          progressVisible
         )
-        // Fade out quando sai do viewport
+        // Fade out e slide down (saída)
         .to(
           feature,
           {
             opacity: 0,
-            pointerEvents: 'none',
-            duration: 0.15,
+            y: -50,
+            duration: 0.2,
             ease: 'power2.in',
           },
           progressEnd
-        )
-        // Garantir invisível após desaparecer
-        .set(
-          feature,
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
-          progressEnd + 0.01
         );
     });
 
@@ -217,37 +160,23 @@ function initCinematicScroll(sectionId: string) {
       });
       
       // Limpar animações
-      horizontalTimeline.kill();
+      masterTimeline.kill();
     };
   };
 
-  // Executar quando DOM estiver pronto e React renderizar
-  // Aguardar mais tempo para garantir que React renderizou completamente
-  const timeout = setTimeout(() => {
-    // Tentar múltiplas vezes caso os elementos ainda não estejam prontos
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    const tryInit = () => {
-      const section = document.getElementById(sectionId);
-      const container = section?.querySelector('.features-container');
-      const items = container?.querySelectorAll('.feature-item');
-      
-      if (section && container && items && items.length > 0) {
-        init();
-      } else if (attempts < maxAttempts) {
-        attempts++;
-        setTimeout(tryInit, 200);
-      } else {
-        console.warn('Features section not ready after multiple attempts.');
-      }
+  // Executar quando DOM estiver pronto
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+    return () => {
+      document.removeEventListener('DOMContentLoaded', init);
     };
-    
-    tryInit();
-  }, 500);
-
-  return () => {
-    clearTimeout(timeout);
-  };
+  } else {
+    // DOM já está pronto, mas aguardar um pouco para garantir que React renderizou
+    const timeout = setTimeout(init, 100);
+    return () => {
+      clearTimeout(timeout);
+      // Cleanup será feito pela função init se necessário
+    };
+  }
 }
 

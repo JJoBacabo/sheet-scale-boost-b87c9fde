@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react';
 
-/**
- * Hook para debounce de valores
- * Útil para inputs de busca e filtros
- * 
- * @param value - Valor a ser debounced
- * @param delay - Delay em milissegundos (padrão: 300ms)
- * @returns Valor debounced
- */
 export function useDebounce<T>(value: T, delay: number = 300): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
@@ -23,3 +15,4 @@ export function useDebounce<T>(value: T, delay: number = 300): T {
 
   return debouncedValue;
 }
+

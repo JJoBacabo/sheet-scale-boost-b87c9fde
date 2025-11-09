@@ -37,8 +37,8 @@ export const Background3D = () => {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Create particles - optimized count based on screen size
-    const particleCount = window.innerWidth < 768 ? 30 : window.innerWidth < 1024 ? 40 : 50;
+    // Create particles
+    const particleCount = 50;
     particlesRef.current = Array.from({ length: particleCount }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
