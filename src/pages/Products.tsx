@@ -263,7 +263,29 @@ const Products = () => {
         variant: "destructive",
       });
     } else {
-      setProducts(data || []);
+      // Remove duplicates based on shopify_product_id (keep most recent)
+      const uniqueProducts = (data || []).reduce((acc, product) => {
+        const existing = acc.find(p => 
+          p.shopify_product_id && 
+          p.shopify_product_id === product.shopify_product_id
+        );
+        
+        if (!existing) {
+          acc.push(product);
+        } else {
+          // Keep the one with the most recent updated_at
+          const existingDate = new Date(existing.updated_at || existing.created_at).getTime();
+          const newDate = new Date(product.updated_at || product.created_at).getTime();
+          if (newDate > existingDate) {
+            const index = acc.indexOf(existing);
+            acc[index] = product;
+          }
+        }
+        
+        return acc;
+      }, [] as Product[]);
+      
+      setProducts(uniqueProducts);
     }
   };
 
@@ -794,8 +816,14 @@ const Products = () => {
                       alt={product.product_name}
                       className="w-full h-full object-cover rounded-xl"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl"><svg class="w-12 h-12 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                        // Suppress console error and show fallback icon
+                        e.preventDefault();
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl"><svg class="w-8 h-8 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                        }
                       }}
                     />
                   ) : (
