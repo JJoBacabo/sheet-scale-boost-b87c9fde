@@ -386,18 +386,17 @@ const Landing = () => {
               { src: '/images/feature-secure-2.jpg', alt: 'Data Protection' }
             ]
           }].map((feature, index) => {
-            const featureCount = 6; // Total de features
             return (
             <div
               key={index}
               className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20"
               style={{ 
-                position: index === 0 ? 'relative' : 'absolute',
-                top: index === 0 ? 'auto' : 0,
+                position: 'absolute',
+                top: 0,
                 left: 0,
                 right: 0,
                 width: '100%',
-                zIndex: featureCount - index // Primeira feature no topo
+                zIndex: 10 // Todas no mesmo nível, controladas por opacity
               }}
             >
               <div className="max-w-7xl mx-auto w-full">
@@ -573,6 +572,9 @@ const Landing = () => {
           )}
         </AnimatePresence>
       </section>
+
+      {/* Spacer between Features and Pricing - prevents black gap */}
+      <div className="h-32 sm:h-40 md:h-48 bg-black" />
 
       {/* Pricing Section */}
       <section id="pricing" className="container mx-auto px-4 sm:px-6 py-20 relative">

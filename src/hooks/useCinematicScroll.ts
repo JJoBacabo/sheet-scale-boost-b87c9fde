@@ -84,7 +84,7 @@ function initCinematicScroll(sectionId: string) {
     // Aumentamos para 2x para dar mais espaço entre transições
     const scrollHeight = viewportHeight * featureCount * 2;
 
-    // Configurar estado inicial: todas as features visíveis e posicionadas verticalmente
+    // Configurar estado inicial: apenas primeira feature visível, outras completamente invisíveis
     featureElements.forEach((feature, index) => {
       if (index === 0) {
         // Primeira feature totalmente visível no centro
@@ -92,13 +92,15 @@ function initCinematicScroll(sectionId: string) {
           opacity: 1,
           y: 0,
           scale: 1,
+          pointerEvents: 'auto',
         });
       } else {
-        // Outras features posicionadas abaixo, visíveis mas menos destacadas
+        // Outras features completamente invisíveis e desabilitadas
         gsap.set(feature, {
-          opacity: 0.4, // Parcialmente visível para mostrar que existem
-          y: viewportHeight * index * 0.8, // Posicionar abaixo da anterior
-          scale: 0.95,
+          opacity: 0,
+          y: 0, // Todas na mesma posição (sobrepostas)
+          scale: 1,
+          pointerEvents: 'none',
         });
       }
     });
@@ -109,29 +111,31 @@ function initCinematicScroll(sectionId: string) {
         trigger: section,
         start: 'top top', // Quando o topo da seção atinge o topo da viewport
         end: `+=${scrollHeight}`, // Termina após scrollHeight pixels
-        scrub: 1, // Sincronizar com scroll (1 segundo de delay para suavidade)
+        scrub: 0.5, // Sincronizar com scroll (0.5s para mais responsividade)
         pin: true, // Fixar a seção durante o scroll
         anticipatePin: 1,
         pinSpacing: true,
         markers: false, // Desativar marcadores de debug
+        invalidateOnRefresh: true, // Recalcular em refresh
       },
     });
 
-    // Animar cada feature individualmente - scroll vertical com todas visíveis
+    // Animar cada feature individualmente - apenas uma totalmente visível por vez
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
-      const progressStart = index / featureCount; // Quando começa a entrar no viewport
-      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
-      const progressEnd = (index + 1) / featureCount; // Quando sai do viewport
+      const progressStart = index / featureCount; // Quando começa a aparecer
+      const progressCenter = (index + 0.5) / featureCount; // Quando está totalmente visível
+      const progressEnd = (index + 1) / featureCount; // Quando desaparece
 
-      // Mover para o centro e destacar (entrada)
+      // Fade in completo (entrada) - aparece quando scroll atinge este ponto
       masterTimeline.to(
         feature,
         {
           opacity: 1,
-          y: 0, // Mover para o centro (y: 0)
+          y: 0,
           scale: 1,
-          duration: 0.6,
+          pointerEvents: 'auto',
+          duration: 0.4,
           ease: 'power2.out',
         },
         progressStart
@@ -143,18 +147,20 @@ function initCinematicScroll(sectionId: string) {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.3,
+            pointerEvents: 'auto',
+            duration: 0.2,
           },
           progressCenter
         )
-        // Mover para cima e reduzir opacidade (saída) - mas manter parcialmente visível
+        // Fade out completo (saída) - desaparece completamente quando próxima aparece
         .to(
           feature,
           {
-            opacity: 0.3,
-            y: -viewportHeight * 0.6, // Mover para cima
-            scale: 0.9,
-            duration: 0.6,
+            opacity: 0,
+            y: 0, // Não mover, apenas fade
+            scale: 1,
+            pointerEvents: 'none',
+            duration: 0.4,
             ease: 'power2.in',
           },
           progressEnd
