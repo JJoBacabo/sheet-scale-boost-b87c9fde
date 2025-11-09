@@ -80,25 +80,37 @@ function initCinematicScroll(sectionId: string) {
     // Configurar layout horizontal
     // Container deve ter largura suficiente para todas as features lado a lado
     const containerWidth = viewportWidth * featureCount;
-    gsap.set(featuresContainer, {
-      width: `${containerWidth}px`,
-      display: 'flex',
-      flexDirection: 'row',
-    });
+    const containerEl = featuresContainer as HTMLElement;
+    containerEl.style.width = `${containerWidth}px`;
+    containerEl.style.display = 'flex';
+    containerEl.style.flexDirection = 'row';
+    containerEl.style.position = 'relative';
+    containerEl.style.left = '0';
+    containerEl.style.transition = 'none'; // Remover transições CSS que podem interferir
 
     // Configurar estado inicial: features lado a lado
     featureElements.forEach((feature, index) => {
+      feature.style.width = `${viewportWidth}px`;
+      feature.style.minWidth = `${viewportWidth}px`;
+      feature.style.flexShrink = '0';
+      feature.style.position = 'relative';
+      feature.style.left = '0';
+      feature.style.transition = 'none'; // Remover transições CSS
+      
       gsap.set(feature, {
-        x: index * viewportWidth, // Posicionar horizontalmente
         opacity: index === 0 ? 1 : 0, // Primeira visível, outras invisíveis
-        width: `${viewportWidth}px`,
-        flexShrink: 0,
         pointerEvents: index === 0 ? 'auto' : 'none',
       });
     });
 
+    // Posição inicial do container
+    gsap.set(containerEl, {
+      x: 0,
+    });
+
     // Calcular scroll distance (vertical scroll = horizontal movement)
-    const scrollDistance = viewportWidth * featureCount;
+    // Aumentar para dar mais espaço entre features
+    const scrollDistance = viewportWidth * featureCount * 2;
 
     // Criar animação horizontal
     const horizontalTimeline = gsap.timeline({
@@ -125,11 +137,26 @@ function initCinematicScroll(sectionId: string) {
       1 // Progresso completo (0 a 1)
     );
 
-    // Animar fade de cada feature
+    // Animar fade de cada feature com gap entre elas
     featureElements.forEach((feature, index) => {
-      const progressStart = index / featureCount; // Quando começa a aparecer
-      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
-      const progressEnd = (index + 1) / featureCount; // Quando desaparece
+      // Adicionar gap entre features para evitar sobreposição
+      const gap = 0.1; // 10% de gap
+      const segmentSize = (1 - gap * (featureCount - 1)) / featureCount;
+      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer
+      const progressCenter = progressStart + segmentSize * 0.4; // Quando está totalmente visível
+      const progressEnd = progressStart + segmentSize; // Quando desaparece (antes do gap)
+
+      // Garantir invisível antes de começar
+      if (index > 0) {
+        horizontalTimeline.set(
+          feature,
+          {
+            opacity: 0,
+            pointerEvents: 'none',
+          },
+          progressStart - 0.01
+        );
+      }
 
       // Fade in quando entra no viewport
       horizontalTimeline.to(
@@ -137,7 +164,7 @@ function initCinematicScroll(sectionId: string) {
         {
           opacity: 1,
           pointerEvents: 'auto',
-          duration: 0.2,
+          duration: 0.3,
           ease: 'power2.out',
         },
         progressStart
@@ -148,20 +175,29 @@ function initCinematicScroll(sectionId: string) {
           {
             opacity: 1,
             pointerEvents: 'auto',
-            duration: 0.3,
+            duration: 0.2,
           },
           progressCenter
         )
-        // Fade out quando sai do viewport
+        // Fade out quando sai do viewport (antes do gap)
         .to(
           feature,
           {
             opacity: 0,
             pointerEvents: 'none',
-            duration: 0.2,
+            duration: 0.3,
             ease: 'power2.in',
           },
           progressEnd
+        )
+        // Garantir invisível durante gap
+        .set(
+          feature,
+          {
+            opacity: 0,
+            pointerEvents: 'none',
+          },
+          progressStart + segmentSize + gap - 0.01
         );
     });
 

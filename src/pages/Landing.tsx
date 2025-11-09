@@ -342,7 +342,7 @@ const Landing = () => {
         </div>
 
         {/* Features with Horizontal Scroll */}
-        <div className="features-container relative overflow-hidden" style={{ minHeight: '100vh' }}>
+        <div className="features-container relative" style={{ minHeight: '100vh', overflow: 'hidden' }}>
           {[{
             icon: Activity,
             key: 'integration',
