@@ -426,140 +426,254 @@ const Landing = () => {
                     </p>
 
                     {/* Additional Features List - Specific to each feature */}
-                    <div className="space-y-3 pt-4">
+                    <motion.div 
+                      className="space-y-3 pt-4"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.6, delay: 0.3 }}
+                      viewport={{ once: false, amount: 0.3 }}
+                    >
                       {feature.key === 'integration' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Conexão direta com Facebook Ads, Shopify e mais
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Sincronização automática de campanhas e produtos
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Configuração em menos de 5 minutos
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
                       {feature.key === 'metrics' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Análise em tempo real de todas as suas campanhas
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Dashboard completo com KPIs essenciais
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Alertas inteligentes sobre performance
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
                       {feature.key === 'ai' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Relatórios detalhados e insights acionáveis
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Sugestões automáticas de otimização
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Previsões de performance baseadas em IA
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
                       {feature.key === 'automation' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Integração automática com suas plataformas
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Regras personalizadas de auto-scaling
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Notificações instantâneas por email
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
                       {feature.key === 'profit' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Cálculo automático de margem e lucro líquido
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Relatórios de rentabilidade por produto
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Exportação para Excel e Google Sheets
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
                       {feature.key === 'secure' && (
                         <>
-                          <div className="flex items-start gap-3">
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Dados criptografados de ponta a ponta
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.5 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Conformidade com GDPR e LGPD
                             </p>
-                          </div>
-                          <div className="flex items-start gap-3">
+                          </motion.div>
+                          <motion.div 
+                            className="flex items-start gap-3"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.6 }}
+                            viewport={{ once: false }}
+                          >
                             <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                             <p className="text-sm sm:text-base text-gray-400">
                               Backups automáticos diários
                             </p>
-                          </div>
+                          </motion.div>
                         </>
                       )}
-                    </div>
+                    </motion.div>
 
                     {/* Scroll Indicator - Only on last feature */}
                     {index === 5 && (
