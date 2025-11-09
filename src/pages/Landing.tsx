@@ -316,9 +316,9 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 sm:px-6 py-20 relative">
+      <section id="features" className="container mx-auto px-4 sm:px-6 pt-20 pb-0 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               Features that make the difference
             </h2>
@@ -327,7 +327,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-0">
             {[
               { icon: Zap, title: 'Real-Time Analysis', description: 'Monitoriza campanhas em tempo real com métricas atualizadas segundo a segundo' },
               { icon: Brain, title: 'Campaign Insights', description: 'Obtém insights automáticos sobre desempenho, públicos e tendências' },
