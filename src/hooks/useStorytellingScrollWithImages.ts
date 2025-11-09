@@ -15,27 +15,35 @@ import { useEffect } from 'react';
  */
 export const useStorytellingScrollWithImages = (sectionId: string) => {
   useEffect(() => {
+    console.log(`[${sectionId}] Hook mounted, checking for GSAP...`);
+    
     // Verificar se GSAP e ScrollTrigger estão disponíveis
     if (typeof window === 'undefined' || !(window as any).gsap || !(window as any).ScrollTrigger) {
+      console.log(`[${sectionId}] GSAP not ready, waiting...`);
       // Aguardar carregamento dos scripts
       const checkGSAP = setInterval(() => {
         if ((window as any).gsap && (window as any).ScrollTrigger) {
+          console.log(`[${sectionId}] GSAP loaded, initializing...`);
           clearInterval(checkGSAP);
           initStorytellingScroll(sectionId);
         }
       }, 100);
 
-      // Timeout após 5 segundos
+      // Timeout após 10 segundos
       setTimeout(() => {
         clearInterval(checkGSAP);
         if (!(window as any).gsap || !(window as any).ScrollTrigger) {
-          console.warn('GSAP or ScrollTrigger not loaded. Storytelling scroll effect disabled.');
+          console.error(`[${sectionId}] GSAP or ScrollTrigger not loaded after 10s. Storytelling scroll effect disabled.`);
         }
-      }, 5000);
+      }, 10000);
 
-      return () => clearInterval(checkGSAP);
+      return () => {
+        clearInterval(checkGSAP);
+        console.log(`[${sectionId}] Hook unmounted, cleaning up...`);
+      };
     } else {
       // GSAP já está disponível, inicializar imediatamente
+      console.log(`[${sectionId}] GSAP ready, initializing immediately...`);
       return initStorytellingScroll(sectionId);
     }
   }, [sectionId]);
@@ -99,6 +107,8 @@ function initStorytellingScroll(sectionId: string) {
     });
 
     // Criar timeline principal
+    console.log(`[${sectionId}] Creating ScrollTrigger with distance: ${scrollDistance}px (${topicCount} topics × ${viewportHeight}px)`);
+    
     const masterTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: section,
@@ -108,10 +118,16 @@ function initStorytellingScroll(sectionId: string) {
         pin: true, // Fixar seção durante scroll
         anticipatePin: 1,
         pinSpacing: true,
-        markers: false, // Mudar para true para debug
+        markers: true, // Ativar markers para debug
         invalidateOnRefresh: true,
+        onEnter: () => console.log(`[${sectionId}] ScrollTrigger entered`),
+        onLeave: () => console.log(`[${sectionId}] ScrollTrigger left`),
+        onEnterBack: () => console.log(`[${sectionId}] ScrollTrigger entered back`),
+        onLeaveBack: () => console.log(`[${sectionId}] ScrollTrigger left back`),
       },
     });
+    
+    console.log(`[${sectionId}] ✅ ScrollTrigger created successfully`);
 
     // Animar cada tópico
     topicElements.forEach((topic, index) => {
@@ -246,30 +262,39 @@ function initStorytellingScroll(sectionId: string) {
   // Executar quando DOM estiver pronto
   const timeout = setTimeout(() => {
     let attempts = 0;
-    const maxAttempts = 20; // Aumentar tentativas
+    const maxAttempts = 30; // Aumentar tentativas
     
     const tryInit = () => {
       const section = document.getElementById(sectionId);
       const topics = section?.querySelectorAll('.storytelling-topic');
       
+      console.log(`[${sectionId}] Attempt ${attempts + 1}/${maxAttempts}: Section=${!!section}, Topics=${topics?.length || 0}`);
+      
       if (section && topics && topics.length > 0) {
-        console.log(`[${sectionId}] Found ${topics.length} topics, initializing...`);
-        init();
+        console.log(`[${sectionId}] ✅ Found ${topics.length} topics, initializing scroll storytelling...`);
+        const cleanup = init();
+        if (cleanup) {
+          return cleanup;
+        }
       } else if (attempts < maxAttempts) {
         attempts++;
-        setTimeout(tryInit, 300); // Aumentar delay
+        setTimeout(tryInit, 500); // Aumentar delay
       } else {
-        console.warn(`[${sectionId}] Storytelling section not ready after ${maxAttempts} attempts.`);
-        console.warn(`[${sectionId}] Section found:`, !!section);
-        console.warn(`[${sectionId}] Topics found:`, topics?.length || 0);
+        console.error(`[${sectionId}] ❌ Storytelling section not ready after ${maxAttempts} attempts.`);
+        console.error(`[${sectionId}] Section found:`, !!section);
+        console.error(`[${sectionId}] Topics found:`, topics?.length || 0);
+        if (section) {
+          console.error(`[${sectionId}] Section HTML:`, section.outerHTML.substring(0, 500));
+        }
       }
     };
     
     tryInit();
-  }, 1000); // Aumentar delay inicial
+  }, 1500); // Aumentar delay inicial
 
   return () => {
     clearTimeout(timeout);
+    console.log(`[${sectionId}] Cleanup: timeout cleared`);
   };
 }
 
