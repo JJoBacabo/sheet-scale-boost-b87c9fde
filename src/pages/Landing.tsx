@@ -9,11 +9,13 @@ import { LanguageToggle } from "@/components/LanguageToggle";
 import logo from "@/assets/logo.png";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
 import { useCinematicScroll } from "@/hooks/useCinematicScroll";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { X, ZoomIn } from "lucide-react";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ const Landing = () => {
   } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   
   // Hook para efeito cinematográfico de scroll nas features
   useCinematicScroll('features');
@@ -342,80 +345,214 @@ const Landing = () => {
         <div className="features-container">
           {[{
             icon: Activity,
-            key: 'integration'
+            key: 'integration',
+            images: [
+              { src: '/images/feature-integration-1.jpg', alt: 'Facebook Ads Integration Dashboard' },
+              { src: '/images/feature-integration-2.jpg', alt: 'Campaign Analytics View' }
+            ]
           }, {
             icon: BarChart3,
-            key: 'metrics'
+            key: 'metrics',
+            images: [
+              { src: '/images/feature-metrics-1.jpg', alt: 'Real-time Metrics Dashboard' },
+              { src: '/images/feature-metrics-2.jpg', alt: 'Performance Analytics' }
+            ]
           }, {
             icon: Brain,
-            key: 'ai'
+            key: 'ai',
+            images: [
+              { src: '/images/feature-ai-1.jpg', alt: 'AI Analysis Interface' },
+              { src: '/images/feature-ai-2.jpg', alt: 'Smart Recommendations' }
+            ]
           }, {
             icon: Zap,
-            key: 'automation'
+            key: 'automation',
+            images: [
+              { src: '/images/feature-automation-1.jpg', alt: 'Automation Settings' },
+              { src: '/images/feature-automation-2.jpg', alt: 'Workflow Builder' }
+            ]
           }, {
             icon: TrendingUp,
-            key: 'profit'
+            key: 'profit',
+            images: [
+              { src: '/images/feature-profit-1.jpg', alt: 'Profit Analysis Dashboard' },
+              { src: '/images/feature-profit-2.jpg', alt: 'Revenue Tracking' }
+            ]
           }, {
             icon: Lock,
-            key: 'secure'
+            key: 'secure',
+            images: [
+              { src: '/images/feature-secure-1.jpg', alt: 'Security Features' },
+              { src: '/images/feature-secure-2.jpg', alt: 'Data Protection' }
+            ]
           }].map((feature, index) => (
             <div
               key={index}
               className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 relative"
             >
-              <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Image Space - Left on desktop, Top on mobile */}
-                <div className="order-2 lg:order-1">
-                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
-                    {/* Placeholder para imagem */}
-                    <div className="text-center p-8">
-                      <feature.icon className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mx-auto mb-4 text-primary/50" />
-                      <p className="text-sm sm:text-base text-muted-foreground">
-                        Espaço para imagem
-                      </p>
-                      <p className="text-xs text-muted-foreground/70 mt-2">
-                        Adicione sua imagem aqui
-                      </p>
+              <div className="max-w-7xl mx-auto w-full">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+                  {/* Images Section - Left on desktop, Top on mobile */}
+                  <div className="order-2 lg:order-1 space-y-4">
+                    {/* Two Images Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {feature.images.map((img, imgIndex) => (
+                        <motion.div
+                          key={imgIndex}
+                          className="relative group cursor-pointer rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setSelectedImage(img)}
+                        >
+                          {/* Placeholder ou Imagem */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors">
+                            <div className="text-center p-4">
+                              <feature.icon className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50 group-hover:text-primary/70 transition-colors" />
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                Imagem {imgIndex + 1}
+                              </p>
+                            </div>
+                            {/* Descomente para usar imagem real:
+                            <img 
+                              src={img.src} 
+                              alt={img.alt} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                // Fallback para placeholder se imagem não existir
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                            */}
+                          </div>
+                          
+                          {/* Zoom Icon Overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                            <ZoomIn className="w-8 h-8 text-white" />
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
-                    {/* Imagem será adicionada aqui - substitua a div acima pela tag <img> */}
-                    {/* <img src="/path/to/image.jpg" alt={t(`landing.features.${feature.key}.title`)} className="w-full h-full object-cover" /> */}
-                  </div>
-                </div>
-
-                {/* Content - Right on desktop, Bottom on mobile */}
-                <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
-                  {/* Icon */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    {t(`landing.features.${feature.key}.title`)}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    {t(`landing.features.${feature.key}.description`)}
-                  </p>
-
-                  {/* Scroll Indicator - Only on last feature */}
-                  {index === 5 && (
-                    <div className="pt-8 flex flex-col items-start gap-2">
-                      <div className="text-gray-400 text-sm">
-                        Continue scrolling
+                    
+                    {/* Additional Info Below Images */}
+                    <div className="pt-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <CheckCircle2 className="w-4 h-4 text-primary" />
+                        <span>Clique nas imagens para ampliar</span>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-primary rotate-90" />
                     </div>
-                  )}
+                  </div>
+
+                  {/* Content - Right on desktop, Bottom on mobile */}
+                  <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
+                    {/* Icon */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                        <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                      </div>
+                      <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
+                      {t(`landing.features.${feature.key}.title`)}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
+                      {t(`landing.features.${feature.key}.description`)}
+                    </p>
+
+                    {/* Additional Features List */}
+                    <div className="space-y-3 pt-4">
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Análise em tempo real de todas as suas campanhas
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Relatórios detalhados e insights acionáveis
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                        <p className="text-sm sm:text-base text-gray-400">
+                          Integração automática com suas plataformas
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Scroll Indicator - Only on last feature */}
+                    {index === 5 && (
+                      <div className="pt-8 flex flex-col items-start gap-2">
+                        <div className="text-gray-400 text-sm">
+                          Continue scrolling
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-primary rotate-90" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Image Zoom Modal */}
+        <AnimatePresence>
+          {selectedImage && (
+            <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+              <DialogContent className="max-w-7xl w-full p-0 bg-black/95 border-primary/20">
+                <div className="relative">
+                  <motion.button
+                    className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full bg-black/80 hover:bg-black/90 flex items-center justify-center text-white transition-colors"
+                    onClick={() => setSelectedImage(null)}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                  
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="p-4"
+                  >
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center">
+                      {/* Placeholder ou Imagem Ampliada */}
+                      <div className="text-center p-8">
+                        <ZoomIn className="w-24 h-24 mx-auto mb-4 text-primary/50" />
+                        <p className="text-lg text-muted-foreground mb-2">
+                          {selectedImage.alt}
+                        </p>
+                        <p className="text-sm text-muted-foreground/70">
+                          Adicione sua imagem aqui para ver o zoom
+                        </p>
+                      </div>
+                      {/* Descomente para usar imagem real:
+                      <img 
+                        src={selectedImage.src} 
+                        alt={selectedImage.alt} 
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      */}
+                    </div>
+                    <p className="text-center text-sm text-muted-foreground mt-4">
+                      {selectedImage.alt}
+                    </p>
+                  </motion.div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* Pricing Section */}
