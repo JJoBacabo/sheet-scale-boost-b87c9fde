@@ -100,7 +100,7 @@ const Landing = () => {
             
             {/* Nav - Center (absolute positioning for true center) - Desktop Only */}
             <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
-              {['what-is-it', 'pricing', 'faq'].map((section, index) => (
+              {['what-is-it', 'features', 'pricing', 'faq'].map((section, index) => (
                 <motion.button
                   key={section}
                   onClick={() => scrollToSection(section)}
@@ -151,7 +151,7 @@ const Landing = () => {
                       {t('nav.whatIsIt')}
                     </button>
                     <button 
-                      onClick={() => scrollToSection('pricing')} 
+                      onClick={() => scrollToSection('features')} 
                       className="text-white hover:text-primary transition-colors text-left text-lg"
                     >
                       {t('nav.features')}
@@ -605,7 +605,7 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="container mx-auto px-4 sm:px-6 py-20 relative bg-gradient-to-b from-black via-black/95 to-black">
+      <section id="pricing" className="container mx-auto px-4 sm:px-6 pt-0 pb-20 relative bg-gradient-to-b from-black via-black/95 to-black">
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
             {t('landing.pricing.title')}
