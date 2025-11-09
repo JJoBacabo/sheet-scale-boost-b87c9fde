@@ -20,7 +20,7 @@ export const PageHeader = ({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b border-border/30 bg-background/80 backdrop-blur-sm",
+        "sticky top-0 z-40 bg-background/80 backdrop-blur-sm",
         className
       )}
     >

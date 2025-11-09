@@ -938,7 +938,7 @@ const Products = () => {
                           <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                         )}
 
-                        <div className="space-y-2.5 p-3 rounded-lg bg-background/40 border border-border/20">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-background/30">
                           {/* Cotação (Supplier Cost) - Editable */}
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm text-muted-foreground">{t('products.supplierQuote')}</span>
@@ -1019,7 +1019,7 @@ const Products = () => {
                               {product.profit_margin?.toFixed(1) || 0}%
                             </Badge>
                           </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                          <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
                             <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               €{calculateProfit(product).toFixed(2)}
