@@ -45,6 +45,32 @@ const Dashboard = () => {
 
   const { stats, loading: statsLoading } = useDashboardStats(user?.id);
 
+  // Get top products
+  const [topProducts, setTopProducts] = useState<any[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('products')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('total_revenue', { ascending: false })
+      .limit(5)
+      .then(({ data }) => setTopProducts(data || []));
+  }, [user?.id]);
+
+  // Get recent campaigns
+  const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
+  useEffect(() => {
+    if (!user?.id) return;
+    supabase
+      .from('campaigns')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+      .then(({ data }) => setRecentCampaigns(data || []));
+  }, [user?.id]);
+
   if (loading || stateLoading || statsLoading) {
     return <LoadingOverlay message={t('dashboard.loading')} />;
   }
@@ -73,32 +99,6 @@ const Dashboard = () => {
       date: format(new Date(item.date), 'dd/MM'),
       value: item.margin_euros || 0,
     }));
-
-  // Get top products
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase
-      .from('products')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('total_revenue', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setTopProducts(data || []));
-  }, [user?.id]);
-
-  // Get recent campaigns
-  const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase
-      .from('campaigns')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setRecentCampaigns(data || []));
-  }, [user?.id]);
 
   return (
     <PageLayout
