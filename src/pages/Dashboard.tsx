@@ -70,6 +70,8 @@ const Dashboard = () => {
   const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
   const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Check Facebook integration and auto-sync
   useEffect(() => {
@@ -164,9 +166,6 @@ const Dashboard = () => {
       date: format(new Date(item.date), 'dd/MM'),
       value: item.purchases || 0,
     }));
-
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const filteredCampaigns = allCampaigns.filter(campaign => {
     const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
