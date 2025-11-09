@@ -13,6 +13,8 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
+import { MouseInteraction } from "@/components/ui/MouseInteraction";
+
 const Landing = () => {
   const navigate = useNavigate();
   const {
@@ -63,6 +65,9 @@ const Landing = () => {
   return <div className="min-h-screen bg-black text-white relative overflow-hidden">
       {/* Background 3D */}
       <Background3D />
+      
+      {/* Mouse Interaction Effects */}
+      <MouseInteraction />
       
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">

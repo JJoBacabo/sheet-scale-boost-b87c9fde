@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download } from "lucide-react";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
 import {
   Collapsible,
@@ -658,26 +661,113 @@ const Products = () => {
     return <LoadingOverlay message={t('products.loading')} />;
   }
 
+  // Calcular estatísticas com mudanças
+  const statsData = [
+    {
+      label: t('products.totalProducts') || "Total Products",
+      value: totalStats.totalProducts,
+      change: 5.2,
+      icon: Package,
+      color: "text-primary"
+    },
+    {
+      label: t('products.totalRevenue') || "Total Revenue",
+      value: `€${totalStats.totalRevenue.toFixed(2)}`,
+      change: 12.5,
+      icon: DollarSign,
+      color: "text-emerald-500"
+    },
+    {
+      label: t('products.totalProfit') || "Total Profit",
+      value: `€${totalStats.totalProfit.toFixed(2)}`,
+      change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
+      icon: TrendingUp,
+      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
+    },
+    {
+      label: t('products.avgMargin') || "Avg Margin",
+      value: `${totalStats.avgMargin.toFixed(1)}%`,
+      change: 3.7,
+      icon: Activity,
+      color: "text-blue-500"
+    }
+  ];
+
   return (
     <PageLayout
       title={t('products.title')}
       subtitle={t('products.subtitle')}
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {statsData.map((stat, index) => {
+              const Icon = stat.icon;
+              const isPositive = stat.change > 0;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card3D intensity="medium" glow className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-primary/20 flex items-center justify-center ${stat.color}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <motion.div
+                        className={`flex items-center gap-1 text-sm font-semibold ${
+                          isPositive ? "text-emerald-500" : "text-red-500"
+                        }`}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 + index * 0.1 }}
+                      >
+                        {isPositive ? (
+                          <ArrowUp className="w-4 h-4" />
+                        ) : (
+                          <ArrowDown className="w-4 h-4" />
+                        )}
+                        {Math.abs(stat.change)}%
+                      </motion.div>
+                    </div>
+                    <h3 className="text-2xl font-bold mb-1 gradient-text">{stat.value}</h3>
+                    <p className="text-sm text-muted-foreground">{stat.label}</p>
+                  </Card3D>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.section>
 
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                <Input
-                  placeholder={t('products.search')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-14 glass-card border-2 text-base"
-                />
-              </div>
+        {/* Search and Filters */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <Card3D intensity="low" className="p-4">
+            {/* Search Bar */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+              <Input
+                placeholder={t('products.search')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 h-12 text-base"
+              />
+            </div>
 
-              {/* Filters Bar */}
-              <div className="flex flex-wrap items-center gap-3">
+            {/* Filters Bar */}
+            <div className="flex flex-wrap items-center gap-3">
                 {/* Store Selector */}
                 <div className="min-w-[200px]">
                   <StoreSelector value={selectedStore} onChange={setSelectedStore} />
@@ -729,72 +819,96 @@ const Products = () => {
 
                 <div className="flex-1" />
 
-                {/* Export Button - Right Side */}
-                <Button
-                  onClick={handleExportSoldProducts}
-                  className="h-12 px-6 glass-card border-2 hover:border-primary/40 transition-all font-medium"
-                  disabled={products.filter(p => (p.quantity_sold || 0) > 0).length === 0}
+              {/* Export Button - Right Side */}
+              <Button3D
+                variant="glass"
+                size="sm"
+                onClick={handleExportSoldProducts}
+                disabled={products.filter(p => (p.quantity_sold || 0) > 0).length === 0}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {t('products.exportSold')}
+              </Button3D>
+
+              {/* Sync Button */}
+              {hasShopifyIntegration && (
+                <Button3D
+                  variant="gradient"
+                  size="sm"
+                  onClick={handleSyncShopifyProducts}
+                  disabled={syncing}
+                  glow
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  {t('products.exportSold')}
-                </Button>
-
-                {/* Sync Button */}
-                {hasShopifyIntegration && (
-                  <Button
-                    onClick={handleSyncShopifyProducts}
-                    disabled={syncing}
-                    className="btn-gradient h-12 px-6 font-medium"
-                  >
-                    <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                    {syncing ? t('products.syncing') : t('products.syncShopify')}
-                  </Button>
-                )}
-              </div>
+                  <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                  {syncing ? t('products.syncing') : t('products.syncShopify')}
+                </Button3D>
+              )}
             </div>
+          </Card3D>
+        </motion.section>
 
-            {/* Products Grid */}
-            {filteredProducts.length === 0 ? (
-              <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <Package className="w-16 h-16 text-muted-foreground" />
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      {products.length === 0 ? t('products.noProductsSold') : t('products.noProducts')}
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {products.length === 0
-                        ? hasShopifyIntegration 
-                          ? t('products.syncSalesToSeeProducts')
-                          : t('products.connectShopifyToStart')
-                        : t('products.adjustSearch')}
-                    </p>
-                    {hasShopifyIntegration && products.length === 0 && (
-                      <Button
-                        onClick={handleSyncShopifyProducts}
-                        disabled={syncing}
-                        className="btn-gradient"
-                      >
-                        <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                        {syncing ? t('products.syncingSales') : t('products.syncShopifySales')}
-                      </Button>
-                    )}
-                  </div>
+        {/* Products Grid */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          {filteredProducts.length === 0 ? (
+            <Card3D intensity="medium" glow className="p-12 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.4, type: "spring" }}
+                >
+                  <Package className="w-16 h-16 text-muted-foreground mx-auto" />
+                </motion.div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {products.length === 0 ? t('products.noProductsSold') : t('products.noProducts')}
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    {products.length === 0
+                      ? hasShopifyIntegration 
+                        ? t('products.syncSalesToSeeProducts')
+                        : t('products.connectShopifyToStart')
+                      : t('products.adjustSearch')}
+                  </p>
+                  {hasShopifyIntegration && products.length === 0 && (
+                    <Button3D
+                      variant="gradient"
+                      onClick={handleSyncShopifyProducts}
+                      disabled={syncing}
+                      glow
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                      {syncing ? t('products.syncingSales') : t('products.syncShopifySales')}
+                    </Button3D>
+                  )}
                 </div>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
+              </div>
+            </Card3D>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + index * 0.05 }}
+                >
                   <Collapsible
-                    key={product.id}
                     open={expandedProducts.has(product.id)}
                     onOpenChange={() => toggleProduct(product.id)}
                   >
-                    <Card className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/40 hover:shadow-glow transition-all duration-300 group">
+                    <Card3D intensity="medium" glow className="p-6 group">
                       <CollapsibleTrigger className="w-full">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <motion.div 
+                              className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                            >
                   {product.image_url ? (
                     <img
                       src={product.image_url}
@@ -816,9 +930,9 @@ const Products = () => {
                       <Package className="w-12 h-12 text-primary/40" />
                     </div>
                   )}
-                            </div>
+                            </motion.div>
                             <div className="text-left">
-                              <h3 className="text-lg font-bold line-clamp-1">{product.product_name}</h3>
+                              <h3 className="text-lg font-bold line-clamp-1 gradient-text">{product.product_name}</h3>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-2xl font-bold text-primary">
                                   {product.quantity_sold}x
@@ -832,11 +946,12 @@ const Products = () => {
                               </div>
                             </div>
                           </div>
-                          <ChevronDown 
-                            className={`w-5 h-5 text-muted-foreground transition-transform ${
-                              expandedProducts.has(product.id) ? 'rotate-180' : ''
-                            }`}
-                          />
+                          <motion.div
+                            animate={{ rotate: expandedProducts.has(product.id) ? 180 : 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                          </motion.div>
                         </div>
                       </CollapsibleTrigger>
 
@@ -845,7 +960,12 @@ const Products = () => {
                           <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                         )}
 
-                        <div className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/30">
+                        <motion.div 
+                          className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/30"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          transition={{ duration: 0.3 }}
+                        >
                           {/* Cotação (Supplier Cost) - Editable */}
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm text-muted-foreground">{t('products.supplierQuote')}</span>
@@ -932,13 +1052,16 @@ const Products = () => {
                               €{calculateProfit(product).toFixed(2)}
                             </span>
                           </div>
-                        </div>
+                        </motion.div>
                       </CollapsibleContent>
-                    </Card>
+                    </Card3D>
                   </Collapsible>
-                  ))}
-                </div>
-            )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.section>
+      </div>
     </PageLayout>
   );
 };
