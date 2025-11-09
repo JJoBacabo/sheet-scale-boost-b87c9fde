@@ -51,7 +51,8 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const { stats, loading: statsLoading } = useDashboardStats(user?.id);
+  const stats = useDashboardStats(user?.id);
+  const statsLoading = stats.loading;
 
   // Get top products
   const [topProducts, setTopProducts] = useState<any[]>([]);
