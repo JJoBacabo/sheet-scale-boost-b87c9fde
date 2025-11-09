@@ -76,6 +76,9 @@ function initCinematicScroll(sectionId: string) {
 
     const featureCount = featureElements.length;
     const viewportWidth = window.innerWidth;
+    
+    // Debug: verificar quantas features foram encontradas
+    console.log(`[CinematicScroll] Found ${featureCount} features, viewport width: ${viewportWidth}px`);
 
     // Configurar layout horizontal
     // Container deve ter largura suficiente para todas as features lado a lado
@@ -128,8 +131,9 @@ function initCinematicScroll(sectionId: string) {
     });
 
     // Animar movimento horizontal - scroll vertical move container horizontalmente
+    // Mover container de x: 0 até x: -(featureCount - 1) * viewportWidth
     horizontalTimeline.to(
-      featuresContainer,
+      containerEl,
       {
         x: -(featureCount - 1) * viewportWidth, // Mover até a última feature
         ease: 'none', // Movimento linear sincronizado com scroll
@@ -137,16 +141,18 @@ function initCinematicScroll(sectionId: string) {
       1 // Progresso completo (0 a 1)
     );
 
-    // Animar fade de cada feature com gap entre elas
+    // Animar fade de cada feature - todas devem aparecer durante o scroll
     featureElements.forEach((feature, index) => {
-      // Adicionar gap entre features para evitar sobreposição
-      const gap = 0.1; // 10% de gap
-      const segmentSize = (1 - gap * (featureCount - 1)) / featureCount;
-      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer
-      const progressCenter = progressStart + segmentSize * 0.4; // Quando está totalmente visível
-      const progressEnd = progressStart + segmentSize; // Quando desaparece (antes do gap)
+      // Calcular progresso baseado na posição no scroll
+      // Cada feature ocupa uma parte igual do scroll total
+      const progressStart = index / featureCount; // Quando começa a aparecer (0, 0.166, 0.333, 0.5, 0.666, 0.833)
+      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
+      const progressEnd = (index + 1) / featureCount; // Quando desaparece
+      
+      // Debug: log para cada feature
+      console.log(`[CinematicScroll] Feature ${index + 1}: start=${progressStart.toFixed(3)}, center=${progressCenter.toFixed(3)}, end=${progressEnd.toFixed(3)}`);
 
-      // Garantir invisível antes de começar
+      // Estado inicial: primeira visível, outras invisíveis
       if (index > 0) {
         horizontalTimeline.set(
           feature,
@@ -154,7 +160,7 @@ function initCinematicScroll(sectionId: string) {
             opacity: 0,
             pointerEvents: 'none',
           },
-          progressStart - 0.01
+          progressStart - 0.01 // Antes de começar
         );
       }
 
@@ -164,12 +170,12 @@ function initCinematicScroll(sectionId: string) {
         {
           opacity: 1,
           pointerEvents: 'auto',
-          duration: 0.3,
+          duration: 0.15,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter visível no centro
+        // Manter totalmente visível no centro
         .to(
           feature,
           {
@@ -179,25 +185,25 @@ function initCinematicScroll(sectionId: string) {
           },
           progressCenter
         )
-        // Fade out quando sai do viewport (antes do gap)
+        // Fade out quando sai do viewport
         .to(
           feature,
           {
             opacity: 0,
             pointerEvents: 'none',
-            duration: 0.3,
+            duration: 0.15,
             ease: 'power2.in',
           },
           progressEnd
         )
-        // Garantir invisível durante gap
+        // Garantir invisível após desaparecer
         .set(
           feature,
           {
             opacity: 0,
             pointerEvents: 'none',
           },
-          progressStart + segmentSize + gap - 0.01
+          progressEnd + 0.01
         );
     });
 
