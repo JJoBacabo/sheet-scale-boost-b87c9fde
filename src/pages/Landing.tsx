@@ -351,6 +351,13 @@ const Landing = () => {
               { src: '/images/feature-integration-2.jpg', alt: 'Campaign Analytics View' }
             ]
           }, {
+            icon: Zap,
+            key: 'realtime',
+            images: [
+              { src: '/images/feature-realtime-1.jpg', alt: 'Real-time Data Sync' },
+              { src: '/images/feature-realtime-2.jpg', alt: 'Live Updates Dashboard' }
+            ]
+          }, {
             icon: BarChart3,
             key: 'metrics',
             images: [
