@@ -1025,7 +1025,7 @@ const Products = () => {
                               €{calculateProfit(product).toFixed(2)}
                             </span>
                           </div>
-                        </motion.div>
+                        </div>
                       </CollapsibleContent>
                     </Card3D>
                   </Collapsible>
