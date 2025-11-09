@@ -30,16 +30,16 @@ export const Card3D = ({
       whileHover={hoverProps}
       transition={{
         type: "spring",
-        stiffness: 300,
-        damping: 20
+        stiffness: 200,
+        damping: 25
       }}
       style={{
         transformStyle: 'preserve-3d',
         perspective: '1000px',
+        willChange: 'transform',
       }}
       className={cn(
-        "glass-card rounded-xl p-6 cursor-pointer transition-all duration-300",
-        glow && "hover:shadow-glow",
+        "glass-card rounded-xl p-6 cursor-pointer",
         className
       )}
     >
@@ -50,14 +50,17 @@ export const Card3D = ({
         {children}
       </motion.div>
       
-      {/* Glow effect overlay */}
+      {/* Glow effect overlay - controlado pelo Framer Motion */}
       {glow && (
         <motion.div
-          className="absolute inset-0 rounded-xl opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+          className="absolute inset-0 rounded-xl pointer-events-none"
           style={{
             background: 'radial-gradient(circle at center, rgba(74, 233, 189, 0.1) 0%, transparent 70%)',
             filter: 'blur(20px)',
           }}
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.2 }}
         />
       )}
     </motion.div>

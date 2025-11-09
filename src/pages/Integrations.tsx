@@ -424,7 +424,7 @@ export default function Integrations() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
               >
-                <Card3D intensity="medium" glow className="p-5 sm:p-6 hover:border-primary/30 transition-all relative overflow-hidden">
+                <Card3D intensity="medium" glow className="p-5 sm:p-6 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#1877F2]/10 rounded-full blur-3xl" />
                   <div className="relative z-10">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
@@ -610,7 +610,7 @@ export default function Integrations() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <Card3D intensity="medium" glow className="p-5 sm:p-6 hover:border-primary/30 transition-all relative overflow-hidden">
+                        <Card3D intensity="medium" glow className="p-5 sm:p-6 relative overflow-hidden">
                           <div className="absolute top-0 right-0 w-32 h-32 bg-[#96BF48]/10 rounded-full blur-3xl" />
                           <div className="relative z-10">
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">

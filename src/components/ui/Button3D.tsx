@@ -35,20 +35,21 @@ export const Button3D = ({
       whileHover={{
         scale: 1.05,
         y: -2,
-        boxShadow: glow ? '0 10px 30px rgba(74, 233, 189, 0.4)' : undefined,
       }}
-      whileTap={{ scale: 0.95 }}
+      whileTap={{ scale: 0.98 }}
       transition={{
         type: "spring",
-        stiffness: 400,
-        damping: 17
+        stiffness: 300,
+        damping: 20
       }}
       style={{
         transformStyle: 'preserve-3d',
         perspective: '1000px',
+        willChange: 'transform',
+        boxShadow: glow ? '0 0 0 rgba(74, 233, 189, 0)' : undefined,
       }}
       className={cn(
-        'rounded-xl font-semibold transition-all duration-300',
+        'rounded-xl font-semibold',
         'relative overflow-hidden',
         sizeMap[size],
         variantStyles[variant],
@@ -63,14 +64,28 @@ export const Button3D = ({
         {children}
       </motion.span>
       
-      {/* Shine effect */}
+      {/* Shine effect - apenas no hover */}
       <motion.div
         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-        initial={{ x: '-100%' }}
-        whileHover={{ x: '100%' }}
-        transition={{ duration: 0.6 }}
+        initial={{ x: '-100%', opacity: 0 }}
+        whileHover={{ x: '100%', opacity: 1 }}
+        transition={{ duration: 0.5, ease: 'easeInOut' }}
         style={{ transform: 'translateZ(0px)' }}
       />
+      
+      {/* Glow shadow - controlado pelo Framer Motion */}
+      {glow && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          style={{
+            boxShadow: '0 10px 30px rgba(74, 233, 189, 0)',
+          }}
+          whileHover={{
+            boxShadow: '0 10px 30px rgba(74, 233, 189, 0.4)',
+          }}
+          transition={{ duration: 0.2 }}
+        />
+      )}
     </motion.button>
   );
 };

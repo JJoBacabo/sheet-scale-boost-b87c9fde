@@ -7,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import logo from "@/assets/logo.png";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
+import { useCinematicScroll } from "@/hooks/useCinematicScroll";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -334,34 +335,35 @@ const Landing = () => {
           </motion.p>
         </div>
 
-        {/* Features with Full Page Scroll */}
-        {[{
-          icon: Activity,
-          key: 'integration'
-        }, {
-          icon: BarChart3,
-          key: 'metrics'
-        }, {
-          icon: Brain,
-          key: 'ai'
-        }, {
-          icon: Zap,
-          key: 'automation'
-        }, {
-          icon: TrendingUp,
-          key: 'profit'
-        }, {
-          icon: Lock,
-          key: 'secure'
-        }].map((feature, index) => (
-          <motion.div
-            key={index}
-            className="snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: false, margin: "-50px", amount: 0.3 }}
-            transition={{ duration: 0.6 }}
-          >
+        {/* Features with Full Page Scroll - Cinematic Effect */}
+        <div className="features-container">
+          {[{
+            icon: Activity,
+            key: 'integration'
+          }, {
+            icon: BarChart3,
+            key: 'metrics'
+          }, {
+            icon: Brain,
+            key: 'ai'
+          }, {
+            icon: Zap,
+            key: 'automation'
+          }, {
+            icon: TrendingUp,
+            key: 'profit'
+          }, {
+            icon: Lock,
+            key: 'secure'
+          }].map((feature, index) => (
+            <motion.div
+              key={index}
+              className="feature-item snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+            >
             <motion.div
               className="max-w-4xl mx-auto w-full"
               initial={{ opacity: 0, y: 80, scale: 0.95 }}
@@ -443,7 +445,8 @@ const Landing = () => {
               </Card3D>
             </motion.div>
           </motion.div>
-        ))}
+          ))}
+        </div>
       </section>
 
       {/* Pricing Section */}

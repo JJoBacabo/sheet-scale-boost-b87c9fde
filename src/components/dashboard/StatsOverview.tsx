@@ -118,30 +118,26 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
             <Card3D 
               intensity="medium" 
               glow={stat.trend === "up"}
-              className="hover:scale-105 transition-transform"
             >
               <div className="relative p-6">
                 <div className="flex items-start justify-between mb-3">
                   <motion.div
                     className={`p-3 rounded-xl ${stat.iconBg}`}
-                    animate={{ rotateY: [0, 5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: index * 0.2 }}
-                    whileHover={{ rotateY: 360, scale: 1.1 }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
                     <Icon className={`h-5 w-5 ${stat.iconColor}`} />
                   </motion.div>
                   {stat.trend !== "neutral" && (
-                    <motion.div
+                    <div
                       className={`px-2 py-1 rounded-lg text-xs font-medium ${
                         stat.trend === "up" 
                           ? "bg-primary/10 text-primary" 
                           : "bg-destructive/10 text-destructive"
                       }`}
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
                     >
                       {stat.trend === "up" ? "↑" : "↓"}
-                    </motion.div>
+                    </div>
                   )}
                 </div>
                 <div>
