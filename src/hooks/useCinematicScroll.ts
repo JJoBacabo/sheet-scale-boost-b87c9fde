@@ -121,11 +121,30 @@ function initCinematicScroll(sectionId: string) {
     });
 
     // Animar cada feature individualmente - apenas uma totalmente visível por vez
+    // Com delay entre fade out e fade in para evitar sobreposição de texto
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
-      const progressStart = index / featureCount; // Quando começa a aparecer
-      const progressCenter = (index + 0.5) / featureCount; // Quando está totalmente visível
-      const progressEnd = (index + 1) / featureCount; // Quando desaparece
+      // Adicionar pequeno gap entre features para evitar sobreposição
+      const gap = 0.05; // 5% de gap entre features
+      const segmentSize = (1 - gap * (featureCount - 1)) / featureCount;
+      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer
+      const progressCenter = progressStart + segmentSize * 0.5; // Quando está totalmente visível
+      const progressEnd = progressStart + segmentSize; // Quando desaparece (antes da próxima começar)
+
+      // Fade out da feature anterior deve terminar antes desta começar
+      if (index > 0) {
+        // Garantir que a anterior desapareceu completamente antes desta aparecer
+        masterTimeline.to(
+          featureElements[index - 1],
+          {
+            opacity: 0,
+            pointerEvents: 'none',
+            duration: 0.3,
+            ease: 'power2.in',
+          },
+          progressStart - 0.05 // Terminar antes desta começar
+        );
+      }
 
       // Fade in completo (entrada) - aparece quando scroll atinge este ponto
       masterTimeline.to(
@@ -135,7 +154,7 @@ function initCinematicScroll(sectionId: string) {
           y: 0,
           scale: 1,
           pointerEvents: 'auto',
-          duration: 0.4,
+          duration: 0.5,
           ease: 'power2.out',
         },
         progressStart
@@ -148,11 +167,11 @@ function initCinematicScroll(sectionId: string) {
             y: 0,
             scale: 1,
             pointerEvents: 'auto',
-            duration: 0.2,
+            duration: 0.3,
           },
           progressCenter
         )
-        // Fade out completo (saída) - desaparece completamente quando próxima aparece
+        // Fade out completo (saída) - desaparece completamente
         .to(
           feature,
           {
@@ -160,7 +179,7 @@ function initCinematicScroll(sectionId: string) {
             y: 0, // Não mover, apenas fade
             scale: 1,
             pointerEvents: 'none',
-            duration: 0.4,
+            duration: 0.5,
             ease: 'power2.in',
           },
           progressEnd

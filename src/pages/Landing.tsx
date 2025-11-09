@@ -574,10 +574,19 @@ const Landing = () => {
       </section>
 
       {/* Spacer between Features and Pricing - prevents black gap */}
-      <div className="h-32 sm:h-40 md:h-48 bg-black" />
+      <div className="relative h-32 sm:h-40 md:h-48 overflow-hidden">
+        {/* Gradient transition from features to pricing */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-primary/10 to-black" />
+        {/* Decorative elements */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-full max-w-4xl mx-auto px-4">
+            <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          </div>
+        </div>
+      </div>
 
       {/* Pricing Section */}
-      <section id="pricing" className="container mx-auto px-4 sm:px-6 py-20 relative">
+      <section id="pricing" className="container mx-auto px-4 sm:px-6 py-20 relative bg-gradient-to-b from-black via-black/95 to-black">
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
             {t('landing.pricing.title')}
