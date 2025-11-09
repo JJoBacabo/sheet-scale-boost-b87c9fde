@@ -319,45 +319,92 @@ const Landing = () => {
       </section>
 
       {/* Features Section - Storytelling Scroll */}
-      <section id="features-storytelling" className="relative min-h-screen flex items-center justify-center overflow-hidden" aria-label="Features that make the difference">
+      <section id="features-storytelling" className="relative min-h-screen overflow-hidden" aria-label="Features that make the difference">
         {/* Background da homepage (partículas) */}
         <Background3D />
         
-        {/* Container para as frases - cada frase será animada individualmente */}
-        <div className="relative w-full z-10">
-          {/* Frase 1: Título */}
-          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
-            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gradient-text text-center px-4">
-              Features that make the difference
-            </h2>
-          </div>
+        {/* Container seguindo padrão do site */}
+        <div className="container mx-auto px-4 sm:px-6 py-20 relative z-10">
+          <div className="max-w-6xl mx-auto">
+            {/* Conteúdo textual com scroll storytelling - cada elemento será animado individualmente */}
+            
+            {/* Elemento 1: Título Principal */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full">
+                <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+                  Features that make the difference
+                </h2>
+              </div>
+            </div>
 
-          {/* Frase 2: Descrição EN */}
-          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
-              Connect directly to your campaigns for real-time analysis
-            </p>
-          </div>
+            {/* Elemento 2: Subtítulo */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full">
+                <p className="text-xl text-gray-400 max-w-4xl mx-auto">
+                  Connect directly to your campaigns for real-time analysis and powerful insights
+                </p>
+              </div>
+            </div>
 
-          {/* Frase 3: Feature 1 */}
-          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
-              Análise em tempo real de todas as suas campanhas
-            </p>
-          </div>
+            {/* Elemento 3: Feature 1 - Real-Time Analysis */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full max-w-4xl mx-auto">
+                <h3 className="text-3xl sm:text-4xl font-bold mb-4 gradient-text">
+                  Real-Time Analysis
+                </h3>
+                <p className="text-xl text-gray-400 leading-relaxed">
+                  Monitoriza campanhas em tempo real com métricas atualizadas segundo a segundo
+                </p>
+              </div>
+            </div>
 
-          {/* Frase 4: Feature 2 */}
-          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
-              Relatórios detalhados e insights acionáveis
-            </p>
-          </div>
+            {/* Elemento 4: Feature 2 - Campaign Insights */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full max-w-4xl mx-auto">
+                <h3 className="text-3xl sm:text-4xl font-bold mb-4 gradient-text">
+                  Campaign Insights
+                </h3>
+                <p className="text-xl text-gray-400 leading-relaxed">
+                  Obtém insights automáticos sobre desempenho, públicos e tendências
+                </p>
+              </div>
+            </div>
 
-          {/* Frase 5: Feature 3 */}
-          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
-              Integração automática com suas plataformas
-            </p>
+            {/* Elemento 5: Feature 3 - Automatic Reports */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full max-w-4xl mx-auto">
+                <h3 className="text-3xl sm:text-4xl font-bold mb-4 gradient-text">
+                  Automatic Reports
+                </h3>
+                <p className="text-xl text-gray-400 leading-relaxed">
+                  Gera relatórios personalizados automaticamente e exporta para PDF
+                </p>
+              </div>
+            </div>
+
+            {/* Elemento 6: Feature 4 - Cross-Platform Integration */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full max-w-4xl mx-auto">
+                <h3 className="text-3xl sm:text-4xl font-bold mb-4 gradient-text">
+                  Cross-Platform Integration
+                </h3>
+                <p className="text-xl text-gray-400 leading-relaxed">
+                  Liga o Facebook Ads a outras plataformas como Google Ads ou TikTok Ads
+                </p>
+              </div>
+            </div>
+
+            {/* Elemento 7: Feature 5 - Actionable Decisions */}
+            <div className="storytelling-text absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center w-full max-w-4xl mx-auto">
+                <h3 className="text-3xl sm:text-4xl font-bold mb-4 gradient-text">
+                  Actionable Decisions
+                </h3>
+                <p className="text-xl text-gray-400 leading-relaxed">
+                  Transforma dados em decisões com recomendações inteligentes
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

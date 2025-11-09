@@ -58,9 +58,9 @@ function initStorytellingScroll(sectionId: string) {
       return;
     }
 
-    // Encontrar todos os elementos de frase
+    // Encontrar todos os elementos de texto (suporta tanto .storytelling-phrase quanto .storytelling-text)
     const phraseElements = Array.from(
-      section.querySelectorAll('.storytelling-phrase')
+      section.querySelectorAll('.storytelling-phrase, .storytelling-text')
     ) as HTMLElement[];
 
     if (phraseElements.length === 0) {
@@ -191,7 +191,7 @@ function initStorytellingScroll(sectionId: string) {
     
     const tryInit = () => {
       const section = document.getElementById(sectionId);
-      const phrases = section?.querySelectorAll('.storytelling-phrase');
+      const phrases = section?.querySelectorAll('.storytelling-phrase, .storytelling-text');
       
       if (section && phrases && phrases.length > 0) {
         init();
