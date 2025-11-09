@@ -328,7 +328,7 @@ const Landing = () => {
           {/* Frase 1: Título */}
           <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
             <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gradient-text text-center px-4">
-              Facebook Ads Integration
+              Features that make the difference
             </h2>
           </div>
 
@@ -375,6 +375,13 @@ const Landing = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
                 <div className="space-y-6 sm:space-y-8">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Activity className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Facebook Ads Integration
                   </h2>
@@ -422,6 +429,13 @@ const Landing = () => {
                 </div>
                 {/* Texto - Direita */}
                 <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Zap className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Real-Time Analysis
                   </h2>
@@ -439,6 +453,13 @@ const Landing = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
                 <div className="space-y-6 sm:space-y-8">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Brain className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Campaign Insights
                   </h2>
@@ -486,6 +507,13 @@ const Landing = () => {
                 </div>
                 {/* Texto - Direita */}
                 <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Shield className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Automatic Reports
                   </h2>
@@ -503,6 +531,13 @@ const Landing = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
                 {/* Texto - Esquerda */}
                 <div className="space-y-6 sm:space-y-8">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Cross-Platform Integration
                   </h2>
@@ -550,6 +585,13 @@ const Landing = () => {
                 </div>
                 {/* Texto - Direita */}
                 <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
+                  {/* Ícone */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
+                    </div>
+                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
+                  </div>
                   <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
                     Actionable Decisions
                   </h2>
