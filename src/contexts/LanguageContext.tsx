@@ -226,6 +226,10 @@ const translations = {
           title: 'Análise em Tempo Real',
           description: 'Dados atualizados instantaneamente, sempre sincronizados com suas campanhas',
         },
+        campaigns: {
+          title: 'Gestão de Campanhas',
+          description: 'Controle total sobre suas campanhas com análise detalhada e recomendações inteligentes',
+        },
         metrics: {
           title: 'Métricas Automáticas',
           description: 'ROAS, CPC, CPA, CTR, Taxa de Conversão calculados automaticamente',
@@ -1249,6 +1253,10 @@ const translations = {
         realtime: {
           title: 'Real-Time Analysis',
           description: 'Data updated instantly, always synchronized with your campaigns',
+        },
+        campaigns: {
+          title: 'Campaign Management',
+          description: 'Full control over your campaigns with detailed analysis and smart recommendations',
         },
         metrics: {
           title: 'Automatic Metrics',

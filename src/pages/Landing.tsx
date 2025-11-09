@@ -358,6 +358,13 @@ const Landing = () => {
               { src: '/images/feature-realtime-2.jpg', alt: 'Live Updates Dashboard' }
             ]
           }, {
+            icon: Target,
+            key: 'campaigns',
+            images: [
+              { src: '/images/feature-campaigns-1.jpg', alt: 'Campaign Management Dashboard' },
+              { src: '/images/feature-campaigns-2.jpg', alt: 'Campaign Performance View' }
+            ]
+          }, {
             icon: BarChart3,
             key: 'metrics',
             images: [
