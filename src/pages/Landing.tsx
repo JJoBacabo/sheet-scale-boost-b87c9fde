@@ -316,7 +316,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 sm:px-6 pt-20 pb-0 relative">
+      <section id="features" className="container mx-auto px-4 sm:px-6 pt-12 pb-0 relative">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
@@ -605,7 +605,7 @@ const Landing = () => {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="container mx-auto px-4 sm:px-6 -mt-32 pb-20 relative bg-gradient-to-b from-black via-black/95 to-black">
+      <section id="pricing" className="container mx-auto px-4 sm:px-6 -mt-64 pb-20 relative bg-gradient-to-b from-black via-black/95 to-black">
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold mb-4">
             {t('landing.pricing.title')}
