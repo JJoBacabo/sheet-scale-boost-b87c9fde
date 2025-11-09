@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
+import { useStorytellingScroll } from "@/hooks/useStorytellingScroll";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ const Landing = () => {
   } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  
+  // Hook para efeito de scroll storytelling na seção Features
+  useStorytellingScroll('features-storytelling');
   
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
@@ -306,6 +310,50 @@ const Landing = () => {
                 </Card3D>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Storytelling Scroll */}
+      <section id="features-storytelling" className="relative min-h-screen flex items-center justify-center overflow-hidden" aria-label="Features that make the difference">
+        {/* Background da homepage (partículas) */}
+        <Background3D />
+        
+        {/* Container para as frases - cada frase será animada individualmente */}
+        <div className="relative w-full z-10">
+          {/* Frase 1: Título */}
+          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
+            <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gradient-text text-center px-4">
+              Facebook Ads Integration
+            </h2>
+          </div>
+
+          {/* Frase 2: Descrição EN */}
+          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
+              Connect directly to your campaigns for real-time analysis
+            </p>
+          </div>
+
+          {/* Frase 3: Feature 1 */}
+          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
+              Análise em tempo real de todas as suas campanhas
+            </p>
+          </div>
+
+          {/* Frase 4: Feature 2 */}
+          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
+              Relatórios detalhados e insights acionáveis
+            </p>
+          </div>
+
+          {/* Frase 5: Feature 3 */}
+          <div className="storytelling-phrase absolute inset-0 flex items-center justify-center pointer-events-none">
+            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gray-300 text-center px-4 max-w-4xl">
+              Integração automática com suas plataformas
+            </p>
           </div>
         </div>
       </section>
