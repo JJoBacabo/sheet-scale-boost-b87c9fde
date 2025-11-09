@@ -26,8 +26,8 @@ const Landing = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   
-  // Hook para efeito cinematográfico de scroll nas features
-  useCinematicScroll('features');
+  // Hook para efeito cinematográfico de scroll nas features - DESABILITADO temporariamente
+  // useCinematicScroll('features');
   
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
@@ -318,9 +318,9 @@ const Landing = () => {
       </section>
 
       {/* Features Section - Full Page Scroll */}
-      <section id="features" className="relative">
-        {/* Section Title - Fixed at top */}
-        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
+      <section id="features" className="relative py-12 sm:py-16 md:py-20">
+        {/* Section Title */}
+        <div className="text-center py-6 sm:py-8 mb-8 sm:mb-12">
           <motion.h2 
             className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
             initial={{ opacity: 0, y: -20 }}
@@ -388,7 +388,7 @@ const Landing = () => {
           }].map((feature, index) => (
             <div
               key={index}
-              className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 relative"
+              className="feature-item py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 relative"
             >
               <div className="max-w-7xl mx-auto w-full">
                 {/* Nova disposição: Imagens em cima, conteúdo embaixo */}
