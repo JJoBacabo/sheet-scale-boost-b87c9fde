@@ -50,7 +50,7 @@ const Dashboard = () => {
   }
 
   // Prepare chart data from daily ROAS
-  const revenueChartData = stats.dailyRoasData
+  const revenueChartData = (stats?.dailyRoasData || [])
     .slice()
     .reverse()
     .map((item: any) => ({
@@ -58,7 +58,7 @@ const Dashboard = () => {
       value: item.total_revenue || 0,
     }));
 
-  const roasChartData = stats.dailyRoasData
+  const roasChartData = (stats?.dailyRoasData || [])
     .slice()
     .reverse()
     .map((item: any) => ({
@@ -66,7 +66,7 @@ const Dashboard = () => {
       value: item.roas || 0,
     }));
 
-  const profitChartData = stats.dailyRoasData
+  const profitChartData = (stats?.dailyRoasData || [])
     .slice()
     .reverse()
     .map((item: any) => ({
@@ -124,7 +124,7 @@ const Dashboard = () => {
 
       <div className="space-y-6">
         {/* Stats Overview */}
-        <StatsOverview stats={stats} />
+        {stats && <StatsOverview stats={stats} />}
 
         {/* Crypto Style Charts */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -255,28 +255,28 @@ const Dashboard = () => {
               <Activity className="w-5 h-5 text-primary" />
               <p className="text-sm text-muted-foreground">Total Campanhas</p>
             </div>
-            <p className="text-2xl font-bold">{stats.totalCampaigns}</p>
+            <p className="text-2xl font-bold">{stats?.totalCampaigns || 0}</p>
           </Card3D>
           <Card3D intensity="low" className="p-5">
             <div className="flex items-center gap-3 mb-2">
               <Package className="w-5 h-5 text-emerald-500" />
               <p className="text-sm text-muted-foreground">Total Produtos</p>
             </div>
-            <p className="text-2xl font-bold">{stats.totalProducts}</p>
+            <p className="text-2xl font-bold">{stats?.totalProducts || 0}</p>
           </Card3D>
           <Card3D intensity="low" className="p-5">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp className="w-5 h-5 text-purple-500" />
               <p className="text-sm text-muted-foreground">Conversões</p>
             </div>
-            <p className="text-2xl font-bold">{stats.totalConversions}</p>
+            <p className="text-2xl font-bold">{stats?.totalConversions || 0}</p>
           </Card3D>
           <Card3D intensity="low" className="p-5">
             <div className="flex items-center gap-3 mb-2">
               <Target className="w-5 h-5 text-blue-500" />
               <p className="text-sm text-muted-foreground">CPC Médio</p>
             </div>
-            <p className="text-2xl font-bold">€{stats.averageCpc.toFixed(2)}</p>
+            <p className="text-2xl font-bold">€{(stats?.averageCpc || 0).toFixed(2)}</p>
           </Card3D>
         </div>
       </div>
