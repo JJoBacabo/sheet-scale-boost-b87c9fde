@@ -746,7 +746,8 @@ const Settings = () => {
               </Card3D>
 
               {/* Subscription Section */}
-              <Card3D id="plans-section" intensity="low" className="p-6">
+              <div id="plans-section">
+                <Card3D intensity="low" className="p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
                     <CreditCard className="w-6 h-6 text-primary-foreground" />
@@ -946,7 +947,8 @@ const Settings = () => {
                     );
                   }
                 })()}
-              </Card3D>
+                </Card3D>
+              </div>
 
               {/* Danger Zone */}
               <Card3D intensity="low" className="p-6 border-destructive/20">

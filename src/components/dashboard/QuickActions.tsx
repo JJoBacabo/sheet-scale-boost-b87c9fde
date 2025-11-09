@@ -82,12 +82,13 @@ export const QuickActions = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              onClick={action.onClick}
+              className="cursor-pointer"
             >
               <Card3D 
                 intensity="low" 
                 glow={action.connected}
-                className="p-6 text-left w-full cursor-pointer"
-                onClick={action.onClick}
+                className="p-6 text-left w-full"
               >
                 <div className="relative flex flex-col items-center text-center gap-4">
                   <motion.div

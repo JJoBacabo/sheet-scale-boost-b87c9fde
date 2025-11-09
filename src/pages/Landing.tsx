@@ -314,7 +314,7 @@ const Landing = () => {
       {/* Features Section - Full Page Scroll */}
       <section id="features" className="relative snap-start snap-always">
         {/* Section Title - Fixed at top */}
-        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 backdrop-blur-md border-b border-white/10">
           <motion.h2 
             className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
             initial={{ opacity: 0, y: -20 }}
