@@ -604,8 +604,6 @@ const Landing = () => {
                   </button>
                 </li>
                 <li>
-                </li>
-                <li>
                   <button onClick={() => scrollToSection('pricing')} className="text-gray-400 hover:text-white transition-colors">
                     {t('footer.pricing')}
                   </button>
