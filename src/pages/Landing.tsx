@@ -341,8 +341,8 @@ const Landing = () => {
           </motion.p>
         </div>
 
-        {/* Features with Full Page Scroll - Cinematic Effect */}
-        <div className="features-container relative" style={{ minHeight: `${6 * 100}vh` }}>
+        {/* Features with Horizontal Scroll */}
+        <div className="features-container relative overflow-hidden" style={{ minHeight: '100vh' }}>
           {[{
             icon: Activity,
             key: 'integration',
@@ -391,12 +391,9 @@ const Landing = () => {
               key={index}
               className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20"
               style={{ 
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                width: '100%',
-                zIndex: 10 // Todas no mesmo nível, controladas por opacity
+                position: 'relative',
+                width: '100vw',
+                flexShrink: 0,
               }}
             >
               <div className="max-w-7xl mx-auto w-full">

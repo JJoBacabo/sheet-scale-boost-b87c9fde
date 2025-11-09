@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
 
 /**
- * Hook para implementar efeito de scroll cinematográfico usando GSAP + ScrollTrigger
+ * Hook para implementar efeito de scroll horizontal usando GSAP + ScrollTrigger
  * 
  * Funcionalidade:
+ * - Scroll horizontal através das features
  * - Fixa a seção durante o scroll (sticky/pin)
- * - Mostra apenas uma feature por vez
- * - Transições suaves com fade (opacity) e translateY
+ * - Mostra uma feature por vez com transições suaves
  * - Detecta automaticamente quantos elementos .feature-item existem
- * - Calcula altura da animação baseado no número de features
- * - Não altera o layout ou HTML existente, apenas adiciona comportamento JS
+ * - Calcula largura da animação baseado no número de features
  */
 export const useCinematicScroll = (sectionId: string) => {
   useEffect(() => {
@@ -40,7 +39,7 @@ export const useCinematicScroll = (sectionId: string) => {
 };
 
 /**
- * Função que inicializa o efeito cinematográfico
+ * Função que inicializa o scroll horizontal
  */
 function initCinematicScroll(sectionId: string) {
   const gsap = (window as any).gsap;
@@ -76,165 +75,93 @@ function initCinematicScroll(sectionId: string) {
     }
 
     const featureCount = featureElements.length;
-    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-    // Calcular altura total da animação
-    // Cada feature precisa de espaço suficiente para aparecer, ficar visível e desaparecer
-    // Aumentamos para 3x para dar muito mais espaço entre transições e evitar sobreposição
-    const scrollHeight = viewportHeight * featureCount * 3;
-
-    // Configurar estado inicial: apenas primeira feature visível, outras completamente invisíveis
-    featureElements.forEach((feature, index) => {
-      if (index === 0) {
-        // Primeira feature totalmente visível no centro
-        gsap.set(feature, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          pointerEvents: 'auto',
-        });
-      } else {
-        // Outras features completamente invisíveis e desabilitadas
-        gsap.set(feature, {
-          opacity: 0,
-          y: 0, // Todas na mesma posição (sobrepostas)
-          scale: 1,
-          pointerEvents: 'none',
-        });
-      }
+    // Configurar layout horizontal
+    // Container deve ter largura suficiente para todas as features lado a lado
+    const containerWidth = viewportWidth * featureCount;
+    gsap.set(featuresContainer, {
+      width: `${containerWidth}px`,
+      display: 'flex',
+      flexDirection: 'row',
     });
 
-    // Criar timeline principal
-    const masterTimeline = gsap.timeline({
+    // Configurar estado inicial: features lado a lado
+    featureElements.forEach((feature, index) => {
+      gsap.set(feature, {
+        x: index * viewportWidth, // Posicionar horizontalmente
+        opacity: index === 0 ? 1 : 0, // Primeira visível, outras invisíveis
+        width: `${viewportWidth}px`,
+        flexShrink: 0,
+        pointerEvents: index === 0 ? 'auto' : 'none',
+      });
+    });
+
+    // Calcular scroll distance (vertical scroll = horizontal movement)
+    const scrollDistance = viewportWidth * featureCount;
+
+    // Criar animação horizontal
+    const horizontalTimeline = gsap.timeline({
       scrollTrigger: {
         trigger: section,
-        start: 'top top', // Quando o topo da seção atinge o topo da viewport
-        end: `+=${scrollHeight}`, // Termina após scrollHeight pixels
-        scrub: 0.5, // Sincronizar com scroll (0.5s para mais responsividade)
-        pin: true, // Fixar a seção durante o scroll
+        start: 'top top',
+        end: `+=${scrollDistance}`,
+        scrub: 1, // Sincronizar com scroll
+        pin: true,
         anticipatePin: 1,
         pinSpacing: true,
-        markers: false, // Desativar marcadores de debug
-        invalidateOnRefresh: true, // Recalcular em refresh
+        markers: false,
+        invalidateOnRefresh: true,
       },
     });
 
-    // Animar cada feature individualmente - apenas uma totalmente visível por vez
-    // Fluxo: Tópico → Fade out → Background preto → Fade in → Próximo tópico
+    // Animar movimento horizontal - scroll vertical move container horizontalmente
+    horizontalTimeline.to(
+      featuresContainer,
+      {
+        x: -(featureCount - 1) * viewportWidth, // Mover até a última feature
+        ease: 'none', // Movimento linear sincronizado com scroll
+      },
+      1 // Progresso completo (0 a 1)
+    );
+
+    // Animar fade de cada feature
     featureElements.forEach((feature, index) => {
-      // Calcular progresso no timeline (0 a 1)
-      // Gap maior para garantir período de background preto entre tópicos
-      const gap = 0.2; // 20% de gap (período de background preto)
-      const segmentSize = (1 - gap * (featureCount - 1)) / featureCount;
-      
-      // Calcular pontos de transição
-      const progressStart = index * (segmentSize + gap); // Quando começa a aparecer (após gap)
-      const progressVisible = progressStart + segmentSize * 0.4; // Quando está totalmente visível (40% do segmento)
-      const progressFadeOut = progressStart + segmentSize * 0.6; // Quando começa a desaparecer (60% do segmento)
-      const progressEnd = progressStart + segmentSize; // Quando desaparece completamente (100% do segmento, antes do gap)
+      const progressStart = index / featureCount; // Quando começa a aparecer
+      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
+      const progressEnd = (index + 1) / featureCount; // Quando desaparece
 
-      // FASE 1: Garantir que feature anterior desapareceu COMPLETAMENTE antes do gap
-      if (index > 0) {
-        const previousEnd = (index - 1) * (segmentSize + gap) + segmentSize;
-        
-        // Fade out completo da anterior - deve terminar ANTES do gap começar
-        masterTimeline.to(
-          featureElements[index - 1],
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-            duration: 0.4,
-            ease: 'power2.in',
-          },
-          previousEnd - 0.4 // Começa a desaparecer antes do fim
-        );
-        
-        // Garantir invisível durante TODO o gap (background preto)
-        masterTimeline.set(
-          featureElements[index - 1],
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
-          previousEnd // Início do gap
-        );
-        
-        // Manter invisível durante todo o gap até esta começar
-        masterTimeline.set(
-          featureElements[index - 1],
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
-          progressStart - 0.01 // Fim do gap, antes desta começar
-        );
-      }
-
-      // FASE 2: Garantir que esta feature está invisível antes de começar (durante gap)
-      masterTimeline.set(
-        feature,
-        {
-          opacity: 0,
-          pointerEvents: 'none',
-        },
-        progressStart - 0.01 // Durante o gap, antes de aparecer
-      );
-
-      // FASE 3: Fade in (entrada) - aparece APÓS o período de background preto
-      masterTimeline.to(
+      // Fade in quando entra no viewport
+      horizontalTimeline.to(
         feature,
         {
           opacity: 1,
-          y: 0,
-          scale: 1,
           pointerEvents: 'auto',
-          duration: 0.5,
+          duration: 0.2,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter totalmente visível (plateau)
+        // Manter visível no centro
         .to(
           feature,
           {
             opacity: 1,
-            y: 0,
-            scale: 1,
             pointerEvents: 'auto',
-            duration: 0.2,
+            duration: 0.3,
           },
-          progressVisible
+          progressCenter
         )
-        // FASE 4: Fade out (saída) - desaparece para mostrar background preto
+        // Fade out quando sai do viewport
         .to(
           feature,
           {
             opacity: 0,
-            y: 0,
-            scale: 1,
             pointerEvents: 'none',
-            duration: 0.4,
+            duration: 0.2,
             ease: 'power2.in',
           },
-          progressFadeOut
-        )
-        // Garantir invisível no fim do segmento (antes do gap)
-        .set(
-          feature,
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
           progressEnd
-        )
-        // Manter invisível durante TODO o gap (background preto)
-        .set(
-          feature,
-          {
-            opacity: 0,
-            pointerEvents: 'none',
-          },
-          progressStart + segmentSize + gap - 0.01 // Fim do gap
         );
     });
 
@@ -248,7 +175,7 @@ function initCinematicScroll(sectionId: string) {
       });
       
       // Limpar animações
-      masterTimeline.kill();
+      horizontalTimeline.kill();
     };
   };
 
