@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
-import { useStorytellingScrollWithImages } from "@/hooks/useStorytellingScrollWithImages";
+import { useCinematicScroll } from "@/hooks/useCinematicScroll";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -22,12 +22,6 @@ const Landing = () => {
   } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
-  
-  // Hook para efeito de scroll storytelling com imagens (Features)
-  useStorytellingScrollWithImages('features-storytelling');
-  
-  // Hook para efeito de scroll storytelling com imagens (Facebook Ads Integration subsecção)
-  useStorytellingScrollWithImages('facebook-integration-subsection');
   
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
@@ -317,489 +311,141 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section - Storytelling Scroll with Images */}
-      <section id="features-storytelling" className="relative overflow-hidden" aria-label="Features that make the difference">
-        {/* Background da homepage (partículas) */}
-        <Background3D />
-        
-        {/* Container para os tópicos - cada tópico será animado individualmente */}
-        <div className="relative w-full">
-          {/* Tópico 1: Facebook Ads Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-100">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Activity className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Facebook Ads Integration
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Integra a tua conta do Facebook Ads e vê todos os dados num só painel.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Activity className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Logótipo Facebook Ads</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico Dinâmico</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 2: Real-Time Analysis - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Dashboard Analítico</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Gauge className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Relógio Digital</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Zap className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Real-Time Analysis
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Monitoriza campanhas em tempo real com métricas atualizadas segundo a segundo.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 3: Campaign Insights - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Brain className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Campaign Insights
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Obtém insights automáticos sobre desempenho, públicos e tendências.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico de Barras</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Brain className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">IA</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 4: Automatic Reports - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Documento PDF</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico Resumido</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Shield className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Automatic Reports
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Gera relatórios personalizados automaticamente e exporta para PDF.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 5: Cross-Platform Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Cross-Platform Integration
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Liga o Facebook Ads a outras plataformas como Google Ads ou TikTok Ads.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Target className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Ícones Plataformas</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Zap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Linhas de Ligação</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 6: Actionable Decisions - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Zap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Botão de Ação</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <ArrowRight className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Setas Progresso</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Actionable Decisions
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Transforma dados em decisões com recomendações inteligentes.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Features Section - Full Page Scroll */}
+      <section id="features" className="relative snap-start snap-always">
+        {/* Section Title - Fixed at top */}
+        <div className="sticky top-0 z-30 text-center py-6 sm:py-8 bg-black/80 backdrop-blur-md border-b border-white/10">
+          <motion.h2 
+            className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2"
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            {t('landing.features.title')}
+          </motion.h2>
+          <motion.p 
+            className="text-base sm:text-lg md:text-xl text-gray-400"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            {t('landing.features.subtitle')}
+          </motion.p>
         </div>
-      </section>
 
-      {/* Facebook Ads Integration - Subsecção com Scroll Storytelling */}
-      <section id="facebook-integration-subsection" className="relative overflow-hidden" aria-label="Facebook Ads Integration">
-        {/* Background da homepage (partículas) */}
-        <Background3D />
-        
-        {/* Container para os tópicos - cada tópico será animado individualmente */}
-        <div className="relative w-full">
-          {/* Tópico 1: Facebook Ads Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-100">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Activity className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Facebook Ads Integration
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Integra a tua conta do Facebook Ads e vê todos os dados num só painel.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Activity className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Logótipo Facebook Ads</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico Dinâmico</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Features with Full Page Scroll - Cinematic Effect */}
+        <div className="features-container">
+          {[{
+            icon: Activity,
+            key: 'integration'
+          }, {
+            icon: BarChart3,
+            key: 'metrics'
+          }, {
+            icon: Brain,
+            key: 'ai'
+          }, {
+            icon: Zap,
+            key: 'automation'
+          }, {
+            icon: TrendingUp,
+            key: 'profit'
+          }, {
+            icon: Lock,
+            key: 'secure'
+          }].map((feature, index) => (
+            <motion.div
+              key={index}
+              className="feature-item snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+            >
+            <motion.div
+              className="max-w-4xl mx-auto w-full"
+              initial={{ opacity: 0, y: 80, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ 
+                duration: 0.7, 
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+              }}
+            >
+              <Card3D intensity="high" glow className="p-6 sm:p-10 md:p-14 lg:p-16">
+                <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 md:space-y-8">
+                  {/* Icon */}
+                  <motion.div
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
+                    whileInView={{ 
+                      rotateY: [0, 360],
+                      scale: [1, 1.15, 1]
+                    }}
+                    viewport={{ once: false }}
+                    transition={{ 
+                      duration: 1.2,
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  >
+                    <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 text-primary-foreground" />
+                  </motion.div>
 
-          {/* Tópico 2: Real-Time Analysis - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Dashboard Analítico</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Gauge className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Relógio Digital</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Zap className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Real-Time Analysis
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Monitoriza campanhas em tempo real com métricas atualizadas segundo a segundo.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+                  {/* Title */}
+                  <motion.h3 
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold gradient-text"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.2, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.title`)}
+                  </motion.h3>
 
-          {/* Tópico 3: Campaign Insights - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Brain className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Campaign Insights
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Obtém insights automáticos sobre desempenho, públicos e tendências.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico de Barras</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Brain className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">IA</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  {/* Description */}
+                  <motion.p 
+                    className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto px-4"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.description`)}
+                  </motion.p>
 
-          {/* Tópico 4: Automatic Reports - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Shield className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Documento PDF</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Gráfico Resumido</p>
-                    </div>
-                  </div>
+                  {/* Scroll Indicator - Only on last feature */}
+                  {index === 5 && (
+                    <motion.div
+                      className="mt-6 sm:mt-8 flex flex-col items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: false }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-gray-400 text-xs sm:text-sm"
+                      >
+                        Continue scrolling
+                      </motion.div>
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                      >
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary rotate-90" />
+                      </motion.div>
+                    </motion.div>
+                  )}
                 </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Shield className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Automatic Reports
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Gera relatórios personalizados automaticamente e exporta para PDF.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 5: Cross-Platform Integration - Texto | Imagem */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                {/* Texto - Esquerda */}
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Target className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Cross-Platform Integration
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Liga o Facebook Ads a outras plataformas como Google Ads ou TikTok Ads.
-                  </p>
-                </div>
-                {/* Imagens - Direita */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Target className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Ícones Plataformas</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Zap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Linhas de Ligação</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tópico 6: Actionable Decisions - Imagem | Texto */}
-          <div className="storytelling-topic absolute inset-0 min-h-screen flex items-center justify-center pointer-events-none opacity-0">
-            <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 md:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center lg:grid-flow-dense">
-                {/* Imagens - Esquerda */}
-                <div className="grid grid-cols-2 gap-4 lg:order-1 lg:col-start-1 lg:row-start-1">
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <Zap className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Botão de Ação</p>
-                    </div>
-                  </div>
-                  <div className="relative group rounded-xl overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 aspect-video flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <ArrowRight className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 text-primary/50" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Setas Progresso</p>
-                    </div>
-                  </div>
-                </div>
-                {/* Texto - Direita */}
-                <div className="space-y-6 sm:space-y-8 lg:order-2 lg:col-start-2">
-                  {/* Ícone */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
-                      <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
-                    </div>
-                    <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
-                  </div>
-                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold gradient-text leading-tight">
-                    Actionable Decisions
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-xl text-gray-300 leading-relaxed">
-                    Transforma dados em decisões com recomendações inteligentes.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+              </Card3D>
+            </motion.div>
+          </motion.div>
+          ))}
         </div>
       </section>
 
