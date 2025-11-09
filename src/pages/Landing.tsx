@@ -391,11 +391,12 @@ const Landing = () => {
               className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 relative"
             >
               <div className="max-w-7xl mx-auto w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
-                  {/* Images Section - Left on desktop, Top on mobile */}
-                  <div className="order-2 lg:order-1 space-y-4">
+                {/* Nova disposição: Imagens em cima, conteúdo embaixo */}
+                <div className="space-y-8 md:space-y-12">
+                  {/* Images Section - Top */}
+                  <div className="space-y-4">
                     {/* Two Images Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                       {feature.images.map((img, imgIndex) => (
                         <motion.div
                           key={imgIndex}
@@ -418,7 +419,6 @@ const Landing = () => {
                               alt={img.alt} 
                               className="w-full h-full object-cover"
                               onError={(e) => {
-                                // Fallback para placeholder se imagem não existir
                                 e.currentTarget.style.display = 'none';
                               }}
                             />
@@ -434,22 +434,19 @@ const Landing = () => {
                     </div>
                     
                     {/* Additional Info Below Images */}
-                    <div className="pt-4 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle2 className="w-4 h-4 text-primary" />
-                        <span>Clique nas imagens para ampliar</span>
-                      </div>
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-primary" />
+                      <span>Clique nas imagens para ampliar</span>
                     </div>
                   </div>
 
-                  {/* Content - Right on desktop, Bottom on mobile */}
-                  <div className="order-1 lg:order-2 space-y-6 sm:space-y-8">
+                  {/* Content Section - Bottom */}
+                  <div className="space-y-6 sm:space-y-8 text-center max-w-4xl mx-auto">
                     {/* Icon */}
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center gap-4">
                       <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
                         <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-primary-foreground" />
                       </div>
-                      <div className="h-px flex-1 bg-gradient-to-r from-primary/50 to-transparent" />
                     </div>
 
                     {/* Title */}
@@ -464,19 +461,19 @@ const Landing = () => {
 
                     {/* Additional Features List */}
                     <div className="space-y-3 pt-4">
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 justify-center">
                         <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                         <p className="text-sm sm:text-base text-gray-400">
                           Análise em tempo real de todas as suas campanhas
                         </p>
                       </div>
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 justify-center">
                         <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                         <p className="text-sm sm:text-base text-gray-400">
                           Relatórios detalhados e insights acionáveis
                         </p>
                       </div>
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-3 justify-center">
                         <CheckCircle2 className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                         <p className="text-sm sm:text-base text-gray-400">
                           Integração automática com suas plataformas
@@ -486,7 +483,7 @@ const Landing = () => {
 
                     {/* Scroll Indicator - Only on last feature */}
                     {index === 5 && (
-                      <div className="pt-8 flex flex-col items-start gap-2">
+                      <div className="pt-8 flex flex-col items-center gap-2">
                         <div className="text-gray-400 text-sm">
                           Continue scrolling
                         </div>

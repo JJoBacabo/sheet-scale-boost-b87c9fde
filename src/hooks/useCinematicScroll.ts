@@ -83,14 +83,9 @@ function initCinematicScroll(sectionId: string) {
     // Usamos viewport height multiplicado pelo número de features
     const scrollHeight = viewportHeight * featureCount * 1.5; // 1.5x para transições suaves
 
-    // Configurar estado inicial: todas invisíveis
+    // Configurar estado inicial: todas visíveis (remover animação que esconde)
+    // Não vamos esconder as features, apenas animar a transição suave
     gsap.set(featureElements, {
-      opacity: 0,
-      y: 50,
-    });
-
-    // Primeira feature visível inicialmente
-    gsap.set(featureElements[0], {
       opacity: 1,
       y: 0,
     });
@@ -109,41 +104,49 @@ function initCinematicScroll(sectionId: string) {
       },
     });
 
-    // Animar cada feature individualmente
+    // Animar cada feature individualmente - efeito mais suave
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
       const progressStart = index / featureCount; // Quando começa a aparecer
-      const progressVisible = (index + 0.3) / featureCount; // Quando está totalmente visível
-      const progressEnd = (index + 1) / featureCount; // Quando desaparece
+      const progressCenter = (index + 0.5) / featureCount; // Centro da animação
+      const progressEnd = (index + 1) / featureCount; // Quando termina
 
-      // Fade in e slide up (entrada)
-      masterTimeline.to(
+      // Fade in suave (entrada)
+      masterTimeline.fromTo(
         feature,
+        {
+          opacity: 0.3,
+          y: 30,
+          scale: 0.95,
+        },
         {
           opacity: 1,
           y: 0,
-          duration: 0.2,
+          scale: 1,
+          duration: 0.3,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter visível (plateau)
+        // Manter no centro (destaque)
         .to(
           feature,
           {
             opacity: 1,
             y: 0,
-            duration: 0.1,
+            scale: 1,
+            duration: 0.2,
           },
-          progressVisible
+          progressCenter
         )
-        // Fade out e slide down (saída)
+        // Fade out suave (saída) - mas não completamente invisível
         .to(
           feature,
           {
-            opacity: 0,
-            y: -50,
-            duration: 0.2,
+            opacity: 0.3,
+            y: -30,
+            scale: 0.95,
+            duration: 0.3,
             ease: 'power2.in',
           },
           progressEnd
