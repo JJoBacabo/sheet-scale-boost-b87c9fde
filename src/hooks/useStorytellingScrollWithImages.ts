@@ -56,7 +56,7 @@ function initStorytellingScroll(sectionId: string) {
     // Encontrar a seção
     const section = document.getElementById(sectionId);
     if (!section) {
-      console.warn(`Section with id "${sectionId}" not found.`);
+      console.warn(`[${sectionId}] Section not found.`);
       return;
     }
 
@@ -66,9 +66,11 @@ function initStorytellingScroll(sectionId: string) {
     ) as HTMLElement[];
 
     if (topicElements.length === 0) {
-      console.warn('No storytelling topics found.');
+      console.warn(`[${sectionId}] No storytelling topics found.`);
       return;
     }
+
+    console.log(`[${sectionId}] Initializing scroll storytelling with ${topicElements.length} topics`);
 
     const topicCount = topicElements.length;
     const viewportHeight = window.innerHeight;
@@ -126,60 +128,105 @@ function initStorytellingScroll(sectionId: string) {
       const progressFadeOutStart = progressStart + gap / 2 + visibleSize * 0.7; // Começa fade-out
       const progressEnd = progressStart + segmentSize; // Fim do segmento
 
-      // Garantir invisível antes de começar
-      masterTimeline.set(
-        topic,
-        {
-          opacity: 0,
-          y: 40,
-          pointerEvents: 'none',
-        },
-        progressStart
-      );
+      // Para o primeiro tópico, não definir como invisível no início
+      if (index > 0) {
+        // Garantir invisível antes de começar (exceto primeiro)
+        masterTimeline.set(
+          topic,
+          {
+            opacity: 0,
+            y: 40,
+            pointerEvents: 'none',
+          },
+          progressStart
+        );
+      }
 
       // Fade-in + translateY(40px → 0)
-      masterTimeline.to(
-        topic,
-        {
-          opacity: 1,
-          y: 0,
-          duration: visibleSize * 0.3, // 30% do tamanho visível para fade-in
-          ease: 'power2.out',
-        },
-        progressFadeInStart
-      )
-        // Manter totalmente visível no centro
-        .to(
-          topic,
-          {
-            opacity: 1,
-            y: 0,
-            duration: visibleSize * 0.4, // 40% do tamanho visível mantém visível
-          },
-          progressVisible
-        )
-        // Fade-out + translateY(0 → -40px)
-        .to(
-          topic,
-          {
-            opacity: 0,
-            y: -40,
-            duration: visibleSize * 0.3, // 30% do tamanho visível para fade-out
-            ease: 'power2.in',
-            pointerEvents: 'none',
-          },
-          progressFadeOutStart
-        )
-        // Garantir invisível durante gap (antes do próximo tópico)
-        .set(
-          topic,
-          {
-            opacity: 0,
-            y: 40, // Reset para próxima animação
-            pointerEvents: 'none',
-          },
-          progressEnd - 0.01
-        );
+      if (index === 0) {
+        // Primeiro tópico já está visível, manter visível e depois fazer fade-out
+        masterTimeline
+          .to(
+            topic,
+            {
+              opacity: 1,
+              y: 0,
+              duration: visibleSize * 0.4, // Manter visível
+            },
+            progressFadeInStart
+          )
+          .to(
+            topic,
+            {
+              opacity: 1,
+              y: 0,
+              duration: visibleSize * 0.4, // 40% do tamanho visível mantém visível
+            },
+            progressVisible
+          )
+          .to(
+            topic,
+            {
+              opacity: 0,
+              y: -40,
+              duration: visibleSize * 0.3, // 30% do tamanho visível para fade-out
+              ease: 'power2.in',
+              pointerEvents: 'none',
+            },
+            progressFadeOutStart
+          )
+          .set(
+            topic,
+            {
+              opacity: 0,
+              y: 40, // Reset para próxima animação
+              pointerEvents: 'none',
+            },
+            progressEnd - 0.01
+          );
+      } else {
+        // Outros tópicos fazem fade-in completo
+        masterTimeline
+          .to(
+            topic,
+            {
+              opacity: 1,
+              y: 0,
+              duration: visibleSize * 0.3, // 30% do tamanho visível para fade-in
+              ease: 'power2.out',
+            },
+            progressFadeInStart
+          )
+          .to(
+            topic,
+            {
+              opacity: 1,
+              y: 0,
+              duration: visibleSize * 0.4, // 40% do tamanho visível mantém visível
+            },
+            progressVisible
+          )
+          .to(
+            topic,
+            {
+              opacity: 0,
+              y: -40,
+              duration: visibleSize * 0.3, // 30% do tamanho visível para fade-out
+              ease: 'power2.in',
+              pointerEvents: 'none',
+            },
+            progressFadeOutStart
+          )
+          .set(
+            topic,
+            {
+              opacity: 0,
+              y: 40, // Reset para próxima animação
+              pointerEvents: 'none',
+            },
+            progressEnd - 0.01
+          );
+      }
     });
 
     // Cleanup function
@@ -199,24 +246,27 @@ function initStorytellingScroll(sectionId: string) {
   // Executar quando DOM estiver pronto
   const timeout = setTimeout(() => {
     let attempts = 0;
-    const maxAttempts = 10;
+    const maxAttempts = 20; // Aumentar tentativas
     
     const tryInit = () => {
       const section = document.getElementById(sectionId);
       const topics = section?.querySelectorAll('.storytelling-topic');
       
       if (section && topics && topics.length > 0) {
+        console.log(`[${sectionId}] Found ${topics.length} topics, initializing...`);
         init();
       } else if (attempts < maxAttempts) {
         attempts++;
-        setTimeout(tryInit, 200);
+        setTimeout(tryInit, 300); // Aumentar delay
       } else {
-        console.warn('Storytelling section not ready after multiple attempts.');
+        console.warn(`[${sectionId}] Storytelling section not ready after ${maxAttempts} attempts.`);
+        console.warn(`[${sectionId}] Section found:`, !!section);
+        console.warn(`[${sectionId}] Topics found:`, topics?.length || 0);
       }
     };
     
     tryInit();
-  }, 500);
+  }, 1000); // Aumentar delay inicial
 
   return () => {
     clearTimeout(timeout);
