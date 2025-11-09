@@ -2,8 +2,9 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
-import { PageLayout } from "@/components/PageLayout";
+import { Background3D } from "@/components/ui/Background3D";
 import { useLanguage } from "@/contexts/LanguageContext";
+import logo from "@/assets/logo.png";
 import { 
   Table,
   TableBody,
@@ -229,22 +230,70 @@ const TestPage = () => {
   };
 
   return (
-    <PageLayout
-      title="Test Page - Data Dashboard"
-      subtitle="Demonstração de design moderno com dados funcionais"
-      actions={
-        <div className="flex gap-2">
-          <Button3D variant="glass" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
-          </Button3D>
-          <Button3D variant="glass" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button3D>
+    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* Background 3D */}
+      <Background3D />
+      
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <motion.div 
+              className="flex items-center gap-3"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
+                <motion.img 
+                  src={logo} 
+                  alt="Sheet Tools" 
+                  className="h-12 sm:h-16 w-auto relative logo-glow"
+                  animate={{ 
+                    filter: [
+                      "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))",
+                      "drop-shadow(0 0 16px rgba(74, 233, 189, 0.5))",
+                      "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))"
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
+              </div>
+            </motion.div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-4">
+              <Button3D variant="glass" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button3D>
+              <Button3D variant="glass" size="sm">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Refresh
+              </Button3D>
+            </div>
+          </div>
         </div>
-      }
-    >
+      </header>
+
+      {/* Main Content */}
+      <main className="pt-24 pb-16 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6">
+          {/* Page Title */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mb-12 text-center"
+          >
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 gradient-text">
+              Test Page - Data Dashboard
+            </h1>
+            <p className="text-xl text-muted-foreground">
+              Demonstração de design moderno com dados funcionais
+            </p>
+          </motion.div>
       {/* Stats Cards */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -529,7 +578,9 @@ const TestPage = () => {
           </div>
         </Card3D>
       </motion.section>
-    </PageLayout>
+        </div>
+      </main>
+    </div>
   );
 };
 
