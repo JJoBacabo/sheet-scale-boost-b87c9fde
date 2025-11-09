@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { ArrowLeft, Construction } from "lucide-react";
 import logo from "@/assets/logo.png";
 
@@ -13,26 +11,10 @@ export default function ProductResearch() {
   const navigate = useNavigate();
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-        <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <h1 className="text-2xl font-bold">{t('productResearch.title')}</h1>
-                  <p className="text-sm text-muted-foreground">{t('productResearch.subtitle')}</p>
-                </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          <main className="container mx-auto px-6 py-8 relative">
+    <PageLayout
+      title={t('productResearch.title')}
+      subtitle={t('productResearch.subtitle')}
+    >
             <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
               <div className="w-full max-w-2xl">
                 <Card className="glass-card rounded-3xl border-2 border-border/50 p-12">
@@ -92,9 +74,6 @@ export default function ProductResearch() {
               </Card>
             </div>
           </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 }

@@ -5,13 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download } from "lucide-react";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { StoreSelector } from "@/components/StoreSelector";
 import {
@@ -661,24 +659,11 @@ const Products = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-mesh opacity-30 pointer-events-none" />
-        <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <main className="relative min-h-screen p-6 space-y-6">
-            {/* Hero Section with integrated controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border-2 hover:border-primary/40 transition-all flex items-center justify-center" />
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {t('products.title')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">{t('products.subtitle')}</p>
-                </div>
-              </div>
+    <PageLayout
+      title={t('products.title')}
+      subtitle={t('products.subtitle')}
+    >
+      <div className="space-y-4">
 
               {/* Search Bar */}
               <div className="relative">
@@ -954,10 +939,7 @@ const Products = () => {
                   ))}
                 </div>
             )}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 

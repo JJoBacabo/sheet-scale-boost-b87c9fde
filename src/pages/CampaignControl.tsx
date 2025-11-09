@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { 
@@ -1478,57 +1477,48 @@ const CampaignControl = () => {
 
   if (!hasFacebookIntegration || !hasShopifyIntegration) {
     return (
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
-          <AppSidebar />
-          <main className="flex-1 p-6 overflow-auto">
-            <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto mt-20 border-2 border-border/50">
-              <h2 className="text-2xl font-bold mb-4">{t("dailyRoas.integrationsNeeded")}</h2>
-              <p className="text-muted-foreground mb-6">
-                {t("dailyRoas.integrationsDesc")}
+      <PageLayout
+        title={t("dailyRoas.integrationsNeeded")}
+        subtitle={t("dailyRoas.integrationsDesc")}
+      >
+        <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto border-2 border-border/50">
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg border ${hasFacebookIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
+              <h3 className="font-semibold mb-1">
+                {hasFacebookIntegration ? '✅ ' : '❌ '}{t("dailyRoas.facebookAds")}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {hasFacebookIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForCampaigns")}
               </p>
-              <div className="space-y-4">
-                <div className={`p-4 rounded-lg border ${hasFacebookIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                  <h3 className="font-semibold mb-1">
-                    {hasFacebookIntegration ? '✅ ' : '❌ '}{t("dailyRoas.facebookAds")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {hasFacebookIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForCampaigns")}
-                  </p>
-                </div>
-                <div className={`p-4 rounded-lg border ${hasShopifyIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                  <h3 className="font-semibold mb-1">
-                    {hasShopifyIntegration ? '✅ ' : '❌ '}{t("dailyRoas.shopify")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {hasShopifyIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForProducts")}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Button onClick={() => navigate("/settings")} className="w-full">
-                  {t("dailyRoas.goToSettings")}
-                </Button>
-              </div>
-            </Card>
-          </main>
-        </div>
-      </SidebarProvider>
+            </div>
+            <div className={`p-4 rounded-lg border ${hasShopifyIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
+              <h3 className="font-semibold mb-1">
+                {hasShopifyIntegration ? '✅ ' : '❌ '}{t("dailyRoas.shopify")}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {hasShopifyIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForProducts")}
+              </p>
+            </div>
+          </div>
+          <div className="mt-6">
+            <Button onClick={() => navigate("/settings")} className="w-full">
+              {t("dailyRoas.goToSettings")}
+            </Button>
+          </div>
+        </Card>
+      </PageLayout>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <AppSidebar />
-        <main className="flex-1 p-6 overflow-auto">
-          {/* Header */}
-          <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">{t('dailyRoas.title')}</h1>
-                <p className="text-sm md:text-base text-muted-foreground">{t('dailyRoas.subtitle')}</p>
-              </div>
+    <PageLayout
+      title={t('dailyRoas.title')}
+      subtitle={t('dailyRoas.subtitle')}
+    >
+      <div className="space-y-6">
+        {/* Controls Section */}
+        <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 border-2 border-border/50">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
               <div className="flex flex-wrap gap-2">
                 {/* Market Type Selector */}
                 <div className="flex flex-col gap-1">
@@ -2040,9 +2030,8 @@ const CampaignControl = () => {
               )}
             </DialogContent>
           </Dialog>
-        </main>
       </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 

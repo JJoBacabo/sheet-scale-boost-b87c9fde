@@ -6,13 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ExternalLink, AlertCircle, CheckCircle2, Plus, Trash2, RefreshCw, ShoppingBag, Lock } from "lucide-react";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
@@ -380,30 +378,10 @@ export default function Integrations() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-        <AppSidebar />
-        
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                    {t('settings.integrationsPage.title')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.integrationsPage.subtitle')}
-                  </p>
-                </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          <main className="container mx-auto px-6 py-8 relative space-y-8">
+    <PageLayout
+      title={t('settings.integrationsPage.title')}
+      subtitle={t('settings.integrationsPage.subtitle')}
+    >
             {/* Summary Card */}
             <Card className="p-6 glass-card rounded-3xl border-2 border-primary/20 relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-primary opacity-10 rounded-full blur-3xl" />
@@ -607,9 +585,6 @@ export default function Integrations() {
                 )}
               </div>
             </div>
-          </main>
-        </SidebarInset>
-      </div>
 
       {/* Shopify Connection Dialog */}
       <Dialog open={showShopifyDialog} onOpenChange={setShowShopifyDialog}>
@@ -837,6 +812,6 @@ export default function Integrations() {
         current={usageData?.storesUsed}
         limit={usageData?.storesLimit}
       />
-    </SidebarProvider>
+    </PageLayout>
   );
 }

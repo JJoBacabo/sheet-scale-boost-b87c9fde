@@ -8,13 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import { User as UserIcon, Building2, CreditCard, Facebook, ShoppingBag, Check, ExternalLink, Sparkles, X, RefreshCw, Calendar } from "lucide-react";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { profileSchema, shopifyIntegrationSchema } from "@/lib/validation";
 import { SubscriptionHistoryModal } from "@/components/SubscriptionHistoryModal";
@@ -694,27 +692,11 @@ const Settings = () => {
   }
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-        <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <h1 className="text-2xl font-bold">{t('settings.title')}</h1>
-                  <p className="text-sm text-muted-foreground mt-1">{t('settings.integrationsPage.subtitle')}</p>
-                </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          <main className="container max-w-6xl mx-auto px-6 py-12 relative">
-            <div className="space-y-8">
+    <PageLayout
+      title={t('settings.title')}
+      subtitle={t('settings.integrationsPage.subtitle')}
+    >
+      <div className="space-y-8">
               {/* Profile Section */}
               <Card className="p-8 glass-card rounded-3xl border-2 border-border/50">
                 <div className="flex items-center gap-3 mb-6">
@@ -982,11 +964,10 @@ const Settings = () => {
                     </Button>
                   </div>
                 </div>
-              </Card>
-            </div>
-          </main>
+                </Card>
+              </div>
 
-          {/* Shopify Dialog */}
+            {/* Shopify Dialog */}
           <Dialog open={showShopifyDialog} onOpenChange={setShowShopifyDialog}>
             <DialogContent className="glass-card max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -1076,9 +1057,7 @@ const Settings = () => {
             onOpenChange={setShowHistoryModal}
             history={subscriptionHistory}
           />
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 

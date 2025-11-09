@@ -7,8 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
@@ -29,7 +27,7 @@ import {
   ExternalLink,
   Settings2,
 } from "lucide-react";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -714,39 +712,22 @@ const MetaDashboard = () => {
 
   if (!isConnected) {
     return (
-      <SidebarProvider defaultOpen={true}>
-        <div className="min-h-screen w-full flex bg-background relative">
-          <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-          <AppSidebar />
-
-          <SidebarInset className="flex-1 transition-all duration-300">
-            <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-              <div className="flex items-center gap-4 px-6 py-4">
-                <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-                <div className="flex items-center justify-between flex-1">
-                  <div>
-                    <h1 className="text-2xl font-bold">{t("metaDashboard.title")}</h1>
-                    <p className="text-sm text-muted-foreground mt-1">{t("metaDashboard.connectFacebookDesc")}</p>
-                  </div>
-                  <LanguageToggle />
-                </div>
-              </div>
-            </header>
-
-            <main className="container max-w-4xl mx-auto px-6 py-12 relative">
-              <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
-                <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-warning" />
-                <h2 className="text-2xl font-bold mb-2">{t("metaDashboard.connectTitle")}</h2>
-                <p className="text-muted-foreground mb-6">{t("metaDashboard.connectDesc")}</p>
-                <Button className="btn-gradient" onClick={() => navigate("/settings")}>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  {t("metaDashboard.goToSettings")}
-                </Button>
-              </Card>
-            </main>
-          </SidebarInset>
+      <PageLayout
+        title={t("metaDashboard.title")}
+        subtitle={t("metaDashboard.connectFacebookDesc")}
+      >
+        <div className="container max-w-4xl mx-auto">
+          <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
+            <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-warning" />
+            <h2 className="text-2xl font-bold mb-2">{t("metaDashboard.connectTitle")}</h2>
+            <p className="text-muted-foreground mb-6">{t("metaDashboard.connectDesc")}</p>
+            <Button className="btn-gradient" onClick={() => navigate("/settings")}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              {t("metaDashboard.goToSettings")}
+            </Button>
+          </Card>
         </div>
-      </SidebarProvider>
+      </PageLayout>
     );
   }
 
@@ -760,31 +741,15 @@ const MetaDashboard = () => {
   const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-        <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold">{t("metaDashboard.title")}</h1>
-                    <Badge className="bg-success/20 text-success border-success/30">
-                      {t("metaDashboard.connectedBadge")}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{t('metaDashboard.subtitle')}</p>
-                </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          <main className="container mx-auto px-6 py-8 relative space-y-8">
+    <PageLayout
+      title={t("metaDashboard.title")}
+      subtitle={t('metaDashboard.subtitle')}
+      badge={
+        <Badge className="bg-success/20 text-success border-success/30">
+          {t("metaDashboard.connectedBadge")}
+        </Badge>
+      }
+    >
             {/* Ad Account Selector & Filters */}
             <Card className="p-6 glass-card rounded-3xl border-2 border-border/50">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
@@ -1077,12 +1042,10 @@ const MetaDashboard = () => {
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </main>
-        </SidebarInset>
+                )}
+              </div>
 
-        {/* Campaign Details Dialog */}
+      {/* Campaign Details Dialog */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
           <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1292,8 +1255,7 @@ const MetaDashboard = () => {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 
