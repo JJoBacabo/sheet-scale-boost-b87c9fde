@@ -84,20 +84,20 @@ function initCinematicScroll(sectionId: string) {
     // Aumentamos para 2x para dar mais espaço entre transições
     const scrollHeight = viewportHeight * featureCount * 2;
 
-    // Configurar estado inicial: primeira feature visível, outras invisíveis
+    // Configurar estado inicial: todas as features visíveis e posicionadas verticalmente
     featureElements.forEach((feature, index) => {
       if (index === 0) {
-        // Primeira feature totalmente visível
+        // Primeira feature totalmente visível no centro
         gsap.set(feature, {
           opacity: 1,
           y: 0,
           scale: 1,
         });
       } else {
-        // Outras features invisíveis
+        // Outras features posicionadas abaixo, visíveis mas menos destacadas
         gsap.set(feature, {
-          opacity: 0,
-          y: 50,
+          opacity: 0.4, // Parcialmente visível para mostrar que existem
+          y: viewportHeight * index * 0.8, // Posicionar abaixo da anterior
           scale: 0.95,
         });
       }
@@ -117,44 +117,44 @@ function initCinematicScroll(sectionId: string) {
       },
     });
 
-    // Animar cada feature individualmente - apenas uma totalmente visível por vez
+    // Animar cada feature individualmente - scroll vertical com todas visíveis
     featureElements.forEach((feature, index) => {
       // Calcular progresso no timeline (0 a 1)
-      const progressStart = index / featureCount; // Quando começa a aparecer
-      const progressVisible = (index + 0.4) / featureCount; // Quando está totalmente visível
-      const progressEnd = (index + 1) / featureCount; // Quando desaparece
+      const progressStart = index / featureCount; // Quando começa a entrar no viewport
+      const progressCenter = (index + 0.5) / featureCount; // Quando está no centro
+      const progressEnd = (index + 1) / featureCount; // Quando sai do viewport
 
-      // Fade in suave (entrada) - aparece quando scroll atinge este ponto
+      // Mover para o centro e destacar (entrada)
       masterTimeline.to(
         feature,
         {
           opacity: 1,
-          y: 0,
+          y: 0, // Mover para o centro (y: 0)
           scale: 1,
-          duration: 0.5,
+          duration: 0.6,
           ease: 'power2.out',
         },
         progressStart
       )
-        // Manter totalmente visível (plateau)
+        // Manter totalmente visível no centro (plateau)
         .to(
           feature,
           {
             opacity: 1,
             y: 0,
             scale: 1,
-            duration: 0.2,
+            duration: 0.3,
           },
-          progressVisible
+          progressCenter
         )
-        // Fade out suave (saída) - desaparece quando próxima aparece
+        // Mover para cima e reduzir opacidade (saída) - mas manter parcialmente visível
         .to(
           feature,
           {
-            opacity: 0,
-            y: -50,
-            scale: 0.95,
-            duration: 0.5,
+            opacity: 0.3,
+            y: -viewportHeight * 0.6, // Mover para cima
+            scale: 0.9,
+            duration: 0.6,
             ease: 'power2.in',
           },
           progressEnd

@@ -342,7 +342,7 @@ const Landing = () => {
         </div>
 
         {/* Features with Full Page Scroll - Cinematic Effect */}
-        <div className="features-container">
+        <div className="features-container relative" style={{ minHeight: `${6 * 100}vh` }}>
           {[{
             icon: Activity,
             key: 'integration',
@@ -385,10 +385,20 @@ const Landing = () => {
               { src: '/images/feature-secure-1.jpg', alt: 'Security Features' },
               { src: '/images/feature-secure-2.jpg', alt: 'Data Protection' }
             ]
-          }].map((feature, index) => (
+          }].map((feature, index) => {
+            const featureCount = 6; // Total de features
+            return (
             <div
               key={index}
-              className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 relative"
+              className="feature-item min-h-screen flex items-center justify-center px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20"
+              style={{ 
+                position: index === 0 ? 'relative' : 'absolute',
+                top: index === 0 ? 'auto' : 0,
+                left: 0,
+                right: 0,
+                width: '100%',
+                zIndex: featureCount - index // Primeira feature no topo
+              }}
             >
               <div className="max-w-7xl mx-auto w-full">
                 {/* Disposição alternada: texto-imagem (índice par) ou imagem-texto (índice ímpar) */}
@@ -505,7 +515,8 @@ const Landing = () => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Image Zoom Modal */}
