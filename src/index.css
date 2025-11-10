@@ -60,9 +60,9 @@
 
     --radius: 0.75rem;
 
-    /* Gradients - Cyan sólido elegante (sem gradiente contrastante) */
-    --gradient-primary: hsl(187 100% 50%);
-    --gradient-success: hsl(160 84% 39%);
+    /* Gradients - Cyan suave (gradiente muito sutil para funcionar com bg-gradient) */
+    --gradient-primary: linear-gradient(135deg, hsl(187 100% 48%) 0%, hsl(187 100% 52%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 37%) 0%, hsl(160 84% 41%) 100%);
     --gradient-hero: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12% / 0.8) 50%, hsl(230 58% 10%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(187 100% 50% / 0.05), hsl(271 81% 66% / 0.03));
     --gradient-sidebar: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12%) 50%, hsl(230 58% 10%) 100%);
@@ -260,6 +260,15 @@
 }
 
 @layer components {
+  /* Garantir que bg-gradient-primary funcione */
+  .bg-gradient-primary {
+    background-image: var(--gradient-primary) !important;
+  }
+  
+  .bg-gradient-success {
+    background-image: var(--gradient-success) !important;
+  }
+
   /* Glass Card Effect */
   .glass-card {
     background: hsl(var(--glass-bg));
