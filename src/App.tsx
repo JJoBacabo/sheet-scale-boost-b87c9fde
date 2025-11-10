@@ -29,6 +29,7 @@ import ProductResearch from "./pages/ProductResearch";
 import Billing from "./pages/Billing";
 import TestBrevo from "./pages/TestBrevo";
 import TestPage from "./pages/TestPage";
+import HomePageTest from "./pages/HomePageTest";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const AppContent = () => {
         <Route path="/billing" element={<><TrialBanner /><Billing /></>} />
         <Route path="/test-brevo" element={<TestBrevo />} />
         <Route path="/test-page" element={<TestPage />} />
+        <Route path="/homepage-test" element={<HomePageTest />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
