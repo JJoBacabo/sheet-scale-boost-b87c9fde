@@ -257,29 +257,28 @@ const ScrollDemo = () => {
         const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
         if (!container || !cards || cards.length === 0) return;
 
-        // Set initial state - all cards visible but stacked
+        // Set initial state - all cards visible, first card on top
         cards.forEach((card, index) => {
           const cardElement = card as HTMLElement;
-          // Set z-index based on position (last card on top)
-          cardElement.style.zIndex = `${cards.length - index}`;
           
           if (index === 0) {
             // First card: fully visible and on top
+            cardElement.style.zIndex = `${cards.length}`;
             gsap.set(card, {
               opacity: 1,
               y: 0,
-              scale: 1,
-              zIndex: cards.length
+              scale: 1
             });
           } else {
-            // Other cards: slightly scaled down and offset, creating stack effect
-            const offset = index * 8; // Small offset for stacking effect
-            const scale = 1 - (index * 0.05); // Slightly smaller for depth
+            // Other cards: visible but behind, creating stair effect
+            // Cards that haven't been activated yet stay below
+            cardElement.style.zIndex = `${cards.length - index}`;
+            const offset = index * 15; // Stair step offset
+            const scale = 1 - (index * 0.03); // Slightly smaller
             gsap.set(card, {
-              opacity: 0.6 - (index * 0.1),
-              y: offset,
-              scale: Math.max(scale, 0.85),
-              zIndex: cards.length - index
+              opacity: 0.7 - (index * 0.08), // Still visible but dimmer
+              y: offset, // Stair step down
+              scale: Math.max(scale, 0.88)
             });
           }
         });
@@ -314,45 +313,50 @@ const ScrollDemo = () => {
             if (newIndex !== currentVisibleIndex) {
               currentVisibleIndex = newIndex;
 
-              // Update all cards based on current index - stack effect
+              // Stair effect: all cards remain visible, active card goes to top
               cards.forEach((card, index) => {
                 const cardElement = card as HTMLElement;
-                const distanceFromActive = Math.abs(index - currentVisibleIndex);
                 
-                if (index === currentVisibleIndex) {
-                  // Active card: fully visible and on top
-                  cardElement.style.zIndex = `${cards.length + 10}`;
-                  gsap.to(card, {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    duration: 0.6,
-                    ease: "power2.out"
-                  });
-                } else if (index < currentVisibleIndex) {
-                  // Cards before active: behind, slightly offset up
-                  const offset = (currentVisibleIndex - index) * 10;
-                  const scale = 1 - ((currentVisibleIndex - index) * 0.05);
-                  const opacity = Math.max(0.4 - ((currentVisibleIndex - index) * 0.15), 0.1);
-                  cardElement.style.zIndex = `${cards.length - (currentVisibleIndex - index)}`;
-                  gsap.to(card, {
-                    opacity: opacity,
-                    y: -offset,
-                    scale: Math.max(scale, 0.8),
-                    duration: 0.6,
-                    ease: "power2.out"
-                  });
+                if (index <= currentVisibleIndex) {
+                  // Cards that have been activated (including current): visible in stair formation
+                  const stepsBehind = currentVisibleIndex - index;
+                  
+                  if (index === currentVisibleIndex) {
+                    // Active card: on top, fully visible, centered
+                    cardElement.style.zIndex = `${cards.length + 20}`;
+                    gsap.to(card, {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      duration: 0.7,
+                      ease: "power2.out"
+                    });
+                  } else {
+                    // Previously activated cards: visible below active card, creating stairs
+                    const offset = stepsBehind * 20; // Stair step - cards go down
+                    const scale = 1 - (stepsBehind * 0.04);
+                    const opacity = Math.max(1 - (stepsBehind * 0.15), 0.5); // Still quite visible
+                    cardElement.style.zIndex = `${cards.length + 10 - stepsBehind}`;
+                    gsap.to(card, {
+                      opacity: opacity,
+                      y: offset, // Positive offset = cards go down (stairs)
+                      scale: Math.max(scale, 0.9),
+                      duration: 0.7,
+                      ease: "power2.out"
+                    });
+                  }
                 } else {
-                  // Cards after active: behind, slightly offset down
-                  const offset = (index - currentVisibleIndex) * 10;
-                  const scale = 1 - ((index - currentVisibleIndex) * 0.05);
-                  const opacity = Math.max(0.6 - ((index - currentVisibleIndex) * 0.15), 0.1);
-                  cardElement.style.zIndex = `${cards.length - (index - currentVisibleIndex)}`;
+                  // Cards not yet activated: below, waiting, but still visible
+                  const stepsAhead = index - currentVisibleIndex;
+                  const offset = (currentVisibleIndex + 1) * 20 + (stepsAhead - 1) * 15;
+                  const scale = 1 - ((currentVisibleIndex + stepsAhead) * 0.03);
+                  const opacity = Math.max(0.6 - (stepsAhead * 0.1), 0.3); // Still visible
+                  cardElement.style.zIndex = `${cards.length - index}`;
                   gsap.to(card, {
                     opacity: opacity,
-                    y: offset,
-                    scale: Math.max(scale, 0.8),
-                    duration: 0.6,
+                    y: offset, // Below the stair
+                    scale: Math.max(scale, 0.85),
+                    duration: 0.7,
                     ease: "power2.out"
                   });
                 }
@@ -511,9 +515,9 @@ const ScrollDemo = () => {
               Everything you need to optimize your campaigns in one platform
             </p>
 
-            {/* Pinned content that changes - 2 Column Layout with Stacked Cards */}
-            <div className="relative min-h-[600px] flex items-center justify-center py-20">
-              <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative" style={{ perspective: '1000px' }}>
+            {/* Pinned content that changes - 2 Column Layout with Stair Stacked Cards */}
+            <div className="relative min-h-[800px] flex items-start justify-center py-20 overflow-visible">
+              <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative" style={{ perspective: '1200px', minHeight: '700px' }}>
                 {features.map((feature, index) => {
                   const Icon = feature.icon;
                   const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
@@ -521,12 +525,14 @@ const ScrollDemo = () => {
                   return (
                     <Card
                       key={index}
-                      className="feature-card-4 absolute left-0 right-0 mx-auto bg-[#0A0E27]/95 border-2 border-[#7BBCFE]/40 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl"
+                      className="feature-card-4 absolute left-0 right-0 mx-auto bg-[#0A0E27]/95 border-2 border-[#7BBCFE]/40 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl transition-shadow duration-300"
                       style={{
                         width: '100%',
                         maxWidth: '100%',
                         transformStyle: 'preserve-3d',
-                        willChange: 'transform, opacity, z-index'
+                        willChange: 'transform, opacity, z-index',
+                        top: '50%',
+                        transform: 'translateY(-50%)'
                       }}
                     >
                       <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
