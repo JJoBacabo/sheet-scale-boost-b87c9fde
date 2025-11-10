@@ -135,6 +135,12 @@
     background: linear-gradient(135deg, hsl(166 82% 40%) 0%, hsl(166 82% 60%) 100%);
     border-radius: 10px;
     border: 2px solid hsl(0 0% 4%);
+    transition: all 0.3s ease;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, hsl(166 82% 50%) 0%, hsl(166 82% 70%) 100%);
+    box-shadow: 0 0 10px hsl(166 82% 60% / 0.5);
   }
 
   ::-webkit-scrollbar-corner {
@@ -258,6 +264,13 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid hsl(var(--glass-border));
+    transition: all 0.3s ease;
+  }
+
+  .glass-card:hover {
+    border-color: hsl(166 82% 60% / 0.3);
+    box-shadow: var(--shadow-glow);
+    background: hsl(var(--glass-bg-hover));
   }
 
   /* Logo Glow Effect */
@@ -288,6 +301,11 @@
     background: var(--gradient-primary);
     color: hsl(var(--primary-foreground));
     border: none;
+    transition: all 0.3s ease;
+  }
+
+  .btn-gradient:hover {
+    box-shadow: var(--shadow-lg);
   }
 
   .btn-glass {
@@ -295,5 +313,12 @@
     backdrop-filter: blur(10px);
     border: 1px solid hsl(var(--glass-border));
     color: hsl(var(--foreground));
+    transition: all 0.3s ease;
+  }
+
+  .btn-glass:hover {
+    background: hsl(var(--glass-bg-hover));
+    border-color: hsl(166 82% 60% / 0.3);
+    box-shadow: var(--shadow-glow);
   }
 }
