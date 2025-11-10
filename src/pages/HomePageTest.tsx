@@ -15,7 +15,12 @@ import {
   Target,
   MessageSquare,
   Send,
+  ShoppingCart,
+  Users,
+  Settings,
+  Shield,
 } from "lucide-react";
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
@@ -144,7 +149,6 @@ const HomePageTest = () => {
         const numbers = dashboardRef.current.querySelectorAll(".count-up");
         numbers.forEach((num, index) => {
           const target = parseFloat(num.getAttribute("data-target") || "0");
-          const isDecimal = num.getAttribute("data-format") === "decimal";
           const prefix = num.getAttribute("data-prefix") || "";
           const suffix = num.getAttribute("data-suffix") || "";
           const obj = { value: 0 };
@@ -156,11 +160,9 @@ const HomePageTest = () => {
             ease: "power2.out",
             onUpdate: function () {
               if (num) {
-                if (isDecimal) {
-                  num.textContent = `${prefix}${obj.value.toFixed(1)}${suffix}`;
-                } else {
-                  num.textContent = `${prefix}${Math.round(obj.value)}${suffix}`;
-                }
+                // Format numbers with commas for thousands
+                const formatted = Math.round(obj.value).toLocaleString();
+                num.textContent = `${prefix}${formatted}${suffix}`;
               }
             },
           });
@@ -562,14 +564,15 @@ const HomePageTest = () => {
                 onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })}
                 className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
               >
-                FAQ
+                Support
               </button>
             </nav>
             <Button
               onClick={() => navigate("/auth")}
-              className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 font-semibold"
+              variant="outline"
+              className="bg-transparent border border-[#F0F4F8]/30 text-[#F0F4F8] hover:bg-[#F0F4F8]/10 hover:border-[#F0F4F8]/50 font-semibold"
             >
-              Get Started
+              Sign in
             </Button>
           </div>
         </div>
@@ -579,83 +582,167 @@ const HomePageTest = () => {
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E27] via-[#0A0E27] to-[#0A0E27] opacity-90" />
         <div className="container mx-auto max-w-7xl relative z-10">
-          <div ref={heroRef} className="grid md:grid-cols-2 gap-12 items-center">
+          <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Hero Content */}
             <div>
-              <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
-                Automate Your{" "}
-                <span className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
-                  Facebook Campaigns
-                </span>
+              <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight text-white">
+                The eCommerce Tools You Need
               </h1>
-              <p className="hero-subtitle text-xl text-[#F0F4F8] mb-8">
-                Your smart platform for automatic metrics calculation and action recommendations.
+              <p className="hero-subtitle text-xl text-[#F0F4F8]/80 mb-10 leading-relaxed">
+                Powerful solutions to help you increase sales and grow your business.
               </p>
 
-              <div className="space-y-4 mb-10">
-                <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
-                  <span className="text-[#F0F4F8]">Calculates metrics automatically</span>
-                </div>
-                <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
-                  <span className="text-[#F0F4F8]">CPC, ROAS, CPA, Profit Margin in real-time</span>
-                </div>
-                <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
-                  <span className="text-[#F0F4F8]">Smart recommendations: Kill, Scale, Maintain</span>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  onClick={() => navigate("/auth")}
+                  size="lg"
+                  className="hero-button bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30"
+                >
+                  Get Started
+                </Button>
+                <Button
+                  onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+                  size="lg"
+                  variant="outline"
+                  className="bg-[#0A0E27]/80 border border-[#F0F4F8]/30 text-[#F0F4F8] hover:bg-[#F0F4F8]/10 hover:border-[#F0F4F8]/50 text-lg px-8 py-6 font-semibold"
+                >
+                  Learn More
+                </Button>
               </div>
-
-              <Button
-                onClick={() => navigate("/auth")}
-                size="lg"
-                className="hero-button bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30"
-              >
-                Start Free for 10 Days
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
             </div>
 
-            {/* Animated Dashboard */}
+            {/* Right: Sales Overview Card */}
             <div ref={dashboardRef} className="relative">
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-md">
+              <Card className="bg-[#0A0E27]/90 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold">Campaign Performance</h3>
-                    <Sparkles className="w-5 h-5 text-[#00D9FF]" />
+                  <h3 className="text-xl font-semibold text-white">Sales Overview</h3>
+                  
+                  {/* Chart */}
+                  <div className="h-48 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={[
+                          { name: "Mon", value: 2400 },
+                          { name: "Tue", value: 3200 },
+                          { name: "Wed", value: 2800 },
+                          { name: "Thu", value: 3900 },
+                          { name: "Fri", value: 4200 },
+                          { name: "Sat", value: 4800 },
+                          { name: "Sun", value: 5200 },
+                        ]}
+                      >
+                        <defs>
+                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#00D9FF" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#00D9FF" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 217, 255, 0.2)" />
+                        <XAxis dataKey="name" stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
+                        <YAxis stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0A0E27",
+                            border: "1px solid rgba(0, 217, 255, 0.3)",
+                            borderRadius: "8px",
+                            color: "#F0F4F8",
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#00D9FF"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorSales)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
+
+                  {/* Metrics */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
-                      <div className="text-sm text-[#F0F4F8] mb-2">ROAS</div>
-                      <div className="text-2xl font-bold text-[#00D9FF]">
-                        <span className="count-up" data-target="4.2" data-format="decimal" data-suffix="x">0</span>
+                    <div className="bg-gradient-to-br from-[#A855F7] to-[#A855F7]/80 rounded-xl p-4 border border-[#A855F7]/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ShoppingCart className="w-4 h-4 text-white" />
+                        <span className="text-xs text-white/80 font-medium">Orders</span>
+                      </div>
+                      <div className="text-3xl font-bold text-white">
+                        <span className="count-up" data-target="1250">0</span>
                       </div>
                     </div>
-                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
-                      <div className="text-sm text-[#F0F4F8] mb-2">CPC</div>
-                      <div className="text-2xl font-bold text-[#00D9FF]">
-                        <span className="count-up" data-target="0.45" data-format="decimal" data-prefix="€">0</span>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="text-xs text-[#F0F4F8]/70 mb-1">Revenue</div>
+                        <div className="text-2xl font-bold text-white">
+                          <span className="count-up" data-target="34500" data-prefix="€">0</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-[#F0F4F8]/70 mb-1">Customers</div>
+                        <div className="text-2xl font-bold text-white">
+                          <span className="count-up" data-target="1080">0</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
-                      <div className="text-sm text-[#F0F4F8] mb-2">CPA</div>
-                      <div className="text-2xl font-bold text-[#00D9FF]">
-                        <span className="count-up" data-target="12.5" data-format="decimal" data-prefix="€">0</span>
-                      </div>
-                    </div>
-                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
-                      <div className="text-sm text-[#F0F4F8] mb-2">Profit</div>
-                      <div className="text-2xl font-bold text-[#00D9FF]">
-                        <span className="count-up" data-target="2340" data-prefix="€">0</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="h-32 bg-gradient-to-r from-[#00D9FF]/20 to-[#A855F7]/20 rounded-lg flex items-center justify-center border border-[#00D9FF]/20">
-                    <BarChart3 className="w-12 h-12 text-[#00D9FF] opacity-50" />
                   </div>
                 </div>
               </Card>
             </div>
+          </div>
+
+          {/* Feature Cards - Bottom Section */}
+          <div className="grid md:grid-cols-3 gap-6 mt-20">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#00D9FF]/80 flex items-center justify-center mb-4">
+                  <Settings className="w-6 h-6 text-[#0A0E27]" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Easy Integration</h3>
+                <p className="text-[#F0F4F8]/70 text-sm leading-relaxed">
+                  Connect your Facebook Ads account in minutes. Our seamless integration makes setup effortless and secure.
+                </p>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#A855F7]/80 flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Advanced Analytics</h3>
+                <p className="text-[#F0F4F8]/70 text-sm leading-relaxed">
+                  Get real-time insights with automated metrics calculation. ROAS, CPC, CPA, and profit margins at your fingertips.
+                </p>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#00D9FF]/80 flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-[#0A0E27]" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Secure & Reliable</h3>
+                <p className="text-[#F0F4F8]/70 text-sm leading-relaxed">
+                  Your data is protected with OAuth authentication. Enterprise-grade security ensures your campaigns stay safe.
+                </p>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </section>
