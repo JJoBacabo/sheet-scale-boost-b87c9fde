@@ -344,16 +344,13 @@ const ScrollDemo = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0E27] text-[#F0F4F8] overflow-x-hidden relative">
+    <div className="min-h-screen text-[#F0F4F8] overflow-x-hidden relative">
       {/* Background 3D */}
       <Background3D />
       {/* Section 1: Scroll Hijacking / Smooth Scroll Sections */}
       <section
         ref={section1Ref}
         className="min-h-screen py-20 px-4 sm:px-6 relative"
-        style={{
-          background: "linear-gradient(135deg, rgba(123, 188, 254, 0.1) 0%, rgba(0, 102, 255, 0.1) 100%)",
-        }}
       >
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
@@ -398,7 +395,7 @@ const ScrollDemo = () => {
       {/* Section 2: Scroll-Triggered Transitions */}
       <section
         ref={section2Ref}
-        className="min-h-screen py-20 px-4 sm:px-6 relative bg-[#0A0E27]"
+        className="min-h-screen py-20 px-4 sm:px-6 relative"
       >
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
@@ -443,7 +440,7 @@ const ScrollDemo = () => {
       {/* Section 3: Scroll Snap + GSAP Timeline */}
       <section
         ref={section3Ref}
-        className="relative bg-[#0A0E27]"
+        className="relative"
       >
         {features.map((feature, index) => {
           const Icon = feature.icon;
@@ -497,7 +494,7 @@ const ScrollDemo = () => {
       <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 4: Pinned Sections */}
-      <section ref={section4Ref} className="relative bg-[#0A0E27]">
+      <section ref={section4Ref} className="relative">
         <div className="pinned-container min-h-screen flex items-center justify-center px-4 sm:px-6">
           <div className="container mx-auto max-w-4xl text-center relative">
             {/* Label */}
