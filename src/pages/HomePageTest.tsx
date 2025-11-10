@@ -541,7 +541,7 @@ const HomePageTest = () => {
       <Background3D />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0E27]/90 backdrop-blur-md border-b border-[#00D9FF]/20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0E27]/90 backdrop-blur-md border-b border-[#7BBCFE]/20">
         <div className="container mx-auto px-4 sm:px-6 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -550,19 +550,19 @@ const HomePageTest = () => {
             <nav className="hidden md:flex items-center gap-8">
               <button
                 onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#7BBCFE] transition-colors"
               >
                 Features
               </button>
               <button
                 onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#7BBCFE] transition-colors"
               >
                 Pricing
               </button>
               <button
                 onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#7BBCFE] transition-colors"
               >
                 Support
               </button>
@@ -596,7 +596,7 @@ const HomePageTest = () => {
                 <Button
                   onClick={() => navigate("/auth")}
                   size="lg"
-                  className="hero-button bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30"
+                  className="hero-button bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30"
                 >
                   Get Started
                 </Button>
@@ -613,7 +613,7 @@ const HomePageTest = () => {
 
             {/* Right: Sales Overview Card */}
             <div ref={dashboardRef} className="relative">
-              <Card className="bg-[#0A0E27]/90 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
+              <Card className="bg-[#0A0E27]/90 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
                 <div className="space-y-6">
                   <h3 className="text-xl font-semibold text-white">Sales Overview</h3>
                   
@@ -633,17 +633,17 @@ const HomePageTest = () => {
                       >
                         <defs>
                           <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#00D9FF" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#00D9FF" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#7BBCFE" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#7BBCFE" stopOpacity={0} />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 217, 255, 0.2)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(123, 188, 254, 0.2)" />
                         <XAxis dataKey="name" stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
                         <YAxis stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "#0A0E27",
-                            border: "1px solid rgba(0, 217, 255, 0.3)",
+                            border: "1px solid rgba(123, 188, 254, 0.3)",
                             borderRadius: "8px",
                             color: "#F0F4F8",
                           }}
@@ -651,7 +651,7 @@ const HomePageTest = () => {
                         <Area
                           type="monotone"
                           dataKey="value"
-                          stroke="#00D9FF"
+                          stroke="#7BBCFE"
                           strokeWidth={2}
                           fillOpacity={1}
                           fill="url(#colorSales)"
@@ -662,7 +662,7 @@ const HomePageTest = () => {
 
                   {/* Metrics */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gradient-to-br from-[#A855F7] to-[#A855F7]/80 rounded-xl p-4 border border-[#A855F7]/30">
+                    <div className="bg-gradient-to-br from-[#B8A8FE] to-[#B8A8FE]/80 rounded-xl p-4 border border-[#B8A8FE]/30">
                       <div className="flex items-center gap-2 mb-2">
                         <ShoppingCart className="w-4 h-4 text-white" />
                         <span className="text-xs text-white/80 font-medium">Orders</span>
@@ -699,8 +699,8 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#00D9FF]/80 flex items-center justify-center mb-4">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
                   <Settings className="w-6 h-6 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Easy Integration</h3>
@@ -716,8 +716,8 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#A855F7]/80 flex items-center justify-center mb-4">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#B8A8FE] to-[#B8A8FE]/80 flex items-center justify-center mb-4">
                   <Zap className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Advanced Analytics</h3>
@@ -733,8 +733,8 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#00D9FF]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#00D9FF]/80 flex items-center justify-center mb-4">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
                   <Shield className="w-6 h-6 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Secure & Reliable</h3>
@@ -769,8 +769,8 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 h-full backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
                   <Brain className="w-8 h-8 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Smart Analysis</h3>
@@ -788,8 +788,8 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 h-full backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
                   <Gauge className="w-8 h-8 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Decision Automation</h3>
@@ -808,9 +808,9 @@ const HomePageTest = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 backdrop-blur-sm">
-              <div className="h-64 bg-gradient-to-r from-[#00D9FF]/20 via-[#A855F7]/20 to-[#00D9FF]/20 rounded-lg flex items-center justify-center border border-[#00D9FF]/20">
-                <Target className="w-24 h-24 text-[#00D9FF] opacity-50" />
+            <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
+              <div className="h-64 bg-gradient-to-r from-[#7BBCFE]/20 via-[#B8A8FE]/20 to-[#7BBCFE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
+                <Target className="w-24 h-24 text-[#7BBCFE] opacity-50" />
               </div>
             </Card>
           </motion.div>
@@ -827,12 +827,12 @@ const HomePageTest = () => {
           <div className="container mx-auto max-w-4xl text-center relative">
             {/* Header */}
             <div className="mb-4">
-              <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
+              <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
                 Features
               </span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
             <p className="text-xl text-[#F0F4F8]/80 mb-12">
@@ -848,8 +848,8 @@ const HomePageTest = () => {
                     key={index}
                     className="feature-card-4 absolute inset-0 flex items-center justify-center"
                   >
-                    <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
+                    <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6 mx-auto">
                         <Icon className="w-10 h-10 text-[#0A0E27]" />
                       </div>
                       <h3 className="text-3xl font-bold mb-4 text-[#F0F4F8]">{feature.title}</h3>
@@ -885,8 +885,8 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("monthly")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   billingPeriod === "monthly"
-                    ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] shadow-lg shadow-[#00D9FF]/30"
-                    : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 text-[#F0F4F8] hover:text-white hover:border-[#00D9FF]/40"
+                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] shadow-lg shadow-[#7BBCFE]/30"
+                    : "bg-[#0A0E27]/80 border border-[#7BBCFE]/20 text-[#F0F4F8] hover:text-white hover:border-[#7BBCFE]/40"
                 }`}
               >
                 Monthly
@@ -895,12 +895,12 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("annual")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                   billingPeriod === "annual"
-                    ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] shadow-lg shadow-[#00D9FF]/30"
-                    : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 text-[#F0F4F8] hover:text-white hover:border-[#00D9FF]/40"
+                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] shadow-lg shadow-[#7BBCFE]/30"
+                    : "bg-[#0A0E27]/80 border border-[#7BBCFE]/20 text-[#F0F4F8] hover:text-white hover:border-[#7BBCFE]/40"
                 }`}
               >
                 Annual
-                <span className="text-xs bg-[#00D9FF]/20 px-2 py-1 rounded text-[#00D9FF]">SAVE 3 MONTHS</span>
+                <span className="text-xs bg-[#7BBCFE]/20 px-2 py-1 rounded text-[#7BBCFE]">SAVE 3 MONTHS</span>
               </button>
             </div>
           </div>
@@ -909,12 +909,12 @@ const HomePageTest = () => {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Feature Comparison Table */}
             <div className="comparison-table">
-              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 backdrop-blur-sm">
                 <h3 className="text-2xl font-bold mb-6">Feature Comparison</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-[#00D9FF]/25">
+                      <tr className="border-b border-[#7BBCFE]/25">
                         <th className="text-left p-4 text-[#F0F4F8] font-semibold">Feature</th>
                         <th className="text-center p-4 text-[#F0F4F8] font-semibold">Basic</th>
                         <th className="text-center p-4 text-[#F0F4F8] font-semibold">Standard</th>
@@ -924,32 +924,32 @@ const HomePageTest = () => {
                     </thead>
                     <tbody>
                       {featureComparison.map((item, i) => (
-                        <tr key={i} className="border-b border-[#00D9FF]/10 last:border-0">
+                        <tr key={i} className="border-b border-[#7BBCFE]/10 last:border-0">
                           <td className="p-4 text-[#F0F4F8]">{item.feature}</td>
                           <td className="p-4 text-center">
                             {item.basic ? (
-                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
                             ) : (
                               <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.standard ? (
-                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
                             ) : (
                               <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.expert ? (
-                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
                             ) : (
                               <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.business ? (
-                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
                             ) : (
                               <span className="text-[#F0F4F8]/30">—</span>
                             )}
@@ -974,12 +974,12 @@ const HomePageTest = () => {
                   <Card
                     className={`bg-[#0A0E27]/80 border p-6 h-full flex flex-col backdrop-blur-sm transition-all duration-300 ${
                       plan.popular
-                        ? "border-[#00D9FF]/50 shadow-lg shadow-[#00D9FF]/20 scale-105"
-                        : "border-[#00D9FF]/20 hover:border-[#00D9FF]/40"
+                        ? "border-[#7BBCFE]/50 shadow-lg shadow-[#7BBCFE]/20 scale-105"
+                        : "border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40"
                     }`}
                   >
                     {plan.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] rounded-full text-sm font-bold text-[#0A0E27] z-10">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] rounded-full text-sm font-bold text-[#0A0E27] z-10">
                         Most Popular
                       </div>
                     )}
@@ -993,7 +993,7 @@ const HomePageTest = () => {
                     <ul className="space-y-2 mb-6 flex-1 text-sm">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-[#00D9FF] flex-shrink-0 mt-0.5" />
+                          <Check className="w-4 h-4 text-[#7BBCFE] flex-shrink-0 mt-0.5" />
                           <span className="text-[#F0F4F8]">{feature}</span>
                         </li>
                       ))}
@@ -1002,8 +1002,8 @@ const HomePageTest = () => {
                       onClick={() => navigate("/auth")}
                       className={`w-full transition-all duration-300 ${
                         plan.popular
-                          ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 hover:shadow-lg hover:shadow-[#00D9FF]/30"
-                          : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 hover:bg-[#00D9FF]/10 hover:border-[#00D9FF]/40 text-[#00D9FF]"
+                          ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] hover:opacity-90 hover:shadow-lg hover:shadow-[#7BBCFE]/30"
+                          : "bg-[#0A0E27]/80 border border-[#7BBCFE]/20 hover:bg-[#7BBCFE]/10 hover:border-[#7BBCFE]/40 text-[#7BBCFE]"
                       }`}
                     >
                       Choose Plan
@@ -1031,7 +1031,7 @@ const HomePageTest = () => {
               <Button
                 onClick={scrollToContact}
                 size="lg"
-                className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30 w-full sm:w-auto"
+                className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full sm:w-auto"
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Contact Us
@@ -1045,11 +1045,11 @@ const HomePageTest = () => {
                   <AccordionItem
                     key={index}
                     value={`item-${index}`}
-                    className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 rounded-2xl px-6 data-[state=open]:border-[#00D9FF]/50 backdrop-blur-sm"
+                    className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 rounded-2xl px-6 data-[state=open]:border-[#7BBCFE]/50 backdrop-blur-sm"
                   >
                     <AccordionTrigger className="text-lg font-bold hover:no-underline py-6 text-left">
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center text-[#0A0E27] font-bold text-sm flex-shrink-0">
+                        <span className="w-8 h-8 rounded-full bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center text-[#0A0E27] font-bold text-sm flex-shrink-0">
                           {index + 1}
                         </span>
                         {faq.question}
@@ -1072,7 +1072,7 @@ const HomePageTest = () => {
         className="py-20 px-4 sm:px-6 relative overflow-hidden"
       >
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#00D9FF] via-[#00D9FF] to-[#00D9FF] opacity-20"
+          className="absolute inset-0 bg-gradient-to-br from-[#7BBCFE] via-[#7BBCFE] to-[#7BBCFE] opacity-20"
           style={{
             backgroundSize: "400% 400%",
             animation: "gradientShift 15s ease infinite",
@@ -1098,7 +1098,7 @@ const HomePageTest = () => {
               within 24 hours.
             </p>
 
-            <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 backdrop-blur-sm">
+            <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
               <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-[#F0F4F8] mb-2">
@@ -1110,7 +1110,7 @@ const HomePageTest = () => {
                     placeholder="Your name"
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF]"
+                    className="bg-[#0A0E27]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
                     required
                   />
                 </div>
@@ -1124,7 +1124,7 @@ const HomePageTest = () => {
                     placeholder="your.email@example.com"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF]"
+                    className="bg-[#0A0E27]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
                     required
                   />
                 </div>
@@ -1137,14 +1137,14 @@ const HomePageTest = () => {
                     placeholder="Tell us about your needs..."
                     value={contactForm.message}
                     onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF] min-h-[120px]"
+                    className="bg-[#0A0E27]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE] min-h-[120px]"
                     required
                   />
                 </div>
                 <Button
                   type="submit"
                   size="lg"
-                  className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30 w-full"
+                  className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full"
                 >
                   <Send className="w-5 h-5 mr-2" />
                   Send Message
@@ -1159,7 +1159,7 @@ const HomePageTest = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#00D9FF]/20 py-16 bg-[#0A0E27]">
+      <footer className="border-t border-[#7BBCFE]/20 py-16 bg-[#0A0E27]">
         <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
           <div className="text-center text-[#F0F4F8]">
             <p>&copy; 2024 Sheet Tools. All rights reserved.</p>
