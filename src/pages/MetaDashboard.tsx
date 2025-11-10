@@ -109,7 +109,7 @@ const CampaignCard = memo(({
             variant="ghost"
             className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
             onClick={onViewDetails}
-            title={t("metaDashboard.viewDetails") || "Ver detalhes"}
+            title={t("metaDashboard.viewDetails")}
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -118,7 +118,7 @@ const CampaignCard = memo(({
             variant="ghost"
             className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
             onClick={onEdit}
-            title={t("metaDashboard.editCampaign") || "Editar campanha"}
+            title={t("metaDashboard.editCampaign")}
           >
             <Pencil className="w-4 h-4" />
           </Button>
@@ -305,6 +305,7 @@ const MetaDashboard = () => {
     lifetime_budget: "",
     start_time: "",
     stop_time: "",
+    newImage: "",
   });
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [selectedAdAccount, setSelectedAdAccount] = useState<string>("");
@@ -1432,7 +1433,7 @@ const MetaDashboard = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Pencil className="w-5 h-5" />
-                {t("metaDashboard.editCampaign") || "Editar Campanha"}
+                {t("metaDashboard.editCampaign")}
               </DialogTitle>
               <DialogDescription>
                 {editingCampaign?.name}
@@ -1442,11 +1443,11 @@ const MetaDashboard = () => {
             <div className="space-y-4 pt-4">
               {/* Campaign Name */}
               <div className="space-y-2">
-                <label className="text-sm font-medium">{t("metaDashboard.campaignName") || "Nome da Campanha"}</label>
+                <label className="text-sm font-medium">{t("metaDashboard.campaignName")}</label>
                 <Input
                   value={editFormData.name}
                   onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  placeholder={t("metaDashboard.campaignNamePlaceholder") || "Nome da campanha"}
+                  placeholder={t("metaDashboard.campaignNamePlaceholder")}
                 />
               </div>
 
@@ -1454,14 +1455,14 @@ const MetaDashboard = () => {
               <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  {t("metaDashboard.budget") || "Orçamento"}
+                  {t("metaDashboard.budget")}
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Daily Budget */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.dailyBudget") || "Orçamento Diário"} (€)
+                      {t("metaDashboard.dailyBudget")} (€)
                     </label>
                     <Input
                       type="number"
@@ -1479,14 +1480,14 @@ const MetaDashboard = () => {
                       placeholder="0.00"
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t("metaDashboard.dailyBudgetDesc") || "Deixe vazio se usar orçamento total"}
+                      {t("metaDashboard.dailyBudgetDesc")}
                     </p>
                   </div>
 
                   {/* Lifetime Budget */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.lifetimeBudget") || "Orçamento Total"} (€)
+                      {t("metaDashboard.lifetimeBudget")} (€)
                     </label>
                     <Input
                       type="number"
@@ -1504,7 +1505,7 @@ const MetaDashboard = () => {
                       placeholder="0.00"
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t("metaDashboard.lifetimeBudgetDesc") || "Deixe vazio se usar orçamento diário"}
+                      {t("metaDashboard.lifetimeBudgetDesc")}
                     </p>
                   </div>
                 </div>
@@ -1514,14 +1515,14 @@ const MetaDashboard = () => {
               <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  {t("metaDashboard.schedule") || "Horários"}
+                  {t("metaDashboard.schedule")}
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Start Time */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.startTime") || "Data/Hora de Início"}
+                      {t("metaDashboard.startTime")}
                     </label>
                     <Input
                       type="datetime-local"
@@ -1533,7 +1534,7 @@ const MetaDashboard = () => {
                   {/* Stop Time */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.stopTime") || "Data/Hora de Fim"}
+                      {t("metaDashboard.stopTime")}
                     </label>
                     <Input
                       type="datetime-local"
@@ -1543,17 +1544,74 @@ const MetaDashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Image Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  {t("metaDashboard.changeImage")}
+                </h3>
+                
+                {/* Current Image */}
+                {editingCampaign?.image_url || editingCampaign?.thumbnail_url ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("metaDashboard.currentImage")}</label>
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+                      <img
+                        src={editingCampaign.image_url || editingCampaign.thumbnail_url}
+                        alt={editingCampaign.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t("metaDashboard.noImage")}</p>
+                )}
+
+                {/* Upload New Image */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t("metaDashboard.uploadImage")}</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Convert to base64 for preview and upload
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const base64String = reader.result as string;
+                          setEditFormData({ ...editFormData, newImage: base64String });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("metaDashboard.imageUploadDesc")}
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4 justify-end pt-6 border-t border-border/50">
               <Button variant="outline" onClick={() => {
                 setShowEditDialog(false);
                 setEditingCampaign(null);
+                setEditFormData({
+                  name: "",
+                  daily_budget: "",
+                  lifetime_budget: "",
+                  start_time: "",
+                  stop_time: "",
+                  newImage: "",
+                });
               }}>
-                {t("metaDashboard.cancel") || "Cancelar"}
+                {t("metaDashboard.cancel")}
               </Button>
               <Button className="btn-gradient" onClick={handleUpdateCampaign}>
-                {t("metaDashboard.saveChanges") || "Salvar Alterações"}
+                {t("metaDashboard.saveChanges")}
               </Button>
             </div>
           </DialogContent>
