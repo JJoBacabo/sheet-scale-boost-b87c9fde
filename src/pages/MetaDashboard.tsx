@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,7 +10,6 @@ import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import {
-  Search,
   Filter,
   Eye,
   Trash2,
@@ -86,8 +84,6 @@ const MetaDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<FacebookCampaign[]>([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState<FacebookCampaign[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isConnected, setIsConnected] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<FacebookCampaign | null>(null);
@@ -236,7 +232,6 @@ const MetaDashboard = () => {
         });
       } else {
         setCampaigns(data.campaigns || []);
-        setFilteredCampaigns(data.campaigns || []);
         console.log(`Loaded ${data.campaigns?.length || 0} campaigns`);
       }
     } catch (error: any) {
@@ -251,26 +246,24 @@ const MetaDashboard = () => {
     }
   };
 
-  useEffect(() => {
+  // Optimized filtering with useMemo
+  const filteredCampaigns = useMemo(() => {
     let filtered = campaigns;
-
-    if (searchQuery) {
-      filtered = filtered.filter((campaign) => campaign.name.toLowerCase().includes(searchQuery.toLowerCase()));
-    }
 
     if (statusFilter !== "all") {
       filtered = filtered.filter((campaign) => campaign.status.toLowerCase() === statusFilter);
     }
 
-    setFilteredCampaigns(filtered);
-  }, [searchQuery, statusFilter, campaigns]);
+    return filtered;
+  }, [statusFilter, campaigns]);
 
   // Auto-fetch when datePreset changes (except for custom)
   useEffect(() => {
     if (selectedAdAccount && datePreset !== "custom") {
       fetchCampaigns();
     }
-  }, [datePreset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datePreset, selectedAdAccount]);
 
   const handlePauseCampaign = async (campaignId: string) => {
     if (!campaignId) {
@@ -864,19 +857,9 @@ const MetaDashboard = () => {
               </div>
             </Card3D>
 
-            {/* Search & Filter */}
+            {/* Filter */}
             <Card3D intensity="low" className="p-5">
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    placeholder={t("metaDashboard.searchPlaceholder")}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-11"
-                  />
-                </div>
-
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-full md:w-48">
                     <Filter className="w-4 h-4 mr-2" />
