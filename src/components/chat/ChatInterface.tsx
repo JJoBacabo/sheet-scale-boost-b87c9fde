@@ -63,7 +63,7 @@ export const ChatInterface = () => {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className={`w-2 h-2 rounded-full ${adminOnline ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+              <span className={`w-2 h-2 rounded-full ${adminOnline ? 'bg-primary' : 'bg-red-500'} animate-pulse`} />
               <span className="text-xs font-medium text-muted-foreground">
                 {adminOnline 
                   ? (language === 'pt' ? 'Online' : 'Online')

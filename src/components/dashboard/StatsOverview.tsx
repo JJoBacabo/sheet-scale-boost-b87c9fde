@@ -28,9 +28,9 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       icon: DollarSign,
       trend: stats.totalRevenue > 0 ? "up" : "neutral",
       gradient: "from-emerald-500/20 to-teal-500/20",
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-500",
-      border: "border-emerald-500/20"
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      border: "border-primary/20"
     },
     {
       title: "Investimento Total",

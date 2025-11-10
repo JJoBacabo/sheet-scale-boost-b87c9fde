@@ -285,7 +285,7 @@ export function AppSidebar() {
                 <div className="relative">
                   <MessageCircle className="w-5 h-5 shrink-0" />
                   {/* Green notification dot */}
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background animate-pulse" />
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>

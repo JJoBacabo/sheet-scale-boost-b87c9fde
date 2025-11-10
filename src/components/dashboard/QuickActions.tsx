@@ -48,9 +48,9 @@ export const QuickActions = ({
       icon: ShoppingBag,
       onClick: onConnectShopify,
       gradient: "from-emerald-500/20 to-teal-500/20",
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-500",
-      border: isConnectedShopify ? "border-primary/20" : "border-emerald-500/20",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      border: "border-primary/20",
       connected: isConnectedShopify,
     },
     {
