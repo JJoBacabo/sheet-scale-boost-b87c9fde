@@ -14,6 +14,52 @@ import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+// Features data for the Pinned Section
+const featuresData = [{
+  icon: Activity,
+  key: 'integration',
+  images: [
+    '/images/features/facebook-ads-dashboard.png',
+    '/images/features/facebook-ads-admin.png'
+  ]
+}, {
+  icon: BarChart3,
+  key: 'metrics',
+  images: [
+    '/images/features/metrics-1.png',
+    '/images/features/metrics-2.png'
+  ]
+}, {
+  icon: Brain,
+  key: 'ai',
+  images: [
+    '/images/features/ai-1.png',
+    '/images/features/ai-2.png'
+  ]
+}, {
+  icon: Zap,
+  key: 'automation',
+  images: [
+    '/images/features/automation-1.png',
+    '/images/features/automation-2.png'
+  ]
+}, {
+  icon: TrendingUp,
+  key: 'profit',
+  images: [
+    '/images/features/profit-1.png',
+    '/images/features/profit-2.png'
+  ]
+}, {
+  icon: Lock,
+  key: 'secure',
+  images: [
+    '/images/features/secure-1.png',
+    '/images/features/secure-2.png'
+  ]
+}];
+
 const Landing = () => {
   const navigate = useNavigate();
   const {
@@ -508,7 +554,7 @@ const Landing = () => {
 
           {/* Feature Cards - Bottom Section */}
           <div className="grid md:grid-cols-3 gap-6 mt-20">
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -526,7 +572,7 @@ const Landing = () => {
               </Card>
             </motion.div>
 
-            <motion.div
+                <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -544,7 +590,7 @@ const Landing = () => {
               </Card>
             </motion.div>
 
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -637,25 +683,7 @@ const Landing = () => {
           <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative">
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[500px] sm:min-h-[600px] w-full">
-              {[{
-              icon: Activity,
-              key: 'integration'
-            }, {
-              icon: BarChart3,
-              key: 'metrics'
-            }, {
-              icon: Brain,
-              key: 'ai'
-            }, {
-              icon: Zap,
-              key: 'automation'
-            }, {
-              icon: TrendingUp,
-              key: 'profit'
-            }, {
-              icon: Lock,
-              key: 'secure'
-            }].map((feature, index) => {
+          {featuresData.map((feature, index) => {
               const Icon = feature.icon;
               const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
               const isZoomed = zoomedImage?.featureIndex === index;
@@ -672,31 +700,71 @@ const Landing = () => {
                       <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
                         <div 
                           onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 1 ? null : {featureIndex: index, imageIndex: 1})}
-                          className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
-                            isZoomed && zoomedImage.imageIndex === 1 ? 'fixed inset-4 z-50 scale-110 bg-[#0A0E27]/95' : 'hover:scale-105'
-                          }`}
+                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105"
                         >
-                          <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 1</span>
+                          <img 
+                            src={feature.images[0]} 
+                            alt={`${t(`landing.features.${feature.key}.title`)} - Image 1`}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.parentElement) {
+                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 1</span></div>';
+                              }
+                            }}
+                          />
                         </div>
                         <div 
                           onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 2 ? null : {featureIndex: index, imageIndex: 2})}
-                          className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
-                            isZoomed && zoomedImage.imageIndex === 2 ? 'fixed inset-4 z-50 scale-110 bg-[#0A0E27]/95' : 'hover:scale-105'
-                          }`}
+                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105"
                         >
-                          <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 2</span>
+                          <img 
+                            src={feature.images[1]} 
+                            alt={`${t(`landing.features.${feature.key}.title`)} - Image 2`}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            loading="lazy"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              if (target.parentElement) {
+                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 2</span></div>';
+                              }
+                            }}
+                          />
                         </div>
                       </div>
                     </div>
                   </div>;
             })}
-            {/* Overlay to close zoom - outside map */}
-            {zoomedImage && (
-              <div 
-                className="fixed inset-0 bg-black/80 z-40"
-                onClick={() => setZoomedImage(null)}
-              />
-                  )}
+            {/* Zoomed Image Modal */}
+            {zoomedImage && (() => {
+              const feature = featuresData[zoomedImage.featureIndex];
+              
+              return (
+                <div 
+                  className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+                  onClick={() => setZoomedImage(null)}
+                >
+                  <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
+                    <img 
+                      src={feature.images[zoomedImage.imageIndex - 1]} 
+                      alt={`${t(`landing.features.${feature.key}.title`)} - Zoomed`}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <button
+                      onClick={() => setZoomedImage(null)}
+                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white text-xl font-bold transition-colors"
+                      aria-label="Close zoom"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
                 </div>
           </div>
         </div>
