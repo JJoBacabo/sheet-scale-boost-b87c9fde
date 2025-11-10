@@ -21,6 +21,7 @@ const Landing = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
   const [gsapLoaded, setGsapLoaded] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<{featureIndex: number, imageIndex: number} | null>(null);
 
   // Refs for Features Pinned Section
   const featuresRef = useRef<HTMLDivElement>(null);
@@ -472,30 +473,48 @@ const Landing = () => {
             }].map((feature, index) => {
               const Icon = feature.icon;
               const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
+              const isZoomed = zoomedImage?.featureIndex === index;
 
               return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center px-4 sm:px-6">
                     <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
-                      {/* Text Content - Left for even, Right for odd */}
-                      <div className={`space-y-4 sm:space-y-6 md:space-y-8 order-2 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
+                      {/* Text Content - Top on mobile, Left/Right on desktop */}
+                      <div className={`space-y-4 sm:space-y-6 md:space-y-8 order-1 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg shadow-primary/30 mx-auto md:mx-0">
                           <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
                         </div>
-                        <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center md:text-left">{t(`landing.features.${feature.key}.title`)}</h3>
-                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed text-center md:text-left">{t(`landing.features.${feature.key}.description`)}</p>
+                        <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center md:text-left">{t(`landing.features.${feature.key}.title`)}</h3>
+                        <p className="text-lg sm:text-xl md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed text-center md:text-left">{t(`landing.features.${feature.key}.description`)}</p>
                       </div>
 
-                      {/* Images - Right for even, Left for odd */}
-                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-1 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
-                        <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                      {/* Images - Stacked vertically on mobile, side by side on desktop */}
+                      <div className={`flex flex-col md:grid md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-2 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
+                        <div 
+                          onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 1 ? null : {featureIndex: index, imageIndex: 1})}
+                          className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
+                            isZoomed && zoomedImage.imageIndex === 1 ? 'fixed inset-4 z-50 scale-110 bg-[#0A0E27]/95' : 'hover:scale-105'
+                          }`}
+                        >
                           <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 1</span>
                         </div>
-                        <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                        <div 
+                          onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 2 ? null : {featureIndex: index, imageIndex: 2})}
+                          className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
+                            isZoomed && zoomedImage.imageIndex === 2 ? 'fixed inset-4 z-50 scale-110 bg-[#0A0E27]/95' : 'hover:scale-105'
+                          }`}
+                        >
                           <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 2</span>
                         </div>
                       </div>
                     </div>
                   </div>;
             })}
+            {/* Overlay to close zoom - outside map */}
+            {zoomedImage && (
+              <div 
+                className="fixed inset-0 bg-black/80 z-40"
+                onClick={() => setZoomedImage(null)}
+              />
+            )}
             </div>
           </div>
         </div>
