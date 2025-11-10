@@ -23,7 +23,10 @@ const ScrollDemo = () => {
   const gsapRef = useRef<any>(null);
   const ScrollTriggerRef = useRef<any>(null);
   const lenisRef = useRef<any>(null);
-  const scrollTriggersRef = useRef<any[]>([]);
+  const scrollTriggersRef1 = useRef<any[]>([]);
+  const scrollTriggersRef2 = useRef<any[]>([]);
+  const scrollTriggersRef3 = useRef<any[]>([]);
+  const scrollTriggersRef4 = useRef<any[]>([]);
 
   const features = [
     {
@@ -145,14 +148,14 @@ const ScrollDemo = () => {
             });
           },
         });
-        scrollTriggersRef.current.push(trigger);
+        scrollTriggersRef1.current.push(trigger);
       });
     }, section1Ref);
 
     return () => {
       ctx.revert();
-      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
-      scrollTriggersRef.current = [];
+      scrollTriggersRef1.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef1.current = [];
     };
   }, [gsapLoaded]);
 
@@ -184,14 +187,14 @@ const ScrollDemo = () => {
             });
           },
         });
-        scrollTriggersRef.current.push(trigger);
+        scrollTriggersRef2.current.push(trigger);
       });
     }, section2Ref);
 
     return () => {
       ctx.revert();
-      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
-      scrollTriggersRef.current = [];
+      scrollTriggersRef2.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef2.current = [];
     };
   }, [gsapLoaded]);
 
@@ -237,14 +240,14 @@ const ScrollDemo = () => {
             });
           },
         });
-        scrollTriggersRef.current.push(trigger);
+        scrollTriggersRef3.current.push(trigger);
       });
     }, section3Ref);
 
     return () => {
       ctx.revert();
-      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
-      scrollTriggersRef.current = [];
+      scrollTriggersRef3.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef3.current = [];
     };
   }, [gsapLoaded]);
 
@@ -289,7 +292,7 @@ const ScrollDemo = () => {
           pin: true,
           pinSpacing: true,
         });
-        scrollTriggersRef.current.push(pinTrigger);
+        scrollTriggersRef4.current.push(pinTrigger);
 
         // Track current visible card to avoid unnecessary animations
         let currentVisibleIndex = 0;
@@ -352,7 +355,7 @@ const ScrollDemo = () => {
           },
         });
 
-        scrollTriggersRef.current.push(scrollTrigger);
+        scrollTriggersRef4.current.push(scrollTrigger);
 
         // Refresh ScrollTrigger after setup
         ScrollTrigger.refresh();
@@ -362,8 +365,8 @@ const ScrollDemo = () => {
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
       if (ctx) ctx?.revert();
-      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
-      scrollTriggersRef.current = [];
+      scrollTriggersRef4.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef4.current = [];
     };
   }, [gsapLoaded]);
 
