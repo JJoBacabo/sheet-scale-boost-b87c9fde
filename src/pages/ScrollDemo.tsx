@@ -512,23 +512,23 @@ const ScrollDemo = () => {
       {/* Section 4: Pinned Sections */}
       <section ref={section4Ref} className="relative">
         <div className="pinned-container min-h-screen flex items-center justify-center px-4 sm:px-6">
-          <div className="container mx-auto max-w-4xl text-center relative">
+          <div className="container mx-auto max-w-7xl relative">
             {/* Label */}
-            <div className="mb-4">
+            <div className="mb-4 text-center">
               <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
                 Pinned Section
               </span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent text-center">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#F0F4F8] mb-12">
+            <p className="text-xl text-[#F0F4F8] mb-12 text-center">
               Everything you need to optimize your campaigns in one platform
             </p>
 
-            {/* Pinned content that changes */}
-            <div className="relative min-h-[500px] flex items-center justify-center">
+            {/* Pinned content that changes - 2 Column Layout */}
+            <div className="relative min-h-[600px]">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -536,16 +536,29 @@ const ScrollDemo = () => {
                     key={index}
                     className="feature-card-4 absolute inset-0 flex items-center justify-center"
                   >
-                    <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
-                        <Icon className="w-10 h-10 text-[#0A0E27]" />
+                    <div className="grid md:grid-cols-2 gap-8 lg:gap-12 w-full items-center">
+                      {/* Left: Title and Description */}
+                      <div className="space-y-6">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center">
+                          <Icon className="w-8 h-8 text-[#0A0E27]" />
+                        </div>
+                        <h3 className="text-4xl sm:text-5xl font-bold text-[#F0F4F8]">{feature.title}</h3>
+                        <p className="text-[#F0F4F8]/80 text-lg sm:text-xl leading-relaxed">{feature.description}</p>
+                        <div className="text-sm text-[#F0F4F8]/50">
+                          {index + 1} / {features.length}
+                        </div>
                       </div>
-                      <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
-                      <p className="text-[#F0F4F8] text-lg leading-relaxed">{feature.description}</p>
-                      <div className="mt-8 text-sm text-[#F0F4F8]/50">
-                        {index + 1} / {features.length}
+
+                      {/* Right: Two Image Placeholders */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="aspect-square rounded-2xl bg-[#0A0E27]/60 border border-[#00D9FF]/20 backdrop-blur-sm flex items-center justify-center">
+                          <span className="text-[#F0F4F8]/30 text-sm">Image 1</span>
+                        </div>
+                        <div className="aspect-square rounded-2xl bg-[#0A0E27]/60 border border-[#00D9FF]/20 backdrop-blur-sm flex items-center justify-center">
+                          <span className="text-[#F0F4F8]/30 text-sm">Image 2</span>
+                        </div>
                       </div>
-                    </Card>
+                    </div>
                   </div>
                 );
               })}
