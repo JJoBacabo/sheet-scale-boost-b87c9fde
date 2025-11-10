@@ -189,13 +189,20 @@ const StackedScroll = () => {
               // Calculate which panel should be active based on scroll progress
               // Divide progress into segments, one per panel
               const segmentSize = 1 / totalPanels;
-              const activeIndex = Math.min(
-                Math.floor(progress / segmentSize),
-                totalPanels - 1
-              );
+              let activeIndex = Math.floor(progress / segmentSize);
+              
+              // Handle edge case: when progress is exactly 1, ensure last panel is active
+              if (progress >= 1) {
+                activeIndex = totalPanels - 1;
+              }
+              
+              // Clamp activeIndex to valid range
+              activeIndex = Math.min(activeIndex, totalPanels - 1);
               
               // Calculate progress within current panel segment (0 to 1)
-              const segmentProgress = (progress % segmentSize) / segmentSize;
+              const segmentProgress = segmentSize > 0 
+                ? (progress % segmentSize) / segmentSize 
+                : 0;
               
               // Update all panels based on scroll progress
               panels.forEach((panel, i) => {
@@ -225,27 +232,56 @@ const StackedScroll = () => {
                   // Active panel: animate based on segment progress
                   panelElement.style.zIndex = `${totalPanels + 20}`;
                   
-                  // Panel enters: yPercent 20 → 0, scale 0.96 → 1, opacity 0 → 1
-                  const panelProgress = Math.min(segmentProgress * 1.2, 1);
-                  panelSetter.yPercent(20 * (1 - panelProgress));
-                  panelSetter.scale(0.96 + (0.04 * panelProgress));
-                  panelSetter.opacity(panelProgress);
-                  
-                  // Text animation (enters with slight delay for parallax)
-                  if (textSetter) {
-                    const textStart = 0.15;
-                    const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
-                    textSetter.y(60 * (1 - textProgress));
-                    textSetter.opacity(textProgress);
-                  }
-                  
-                  // Image animation (parallax effect - enters slightly after text)
-                  if (imageSetter) {
-                    const imageStart = 0.2;
-                    const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
-                    imageSetter.y(30 * (1 - imageProgress));
-                    imageSetter.scale(0.95 + (0.05 * imageProgress));
-                    imageSetter.opacity(imageProgress);
+                  if (i === 0 && segmentProgress === 0) {
+                    // First panel at start: fully visible
+                    panelSetter.yPercent(0);
+                    panelSetter.scale(1);
+                    panelSetter.opacity(1);
+                    
+                    if (textSetter) {
+                      textSetter.y(0);
+                      textSetter.opacity(1);
+                    }
+                    
+                    if (imageSetter) {
+                      imageSetter.y(0);
+                      imageSetter.scale(1);
+                      imageSetter.opacity(1);
+                    }
+                  } else {
+                    // Panel enters: yPercent 20 → 0, scale 0.96 → 1, opacity 0 → 1
+                    const panelProgress = Math.min(segmentProgress * 1.2, 1);
+                    panelSetter.yPercent(20 * (1 - panelProgress));
+                    panelSetter.scale(0.96 + (0.04 * panelProgress));
+                    panelSetter.opacity(Math.max(panelProgress, i === 0 ? 1 : 0));
+                    
+                    // Text animation (enters with slight delay for parallax)
+                    if (textSetter) {
+                      if (i === 0 && segmentProgress === 0) {
+                        textSetter.y(0);
+                        textSetter.opacity(1);
+                      } else {
+                        const textStart = 0.15;
+                        const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
+                        textSetter.y(60 * (1 - textProgress));
+                        textSetter.opacity(Math.max(textProgress, i === 0 ? 1 : 0));
+                      }
+                    }
+                    
+                    // Image animation (parallax effect - enters slightly after text)
+                    if (imageSetter) {
+                      if (i === 0 && segmentProgress === 0) {
+                        imageSetter.y(0);
+                        imageSetter.scale(1);
+                        imageSetter.opacity(1);
+                      } else {
+                        const imageStart = 0.2;
+                        const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
+                        imageSetter.y(30 * (1 - imageProgress));
+                        imageSetter.scale(0.95 + (0.05 * imageProgress));
+                        imageSetter.opacity(Math.max(imageProgress, i === 0 ? 1 : 0));
+                      }
+                    }
                   }
                   
                   // Dim previous panel when this one becomes active (after 40% of segment)
