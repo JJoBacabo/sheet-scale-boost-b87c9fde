@@ -525,7 +525,7 @@ const Landing = () => {
               initial={{ opacity: 0, y: 50, rotateX: -15 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ delay: index * 0.15, type: "spring", stiffness: 100 }}
-              className={plan.popular ? "lg:scale-105 lg:z-10" : ""}
+              className={plan.popular ? "lg:scale-110 lg:z-10" : ""}
             >
               <Card3D 
                 intensity={plan.popular ? "high" : "medium"}
@@ -546,7 +546,7 @@ const Landing = () => {
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      ⭐ {t('landing.pricing.popular')} ⭐
+                      {t('landing.pricing.popular')}
                     </motion.div>
                     <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-2xl pointer-events-none" />
                   </>
