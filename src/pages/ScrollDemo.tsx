@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  Activity,
-  BarChart3,
-  Brain,
-  Zap,
-  TrendingUp,
-  Lock,
-} from "lucide-react";
+import { Activity, BarChart3, Brain, Zap, TrendingUp, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Background3D } from "@/components/ui/Background3D";
-
 const ScrollDemo = () => {
   const [gsapLoaded, setGsapLoaded] = useState(false);
   const [lenisLoaded, setLenisLoaded] = useState(false);
@@ -19,7 +11,6 @@ const ScrollDemo = () => {
   const section2Ref = useRef<HTMLDivElement>(null);
   const section3Ref = useRef<HTMLDivElement>(null);
   const section4Ref = useRef<HTMLDivElement>(null);
-
   const gsapRef = useRef<any>(null);
   const ScrollTriggerRef = useRef<any>(null);
   const lenisRef = useRef<any>(null);
@@ -27,45 +18,37 @@ const ScrollDemo = () => {
   const scrollTriggersRef2 = useRef<any[]>([]);
   const scrollTriggersRef3 = useRef<any[]>([]);
   const scrollTriggersRef4 = useRef<any[]>([]);
-
-  const features = [
-    {
-      icon: Activity,
-      title: "Facebook Ads Integration",
-      description: "Connect directly to your campaigns for real-time analysis",
-    },
-    {
-      icon: BarChart3,
-      title: "Automatic Metrics",
-      description: "ROAS, CPC, CPA, CTR, Conversion Rate calculated automatically",
-    },
-    {
-      icon: Brain,
-      title: "AI for Decisions",
-      description: "Smart algorithms suggest the best actions for each campaign",
-    },
-    {
-      icon: Zap,
-      title: "Complete Automation",
-      description: "Save hours of manual analysis with smart automation",
-    },
-    {
-      icon: TrendingUp,
-      title: "Profit Analysis",
-      description: "Accurate calculation of COGS, Profit Margin and real ROI",
-    },
-    {
-      icon: Lock,
-      title: "Secure Data",
-      description: "Secure connection via OAuth, your data always protected",
-    },
-  ];
+  const features = [{
+    icon: Activity,
+    title: "Facebook Ads Integration",
+    description: "Connect directly to your campaigns for real-time analysis"
+  }, {
+    icon: BarChart3,
+    title: "Automatic Metrics",
+    description: "ROAS, CPC, CPA, CTR, Conversion Rate calculated automatically"
+  }, {
+    icon: Brain,
+    title: "AI for Decisions",
+    description: "Smart algorithms suggest the best actions for each campaign"
+  }, {
+    icon: Zap,
+    title: "Complete Automation",
+    description: "Save hours of manual analysis with smart automation"
+  }, {
+    icon: TrendingUp,
+    title: "Profit Analysis",
+    description: "Accurate calculation of COGS, Profit Margin and real ROI"
+  }, {
+    icon: Lock,
+    title: "Secure Data",
+    description: "Secure connection via OAuth, your data always protected"
+  }];
 
   // Load GSAP
   useEffect(() => {
     if (typeof window !== "undefined") {
-      import("gsap").then((gsapModule) => {
-        import("gsap/ScrollTrigger").then((ScrollTriggerModule) => {
+      import("gsap").then(gsapModule => {
+        import("gsap/ScrollTrigger").then(ScrollTriggerModule => {
           const gsap = gsapModule.default;
           const ScrollTrigger = ScrollTriggerModule.default;
           gsap.registerPlugin(ScrollTrigger);
@@ -94,21 +77,18 @@ const ScrollDemo = () => {
             wheelMultiplier: 1,
             smoothTouch: false,
             touchMultiplier: 2,
-            infinite: false,
+            infinite: false
           });
-
           function raf(time: number) {
             lenis.raf(time);
             requestAnimationFrame(raf);
           }
-
           requestAnimationFrame(raf);
           lenisRef.current = lenis;
           setLenisLoaded(true);
         }
       };
       document.head.appendChild(script);
-
       return () => {
         if (lenisRef.current) {
           lenisRef.current.destroy();
@@ -123,15 +103,16 @@ const ScrollDemo = () => {
   // Section 1: Scroll Hijacking / Smooth Scroll Sections
   useEffect(() => {
     if (!gsapLoaded || !gsapRef.current || !section1Ref.current) return;
-
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const cards = section1Ref.current?.querySelectorAll(".feature-card-1");
 
       // Set initial state
-      gsap.set(cards, { opacity: 0, y: 100 });
-
+      gsap.set(cards, {
+        opacity: 0,
+        y: 100
+      });
       cards?.forEach((card, index) => {
         const trigger = ScrollTrigger.create({
           trigger: card as Element,
@@ -144,17 +125,16 @@ const ScrollDemo = () => {
               y: 0,
               duration: 1,
               ease: "power3.out",
-              delay: index * 0.15,
+              delay: index * 0.15
             });
-          },
+          }
         });
         scrollTriggersRef1.current.push(trigger);
       });
     }, section1Ref);
-
     return () => {
       ctx.revert();
-      scrollTriggersRef1.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef1.current.forEach(trigger => trigger?.kill());
       scrollTriggersRef1.current = [];
     };
   }, [gsapLoaded]);
@@ -162,38 +142,38 @@ const ScrollDemo = () => {
   // Section 2: Scroll-Triggered Transitions with scrub
   useEffect(() => {
     if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current || !section2Ref.current) return;
-
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const cards = section2Ref.current?.querySelectorAll(".feature-card-2");
 
       // Set initial state
-      gsap.set(cards, { opacity: 0, y: 100 });
-
+      gsap.set(cards, {
+        opacity: 0,
+        y: 100
+      });
       cards?.forEach((card, index) => {
         const trigger = ScrollTrigger.create({
           trigger: card as Element,
           start: "top 80%",
           end: "top 20%",
           scrub: 1,
-          onUpdate: (self) => {
+          onUpdate: self => {
             const progress = self.progress;
             gsap.to(card, {
               opacity: progress,
               y: 100 * (1 - progress),
               duration: 0.1,
-              ease: "none",
+              ease: "none"
             });
-          },
+          }
         });
         scrollTriggersRef2.current.push(trigger);
       });
     }, section2Ref);
-
     return () => {
       ctx.revert();
-      scrollTriggersRef2.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef2.current.forEach(trigger => trigger?.kill());
       scrollTriggersRef2.current = [];
     };
   }, [gsapLoaded]);
@@ -201,15 +181,16 @@ const ScrollDemo = () => {
   // Section 3: Scroll Snap + GSAP Timeline
   useEffect(() => {
     if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current || !section3Ref.current) return;
-
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const cards = section3Ref.current?.querySelectorAll(".feature-card-3");
 
       // Set initial state
-      gsap.set(cards, { opacity: 0, scale: 0.8 });
-
+      gsap.set(cards, {
+        opacity: 0,
+        scale: 0.8
+      });
       cards?.forEach((card, index) => {
         const trigger = ScrollTrigger.create({
           trigger: card as Element,
@@ -221,14 +202,14 @@ const ScrollDemo = () => {
               opacity: 1,
               scale: 1,
               duration: 0.8,
-              ease: "power2.out",
+              ease: "power2.out"
             });
           },
           onLeave: () => {
             gsap.to(card, {
               opacity: 0.3,
               scale: 0.95,
-              duration: 0.3,
+              duration: 0.3
             });
           },
           onEnterBack: () => {
@@ -236,17 +217,16 @@ const ScrollDemo = () => {
               opacity: 1,
               scale: 1,
               duration: 0.8,
-              ease: "power2.out",
+              ease: "power2.out"
             });
-          },
+          }
         });
         scrollTriggersRef3.current.push(trigger);
       });
     }, section3Ref);
-
     return () => {
       ctx.revert();
-      scrollTriggersRef3.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef3.current.forEach(trigger => trigger?.kill());
       scrollTriggersRef3.current = [];
     };
   }, [gsapLoaded]);
@@ -264,7 +244,6 @@ const ScrollDemo = () => {
   // Section 4: Pinned Sections
   useEffect(() => {
     if (!section4Ref.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
-
     let timeoutId: NodeJS.Timeout;
     let ctx: any;
 
@@ -273,16 +252,22 @@ const ScrollDemo = () => {
       const gsap = gsapRef.current;
       const ScrollTrigger = ScrollTriggerRef.current;
       if (!gsap || !ScrollTrigger || !section4Ref.current) return;
-
       ctx = gsap.context(() => {
         const container = section4Ref.current?.querySelector(".pinned-container");
         const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
-
         if (!container || !cards || cards.length === 0) return;
 
         // Set initial state - all cards hidden except first
-        gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
-        gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
+        gsap.set(cards, {
+          opacity: 0,
+          y: 50,
+          scale: 0.9
+        });
+        gsap.set(cards[0], {
+          opacity: 1,
+          y: 0,
+          scale: 1
+        });
 
         // Pin the container
         const pinTrigger = ScrollTrigger.create({
@@ -290,7 +275,7 @@ const ScrollDemo = () => {
           start: "top top",
           end: "+=500%",
           pin: true,
-          pinSpacing: true,
+          pinSpacing: true
         });
         scrollTriggersRef4.current.push(pinTrigger);
 
@@ -303,15 +288,12 @@ const ScrollDemo = () => {
           start: "top top",
           end: "+=500%",
           scrub: 1,
-          onUpdate: (self) => {
+          onUpdate: self => {
             const progress = self.progress;
             const totalCards = cards.length;
 
             // Calculate which card should be visible
-            const newIndex = Math.min(
-              Math.floor(progress * totalCards),
-              totalCards - 1
-            );
+            const newIndex = Math.min(Math.floor(progress * totalCards), totalCards - 1);
 
             // Only update if index changed
             if (newIndex !== currentVisibleIndex) {
@@ -326,7 +308,7 @@ const ScrollDemo = () => {
                     y: 0,
                     scale: 1,
                     duration: 0.5,
-                    ease: "power2.out",
+                    ease: "power2.out"
                   });
                 } else {
                   // Hide other cards
@@ -335,39 +317,31 @@ const ScrollDemo = () => {
                     y: index < currentVisibleIndex ? -50 : 50,
                     scale: 0.9,
                     duration: 0.5,
-                    ease: "power2.out",
+                    ease: "power2.out"
                   });
                 }
               });
             }
-          },
+          }
         });
-
         scrollTriggersRef4.current.push(scrollTrigger);
 
         // Refresh ScrollTrigger after setup
         ScrollTrigger.refresh();
       }, section4Ref);
     }, 100);
-
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
       if (ctx) ctx?.revert();
-      scrollTriggersRef4.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef4.current.forEach(trigger => trigger?.kill());
       scrollTriggersRef4.current = [];
     };
   }, [gsapLoaded]);
-
-
-  return (
-    <div className="min-h-screen text-[#F0F4F8] overflow-x-hidden relative">
+  return <div className="min-h-screen text-[#F0F4F8] overflow-x-hidden relative">
       {/* Background 3D */}
       <Background3D />
       {/* Section 1: Scroll Hijacking / Smooth Scroll Sections */}
-      <section
-        ref={section1Ref}
-        className="min-h-screen py-20 px-4 sm:px-6 relative"
-      >
+      <section ref={section1Ref} className="min-h-screen py-20 px-4 sm:px-6 relative">
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
@@ -387,20 +361,15 @@ const ScrollDemo = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={index}
-                  className="feature-card-1 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300"
-                >
+            const Icon = feature.icon;
+            return <Card key={index} className="feature-card-1 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
                   <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </div>
       </section>
@@ -409,10 +378,7 @@ const ScrollDemo = () => {
       <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 2: Scroll-Triggered Transitions */}
-      <section
-        ref={section2Ref}
-        className="min-h-screen py-20 px-4 sm:px-6 relative"
-      >
+      <section ref={section2Ref} className="min-h-screen py-20 px-4 sm:px-6 relative">
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
@@ -432,20 +398,15 @@ const ScrollDemo = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={index}
-                  className="feature-card-2 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300"
-                >
+            const Icon = feature.icon;
+            return <Card key={index} className="feature-card-2 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
                   <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
-                </Card>
-              );
-            })}
+                </Card>;
+          })}
           </div>
         </div>
       </section>
@@ -454,41 +415,29 @@ const ScrollDemo = () => {
       <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 3: Scroll Snap + GSAP Timeline */}
-      <section
-        ref={section3Ref}
-        className="relative"
-      >
+      <section ref={section3Ref} className="relative">
         {features.map((feature, index) => {
-          const Icon = feature.icon;
-          return (
-            <div
-              key={index}
-              className="min-h-screen flex items-center justify-center px-4 sm:px-6"
-              style={{
-                scrollSnapAlign: "start",
-                scrollSnapStop: "always",
-              }}
-            >
+        const Icon = feature.icon;
+        return <div key={index} className="min-h-screen flex items-center justify-center px-4 sm:px-6" style={{
+          scrollSnapAlign: "start",
+          scrollSnapStop: "always"
+        }}>
               <div className="container mx-auto max-w-4xl text-center">
                 {/* Label - only on first card */}
-                {index === 0 && (
-                  <div className="mb-4">
+                {index === 0 && <div className="mb-4">
                     <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
                       Scroll Snap
                     </span>
-                  </div>
-                )}
+                  </div>}
 
-                {index === 0 && (
-                  <>
+                {index === 0 && <>
                     <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
                       Features that make the difference
                     </h2>
                     <p className="text-xl text-[#F0F4F8] mb-12">
                       Everything you need to optimize your campaigns in one platform
                     </p>
-                  </>
-                )}
+                  </>}
 
                 <Card className="feature-card-3 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
                   <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
@@ -501,9 +450,8 @@ const ScrollDemo = () => {
                   </div>
                 </Card>
               </div>
-            </div>
-          );
-        })}
+            </div>;
+      })}
       </section>
 
       {/* Divider */}
@@ -530,18 +478,12 @@ const ScrollDemo = () => {
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[600px]">
               {features.map((feature, index) => {
-                const Icon = feature.icon;
-                return (
-                  <div
-                    key={index}
-                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
-                  >
+              const Icon = feature.icon;
+              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center">
                     <div className="grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center">
                       {/* Left: Title and Description */}
                       <div className="space-y-8">
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center shadow-lg shadow-[#00D9FF]/30">
-                          <Icon className="w-10 h-10 text-[#0A0E27]" />
-                        </div>
+                        
                         <h3 className="text-5xl sm:text-6xl font-bold text-[#F0F4F8] leading-tight">{feature.title}</h3>
                         <p className="text-[#F0F4F8]/70 text-xl sm:text-2xl leading-relaxed">{feature.description}</p>
                       </div>
@@ -556,15 +498,12 @@ const ScrollDemo = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  </div>;
+            })}
             </div>
           </div>
         </div>
       </section>
-    </div>
-  );
+    </div>;
 };
-
 export default ScrollDemo;
