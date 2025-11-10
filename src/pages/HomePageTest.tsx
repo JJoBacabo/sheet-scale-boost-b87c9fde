@@ -13,15 +13,20 @@ import {
   Sparkles,
   Gauge,
   Target,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import logo from "@/assets/logo.png";
 
 const HomePageTest = () => {
   // Lazy load GSAP to avoid SSR issues
   const [gsapLoaded, setGsapLoaded] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -50,12 +55,36 @@ const HomePageTest = () => {
       });
     }
   }, [gsapLoaded]);
+
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
   const heroRef = useRef<HTMLDivElement>(null);
   const dashboardRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
-  const ctaRef = useRef<HTMLDivElement>(null);
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const faqRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
+  const particlesRef = useRef<HTMLDivElement>(null);
+
+  // Background particles animation
+  useEffect(() => {
+    if (!gsapLoaded || !gsapRef.current || !particlesRef.current) return;
+
+    const gsap = gsapRef.current;
+    const particles = particlesRef.current.querySelectorAll(".particle");
+
+    particles.forEach((particle, index) => {
+      gsap.to(particle, {
+        y: "random(-100, 100)",
+        x: "random(-100, 100)",
+        duration: "random(3, 6)",
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: index * 0.2,
+      });
+    });
+  }, [gsapLoaded]);
 
   // Hero section animations
   useEffect(() => {
@@ -63,7 +92,6 @@ const HomePageTest = () => {
 
     const gsap = gsapRef.current;
     const ctx = gsap.context(() => {
-      // Animate hero text elements
       const heroTitle = heroRef.current?.querySelector(".hero-title");
       const heroSubtitle = heroRef.current?.querySelector(".hero-subtitle");
       const heroBullets = heroRef.current?.querySelectorAll(".hero-bullet");
@@ -131,7 +159,7 @@ const HomePageTest = () => {
           ease: "power3.out",
         });
 
-        // Number counting animation with better implementation
+        // Number counting animation
         const numbers = dashboardRef.current.querySelectorAll(".count-up");
         numbers.forEach((num, index) => {
           const target = parseFloat(num.getAttribute("data-target") || "0");
@@ -170,7 +198,7 @@ const HomePageTest = () => {
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const cards = featuresRef.current?.querySelectorAll(".feature-card");
-      
+
       cards?.forEach((card, index) => {
         gsap.from(card, {
           opacity: 0,
@@ -191,101 +219,135 @@ const HomePageTest = () => {
     return () => ctx?.revert();
   }, [gsapLoaded]);
 
-  // CTA gradient animation
+  // Pricing section animation with timeline
   useEffect(() => {
-    if (!ctaRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
+    if (!pricingRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
-      const gradient = ctaRef.current?.querySelector(".animated-gradient") as HTMLElement;
-      const ctaContent = ctaRef.current?.querySelector(".cta-content");
-
-      if (gradient) {
-        // Animate gradient position infinitely
-        gsap.to(gradient, {
-          backgroundPosition: "400% 400%",
-          duration: 20,
-          repeat: -1,
-          ease: "linear",
-        });
-      }
-
-      // Parallax effect
-      if (ctaContent) {
-        gsap.to(ctaContent, {
-          y: -30,
-          scrollTrigger: {
-            trigger: ctaRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 1,
-          },
-        });
-      }
-    }, ctaRef);
-
-    return () => ctx?.revert();
-  }, [gsapLoaded]);
-
-  // Smart Campaign Analysis scroll reveal
-  useEffect(() => {
-    if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
-
-    const analysisSection = document.querySelector("#analysis-section");
-    if (!analysisSection) return;
-
-    const gsap = gsapRef.current;
-    const ScrollTrigger = ScrollTriggerRef.current;
-    const ctx = gsap.context(() => {
-      const leftBlock = analysisSection.querySelector(".analysis-left");
-      const rightBlock = analysisSection.querySelector(".analysis-right");
-      const image = analysisSection.querySelector(".analysis-image");
+      const comparisonTable = pricingRef.current?.querySelector(".comparison-table");
+      const pricingCards = pricingRef.current?.querySelectorAll(".pricing-card");
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: analysisSection as Element,
+          trigger: pricingRef.current,
           start: "top 70%",
           end: "top 30%",
-          scrub: 1,
+          toggleActions: "play none none reverse",
         },
       });
 
-      if (leftBlock) {
-        tl.from(leftBlock, {
+      if (comparisonTable) {
+        tl.from(comparisonTable, {
           opacity: 0,
           x: -50,
-          duration: 1,
+          duration: 0.8,
+          ease: "power3.out",
         });
       }
 
-      if (rightBlock) {
+      pricingCards?.forEach((card, index) => {
         tl.from(
-          rightBlock,
+          card,
           {
             opacity: 0,
             x: 50,
-            duration: 1,
+            scale: 0.95,
+            duration: 0.6,
+            ease: "power2.out",
           },
-          "-=0.5"
+          index === 0 ? "-=0.4" : "-=0.3"
         );
-      }
-
-      if (image) {
-        tl.from(
-          image,
-          {
-            opacity: 0,
-            scale: 0.8,
-            duration: 1,
-          },
-          "-=0.8"
-        );
-      }
-    });
+      });
+    }, pricingRef);
 
     return () => ctx?.revert();
   }, [gsapLoaded]);
+
+  // FAQ section animation
+  useEffect(() => {
+    if (!faqRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
+
+    const gsap = gsapRef.current;
+    const ScrollTrigger = ScrollTriggerRef.current;
+    const ctx = gsap.context(() => {
+      const faqLeft = faqRef.current?.querySelector(".faq-left");
+      const faqRight = faqRef.current?.querySelector(".faq-right");
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: faqRef.current,
+          start: "top 70%",
+          end: "top 30%",
+          toggleActions: "play none none reverse",
+        },
+      });
+
+      if (faqLeft) {
+        tl.from(faqLeft, {
+          opacity: 0,
+          x: -50,
+          duration: 0.8,
+          ease: "power3.out",
+        });
+      }
+
+      if (faqRight) {
+        tl.from(
+          faqRight,
+          {
+            opacity: 0,
+            x: 50,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.4"
+        );
+      }
+    }, faqRef);
+
+    return () => ctx?.revert();
+  }, [gsapLoaded]);
+
+  // Contact section animation
+  useEffect(() => {
+    if (!contactRef.current || !gsapLoaded || !gsapRef.current) return;
+
+    const gsap = gsapRef.current;
+    const ctx = gsap.context(() => {
+      const contactContent = contactRef.current?.querySelector(".contact-content");
+
+      if (contactContent) {
+        gsap.from(contactContent, {
+          opacity: 0,
+          y: 50,
+          duration: 1,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: contactRef.current,
+            start: "top 80%",
+            end: "top 50%",
+            toggleActions: "play none none reverse",
+          },
+        });
+      }
+    }, contactRef);
+
+    return () => ctx?.revert();
+  }, [gsapLoaded]);
+
+  const scrollToContact = () => {
+    contactRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Handle form submission
+    console.log("Contact form submitted:", contactForm);
+    // Reset form
+    setContactForm({ name: "", email: "", message: "" });
+  };
 
   const features = [
     {
@@ -364,6 +426,35 @@ const HomePageTest = () => {
       ],
       popular: false,
     },
+    {
+      name: "Business",
+      monthlyPrice: "€99.99",
+      annualPrice: "€999.99",
+      features: [
+        "Unlimited Stores",
+        "Unlimited Campaigns",
+        "ROAS Sheet",
+        "Quotation",
+        "Campaigns",
+        "Product Research",
+        "Priority Support",
+        "Complete History",
+        "Dedicated Account Manager",
+        "Custom Integrations",
+      ],
+      popular: false,
+    },
+  ];
+
+  const featureComparison = [
+    { feature: "ROAS Sheet", basic: true, standard: true, expert: true, business: true },
+    { feature: "Quotation", basic: false, standard: true, expert: true, business: true },
+    { feature: "Campaigns", basic: false, standard: true, expert: true, business: true },
+    { feature: "Product Research", basic: false, standard: false, expert: true, business: true },
+    { feature: "Priority Support", basic: false, standard: false, expert: true, business: true },
+    { feature: "Complete History", basic: false, standard: false, expert: true, business: true },
+    { feature: "Dedicated Manager", basic: false, standard: false, expert: false, business: true },
+    { feature: "Custom Integrations", basic: false, standard: false, expert: false, business: true },
   ];
 
   const faqs = [
@@ -394,37 +485,74 @@ const HomePageTest = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0A0C14] text-white overflow-x-hidden relative">
+      {/* Animated Background Particles */}
+      <div ref={particlesRef} className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="particle absolute w-1 h-1 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              background: `rgba(123, 188, 254, ${0.3 + Math.random() * 0.3})`,
+              boxShadow: `0 0 ${4 + Math.random() * 4}px rgba(123, 188, 254, 0.5)`,
+            }}
+          />
+        ))}
+        {/* Network lines background */}
+        <svg className="absolute inset-0 w-full h-full opacity-10">
+          <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7BBCFE" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#B8A8FE" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#7BBCFE" stopOpacity="0.3" />
+            </linearGradient>
+          </defs>
+          {[...Array(15)].map((_, i) => (
+            <line
+              key={i}
+              x1={Math.random() * 100 + "%"}
+              y1={Math.random() * 100 + "%"}
+              x2={Math.random() * 100 + "%"}
+              y2={Math.random() * 100 + "%"}
+              stroke="url(#lineGradient)"
+              strokeWidth="0.5"
+            />
+          ))}
+        </svg>
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0C14]/90 backdrop-blur-md border-b border-[#7BBCFE]/20">
+        <div className="container mx-auto px-4 sm:px-6 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <img src={logo} alt="Sheet Tools" className="h-12 w-auto" />
             </div>
             <nav className="hidden md:flex items-center gap-8">
               <button
-                onClick={() => document.getElementById("analysis")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-white/70 hover:text-primary transition-colors"
+                onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
+                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
               >
                 Features
               </button>
               <button
                 onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-white/70 hover:text-primary transition-colors"
+                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
               >
                 Pricing
               </button>
               <button
                 onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-white/70 hover:text-primary transition-colors"
+                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
               >
                 FAQ
               </button>
             </nav>
             <Button
               onClick={() => navigate("/auth")}
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90"
+              className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 font-semibold"
             >
               Get Started
             </Button>
@@ -434,37 +562,39 @@ const HomePageTest = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0D1117] via-[#1C1F2B] to-[#0D1117] opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0C14] via-[#0A0C14] to-[#0A0C14] opacity-90" />
         <div className="container mx-auto max-w-7xl relative z-10">
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
                 Automate Your{" "}
-                <span className="gradient-text">Facebook Campaigns</span>
+                <span className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+                  Facebook Campaigns
+                </span>
               </h1>
-              <p className="hero-subtitle text-xl text-gray-400 mb-8">
+              <p className="hero-subtitle text-xl text-[#C5C7D0] mb-8">
                 Your smart platform for automatic metrics calculation and action recommendations.
               </p>
 
               <div className="space-y-4 mb-10">
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-primary flex-shrink-0" />
-                  <span className="text-gray-300">Calculates metrics automatically</span>
+                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
+                  <span className="text-[#C5C7D0]">Calculates metrics automatically</span>
                 </div>
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-primary flex-shrink-0" />
-                  <span className="text-gray-300">CPC, ROAS, CPA, Profit Margin in real-time</span>
+                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
+                  <span className="text-[#C5C7D0]">CPC, ROAS, CPA, Profit Margin in real-time</span>
                 </div>
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-primary flex-shrink-0" />
-                  <span className="text-gray-300">Smart recommendations: Kill, Scale, Maintain</span>
+                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
+                  <span className="text-[#C5C7D0]">Smart recommendations: Kill, Scale, Maintain</span>
                 </div>
               </div>
 
               <Button
                 onClick={() => navigate("/auth")}
                 size="lg"
-                className="hero-button bg-gradient-primary text-primary-foreground hover:opacity-90 text-lg px-8 py-6"
+                className="hero-button bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30"
               >
                 Start Free for 10 Days
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -473,40 +603,40 @@ const HomePageTest = () => {
 
             {/* Animated Dashboard */}
             <div ref={dashboardRef} className="relative">
-              <Card className="bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-md">
+              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Campaign Performance</h3>
-                    <Sparkles className="w-5 h-5 text-primary" />
+                    <Sparkles className="w-5 h-5 text-[#7BBCFE]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 rounded-lg p-4">
-                      <div className="text-sm text-gray-400 mb-2">ROAS</div>
-                      <div className="text-2xl font-bold text-primary">
+                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
+                      <div className="text-sm text-[#C5C7D0] mb-2">ROAS</div>
+                      <div className="text-2xl font-bold text-[#7BBCFE]">
                         <span className="count-up" data-target="4.2" data-format="decimal" data-suffix="x">0</span>
                       </div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-4">
-                      <div className="text-sm text-gray-400 mb-2">CPC</div>
-                      <div className="text-2xl font-bold text-primary">
+                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
+                      <div className="text-sm text-[#C5C7D0] mb-2">CPC</div>
+                      <div className="text-2xl font-bold text-[#7BBCFE]">
                         <span className="count-up" data-target="0.45" data-format="decimal" data-prefix="€">0</span>
                       </div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-4">
-                      <div className="text-sm text-gray-400 mb-2">CPA</div>
-                      <div className="text-2xl font-bold text-primary">
+                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
+                      <div className="text-sm text-[#C5C7D0] mb-2">CPA</div>
+                      <div className="text-2xl font-bold text-[#7BBCFE]">
                         <span className="count-up" data-target="12.5" data-format="decimal" data-prefix="€">0</span>
                       </div>
                     </div>
-                    <div className="bg-white/5 rounded-lg p-4">
-                      <div className="text-sm text-gray-400 mb-2">Profit</div>
-                      <div className="text-2xl font-bold text-primary">
+                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
+                      <div className="text-sm text-[#C5C7D0] mb-2">Profit</div>
+                      <div className="text-2xl font-bold text-[#7BBCFE]">
                         <span className="count-up" data-target="2340" data-prefix="€">0</span>
                       </div>
                     </div>
                   </div>
-                  <div className="h-32 bg-gradient-to-r from-primary/20 to-primary/10 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-12 h-12 text-primary opacity-50" />
+                  <div className="h-32 bg-gradient-to-r from-[#7BBCFE]/20 to-[#B8A8FE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
+                    <BarChart3 className="w-12 h-12 text-[#7BBCFE] opacity-50" />
                   </div>
                 </div>
               </Card>
@@ -518,12 +648,12 @@ const HomePageTest = () => {
       {/* What Sheet Tools does for you */}
       <section
         id="analysis-section"
-        className="py-20 px-4 sm:px-6 bg-[#1C1F2B] relative"
+        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
       >
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">Smart Campaign Analysis</h2>
-            <p className="text-xl text-gray-400 max-w-4xl mx-auto">
+            <p className="text-xl text-[#C5C7D0] max-w-4xl mx-auto">
               Sheet Tools revolutionizes how you manage your Facebook Ads campaigns. Our platform
               automatically analyzes your metrics and offers precise recommendations to maximize your results.
             </p>
@@ -537,12 +667,12 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-white/5 border border-white/10 p-8 h-full">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6">
-                  <Brain className="w-8 h-8 text-primary-foreground" />
+              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
+                  <Brain className="w-8 h-8 text-[#0A0C14]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Smart Analysis</h3>
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-[#C5C7D0] leading-relaxed">
                   Automatic calculation of CPC, ROAS, COGS, CPA, and Profit Margin. Get real-time
                   insights into your campaign performance without manual calculations.
                 </p>
@@ -556,12 +686,12 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-white/5 border border-white/10 p-8 h-full">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6">
-                  <Gauge className="w-8 h-8 text-primary-foreground" />
+              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
+                  <Gauge className="w-8 h-8 text-[#0A0C14]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Decision Automation</h3>
-                <p className="text-gray-400 leading-relaxed">
+                <p className="text-[#C5C7D0] leading-relaxed">
                   Get automatic recommendations: kill underperforming campaigns, scale winners, or
                   maintain steady performers. Make data-driven decisions effortlessly.
                 </p>
@@ -576,9 +706,9 @@ const HomePageTest = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Card className="bg-white/5 border border-white/10 p-8">
-              <div className="h-64 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
-                <Target className="w-24 h-24 text-primary opacity-50" />
+            <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
+              <div className="h-64 bg-gradient-to-r from-[#7BBCFE]/20 via-[#B8A8FE]/20 to-[#7BBCFE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
+                <Target className="w-24 h-24 text-[#7BBCFE] opacity-50" />
               </div>
             </Card>
           </motion.div>
@@ -589,12 +719,12 @@ const HomePageTest = () => {
       <section
         id="features"
         ref={featuresRef}
-        className="py-20 px-4 sm:px-6 bg-black relative"
+        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
       >
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <motion.h2
-              className="text-4xl sm:text-5xl font-bold mb-6 gradient-text"
+              className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -603,7 +733,7 @@ const HomePageTest = () => {
               Features that make the difference
             </motion.h2>
             <motion.p
-              className="text-xl text-gray-400"
+              className="text-xl text-[#C5C7D0]"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -623,12 +753,12 @@ const HomePageTest = () => {
                   whileHover={{ scale: 1.05, y: -5 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="bg-white/5 border border-white/10 p-6 h-full hover:border-primary/50 transition-colors">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center mb-4">
-                      <Icon className="w-6 h-6 text-primary-foreground" />
+                  <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 h-full hover:border-[#7BBCFE]/50 transition-all duration-300 backdrop-blur-sm hover:shadow-lg hover:shadow-[#7BBCFE]/20">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-[#0A0C14]" />
                     </div>
                     <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+                    <p className="text-[#C5C7D0] text-sm leading-relaxed">{feature.description}</p>
                   </Card>
                 </motion.div>
               );
@@ -637,15 +767,16 @@ const HomePageTest = () => {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing + Feature Comparison Section - 2 Columns */}
       <section
         id="pricing"
-        className="py-20 px-4 sm:px-6 bg-gradient-to-b from-[#0D1117] to-[#1B1F2A] relative"
+        ref={pricingRef}
+        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
       >
-        <div className="container mx-auto max-w-6xl">
+        <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">Choose Your Perfect Plan</h2>
-            <p className="text-xl text-gray-400 mb-8">
+            <p className="text-xl text-[#C5C7D0] mb-8">
               Simple and transparent plans to automate your Facebook campaigns.
             </p>
 
@@ -655,8 +786,8 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("monthly")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   billingPeriod === "monthly"
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                    : "bg-white/5 text-gray-400 hover:text-white"
+                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] shadow-lg shadow-[#7BBCFE]/30"
+                    : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 text-[#C5C7D0] hover:text-white hover:border-[#7BBCFE]/40"
                 }`}
               >
                 Monthly
@@ -665,139 +796,273 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("annual")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                   billingPeriod === "annual"
-                    ? "bg-gradient-primary text-primary-foreground shadow-glow"
-                    : "bg-white/5 text-gray-400 hover:text-white"
+                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] shadow-lg shadow-[#7BBCFE]/30"
+                    : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 text-[#C5C7D0] hover:text-white hover:border-[#7BBCFE]/40"
                 }`}
               >
                 Annual
-                <span className="text-xs bg-primary/20 px-2 py-1 rounded">SAVE 3 MONTHS</span>
+                <span className="text-xs bg-[#7BBCFE]/20 px-2 py-1 rounded text-[#7BBCFE]">SAVE 3 MONTHS</span>
               </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {pricingPlans.map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative ${plan.popular ? "md:-mt-4 md:mb-4" : ""}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10">
-                    Most Popular
-                  </div>
-                )}
-                <Card
-                  className={`bg-white/5 border p-8 h-full flex flex-col ${
-                    plan.popular ? "border-primary/50 shadow-glow" : "border-white/10"
-                  }`}
+          {/* 2 Column Layout: Comparison Table Left, Pricing Cards Right */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Left: Feature Comparison Table */}
+            <div className="comparison-table">
+              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 backdrop-blur-sm">
+                <h3 className="text-2xl font-bold mb-6">Feature Comparison</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-[#7BBCFE]/25">
+                        <th className="text-left p-4 text-[#C5C7D0] font-semibold">Feature</th>
+                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Basic</th>
+                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Standard</th>
+                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Expert</th>
+                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Business</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {featureComparison.map((item, i) => (
+                        <tr key={i} className="border-b border-[#7BBCFE]/10 last:border-0">
+                          <td className="p-4 text-[#C5C7D0]">{item.feature}</td>
+                          <td className="p-4 text-center">
+                            {item.basic ? (
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                            ) : (
+                              <span className="text-[#C5C7D0]/30">—</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            {item.standard ? (
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                            ) : (
+                              <span className="text-[#C5C7D0]/30">—</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            {item.expert ? (
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                            ) : (
+                              <span className="text-[#C5C7D0]/30">—</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            {item.business ? (
+                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                            ) : (
+                              <span className="text-[#C5C7D0]/30">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </div>
+
+            {/* Right: Pricing Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-6">
+              {pricingPlans.map((plan, index) => (
+                <motion.div
+                  key={index}
+                  className="pricing-card"
+                  whileHover={{ scale: 1.02, y: -5 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold">
-                      {billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
-                    </span>
-                    <span className="text-gray-400">/month</span>
-                  </div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {plan.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-300 text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    onClick={() => navigate("/auth")}
-                    className={`w-full transition-all duration-300 ${
+                  <Card
+                    className={`bg-[#0A0C14]/80 border p-6 h-full flex flex-col backdrop-blur-sm transition-all duration-300 ${
                       plan.popular
-                        ? "bg-gradient-primary text-primary-foreground hover:opacity-90 hover:shadow-[0_0_30px_rgba(74,233,189,0.5)]"
-                        : "bg-white/5 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(139,92,246,0.3),0_0_20px_rgba(74,233,189,0.3)]"
+                        ? "border-[#7BBCFE]/50 shadow-lg shadow-[#7BBCFE]/20 scale-105"
+                        : "border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40"
                     }`}
                   >
-                    Choose Plan
-                  </Button>
-                </Card>
-              </motion.div>
-            ))}
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] rounded-full text-sm font-bold text-[#0A0C14] z-10">
+                        Most Popular
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold">
+                        {billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
+                      </span>
+                      <span className="text-[#C5C7D0]">/month</span>
+                    </div>
+                    <ul className="space-y-2 mb-6 flex-1 text-sm">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <Check className="w-4 h-4 text-[#7BBCFE] flex-shrink-0 mt-0.5" />
+                          <span className="text-[#C5C7D0]">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Button
+                      onClick={() => navigate("/auth")}
+                      className={`w-full transition-all duration-300 ${
+                        plan.popular
+                          ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 hover:shadow-lg hover:shadow-[#7BBCFE]/30"
+                          : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 hover:bg-[#7BBCFE]/10 hover:border-[#7BBCFE]/40 text-[#7BBCFE]"
+                      }`}
+                    >
+                      Choose Plan
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 px-4 sm:px-6 bg-black relative">
-        <div className="container mx-auto max-w-3xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
-          </div>
-
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq, index) => (
-              <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className="bg-white/5 border border-white/10 rounded-2xl px-6 data-[state=open]:border-primary/50"
+      {/* FAQ + Contact Section - 2 Columns */}
+      <section id="faq" ref={faqRef} className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative">
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid lg:grid-cols-2 gap-12">
+            {/* Left: FAQ Info + Contact Button */}
+            <div className="faq-left">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
+              <p className="text-xl text-[#C5C7D0] mb-4">Clear your doubts about Sheet.Tools</p>
+              <p className="text-[#C5C7D0] mb-8 leading-relaxed">
+                Find answers to common questions about our platform, pricing, and features. If you
+                can't find what you're looking for, don't hesitate to contact us.
+              </p>
+              <Button
+                onClick={scrollToContact}
+                size="lg"
+                className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full sm:w-auto"
               >
-                <AccordionTrigger className="text-lg font-bold hover:no-underline py-6">
-                  {faq.question}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-400 leading-relaxed pb-6">
-                  {faq.answer}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Contact Us
+              </Button>
+            </div>
+
+            {/* Right: FAQ Accordions */}
+            <div className="faq-right">
+              <Accordion type="single" collapsible className="space-y-4">
+                {faqs.map((faq, index) => (
+                  <AccordionItem
+                    key={index}
+                    value={`item-${index}`}
+                    className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 rounded-2xl px-6 data-[state=open]:border-[#7BBCFE]/50 backdrop-blur-sm"
+                  >
+                    <AccordionTrigger className="text-lg font-bold hover:no-underline py-6 text-left">
+                      <div className="flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-full bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center text-[#0A0C14] font-bold text-sm flex-shrink-0">
+                          {index + 1}
+                        </span>
+                        {faq.question}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="text-[#C5C7D0] leading-relaxed pb-6 pl-11">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* CTA Final Section */}
+      {/* Contact Us Section */}
       <section
-        ref={ctaRef}
-        className="py-20 px-4 sm:px-6 relative overflow-hidden bg-black"
+        ref={contactRef}
+        className="py-20 px-4 sm:px-6 relative overflow-hidden"
       >
         <div
-          className="animated-gradient absolute inset-0"
+          className="absolute inset-0 bg-gradient-to-br from-[#0066FF] via-[#7BBCFE] to-[#0066FF] opacity-20"
           style={{
-            background:
-              "linear-gradient(135deg, hsl(166 82% 60% / 0.1), hsl(280 100% 70% / 0.15), hsl(200 100% 70% / 0.1), hsl(166 82% 60% / 0.1))",
             backgroundSize: "400% 400%",
-            backgroundPosition: "0% 50%",
+            animation: "gradientShift 15s ease infinite",
           }}
         />
+        <style>{`
+          @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+          }
+        `}</style>
         <div className="container mx-auto max-w-4xl relative z-10">
           <motion.div
-            className="cta-content text-center"
+            className="contact-content text-center"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
-              Ready to automate your ROAS?
-            </h2>
-            <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-              Join hundreds of companies that are already saving 10+ hours weekly and increased
-              their profits by 23%.
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">Let's Talk</h2>
+            <p className="text-xl text-[#C5C7D0] mb-10 max-w-2xl mx-auto">
+              Have a question or want to learn more? Send us a message and we'll get back to you
+              within 24 hours.
             </p>
-            <Button
-              onClick={() => navigate("/auth")}
-              size="lg"
-              className="bg-gradient-primary text-primary-foreground hover:opacity-90 text-lg px-8 py-6 shadow-glow"
-            >
-              Start Now – 10 Days Free
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+
+            <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
+              <form onSubmit={handleContactSubmit} className="space-y-6">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                    Name
+                  </label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                    Message
+                  </label>
+                  <Textarea
+                    id="message"
+                    placeholder="Tell us about your needs..."
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE] min-h-[120px]"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full"
+                >
+                  <Send className="w-5 h-5 mr-2" />
+                  Send Message
+                </Button>
+                <p className="text-sm text-[#C5C7D0]/70 mt-4">
+                  We'll get back to you within 24 hours.
+                </p>
+              </form>
+            </Card>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-16 bg-black">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center text-gray-400">
+      <footer className="border-t border-[#7BBCFE]/20 py-16 bg-[#0A0C14]">
+        <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
+          <div className="text-center text-[#C5C7D0]">
             <p>&copy; 2024 Sheet Tools. All rights reserved.</p>
           </div>
         </div>
@@ -807,4 +1072,3 @@ const HomePageTest = () => {
 };
 
 export default HomePageTest;
-
