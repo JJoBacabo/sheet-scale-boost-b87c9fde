@@ -525,22 +525,35 @@ const Landing = () => {
               initial={{ opacity: 0, y: 50, rotateX: -15 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ delay: index * 0.15, type: "spring", stiffness: 100 }}
+              className={plan.popular ? "lg:scale-105 lg:z-10" : ""}
             >
               <Card3D 
                 intensity={plan.popular ? "high" : "medium"}
                 glow={plan.popular}
-                className="p-6 relative flex flex-col"
+                className={`p-6 relative flex flex-col h-full ${
+                  plan.popular 
+                    ? "border-2 border-primary shadow-[0_0_30px_rgba(74,233,189,0.3)]" 
+                    : ""
+                }`}
               >
                 {plan.popular && (
-                  <motion.div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    {t('landing.pricing.popular')}
-                  </motion.div>
+                  <>
+                    <motion.div
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow"
+                      animate={{ 
+                        y: [0, -5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      ⭐ {t('landing.pricing.popular')} ⭐
+                    </motion.div>
+                    <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-2xl pointer-events-none" />
+                  </>
                 )}
-              <h3 className="text-xl font-bold mb-2">{t(`landing.pricing.${plan.key}.name`)}</h3>
+              <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-primary' : ''}`}>
+                {t(`landing.pricing.${plan.key}.name`)}
+              </h3>
               
               {plan.key === 'business' ? (
                 <>
@@ -588,14 +601,14 @@ const Landing = () => {
                 </>
               )}
               
-              <ul className="space-y-2 mb-6 flex-1">
+              <ul className="space-y-2 mb-6 flex-1 min-h-[200px]">
                 {['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7'].map((feat, i) => {
                   const featureText = t(`landing.pricing.${plan.key}.${feat}`);
                   if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
                   
                   return (
                     <li key={i} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? 'text-primary' : 'text-primary/80'}`} />
                       <span className="text-xs text-gray-300">{featureText}</span>
                     </li>
                   );
