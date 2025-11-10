@@ -19,8 +19,6 @@ const getLimitsForPlan = (planCode: string): { stores: number; campaigns: number
       return SUBSCRIPTION_LIMITS.FREE;
     case 'TRIAL':
       return SUBSCRIPTION_LIMITS.TRIAL;
-    case 'BEGINNER':
-      return SUBSCRIPTION_LIMITS.BEGINNER;
     case 'BASIC':
       return SUBSCRIPTION_LIMITS.BASIC;
     case 'STANDARD':
@@ -142,7 +140,7 @@ export const useSubscriptionLimits = () => {
         // This handles cases where subscription hasn't synced yet but profile has plan
         // IMPORTANT: If it's a paid plan, always apply limits regardless of subscription_status
         if (planCode && planCode !== 'free' && planCode !== 'trial') {
-          const isPaidPlan = ['expert', 'standard', 'basic', 'beginner'].includes(planCode);
+          const isPaidPlan = ['expert', 'standard', 'basic'].includes(planCode);
           
           // If it's a paid plan, always use its limits (don't check subscription_status)
           if (isPaidPlan) {

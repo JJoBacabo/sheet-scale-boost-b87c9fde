@@ -438,7 +438,7 @@ const Landing = () => {
               
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-[#B8A0FF] bg-clip-text text-transparent text-center">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-white text-center">
               Features that make the difference
             </h2>
             <p className="text-xl text-gray-300 mb-12 text-center">
