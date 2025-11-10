@@ -48,9 +48,9 @@ export const QuickActions = ({
       icon: ShoppingBag,
       onClick: onConnectShopify,
       gradient: "from-emerald-500/20 to-teal-500/20",
-      iconBg: "bg-emerald-500/10",
-      iconColor: "text-emerald-500",
-      border: isConnectedShopify ? "border-primary/20" : "border-emerald-500/20",
+      iconBg: "bg-primary/10",
+      iconColor: "text-primary",
+      border: "border-primary/20",
       connected: isConnectedShopify,
     },
     {
@@ -93,7 +93,7 @@ export const QuickActions = ({
                 <div className="relative flex flex-col items-center text-center gap-4">
                   <motion.div
                     className={`p-4 rounded-xl ${action.iconBg}`}
-                    whileHover={{ rotateZ: 360, scale: 1.1 }}
+                    whileHover={{ rotateZ: 360 }}
                     transition={{ duration: 0.5 }}
                   >
                     <Icon className={`h-6 w-6 ${action.iconColor}`} />

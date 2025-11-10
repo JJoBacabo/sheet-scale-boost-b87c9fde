@@ -92,7 +92,6 @@ export function AppSidebar() {
       <SidebarHeader className="p-6 flex items-center justify-center border-b border-primary/5">
         <motion.div 
           className="relative"
-          whileHover={{ scale: 1.1 }}
           transition={{ type: "spring", stiffness: 300 }}
         >
           <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
@@ -205,7 +204,7 @@ export function AppSidebar() {
                       text-muted-foreground w-full
                     `}
                   >
-                    <MoreHorizontal className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform duration-300" />
+                    <MoreHorizontal className="w-5 h-5 shrink-0" />
                     {!isCollapsed && <span className="font-medium text-sm">{t('sidebar.moreOptions')}</span>}
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
@@ -284,9 +283,9 @@ export function AppSidebar() {
                 `}
               >
                 <div className="relative">
-                  <MessageCircle className="w-5 h-5 shrink-0 group-hover:scale-110 transition-transform duration-300" />
+                  <MessageCircle className="w-5 h-5 shrink-0" />
                   {/* Green notification dot */}
-                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background animate-pulse" />
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>

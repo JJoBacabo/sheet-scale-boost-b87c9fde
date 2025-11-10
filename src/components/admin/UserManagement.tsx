@@ -323,10 +323,10 @@ export const UserManagement = () => {
               <SelectItem value="all">{isPortuguese ? 'Todos os planos' : 'All plans'}</SelectItem>
               <SelectItem value="free">FREE</SelectItem>
               <SelectItem value="trial">TRIAL</SelectItem>
-              <SelectItem value="beginner">Beginner</SelectItem>
               <SelectItem value="basic">Basic</SelectItem>
               <SelectItem value="standard">Standard</SelectItem>
               <SelectItem value="expert">Expert</SelectItem>
+              <SelectItem value="business">Business</SelectItem>
             </SelectContent>
           </Select>
           <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -436,10 +436,10 @@ export const UserManagement = () => {
                   <SelectContent>
                     <SelectItem value="free">FREE</SelectItem>
                     <SelectItem value="trial">TRIAL</SelectItem>
-                    <SelectItem value="beginner">Beginner</SelectItem>
                     <SelectItem value="basic">Basic</SelectItem>
                     <SelectItem value="standard">Standard</SelectItem>
                     <SelectItem value="expert">Expert</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

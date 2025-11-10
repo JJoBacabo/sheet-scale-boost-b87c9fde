@@ -35,8 +35,8 @@ serve(async (req) => {
     const requestBody = await req.json();
     
     // Validate input
-    const allowedActions = ['list', 'update', 'pause', 'activate', 'delete', 'listAdAccounts', 'getAdSets', 'getCreatives'];
-    const { action, campaignId, updates, adAccountId: requestedAdAccountId } = requestBody;
+    const allowedActions = ['list', 'update', 'pause', 'activate', 'delete', 'listAdAccounts', 'getAdSets', 'getCreatives', 'updateAdSet', 'updateAd'];
+    const { action, campaignId, adSetId, adId, updates, adAccountId: requestedAdAccountId } = requestBody;
     
     if (!action || !allowedActions.includes(action)) {
       console.error('Invalid action:', action);
@@ -50,12 +50,50 @@ serve(async (req) => {
     const noIdActions = ['list', 'listAdAccounts'];
     const requiresId = !noIdActions.includes(action);
     
-    if (requiresId && (!campaignId || !/^\d+$/.test(campaignId))) {
-      console.error('Invalid or missing campaignId for action:', action, campaignId);
-      return new Response(
-        JSON.stringify({ error: 'Campaign ID is required for this action' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Validate IDs based on action
+    if (requiresId) {
+      if (action === 'getAdSets') {
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'getCreatives') {
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'updateAdSet') {
+        if (!adSetId || !/^\d+$/.test(adSetId)) {
+          console.error('Invalid or missing adSetId for action:', action, adSetId);
+          return new Response(
+            JSON.stringify({ error: 'Ad Set ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'updateAd') {
+        if (!adId || !/^\d+$/.test(adId)) {
+          console.error('Invalid or missing adId for action:', action, adId);
+          return new Response(
+            JSON.stringify({ error: 'Ad ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        // For other actions (update, pause, activate, delete)
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
     }
 
     // Get Facebook Ads integration
@@ -161,10 +199,126 @@ serve(async (req) => {
 
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
+      // Fetch images for campaigns in batches to avoid rate limiting
+      // Process in batches of 10 to avoid timeout and rate limits
+      const BATCH_SIZE = 10;
+      const imageMap = new Map();
+      
+      for (let i = 0; i < allCampaigns.length; i += BATCH_SIZE) {
+        const batch = allCampaigns.slice(i, i + BATCH_SIZE);
+        console.log(`Fetching images for batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} campaigns)`);
+        
+        const imagePromises = batch.map(async (campaign) => {
+          try {
+            // Method 1: Try to get image from ads
+            const adsResponse = await fetch(
+              `https://graph.facebook.com/v18.0/${campaign.id}/ads?limit=3&fields=creative{id,image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
+            );
+            const adsData = await adsResponse.json();
+            
+            if (adsData.error) {
+              console.warn(`API error for campaign ${campaign.id}:`, adsData.error.message);
+            }
+            
+            if (adsData.data && adsData.data.length > 0) {
+              // Try each ad until we find one with an image
+              for (const ad of adsData.data) {
+                if (ad.creative) {
+                  const creative = ad.creative;
+                  
+                  // Check for image_url or thumbnail_url
+                  if (creative.image_url || creative.thumbnail_url) {
+                    return {
+                      campaignId: campaign.id,
+                      image_url: creative.image_url || creative.thumbnail_url || null,
+                      thumbnail_url: creative.thumbnail_url || creative.image_url || null,
+                    };
+                  }
+                  
+                  // Check object_story_spec for image (for page posts)
+                  if (creative.object_story_spec?.link_data?.image_url) {
+                    return {
+                      campaignId: campaign.id,
+                      image_url: creative.object_story_spec.link_data.image_url,
+                      thumbnail_url: creative.object_story_spec.link_data.image_url,
+                    };
+                  }
+                  
+                  if (creative.object_story_spec?.video_data?.image_url) {
+                    return {
+                      campaignId: campaign.id,
+                      image_url: creative.object_story_spec.video_data.image_url,
+                      thumbnail_url: creative.object_story_spec.video_data.image_url,
+                    };
+                  }
+                }
+              }
+            }
+            
+            // Method 2: Try to get image from ad sets (if ads didn't work)
+            const adSetsResponse = await fetch(
+              `https://graph.facebook.com/v18.0/${campaign.id}/adsets?limit=1&fields=id&access_token=${accessToken}`
+            );
+            const adSetsData = await adSetsResponse.json();
+            
+            if (adSetsData.data && adSetsData.data.length > 0) {
+              const adSetId = adSetsData.data[0].id;
+              const adSetAdsResponse = await fetch(
+                `https://graph.facebook.com/v18.0/${adSetId}/ads?limit=1&fields=creative{image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
+              );
+              const adSetAdsData = await adSetAdsResponse.json();
+              
+              if (adSetAdsData.data && adSetAdsData.data.length > 0 && adSetAdsData.data[0].creative) {
+                const creative = adSetAdsData.data[0].creative;
+                if (creative.image_url || creative.thumbnail_url) {
+                  return {
+                    campaignId: campaign.id,
+                    image_url: creative.image_url || creative.thumbnail_url || null,
+                    thumbnail_url: creative.thumbnail_url || creative.image_url || null,
+                  };
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching image for campaign ${campaign.id}:`, error);
+          }
+          return { campaignId: campaign.id, image_url: null, thumbnail_url: null };
+        });
+
+        // Wait for batch to complete
+        const batchResults = await Promise.allSettled(imagePromises);
+        batchResults.forEach((result) => {
+          if (result.status === 'fulfilled' && result.value) {
+            const { campaignId, image_url, thumbnail_url } = result.value;
+            if (image_url || thumbnail_url) {
+              imageMap.set(campaignId, {
+                image_url: image_url,
+                thumbnail_url: thumbnail_url,
+              });
+            }
+          }
+        });
+        
+        // Small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < allCampaigns.length) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+      }
+
+      console.log(`Found images for ${imageMap.size} out of ${allCampaigns.length} campaigns`);
+
+      // Merge images into campaigns
+      const campaignsWithImages = allCampaigns.map((campaign) => {
+        const imageData = imageMap.get(campaign.id);
+        return imageData
+          ? { ...campaign, ...imageData }
+          : campaign;
+      });
+
       return new Response(JSON.stringify({ 
-        campaigns: allCampaigns,
+        campaigns: campaignsWithImages,
         adAccountId: targetAdAccountId,
-        total: allCampaigns.length
+        total: campaignsWithImages.length
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -172,38 +326,52 @@ serve(async (req) => {
 
     if (action === 'getAdSets' && campaignId) {
       // Get ad sets for a campaign
+      console.log(`Fetching ad sets for campaign: ${campaignId}`);
       const adSetsResponse = await fetch(
         `https://graph.facebook.com/v18.0/${campaignId}/adsets?fields=id,name,status,daily_budget,lifetime_budget,optimization_goal,billing_event,targeting,created_time,updated_time&access_token=${accessToken}`
       );
       const adSetsData = await adSetsResponse.json();
 
+      console.log(`Ad sets response for campaign ${campaignId}:`, JSON.stringify(adSetsData, null, 2));
+
       if (adSetsData.error) {
+        console.error(`Error fetching ad sets:`, adSetsData.error);
         return new Response(JSON.stringify({ error: adSetsData.error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      return new Response(JSON.stringify({ adSets: adSetsData.data || [] }), {
+      const adSets = adSetsData.data || [];
+      console.log(`Found ${adSets.length} ad sets for campaign ${campaignId}`);
+
+      return new Response(JSON.stringify({ adSets }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'getCreatives' && campaignId) {
       // Get creatives for a campaign via ads
+      console.log(`Fetching ads for campaign: ${campaignId}`);
       const adsResponse = await fetch(
         `https://graph.facebook.com/v18.0/${campaignId}/ads?fields=id,name,status,creative{id,name,title,body,image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
       );
       const adsData = await adsResponse.json();
 
+      console.log(`Ads response for campaign ${campaignId}:`, JSON.stringify(adsData, null, 2));
+
       if (adsData.error) {
+        console.error(`Error fetching ads:`, adsData.error);
         return new Response(JSON.stringify({ error: adsData.error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      return new Response(JSON.stringify({ ads: adsData.data || [] }), {
+      const ads = adsData.data || [];
+      console.log(`Found ${ads.length} ads for campaign ${campaignId}`);
+
+      return new Response(JSON.stringify({ ads }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -277,6 +445,154 @@ serve(async (req) => {
       const deleteData = await deleteResponse.json();
 
       return new Response(JSON.stringify({ success: true, data: deleteData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'updateAdSet' && adSetId) {
+      // Update ad set - prepare clean updates object
+      const cleanUpdates: any = {};
+      
+      // Only include valid fields
+      if (updates.name !== undefined) cleanUpdates.name = updates.name;
+      if (updates.daily_budget !== undefined) cleanUpdates.daily_budget = updates.daily_budget;
+      if (updates.lifetime_budget !== undefined) cleanUpdates.lifetime_budget = updates.lifetime_budget;
+      if (updates.optimization_goal !== undefined) cleanUpdates.optimization_goal = updates.optimization_goal;
+      if (updates.billing_event !== undefined) cleanUpdates.billing_event = updates.billing_event;
+      
+      // If switching between daily and lifetime budget, clear the other
+      if (cleanUpdates.daily_budget && cleanUpdates.daily_budget > 0) {
+        cleanUpdates.lifetime_budget = 0; // Clear lifetime budget
+      } else if (cleanUpdates.lifetime_budget && cleanUpdates.lifetime_budget > 0) {
+        cleanUpdates.daily_budget = 0; // Clear daily budget
+      }
+      
+      if (Object.keys(cleanUpdates).length === 0) {
+        return new Response(JSON.stringify({ error: 'No valid updates provided' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const updateResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${adSetId}?access_token=${accessToken}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cleanUpdates),
+        }
+      );
+      const updateData = await updateResponse.json();
+
+      if (updateData.error) {
+        return new Response(JSON.stringify({ error: updateData.error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, data: updateData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'updateAd' && adId) {
+      // Update ad - handle both ad name and creative updates
+      const updatePayload: any = {};
+      let creativeUpdated = false;
+      
+      // If name is provided, update the ad name
+      if (updates.name !== undefined && updates.name !== '') {
+        updatePayload.name = updates.name;
+      }
+      
+      // If creative updates are provided, we need to update the creative separately
+      if (updates.creative && Object.keys(updates.creative).length > 0) {
+        // First, get the creative ID from the ad
+        const adResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${adId}?fields=creative{id}&access_token=${accessToken}`
+        );
+        const adData = await adResponse.json();
+        
+        if (adData.error) {
+          return new Response(JSON.stringify({ error: adData.error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        const creativeId = adData.creative?.id;
+        
+        if (creativeId) {
+          // Update the creative - only include valid fields
+          const creativeUpdates: any = {};
+          if (updates.creative.title !== undefined && updates.creative.title !== '') {
+            creativeUpdates.title = updates.creative.title;
+          }
+          if (updates.creative.body !== undefined && updates.creative.body !== '') {
+            creativeUpdates.body = updates.creative.body;
+          }
+          
+          // Note: Image updates require uploading to Facebook first via Ad Image API
+          // For now, we'll skip image_url updates as they require a different process
+          // The user would need to upload the image first and then reference it by hash
+          
+          if (Object.keys(creativeUpdates).length > 0) {
+            const creativeResponse = await fetch(
+              `https://graph.facebook.com/v18.0/${creativeId}?access_token=${accessToken}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(creativeUpdates),
+              }
+            );
+            const creativeData = await creativeResponse.json();
+            
+            if (creativeData.error) {
+              return new Response(JSON.stringify({ error: `Creative update failed: ${creativeData.error.message}` }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+            creativeUpdated = true;
+          }
+        } else {
+          return new Response(JSON.stringify({ error: 'Creative ID not found for this ad' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      // Update the ad itself if there are any updates
+      if (Object.keys(updatePayload).length > 0) {
+        const adUpdateResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${adId}?access_token=${accessToken}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatePayload),
+          }
+        );
+        const adUpdateData = await adUpdateResponse.json();
+        
+        if (adUpdateData.error) {
+          return new Response(JSON.stringify({ error: `Ad update failed: ${adUpdateData.error.message}` }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      // Check if any updates were made
+      if (Object.keys(updatePayload).length === 0 && !creativeUpdated) {
+        return new Response(JSON.stringify({ error: 'No valid updates provided' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

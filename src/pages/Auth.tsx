@@ -163,7 +163,7 @@ const Auth = () => {
           <img 
             src={logo} 
             alt="Logo" 
-            className="relative w-80 h-80 hover:scale-110 transition-transform duration-500 logo-glow drop-shadow-2xl"
+            className="relative w-80 h-80 logo-glow drop-shadow-2xl"
           />
         </div>
       </div>

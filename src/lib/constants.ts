@@ -7,10 +7,10 @@ export const APP_CONFIG = {
 
 export const PLAN_CODES = {
   FREE: 'free',
-  BEGINNER: 'beginner',
   BASIC: 'basic',
   STANDARD: 'standard',
   EXPERT: 'expert',
+  BUSINESS: 'business',
 } as const;
 
 export const SUBSCRIPTION_STATES = {
@@ -33,11 +33,6 @@ export const SUBSCRIPTION_LIMITS = {
     features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao'] as string[], // Same as Standard
     duration: 10, // days
   },
-  BEGINNER: {
-    stores: 1,
-    campaigns: 0,
-    features: ['daily_roas'] as string[],
-  },
   BASIC: {
     stores: 1,
     campaigns: 15,
@@ -52,5 +47,10 @@ export const SUBSCRIPTION_LIMITS = {
     stores: 4,
     campaigns: 0, // 0 = unlimited (special handling needed)
     features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao', 'product_research'] as string[],
+  },
+  BUSINESS: {
+    stores: 0, // 0 = unlimited (special handling needed)
+    campaigns: 0, // 0 = unlimited (special handling needed)
+    features: ['daily_roas', 'profit_sheet', 'campaigns', 'ai_cotacao', 'product_research', 'dedicated_support', 'custom_features'] as string[],
   },
 };

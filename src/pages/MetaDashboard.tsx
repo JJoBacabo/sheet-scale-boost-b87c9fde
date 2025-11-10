@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -26,17 +26,20 @@ import {
   RefreshCw,
   ExternalLink,
   Settings2,
+  Pencil,
+  Clock,
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card3D } from "@/components/ui/Card3D";
-import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface FacebookCampaign {
   id: string;
@@ -48,6 +51,8 @@ interface FacebookCampaign {
   created_time: string;
   start_time?: string;
   stop_time?: string;
+  image_url?: string;
+  thumbnail_url?: string;
   insights?: {
     data: Array<{
       impressions: string;
@@ -70,6 +75,34 @@ interface AdAccount {
   account_status: number;
 }
 
+interface AdSet {
+  id: string;
+  name: string;
+  status: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+  optimization_goal?: string;
+  billing_event?: string;
+  targeting?: any;
+  created_time?: string;
+  updated_time?: string;
+}
+
+interface Ad {
+  id: string;
+  name: string;
+  status: string;
+  creative?: {
+    id: string;
+    name?: string;
+    title?: string;
+    body?: string;
+    image_url?: string;
+    thumbnail_url?: string;
+    object_story_spec?: any;
+  };
+}
+
 interface ColumnConfig {
   id: string;
   labelKey: string;
@@ -79,6 +112,210 @@ interface ColumnConfig {
   render: (value: any, campaign: FacebookCampaign, insights: any) => React.ReactNode;
 }
 
+// Memoized Campaign Card Component for better performance
+const CampaignCard = memo(({ 
+  campaign, 
+  insights, 
+  onViewDetails, 
+  onEdit,
+  onPause, 
+  onActivate,
+  t 
+}: { 
+  campaign: FacebookCampaign; 
+  insights: ReturnType<typeof getInsightData>; 
+  onViewDetails: () => void;
+  onEdit: () => void;
+  onPause: () => void;
+  onActivate: () => void;
+  t: (key: string) => string;
+}) => {
+  return (
+    <Card className="p-5 glass-card hover:border-primary/30 transition-all group relative">
+      <div className="flex flex-col lg:flex-row gap-6 relative">
+        {/* Eye and Edit icons in top-right */}
+        <div className="absolute top-0 right-0 flex gap-1 z-10">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+            onClick={onViewDetails}
+            title={t("metaDashboard.viewDetails")}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+            onClick={onEdit}
+            title={t("metaDashboard.editCampaign")}
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Campaign Image */}
+        {(campaign.image_url || campaign.thumbnail_url) && (
+          <div className="w-full lg:w-48 h-48 lg:h-auto flex-shrink-0 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+            <img
+              src={campaign.image_url || campaign.thumbnail_url}
+              alt={campaign.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        {/* Campaign Info */}
+        <div className="flex-1 space-y-3">
+          <div className="flex items-start justify-between gap-4 pr-10">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
+              <p className="text-xs text-muted-foreground">{campaign.objective}</p>
+            </div>
+          </div>
+
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
+              <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
+              <p className="text-lg font-bold">{insights.results}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">CPC</p>
+              <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">ROAS</p>
+              <p className="text-lg font-bold">
+                {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
+              </p>
+            </div>
+            <div className="p-3 flex flex-col items-center justify-center gap-2">
+              <Badge
+                className={
+                  campaign.status === "ACTIVE"
+                    ? "bg-success/20 text-success border-success/30"
+                    : campaign.status === "PAUSED"
+                      ? "bg-warning/20 text-warning border-warning/30"
+                      : "bg-muted/50 text-muted-foreground border-muted"
+                }
+              >
+                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
+              </Badge>
+              {campaign.status === "ACTIVE" ? (
+                <Button
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
+                  onClick={onPause}
+                >
+                  <Pause className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.pause")}</span>
+                </Button>
+              ) : (
+                <Button
+                  className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
+                  onClick={onActivate}
+                >
+                  <Play className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.activate")}</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Budget Info */}
+          <div className="text-xs text-muted-foreground">
+            <span>{t("metaDashboard.budget")}: </span>
+            <span className="font-medium">
+              {campaign.daily_budget
+                ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
+                : campaign.lifetime_budget
+                  ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
+                  : "—"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+});
+CampaignCard.displayName = 'CampaignCard';
+
+// Helper function for insight data (moved outside component)
+const getInsightData = (campaign: FacebookCampaign) => {
+  const insights = campaign.insights?.data?.[0];
+  if (!insights)
+    return {
+      impressions: 0,
+      clicks: 0,
+      spend: 0,
+      conversions: 0,
+      cpc: 0,
+      cpm: 0,
+      ctr: 0,
+      reach: 0,
+      linkClicks: 0,
+      landingPageViews: 0,
+      costPerLandingPageView: 0,
+      costPerResult: 0,
+      roas: 0,
+      results: 0,
+    };
+
+  const conversions = insights.actions?.find((a) => a.action_type === "purchase")?.value || "0";
+  const linkClicks =
+    insights.actions?.find((a) => a.action_type === "link_click")?.value ||
+    insights.actions?.find((a) => a.action_type === "outbound_click")?.value ||
+    "0";
+  const landingPageViews = insights.actions?.find((a) => a.action_type === "landing_page_view")?.value || "0";
+  const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value || "0";
+
+  const spend = parseFloat(insights.spend || "0");
+  const revenue = parseFloat(purchaseValue);
+  const roas = spend > 0 ? revenue / spend : 0;
+
+  const allResults =
+    insights.actions?.reduce((sum, action) => {
+      if (
+        action.action_type === "purchase" ||
+        action.action_type === "lead" ||
+        action.action_type === "link_click" ||
+        action.action_type === "post_engagement"
+      ) {
+        return sum + parseInt(action.value || "0");
+      }
+      return sum;
+    }, 0) || 0;
+
+  const costPerResult = allResults > 0 ? spend / allResults : 0;
+  const costPerLandingPageView = parseInt(landingPageViews) > 0 ? spend / parseInt(landingPageViews) : 0;
+
+  return {
+    impressions: parseInt(insights.impressions || "0"),
+    clicks: parseInt(insights.clicks || "0"),
+    spend,
+    conversions: parseInt(conversions),
+    cpc: parseFloat(insights.cpc || "0"),
+    cpm: parseFloat(insights.cpm || "0"),
+    ctr: parseFloat(insights.ctr || "0"),
+    reach: parseInt(insights.reach || "0"),
+    linkClicks: parseInt(linkClicks),
+    landingPageViews: parseInt(landingPageViews),
+    costPerLandingPageView,
+    costPerResult,
+    roas,
+    results: allResults,
+  };
+};
+
 const MetaDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -86,12 +323,28 @@ const MetaDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<FacebookCampaign[]>([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState<FacebookCampaign[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isConnected, setIsConnected] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<FacebookCampaign | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<FacebookCampaign | null>(null);
+  const [adSets, setAdSets] = useState<AdSet[]>([]);
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [loadingAdSets, setLoadingAdSets] = useState(false);
+  const [loadingAds, setLoadingAds] = useState(false);
+  const [activeTab, setActiveTab] = useState("campaign");
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    daily_budget: "",
+    lifetime_budget: "",
+    start_time: "",
+    stop_time: "",
+    newImage: "",
+  });
+  const [editAdSetsData, setEditAdSetsData] = useState<Record<string, any>>({});
+  const [editAdsData, setEditAdsData] = useState<Record<string, any>>({});
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [selectedAdAccount, setSelectedAdAccount] = useState<string>("");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -236,7 +489,6 @@ const MetaDashboard = () => {
         });
       } else {
         setCampaigns(data.campaigns || []);
-        setFilteredCampaigns(data.campaigns || []);
         console.log(`Loaded ${data.campaigns?.length || 0} campaigns`);
       }
     } catch (error: any) {
@@ -251,7 +503,8 @@ const MetaDashboard = () => {
     }
   };
 
-  useEffect(() => {
+  // Optimized filtering with useMemo
+  const filteredCampaigns = useMemo(() => {
     let filtered = campaigns;
 
     if (searchQuery) {
@@ -262,7 +515,7 @@ const MetaDashboard = () => {
       filtered = filtered.filter((campaign) => campaign.status.toLowerCase() === statusFilter);
     }
 
-    setFilteredCampaigns(filtered);
+    return filtered;
   }, [searchQuery, statusFilter, campaigns]);
 
   // Auto-fetch when datePreset changes (except for custom)
@@ -270,7 +523,8 @@ const MetaDashboard = () => {
     if (selectedAdAccount && datePreset !== "custom") {
       fetchCampaigns();
     }
-  }, [datePreset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datePreset, selectedAdAccount]);
 
   const handlePauseCampaign = async (campaignId: string) => {
     if (!campaignId) {
@@ -398,70 +652,292 @@ const MetaDashboard = () => {
     }
   };
 
-  const getInsightData = (campaign: FacebookCampaign) => {
-    const insights = campaign.insights?.data?.[0];
-    if (!insights)
-      return {
-        impressions: 0,
-        clicks: 0,
-        spend: 0,
-        conversions: 0,
-        cpc: 0,
-        cpm: 0,
-        ctr: 0,
-        reach: 0,
-        linkClicks: 0,
-        landingPageViews: 0,
-        costPerLandingPageView: 0,
-        costPerResult: 0,
-        roas: 0,
-        results: 0,
-      };
 
-    const conversions = insights.actions?.find((a) => a.action_type === "purchase")?.value || "0";
-    const linkClicks =
-      insights.actions?.find((a) => a.action_type === "link_click")?.value ||
-      insights.actions?.find((a) => a.action_type === "outbound_click")?.value ||
-      "0";
-    const landingPageViews = insights.actions?.find((a) => a.action_type === "landing_page_view")?.value || "0";
-    const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value || "0";
+  const handleUpdateCampaign = async () => {
+    if (!editingCampaign) return;
 
-    const spend = parseFloat(insights.spend || "0");
-    const revenue = parseFloat(purchaseValue);
-    const roas = spend > 0 ? revenue / spend : 0;
+    try {
+      const updates: any = {};
+      
+      if (editFormData.name && editFormData.name !== editingCampaign.name) {
+        updates.name = editFormData.name;
+      }
+      
+      if (editFormData.daily_budget) {
+        updates.daily_budget = Math.round(parseFloat(editFormData.daily_budget) * 100);
+      }
+      
+      if (editFormData.lifetime_budget) {
+        updates.lifetime_budget = Math.round(parseFloat(editFormData.lifetime_budget) * 100);
+      }
+      
+      if (editFormData.start_time) {
+        // Facebook API expects timestamp in seconds or ISO string
+        updates.start_time = new Date(editFormData.start_time).toISOString();
+      }
+      
+      if (editFormData.stop_time) {
+        // Facebook API expects timestamp in seconds or ISO string
+        updates.stop_time = new Date(editFormData.stop_time).toISOString();
+      }
+      
+      // Clear budget if switching between daily and lifetime
+      if (editFormData.daily_budget && editingCampaign.lifetime_budget) {
+        // Remove lifetime_budget when switching to daily
+        updates.lifetime_budget = 0; // Set to 0 to clear it
+      }
+      if (editFormData.lifetime_budget && editingCampaign.daily_budget) {
+        // Remove daily_budget when switching to lifetime
+        updates.daily_budget = 0; // Set to 0 to clear it
+      }
 
-    const allResults =
-      insights.actions?.reduce((sum, action) => {
-        if (
-          action.action_type === "purchase" ||
-          action.action_type === "lead" ||
-          action.action_type === "link_click" ||
-          action.action_type === "post_engagement"
-        ) {
-          return sum + parseInt(action.value || "0");
+      // Remove undefined values
+      Object.keys(updates).forEach(key => {
+        if (updates[key] === undefined || updates[key] === null || updates[key] === '') {
+          delete updates[key];
         }
-        return sum;
-      }, 0) || 0;
+      });
 
-    const costPerResult = allResults > 0 ? spend / allResults : 0;
-    const costPerLandingPageView = parseInt(landingPageViews) > 0 ? spend / parseInt(landingPageViews) : 0;
+      if (Object.keys(updates).length === 0) {
+        toast({
+          title: t("metaDashboard.noChanges"),
+          description: t("metaDashboard.noChangesDesc"),
+        });
+        return;
+      }
 
-    return {
-      impressions: parseInt(insights.impressions || "0"),
-      clicks: parseInt(insights.clicks || "0"),
-      spend,
-      conversions: parseInt(conversions),
-      cpc: parseFloat(insights.cpc || "0"),
-      cpm: parseFloat(insights.cpm || "0"),
-      ctr: parseFloat(insights.ctr || "0"),
-      reach: parseInt(insights.reach || "0"),
-      linkClicks: parseInt(linkClicks),
-      landingPageViews: parseInt(landingPageViews),
-      costPerLandingPageView,
-      costPerResult,
-      roas,
-      results: allResults,
-    };
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "update",
+          campaignId: editingCampaign.id,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: t("metaDashboard.errorUpdating"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.updatedSuccess"),
+          description: t("metaDashboard.updatedDesc"),
+        });
+        setShowEditDialog(false);
+        setEditingCampaign(null);
+        fetchCampaigns();
+      }
+    } catch (error: any) {
+      console.error("Error updating campaign:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchAdSetsAndAds = async (campaignId: string) => {
+    console.log("🔍 Fetching ad sets and ads for campaign:", campaignId);
+    setLoadingAdSets(true);
+    setLoadingAds(true);
+    
+    try {
+      // Fetch Ad Sets
+      console.log("📋 Fetching ad sets...");
+      const { data: adSetsData, error: adSetsError } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "getAdSets",
+          campaignId,
+        },
+      });
+
+      console.log("📊 Ad Sets response:", adSetsData);
+      console.log("❌ Ad Sets error:", adSetsError);
+
+      if (adSetsError) {
+        console.error("Error fetching ad sets:", adSetsError);
+        throw adSetsError;
+      }
+
+      if (adSetsData?.adSets && Array.isArray(adSetsData.adSets)) {
+        console.log(`✅ Found ${adSetsData.adSets.length} ad sets`);
+        setAdSets(adSetsData.adSets);
+        // Initialize edit data for each ad set
+        const adSetsEditData: Record<string, any> = {};
+        adSetsData.adSets.forEach((adSet: AdSet) => {
+          adSetsEditData[adSet.id] = {
+            name: adSet.name || "",
+            daily_budget: adSet.daily_budget ? (parseFloat(adSet.daily_budget) / 100).toString() : "",
+            lifetime_budget: adSet.lifetime_budget ? (parseFloat(adSet.lifetime_budget) / 100).toString() : "",
+            optimization_goal: adSet.optimization_goal || "",
+            billing_event: adSet.billing_event || "",
+          };
+        });
+        setEditAdSetsData(adSetsEditData);
+      } else {
+        console.log("⚠️ No ad sets found or invalid data:", adSetsData);
+        setAdSets([]);
+        setEditAdSetsData({});
+      }
+
+      // Fetch Ads
+      console.log("📋 Fetching ads...");
+      const { data: adsData, error: adsError } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "getCreatives",
+          campaignId,
+        },
+      });
+
+      console.log("📊 Ads response:", adsData);
+      console.log("❌ Ads error:", adsError);
+
+      if (adsError) {
+        console.error("Error fetching ads:", adsError);
+        throw adsError;
+      }
+
+      if (adsData?.ads && Array.isArray(adsData.ads)) {
+        console.log(`✅ Found ${adsData.ads.length} ads`);
+        setAds(adsData.ads);
+        // Initialize edit data for each ad
+        const adsEditData: Record<string, any> = {};
+        adsData.ads.forEach((ad: Ad) => {
+          adsEditData[ad.id] = {
+            name: ad.name || "",
+            title: ad.creative?.title || "",
+            body: ad.creative?.body || "",
+            image_url: ad.creative?.image_url || ad.creative?.thumbnail_url || "",
+          };
+        });
+        setEditAdsData(adsEditData);
+      } else {
+        console.log("⚠️ No ads found or invalid data:", adsData);
+        setAds([]);
+        setEditAdsData({});
+      }
+    } catch (error: any) {
+      console.error("❌ Error fetching ad sets and ads:", error);
+      toast({
+        title: t("metaDashboard.errorLoadingAdSets"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAdSets(false);
+      setLoadingAds(false);
+    }
+  };
+
+  const handleUpdateAdSet = async (adSetId: string) => {
+    try {
+      const updates: any = {};
+      const adSetData = editAdSetsData[adSetId];
+      
+      if (!adSetData) return;
+
+      if (adSetData.name) updates.name = adSetData.name;
+      if (adSetData.daily_budget) {
+        updates.daily_budget = Math.round(parseFloat(adSetData.daily_budget) * 100);
+      }
+      if (adSetData.lifetime_budget) {
+        updates.lifetime_budget = Math.round(parseFloat(adSetData.lifetime_budget) * 100);
+      }
+      if (adSetData.optimization_goal) updates.optimization_goal = adSetData.optimization_goal;
+      if (adSetData.billing_event) updates.billing_event = adSetData.billing_event;
+
+      if (Object.keys(updates).length === 0) return;
+
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "updateAdSet",
+          adSetId,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: t("metaDashboard.errorUpdatingAdSet"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.adSetUpdated"),
+          description: t("metaDashboard.adSetUpdatedDesc"),
+        });
+        if (editingCampaign) {
+          await fetchAdSetsAndAds(editingCampaign.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating ad set:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingAdSet"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateAd = async (adId: string) => {
+    try {
+      const updates: any = {};
+      const adData = editAdsData[adId];
+      
+      if (!adData) return;
+
+      if (adData.name) updates.name = adData.name;
+      if (adData.title || adData.body) {
+        updates.creative = {};
+        if (adData.title) updates.creative.title = adData.title;
+        if (adData.body) updates.creative.body = adData.body;
+        if (adData.image_url) updates.creative.image_url = adData.image_url;
+      }
+
+      if (Object.keys(updates).length === 0) return;
+
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "updateAd",
+          adId,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: t("metaDashboard.errorUpdatingAd"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.adUpdated"),
+          description: t("metaDashboard.adUpdatedDesc"),
+        });
+        if (editingCampaign) {
+          await fetchAdSetsAndAds(editingCampaign.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating ad:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingAd"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAdAccountChange = (accountId: string) => {
@@ -655,7 +1131,7 @@ const MetaDashboard = () => {
           {campaign.status === "ACTIVE" ? (
             <Button
               size="sm"
-              className="mt-4 bg-warning/90 hover:bg-warning text-warning-foreground border-2 border-warning shadow-lg hover:shadow-warning/50 transition-all duration-300 hover:scale-110 font-semibold"
+              className="mt-4 bg-warning/90 hover:bg-warning text-warning-foreground border-2 border-warning shadow-lg hover:shadow-warning/50 transition-all duration-300 font-semibold"
               onClick={() => setCampaignToPause(campaign.id)}
             >
               <Pause className="w-4 h-4 mr-1" />
@@ -664,7 +1140,7 @@ const MetaDashboard = () => {
           ) : (
             <Button
               size="sm"
-              className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-110 font-semibold"
+              className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold"
               onClick={() => setCampaignToActivate(campaign.id)}
             >
               <Play className="w-4 h-4 mr-1" />
@@ -719,7 +1195,7 @@ const MetaDashboard = () => {
         subtitle={t("metaDashboard.connectFacebookDesc")}
       >
         <div className="container max-w-4xl mx-auto">
-          <Card3D intensity="low" className="p-8 text-center">
+          <Card className="p-8 text-center glass-card">
             <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-warning" />
             <h2 className="text-2xl font-bold mb-2">{t("metaDashboard.connectTitle")}</h2>
             <p className="text-muted-foreground mb-6">{t("metaDashboard.connectDesc")}</p>
@@ -727,7 +1203,7 @@ const MetaDashboard = () => {
               <ExternalLink className="w-4 h-4 mr-2" />
               {t("metaDashboard.goToSettings")}
             </Button>
-          </Card3D>
+          </Card>
         </div>
       </PageLayout>
     );
@@ -753,7 +1229,7 @@ const MetaDashboard = () => {
       }
     >
             {/* Ad Account Selector & Filters */}
-            <Card3D intensity="low" className="p-5">
+            <Card className="p-5 glass-card">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">{t("metaDashboard.adAccount")}</label>
@@ -862,10 +1338,10 @@ const MetaDashboard = () => {
                   {t("metaDashboard.refresh")}
                 </Button>
               </div>
-            </Card3D>
+            </Card>
 
             {/* Search & Filter */}
-            <Card3D intensity="low" className="p-5">
+            <Card className="p-5 glass-card">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -931,7 +1407,7 @@ const MetaDashboard = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-            </Card3D>
+            </Card>
 
             {/* Campaigns List - Simplified */}
             <div className="space-y-4">
@@ -940,108 +1416,103 @@ const MetaDashboard = () => {
               </div>
 
               {filteredCampaigns.length === 0 ? (
-                <Card3D intensity="low" className="p-8 text-center">
+                <Card className="p-8 text-center glass-card">
                   <p className="text-muted-foreground">{t("metaDashboard.noCampaigns")}</p>
-                </Card3D>
+                </Card>
               ) : (
                 <div className="grid gap-4">
                   {filteredCampaigns.map((campaign) => {
                     const insights = getInsightData(campaign);
                     return (
-                      <Card3D
+                      <CampaignCard
                         key={campaign.id}
-                        intensity="low"
-                        className="p-5 hover:border-primary/30 transition-all group relative"
-                      >
-                        <div className="flex flex-col lg:flex-row gap-6 relative">
-                          {/* Eye icon in top-right */}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary z-10"
-                            onClick={() => {
-                              setSelectedCampaign(campaign);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                        campaign={campaign}
+                        insights={insights}
+                        onViewDetails={() => {
+                          setSelectedCampaign(campaign);
+                          setShowDetailsDialog(true);
+                        }}
+                        onEdit={async () => {
+                          try {
+                            console.log("✏️ Edit button clicked for campaign:", campaign.id, campaign.name);
+                            
+                            if (!campaign || !campaign.id) {
+                              toast({
+                                title: t("metaDashboard.error"),
+                                description: t("metaDashboard.invalidCampaignId"),
+                                variant: "destructive",
+                              });
+                              return;
+                            }
 
-                          {/* Campaign Info */}
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between gap-4 pr-10">
-                              <div className="flex-1">
-                                <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
-                                <p className="text-xs text-muted-foreground">{campaign.objective}</p>
-                              </div>
-                            </div>
-
-                            {/* Key Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
-                                <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
-                                <p className="text-lg font-bold">{insights.results}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">CPC</p>
-                                <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">ROAS</p>
-                                <p className="text-lg font-bold">
-                                  {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
-                                </p>
-                              </div>
-                              <div className="p-3 flex flex-col items-center justify-center gap-2">
-                                <Badge
-                                  className={
-                                    campaign.status === "ACTIVE"
-                                      ? "bg-success/20 text-success border-success/30"
-                                      : campaign.status === "PAUSED"
-                                        ? "bg-warning/20 text-warning border-warning/30"
-                                        : "bg-muted/50 text-muted-foreground border-muted"
-                                  }
-                                >
-                                  {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
-                                </Badge>
-                                {campaign.status === "ACTIVE" ? (
-                                  <Button
-                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 hover:scale-105 font-bold w-full h-auto py-2"
-                                    onClick={() => setCampaignToPause(campaign.id)}
-                                  >
-                                    <Pause className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">{t("metaDashboard.pause")}</span>
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-105 font-semibold w-full h-auto py-2"
-                                    onClick={() => setCampaignToActivate(campaign.id)}
-                                  >
-                                    <Play className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">{t("metaDashboard.activate")}</span>
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Budget Info */}
-                            <div className="text-xs text-muted-foreground">
-                              <span>{t("metaDashboard.budget")}: </span>
-                              <span className="font-medium">
-                                {campaign.daily_budget
-                                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
-                                  : campaign.lifetime_budget
-                                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
-                                    : "—"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </Card3D>
+                            setEditingCampaign(campaign);
+                            
+                            // Safely format dates
+                            let startTime = "";
+                            let stopTime = "";
+                            
+                            try {
+                              if (campaign.start_time) {
+                                const startDate = new Date(campaign.start_time);
+                                if (!isNaN(startDate.getTime())) {
+                                  startTime = format(startDate, "yyyy-MM-dd'T'HH:mm");
+                                }
+                              }
+                            } catch (e) {
+                              console.warn("Error formatting start_time:", e);
+                            }
+                            
+                            try {
+                              if (campaign.stop_time) {
+                                const stopDate = new Date(campaign.stop_time);
+                                if (!isNaN(stopDate.getTime())) {
+                                  stopTime = format(stopDate, "yyyy-MM-dd'T'HH:mm");
+                                }
+                              }
+                            } catch (e) {
+                              console.warn("Error formatting stop_time:", e);
+                            }
+                            
+                            setEditFormData({
+                              name: campaign.name || "",
+                              daily_budget: campaign.daily_budget ? (parseFloat(campaign.daily_budget) / 100).toString() : "",
+                              lifetime_budget: campaign.lifetime_budget ? (parseFloat(campaign.lifetime_budget) / 100).toString() : "",
+                              start_time: startTime,
+                              stop_time: stopTime,
+                              newImage: "",
+                            });
+                            setShowEditDialog(true);
+                            setActiveTab("campaign");
+                            
+                            // Reset ad sets and ads before fetching
+                            setAdSets([]);
+                            setAds([]);
+                            setEditAdSetsData({});
+                            setEditAdsData({});
+                            
+                            // Fetch ad sets and ads
+                            console.log("📞 Calling fetchAdSetsAndAds for campaign:", campaign.id);
+                            try {
+                              await fetchAdSetsAndAds(campaign.id);
+                              console.log("✅ fetchAdSetsAndAds completed for campaign:", campaign.id);
+                            } catch (error: any) {
+                              console.error("❌ Error in fetchAdSetsAndAds:", error);
+                              // Don't show error toast here as fetchAdSetsAndAds already handles it
+                              // Just log it for debugging
+                            }
+                          } catch (error: any) {
+                            console.error("❌ Error in onEdit handler:", error);
+                            toast({
+                              title: t("metaDashboard.error"),
+                              description: error?.message || t("metaDashboard.unknownError"),
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        onPause={() => setCampaignToPause(campaign.id)}
+                        onActivate={() => setCampaignToActivate(campaign.id)}
+                        t={t}
+                      />
                     );
                   })}
                 </div>
@@ -1074,99 +1545,99 @@ const MetaDashboard = () => {
                     const insights = getInsightData(selectedCampaign);
                     return (
                       <>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.impressions")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.impressions.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.reach")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.reach.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.clicks")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.clicks.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.linkClicks")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.linkClicks.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.results")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.results.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.landingPageViews")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.landingPageViews.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.spend")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.spend.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.cpc")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.cpc.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.cpm")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.cpm.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.ctr")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.ctr.toFixed(2)}%
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.costPerResult")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.costPerResult.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.costPerLandingPageView")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.costPerLandingPageView.toFixed(2)}
                           </p>
                         </div>
@@ -1255,6 +1726,461 @@ const MetaDashboard = () => {
               >
                 {t("metaDashboard.confirmActivate")}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Campaign Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="w-5 h-5" />
+                {t("metaDashboard.editCampaign")}
+              </DialogTitle>
+              <DialogDescription>
+                {editingCampaign?.name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Tabs value={activeTab} onValueChange={(value) => {
+              console.log("🔄 Tab changed to:", value, "adSets.length:", adSets.length, "ads.length:", ads.length);
+              setActiveTab(value);
+            }} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="campaign">{t("metaDashboard.campaign")}</TabsTrigger>
+                <TabsTrigger value="adsets">
+                  {t("metaDashboard.adSets")} ({adSets.length})
+                </TabsTrigger>
+                <TabsTrigger value="ads">
+                  {t("metaDashboard.ads")} ({ads.length})
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Campaign Tab */}
+              <TabsContent value="campaign" className="space-y-4 pt-4">
+              {/* Campaign Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("metaDashboard.campaignName")}</label>
+                <Input
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder={t("metaDashboard.campaignNamePlaceholder")}
+                />
+              </div>
+
+              {/* Budget Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  {t("metaDashboard.budget")}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Daily Budget */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.dailyBudget")} {t("metaDashboard.currencySymbol")}
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editFormData.daily_budget}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditFormData({ 
+                          ...editFormData, 
+                          daily_budget: value,
+                          lifetime_budget: value ? "" : editFormData.lifetime_budget 
+                        });
+                      }}
+                      placeholder={t("metaDashboard.placeholderBudget")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("metaDashboard.dailyBudgetDesc")}
+                    </p>
+                  </div>
+
+                  {/* Lifetime Budget */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.lifetimeBudget")} {t("metaDashboard.currencySymbol")}
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editFormData.lifetime_budget}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditFormData({ 
+                          ...editFormData, 
+                          lifetime_budget: value,
+                          daily_budget: value ? "" : editFormData.daily_budget 
+                        });
+                      }}
+                      placeholder={t("metaDashboard.placeholderBudget")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("metaDashboard.lifetimeBudgetDesc")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {t("metaDashboard.schedule")}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Start Time */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.startTime")}
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editFormData.start_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, start_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Stop Time */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.stopTime")}
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editFormData.stop_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, stop_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Image Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Target className="w-4 h-4" />
+                  {t("metaDashboard.changeImage")}
+                </h3>
+                
+                {/* Current Image */}
+                {editingCampaign?.image_url || editingCampaign?.thumbnail_url ? (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("metaDashboard.currentImage")}</label>
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+                      <img
+                        src={editingCampaign.image_url || editingCampaign.thumbnail_url}
+                        alt={editingCampaign.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">{t("metaDashboard.noImage")}</p>
+                )}
+
+                {/* Upload New Image */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t("metaDashboard.uploadImage")}</label>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        // Convert to base64 for preview and upload
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          const base64String = reader.result as string;
+                          setEditFormData({ ...editFormData, newImage: base64String });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t("metaDashboard.imageUploadDesc")}
+                  </p>
+                </div>
+              </div>
+              </TabsContent>
+
+              {/* Ad Sets Tab */}
+              <TabsContent value="adsets" className="space-y-4 pt-4">
+                {(() => {
+                  console.log("🔍 Rendering Ad Sets tab - loadingAdSets:", loadingAdSets, "adSets.length:", adSets.length, "adSets:", adSets);
+                  return null;
+                })()}
+                {loadingAdSets ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingOverlay />
+                  </div>
+                ) : adSets.length === 0 ? (
+                  <Card className="p-8 text-center glass-card">
+                    <p className="text-muted-foreground">{t("metaDashboard.noAdSets")}</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {adSets.map((adSet) => (
+                      <Card key={adSet.id} className="p-4 glass-card">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{adSet.name || adSet.id}</h4>
+                            <Badge className={adSet.status === "ACTIVE" ? "bg-success/20 text-success" : "bg-muted"}>
+                              {adSet.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adSetName")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.name || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], name: e.target.value },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.dailyBudget")} {t("metaDashboard.currencySymbol")}</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editAdSetsData[adSet.id]?.daily_budget || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { 
+                                      ...editAdSetsData[adSet.id], 
+                                      daily_budget: e.target.value,
+                                      lifetime_budget: e.target.value ? "" : editAdSetsData[adSet.id]?.lifetime_budget 
+                                    },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.placeholderBudget")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.lifetimeBudget")} {t("metaDashboard.currencySymbol")}</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editAdSetsData[adSet.id]?.lifetime_budget || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { 
+                                      ...editAdSetsData[adSet.id], 
+                                      lifetime_budget: e.target.value,
+                                      daily_budget: e.target.value ? "" : editAdSetsData[adSet.id]?.daily_budget 
+                                    },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.placeholderBudget")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.optimizationGoal")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.optimization_goal || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], optimization_goal: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.optimizationGoalPlaceholder")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.billingEvent")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.billing_event || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], billing_event: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.billingEventPlaceholder")}
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="btn-gradient w-full" 
+                            onClick={() => handleUpdateAdSet(adSet.id)}
+                          >
+                            {t("metaDashboard.saveAdSet")}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Ads Tab */}
+              <TabsContent value="ads" className="space-y-4 pt-4">
+                {(() => {
+                  console.log("🔍 Rendering Ads tab - loadingAds:", loadingAds, "ads.length:", ads.length, "ads:", ads);
+                  return null;
+                })()}
+                {loadingAds ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingOverlay />
+                  </div>
+                ) : ads.length === 0 ? (
+                  <Card className="p-8 text-center glass-card">
+                    <p className="text-muted-foreground">{t("metaDashboard.noAds")}</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {ads.map((ad) => (
+                      <Card key={ad.id} className="p-4 glass-card">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{ad.name || ad.id}</h4>
+                            <Badge className={ad.status === "ACTIVE" ? "bg-success/20 text-success" : "bg-muted"}>
+                              {ad.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adName")}</Label>
+                              <Input
+                                value={editAdsData[ad.id]?.name || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], name: e.target.value },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adTitle")}</Label>
+                              <Input
+                                value={editAdsData[ad.id]?.title || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], title: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.adTitlePlaceholder")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adBody")}</Label>
+                              <Textarea
+                                value={editAdsData[ad.id]?.body || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], body: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.adBodyPlaceholder")}
+                                rows={4}
+                              />
+                            </div>
+                            
+                            {editAdsData[ad.id]?.image_url && (
+                              <div className="space-y-2">
+                                <Label>{t("metaDashboard.currentImage")}</Label>
+                                <div className="relative w-full h-48 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+                                  <img
+                                    src={editAdsData[ad.id].image_url}
+                                    alt={ad.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.uploadImage")}</Label>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const base64String = reader.result as string;
+                                      setEditAdsData({
+                                        ...editAdsData,
+                                        [ad.id]: { ...editAdsData[ad.id], image_url: base64String },
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="btn-gradient w-full" 
+                            onClick={() => handleUpdateAd(ad.id)}
+                          >
+                            {t("metaDashboard.saveAd")}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex gap-4 justify-end pt-6 border-t border-border/50">
+              <Button variant="outline" onClick={() => {
+                setShowEditDialog(false);
+                setEditingCampaign(null);
+                setAdSets([]);
+                setAds([]);
+                setEditFormData({
+                  name: "",
+                  daily_budget: "",
+                  lifetime_budget: "",
+                  start_time: "",
+                  stop_time: "",
+                  newImage: "",
+                });
+                setEditAdSetsData({});
+                setEditAdsData({});
+              }}>
+                {t("metaDashboard.cancel")}
+              </Button>
+              {activeTab === "campaign" && (
+                <Button className="btn-gradient" onClick={handleUpdateCampaign}>
+                  {t("metaDashboard.saveChanges")}
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>

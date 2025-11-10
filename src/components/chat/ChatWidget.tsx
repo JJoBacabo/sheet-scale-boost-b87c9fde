@@ -40,7 +40,7 @@ export const ChatWidget = () => {
                   {language === 'pt' ? 'Suporte Sheet Boost' : 'Sheet Boost Support'}
                 </h3>
                 <p className="text-white/95 text-sm flex items-center gap-2 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)] animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,217,255,0.8)] animate-pulse" />
                   {language === 'pt' ? 'Online agora' : 'Online now'}
                 </p>
               </div>
@@ -51,7 +51,7 @@ export const ChatWidget = () => {
               aria-label="Close chat"
               title={language === 'pt' ? 'Fechar chat' : 'Close chat'}
             >
-              <X className="w-6 h-6 text-white group-hover:scale-110 transition-transform drop-shadow-md" />
+              <X className="w-6 h-6 text-white drop-shadow-md" />
             </button>
           </div>
 

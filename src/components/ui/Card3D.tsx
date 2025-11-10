@@ -16,9 +16,9 @@ export const Card3D = ({
   glow = true 
 }: Card3DProps) => {
   const intensityMap = {
-    low: { rotateY: 3, rotateX: 3, scale: 1.02, z: 10 },
-    medium: { rotateY: 5, rotateX: 5, scale: 1.05, z: 20 },
-    high: { rotateY: 8, rotateX: 8, scale: 1.08, z: 30 },
+    low: { rotateY: 3, rotateX: 3, z: 10 },
+    medium: { rotateY: 5, rotateX: 5, z: 20 },
+    high: { rotateY: 8, rotateX: 8, z: 30 },
   };
 
   const hoverProps = intensityMap[intensity];

@@ -109,7 +109,7 @@ export const AdminSidebar = ({
               {isPortuguese ? 'Suporte Admin' : 'Admin Support'}
             </h2>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
               {adminName}
             </p>
           </div>

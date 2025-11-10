@@ -62,7 +62,7 @@ const Landing = () => {
     }
     setMobileMenuOpen(false);
   };
-  return <div className="min-h-screen bg-black text-white relative overflow-hidden">
+  return <div className="min-h-screen bg-[#0A0E27] text-[#F0F4F8] relative overflow-hidden">
       {/* CSS para remover fundo preto da seção Features */}
       <style>{`
         #features-storytelling {
@@ -76,13 +76,12 @@ const Landing = () => {
       <Background3D />
       
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050F2A]/80 backdrop-blur-md border-b border-[#B8A0FF]/20">
         <div className="container mx-auto px-4 sm:px-6 py-4 relative">
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
             <motion.div 
               className="flex items-center gap-3 flex-shrink-0"
-              whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="relative">
@@ -304,7 +303,7 @@ const Landing = () => {
                 <Card3D intensity="medium" glow>
                   <motion.div
                     className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow"
-                    whileHover={{ rotateY: 360, scale: 1.1 }}
+                    whileHover={{ rotateY: 360 }}
                     transition={{ duration: 0.6 }}
                   >
                     <item.icon className="w-8 h-8 text-primary-foreground" />
@@ -485,7 +484,7 @@ const Landing = () => {
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
-              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileHover={{ rotateY: 5 }}
               whileTap={{ scale: 0.95 }}
               style={{ transformStyle: 'preserve-3d' }}
             >
@@ -498,7 +497,7 @@ const Landing = () => {
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
-              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileHover={{ rotateY: 5 }}
               whileTap={{ scale: 0.95 }}
               style={{ transformStyle: 'preserve-3d' }}
             >
@@ -516,34 +515,58 @@ const Landing = () => {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
           {[
-            { key: 'beginner', popular: false },
             { key: 'basic', popular: false },
             { key: 'standard', popular: true },
-            { key: 'expert', popular: false }
+            { key: 'expert', popular: false },
+            { key: 'business', popular: false }
           ].map((plan, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 50, rotateX: -15 }}
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               transition={{ delay: index * 0.15, type: "spring", stiffness: 100 }}
+              className={plan.popular ? "lg:scale-110 lg:z-10" : ""}
             >
               <Card3D 
                 intensity={plan.popular ? "high" : "medium"}
                 glow={plan.popular}
-                className={`p-6 relative flex flex-col ${plan.popular ? 'scale-105' : ''}`}
+                className={`p-6 relative flex flex-col h-full ${
+                  plan.popular 
+                    ? "border-2 border-primary shadow-[0_0_30px_rgba(74,233,189,0.3)]" 
+                    : ""
+                }`}
               >
                 {plan.popular && (
-                  <motion.div
-                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10"
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    {t('landing.pricing.popular')}
-                  </motion.div>
+                  <>
+                    <motion.div
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow"
+                      animate={{ 
+                        y: [0, -5, 0],
+                        scale: [1, 1.05, 1]
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {t('landing.pricing.popular')}
+                    </motion.div>
+                    <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-2xl pointer-events-none" />
+                  </>
                 )}
-              <h3 className="text-xl font-bold mb-2">{t(`landing.pricing.${plan.key}.name`)}</h3>
+              <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-primary' : ''}`}>
+                {t(`landing.pricing.${plan.key}.name`)}
+              </h3>
               
-              {billingPeriod === 'monthly' ? (
+              {plan.key === 'business' ? (
+                <>
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold">
+                      {t(`landing.pricing.${plan.key}.price`)}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-6 min-h-[40px]">
+                    {t(`landing.pricing.${plan.key}.description`)}
+                  </p>
+                </>
+              ) : billingPeriod === 'monthly' ? (
                 <>
                   <div className="mb-4">
                     <span className="text-3xl font-bold">
@@ -578,29 +601,40 @@ const Landing = () => {
                 </>
               )}
               
-              <ul className="space-y-2 mb-6 flex-1">
-                {['feature1', 'feature2', 'feature3', 'feature4', 'feature5'].map((feat, i) => {
+              <ul className="space-y-2 mb-6 flex-1 min-h-[200px]">
+                {['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7'].map((feat, i) => {
                   const featureText = t(`landing.pricing.${plan.key}.${feat}`);
                   if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
                   
                   return (
                     <li key={i} className="flex items-start gap-2">
-                      <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? 'text-primary' : 'text-primary/80'}`} />
                       <span className="text-xs text-gray-300">{featureText}</span>
                     </li>
                   );
                 })}
               </ul>
               
-                <Button3D
-                  variant={plan.popular ? 'gradient' : 'glass'}
-                  size="md"
-                  glow={plan.popular}
-                  className="w-full mt-auto"
-                  onClick={() => navigate("/auth")}
-                >
-                  {t('landing.pricing.choosePlan')}
-                </Button3D>
+                {plan.key === 'business' ? (
+                  <Button3D
+                    variant="glass"
+                    size="md"
+                    className="w-full mt-auto"
+                    onClick={() => navigate("/contact-business")}
+                  >
+                    {t(`landing.pricing.${plan.key}.contactUs`)}
+                  </Button3D>
+                ) : (
+                  <Button3D
+                    variant={plan.popular ? 'gradient' : 'glass'}
+                    size="md"
+                    glow={plan.popular}
+                    className="w-full mt-auto"
+                    onClick={() => navigate("/auth")}
+                  >
+                    {t('landing.pricing.choosePlan')}
+                  </Button3D>
+                )}
               </Card3D>
             </motion.div>
           ))}
@@ -608,7 +642,10 @@ const Landing = () => {
 
         {/* Feature Comparison Table */}
         <div className="max-w-5xl mx-auto mt-16">
-          <h3 className="text-2xl font-bold text-center mb-8">{t('landing.pricing.featureComparison.title')}</h3>
+          <h3 className="text-2xl font-bold text-center mb-4">{t('landing.pricing.featureComparison.title')}</h3>
+          <p className="text-center text-gray-400 text-sm mb-8">
+            {t('landing.pricing.featureComparison.note')}
+          </p>
           <Card className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -618,16 +655,18 @@ const Landing = () => {
                     <th className="text-center p-4 text-gray-400 font-semibold">Basic</th>
                     <th className="text-center p-4 text-gray-400 font-semibold">Standard</th>
                     <th className="text-center p-4 text-gray-400 font-semibold">Expert</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">Business</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { key: 'roasSheet', basic: true, standard: true, expert: true },
-                    { key: 'quotation', basic: false, standard: true, expert: true },
-                    { key: 'campaigns', basic: false, standard: true, expert: true },
-                    { key: 'productResearch', basic: false, standard: false, expert: true },
-                    { key: 'prioritySupport', basic: false, standard: false, expert: true },
-                    { key: 'completeHistory', basic: false, standard: false, expert: true },
+                    { key: 'dailyRoas', basic: true, standard: true, expert: true, business: true },
+                    { key: 'profitSheet', basic: true, standard: true, expert: true, business: true },
+                    { key: 'quotation', basic: false, standard: true, expert: true, business: true },
+                    { key: 'campaigns', basic: false, standard: true, expert: true, business: true },
+                    { key: 'productResearch', basic: false, standard: false, expert: true, business: true },
+                    { key: 'prioritySupport', basic: false, standard: false, expert: true, business: true },
+                    { key: 'completeHistory', basic: false, standard: false, expert: true, business: true },
                   ].map((feature, i) => (
                     <tr key={i} className="border-b border-white/10 last:border-0">
                       <td className="p-4 text-gray-300">{t(`landing.pricing.featureComparison.${feature.key}`)}</td>
@@ -652,6 +691,13 @@ const Landing = () => {
                           <span className="text-gray-600">—</span>
                         )}
                       </td>
+                      <td className="p-4 text-center">
+                        {feature.business ? (
+                          <Check className="w-5 h-5 text-primary mx-auto" />
+                        ) : (
+                          <span className="text-gray-600">—</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -664,29 +710,50 @@ const Landing = () => {
       {/* FAQ Section */}
       <section id="faq" className="container mx-auto px-4 sm:px-6 py-20 relative">
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t('landing.faq.title')}
-          </h2>
-          <p className="text-xl text-gray-400">
-            {t('landing.faq.subtitle')}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 gradient-text">
+              {t('landing.faq.title')}
+            </h2>
+            <p className="text-xl text-gray-400">
+              {t('landing.faq.subtitle')}
+            </p>
+          </motion.div>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Accordion type="single" collapsible className="space-y-4">
             {['q1', 'q2', 'q3', 'q4', 'q5'].map((key, index) => (
-              <AccordionItem 
-                key={index} 
-                value={`item-${index}`}
-                className="bg-white/5 border border-white/10 rounded-2xl px-6 data-[state=open]:border-primary/50"
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
               >
-                <AccordionTrigger className="text-lg font-bold hover:no-underline py-6">
-                  {t(`faq.${key}.question`)}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-400 leading-relaxed pb-6">
-                  {t(`faq.${key}.answer`)}
-                </AccordionContent>
-              </AccordionItem>
+                <AccordionItem 
+                  value={`item-${index}`}
+                  className="glass-card border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-primary/30 data-[state=open]:border-primary/50 data-[state=open]:shadow-[0_0_20px_rgba(74,233,189,0.2)]"
+                >
+                  <AccordionTrigger className="text-left text-base sm:text-lg font-bold hover:no-underline py-5 sm:py-6 px-6 hover:text-primary transition-colors group">
+                    <span className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <span className="flex-1">{t(`faq.${key}.question`)}</span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-400 leading-relaxed px-6 pb-6">
+                    <div className="pl-11 text-sm sm:text-base">
+                      {t(`faq.${key}.answer`)}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>
