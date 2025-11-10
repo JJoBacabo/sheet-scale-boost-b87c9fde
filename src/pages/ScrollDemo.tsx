@@ -72,84 +72,96 @@ const ScrollDemo = () => {
 
   // Section 4: Pinned Sections
   useEffect(() => {
-    if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current || !section4Ref.current) return;
+    if (!section4Ref.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
-    const gsap = gsapRef.current;
-    const ScrollTrigger = ScrollTriggerRef.current;
-    const ctx = gsap.context(() => {
-      const container = section4Ref.current?.querySelector(".pinned-container");
-      const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
+    let timeoutId: NodeJS.Timeout;
+    let ctx: any;
 
-      if (!container || !cards || cards.length === 0) return;
+    // Wait a bit for DOM to be ready
+    timeoutId = setTimeout(() => {
+      const gsap = gsapRef.current;
+      const ScrollTrigger = ScrollTriggerRef.current;
+      if (!gsap || !ScrollTrigger || !section4Ref.current) return;
 
-      // Set initial state - all cards hidden except first
-      gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
-      gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
+      ctx = gsap.context(() => {
+        const container = section4Ref.current?.querySelector(".pinned-container");
+        const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
 
-      // Pin the container
-      const pinTrigger = ScrollTrigger.create({
-        trigger: container as Element,
-        start: "top top",
-        end: "+=500%",
-        pin: true,
-        pinSpacing: true,
-      });
-      scrollTriggersRef.current.push(pinTrigger);
+        if (!container || !cards || cards.length === 0) return;
 
-      // Track current visible card to avoid unnecessary animations
-      let currentVisibleIndex = 0;
+        // Set initial state - all cards hidden except first
+        gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
+        gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
 
-      // Create scroll trigger that updates cards based on progress
-      const scrollTrigger = ScrollTrigger.create({
-        trigger: container as Element,
-        start: "top top",
-        end: "+=500%",
-        scrub: 1,
-        onUpdate: (self) => {
-          const progress = self.progress;
-          const totalCards = cards.length;
-          
-          // Calculate which card should be visible
-          const newIndex = Math.min(
-            Math.floor(progress * totalCards),
-            totalCards - 1
-          );
-          
-          // Only update if index changed
-          if (newIndex !== currentVisibleIndex) {
-            currentVisibleIndex = newIndex;
+        // Pin the container
+        const pinTrigger = ScrollTrigger.create({
+          trigger: container as Element,
+          start: "top top",
+          end: "+=500%",
+          pin: true,
+          pinSpacing: true,
+        });
+        scrollTriggersRef.current.push(pinTrigger);
+
+        // Track current visible card to avoid unnecessary animations
+        let currentVisibleIndex = 0;
+
+        // Create scroll trigger that updates cards based on progress
+        const scrollTrigger = ScrollTrigger.create({
+          trigger: container as Element,
+          start: "top top",
+          end: "+=500%",
+          scrub: 1,
+          onUpdate: (self) => {
+            const progress = self.progress;
+            const totalCards = cards.length;
             
-            // Update all cards based on current index
-            cards.forEach((card, index) => {
-              if (index === currentVisibleIndex) {
-                // Show current card
-                gsap.to(card, {
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  duration: 0.5,
-                  ease: "power2.out",
-                });
-              } else {
-                // Hide other cards
-                gsap.to(card, {
-                  opacity: 0,
-                  y: index < currentVisibleIndex ? -50 : 50,
-                  scale: 0.9,
-                  duration: 0.5,
-                  ease: "power2.out",
-                });
-              }
-            });
-          }
-        },
-      });
+            // Calculate which card should be visible
+            const newIndex = Math.min(
+              Math.floor(progress * totalCards),
+              totalCards - 1
+            );
+            
+            // Only update if index changed
+            if (newIndex !== currentVisibleIndex) {
+              currentVisibleIndex = newIndex;
+              
+              // Update all cards based on current index
+              cards.forEach((card, index) => {
+                if (index === currentVisibleIndex) {
+                  // Show current card
+                  gsap.to(card, {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    duration: 0.5,
+                    ease: "power2.out",
+                  });
+                } else {
+                  // Hide other cards
+                  gsap.to(card, {
+                    opacity: 0,
+                    y: index < currentVisibleIndex ? -50 : 50,
+                    scale: 0.9,
+                    duration: 0.5,
+                    ease: "power2.out",
+                  });
+                }
+              });
+            }
+          },
+        });
 
-      scrollTriggersRef.current.push(scrollTrigger);
-    }, section4Ref);
+        scrollTriggersRef.current.push(scrollTrigger);
+
+        // Refresh ScrollTrigger after setup
+        ScrollTrigger.refresh();
+      }, section4Ref);
+    }, 100);
 
     return () => {
-      ctx.revert();
+      if (timeoutId) clearTimeout(timeoutId);
+      if (ctx) ctx?.revert();
       scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
       scrollTriggersRef.current = [];
     };
