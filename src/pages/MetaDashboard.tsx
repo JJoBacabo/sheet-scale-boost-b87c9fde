@@ -933,7 +933,7 @@ const MetaDashboard = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-            </Card3D>
+            </Card>
 
             {/* Campaigns List - Simplified */}
             <div className="space-y-4">
