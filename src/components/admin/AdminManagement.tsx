@@ -170,13 +170,24 @@ export const AdminManagement = () => {
       // Log before deletion (trigger will also log, but this ensures it)
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      const { error } = await supabase
+      if (!currentUser) {
+        throw new Error(isPortuguese ? 'Usuário não autenticado' : 'User not authenticated');
+      }
+
+      const { error, data } = await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', 'admin');
+        .eq('role', 'admin')
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting admin role:', error);
+        throw new Error(
+          error.message || 
+          (isPortuguese ? 'Falha ao remover administrador. Verifique se você tem permissões de administrador.' : 'Failed to remove administrator. Please check if you have admin permissions.')
+        );
+      }
 
       // Additional log (trigger should handle it, but ensure it's logged)
       try {
@@ -185,8 +196,8 @@ export const AdminManagement = () => {
           event_type: 'admin_role_removed',
           event_data: {
             role: 'admin',
-            removed_by: currentUser?.id || 'system',
-            removed_by_email: currentUser?.email || 'system'
+            removed_by: currentUser.id,
+            removed_by_email: currentUser.email || 'unknown'
           }
         });
       } catch (logError) {
@@ -201,11 +212,11 @@ export const AdminManagement = () => {
 
       setAdminToRemove(null);
       fetchAdmins();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error removing admin:', error);
       toast({
         title: isPortuguese ? 'Erro' : 'Error',
-        description: isPortuguese ? 'Falha ao remover administrador' : 'Failed to remove administrator',
+        description: error?.message || (isPortuguese ? 'Falha ao remover administrador' : 'Failed to remove administrator'),
         variant: 'destructive'
       });
     }
