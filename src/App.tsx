@@ -31,6 +31,7 @@ import TestBrevo from "./pages/TestBrevo";
 import TestPage from "./pages/TestPage";
 import HomePageTest from "./pages/HomePageTest";
 import ContactBusiness from "./pages/ContactBusiness";
+import ScrollDemo from "./pages/ScrollDemo";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const AppContent = () => {
         <Route path="/test-brevo" element={<TestBrevo />} />
         <Route path="/test-page" element={<TestPage />} />
         <Route path="/homepage-test" element={<HomePageTest />} />
+        <Route path="/scroll-demo" element={<ScrollDemo />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
