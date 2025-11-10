@@ -257,16 +257,31 @@ const ScrollDemo = () => {
         const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
         if (!container || !cards || cards.length === 0) return;
 
-        // Set initial state - all cards hidden except first
-        gsap.set(cards, {
-          opacity: 0,
-          y: 50,
-          scale: 0.9
-        });
-        gsap.set(cards[0], {
-          opacity: 1,
-          y: 0,
-          scale: 1
+        // Set initial state - all cards visible but stacked
+        cards.forEach((card, index) => {
+          const cardElement = card as HTMLElement;
+          // Set z-index based on position (last card on top)
+          cardElement.style.zIndex = `${cards.length - index}`;
+          
+          if (index === 0) {
+            // First card: fully visible and on top
+            gsap.set(card, {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              zIndex: cards.length
+            });
+          } else {
+            // Other cards: slightly scaled down and offset, creating stack effect
+            const offset = index * 8; // Small offset for stacking effect
+            const scale = 1 - (index * 0.05); // Slightly smaller for depth
+            gsap.set(card, {
+              opacity: 0.6 - (index * 0.1),
+              y: offset,
+              scale: Math.max(scale, 0.85),
+              zIndex: cards.length - index
+            });
+          }
         });
 
         // Pin the container
@@ -299,24 +314,45 @@ const ScrollDemo = () => {
             if (newIndex !== currentVisibleIndex) {
               currentVisibleIndex = newIndex;
 
-              // Update all cards based on current index
+              // Update all cards based on current index - stack effect
               cards.forEach((card, index) => {
+                const cardElement = card as HTMLElement;
+                const distanceFromActive = Math.abs(index - currentVisibleIndex);
+                
                 if (index === currentVisibleIndex) {
-                  // Show current card
+                  // Active card: fully visible and on top
+                  cardElement.style.zIndex = `${cards.length + 10}`;
                   gsap.to(card, {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    duration: 0.5,
+                    duration: 0.6,
+                    ease: "power2.out"
+                  });
+                } else if (index < currentVisibleIndex) {
+                  // Cards before active: behind, slightly offset up
+                  const offset = (currentVisibleIndex - index) * 10;
+                  const scale = 1 - ((currentVisibleIndex - index) * 0.05);
+                  const opacity = Math.max(0.4 - ((currentVisibleIndex - index) * 0.15), 0.1);
+                  cardElement.style.zIndex = `${cards.length - (currentVisibleIndex - index)}`;
+                  gsap.to(card, {
+                    opacity: opacity,
+                    y: -offset,
+                    scale: Math.max(scale, 0.8),
+                    duration: 0.6,
                     ease: "power2.out"
                   });
                 } else {
-                  // Hide other cards
+                  // Cards after active: behind, slightly offset down
+                  const offset = (index - currentVisibleIndex) * 10;
+                  const scale = 1 - ((index - currentVisibleIndex) * 0.05);
+                  const opacity = Math.max(0.6 - ((index - currentVisibleIndex) * 0.15), 0.1);
+                  cardElement.style.zIndex = `${cards.length - (index - currentVisibleIndex)}`;
                   gsap.to(card, {
-                    opacity: 0,
-                    y: index < currentVisibleIndex ? -50 : 50,
-                    scale: 0.9,
-                    duration: 0.5,
+                    opacity: opacity,
+                    y: offset,
+                    scale: Math.max(scale, 0.8),
+                    duration: 0.6,
                     ease: "power2.out"
                   });
                 }
@@ -475,9 +511,9 @@ const ScrollDemo = () => {
               Everything you need to optimize your campaigns in one platform
             </p>
 
-            {/* Pinned content that changes - 2 Column Layout with Cards */}
-            <div className="relative min-h-[600px] flex items-center justify-center">
-              <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative">
+            {/* Pinned content that changes - 2 Column Layout with Stacked Cards */}
+            <div className="relative min-h-[600px] flex items-center justify-center py-20">
+              <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative" style={{ perspective: '1000px' }}>
                 {features.map((feature, index) => {
                   const Icon = feature.icon;
                   const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
@@ -485,9 +521,15 @@ const ScrollDemo = () => {
                   return (
                     <Card
                       key={index}
-                      className="feature-card-4 absolute inset-0 bg-[#0A0E27]/90 border-2 border-[#7BBCFE]/30 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl shadow-[#7BBCFE]/10"
+                      className="feature-card-4 absolute left-0 right-0 mx-auto bg-[#0A0E27]/95 border-2 border-[#7BBCFE]/40 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl"
+                      style={{
+                        width: '100%',
+                        maxWidth: '100%',
+                        transformStyle: 'preserve-3d',
+                        willChange: 'transform, opacity, z-index'
+                      }}
                     >
-                      <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 w-full h-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
+                      <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
                         {/* Text Content - Left for even, Right for odd */}
                         <div className={`space-y-6 sm:space-y-8 order-1 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
                           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center shadow-lg shadow-[#7BBCFE]/30">
