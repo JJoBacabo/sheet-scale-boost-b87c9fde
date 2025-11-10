@@ -124,11 +124,28 @@ const StackedScroll = () => {
           });
         } else {
           // Desktop: Stacked scroll effect with single pinned wrapper
-          // Set initial state: all panels slightly below, small, and transparent
-          gsap.set(panels, {
-            yPercent: 20,
-            scale: 0.96,
-            opacity: 0
+          
+          // Set z-index for stacking order (first panel lowest, last highest)
+          panels.forEach((panel, index) => {
+            (panel as HTMLElement).style.zIndex = `${panels.length - index}`;
+          });
+
+          // Set initial state: first panel visible, others hidden/scaled
+          panels.forEach((panel, i) => {
+            const textRef = textRefs.current[i];
+            const imageRef = imageRefs.current[i];
+
+            if (i === 0) {
+              // First panel: fully visible
+              gsap.set(panel, { yPercent: 0, scale: 1, opacity: 1 });
+              if (textRef) gsap.set(textRef, { y: 0, opacity: 1 });
+              if (imageRef) gsap.set(imageRef, { y: 0, scale: 1, opacity: 1 });
+            } else {
+              // Other panels: start below, scaled, transparent
+              gsap.set(panel, { yPercent: 20, scale: 0.96, opacity: 0 });
+              if (textRef) gsap.set(textRef, { y: 60, opacity: 0 });
+              if (imageRef) gsap.set(imageRef, { y: 30, scale: 0.95, opacity: 0 });
+            }
           });
 
           // Create single timeline for stacked scroll
@@ -137,13 +154,10 @@ const StackedScroll = () => {
               trigger: stackRef.current,
               start: "top top",
               end: () => `+=${panels.length * 120}%`,
-              scrub: true,
+              scrub: 1,
               pin: stickyZoneRef.current,
               pinSpacing: false,
-              anticipatePin: 1,
-              onUpdate: (self) => {
-                // Optional: Add any progress-based effects here
-              }
+              anticipatePin: 1
             }
           });
 
@@ -152,7 +166,12 @@ const StackedScroll = () => {
             const textRef = textRefs.current[i];
             const imageRef = imageRefs.current[i];
 
-            // Panel enters: comes to center, scales up, fades in
+            if (i === 0) {
+              // First panel: already visible, just ensure it stays
+              return;
+            }
+
+            // Panel enters: comes to center (yPercent: 20 → 0), scales up, fades in
             tl.to(panel, {
               yPercent: 0,
               scale: 1,
@@ -161,26 +180,29 @@ const StackedScroll = () => {
               ease: "power2.out"
             }, i);
 
-            // Text parallax: enters slightly after panel
+            // Text parallax: enters slightly after panel starts
             if (textRef) {
-              tl.fromTo(textRef,
-                { y: 60, opacity: 0 },
-                { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-                i + 0.2
-              );
+              tl.to(textRef, {
+                y: 0,
+                opacity: 1,
+                duration: 0.8,
+                ease: "power3.out"
+              }, i + 0.1);
             }
 
-            // Image parallax: enters with slight delay
+            // Image parallax: enters with slight delay for parallax effect
             if (imageRef) {
-              tl.fromTo(imageRef,
-                { y: 30, opacity: 0, scale: 0.95 },
-                { y: 0, opacity: 1, scale: 1, duration: 0.8, ease: "power3.out" },
-                i + 0.3
-              );
+              tl.to(imageRef, {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                duration: 0.8,
+                ease: "power3.out"
+              }, i + 0.2);
             }
 
-            // Previous panel: scales down and dims
-            if (i > 0) {
+            // Previous panel: scales down and dims when new one enters
+            if (i > 0 && panels[i - 1]) {
               tl.to(panels[i - 1], {
                 scale: 0.92,
                 opacity: 0.6,
@@ -191,11 +213,6 @@ const StackedScroll = () => {
           });
 
           scrollTriggersRef.current.push(tl.scrollTrigger);
-
-          // Set z-index for stacking order (first panel lowest, last highest)
-          panels.forEach((panel, index) => {
-            (panel as HTMLElement).style.zIndex = `${panels.length - index}`;
-          });
         }
 
         ScrollTrigger.refresh();
@@ -231,11 +248,14 @@ const StackedScroll = () => {
         {/* Sticky Zone - Pinned Container */}
         <div
           ref={stickyZoneRef}
-          className="sticky-zone relative h-screen w-full flex items-center justify-center"
-          style={{ height: '100vh' }}
+          className="sticky-zone relative w-full"
+          style={{ height: '100vh', position: 'relative' }}
         >
-          {/* Panels Container */}
-          <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center">
+          {/* Panels Container - All panels absolutely positioned and overlapping */}
+          <div 
+            className="relative w-full h-full flex items-center justify-center"
+            style={{ position: 'relative', width: '100%', height: '100%' }}
+          >
             {panelsData.map((panel, index) => {
               const isImageLeft = panel.imagePosition === 'left';
 
@@ -246,9 +266,26 @@ const StackedScroll = () => {
                   className="panel absolute inset-0 w-full h-full flex items-center justify-center"
                   style={{
                     borderRadius: '24px',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    width: '100%',
+                    height: '100%'
                   }}
                 >
-                  <div className="container mx-auto max-w-7xl px-4 sm:px-6 h-full flex items-center">
+                  {/* Glass effect background for panel */}
+                  <div
+                    className="absolute inset-0 rounded-3xl backdrop-blur-md border border-[#7BBCFE]/20 pointer-events-none"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(10, 12, 20, 0.95) 0%, rgba(26, 31, 46, 0.90) 100%)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 1px rgba(123, 188, 254, 0.15)'
+                    }}
+                  />
+
+                  {/* Content Container */}
+                  <div className="relative z-10 container mx-auto max-w-7xl px-4 sm:px-6 w-full">
                     <div
                       className={`grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full ${
                         isImageLeft ? '' : 'lg:grid-flow-dense'
@@ -312,7 +349,7 @@ const StackedScroll = () => {
                           </p>
                         </div>
 
-                        {/* CTA Button - Fixed position in bottom right of card */}
+                        {/* CTA Button */}
                         <div className="relative">
                           <Button
                             size="lg"
@@ -327,23 +364,14 @@ const StackedScroll = () => {
                       </div>
                     </div>
                   </div>
-
-                  {/* Glass effect background for panel */}
-                  <div
-                    className="absolute inset-0 rounded-3xl backdrop-blur-md bg-[#0A0C14]/80 border border-[#7BBCFE]/20 pointer-events-none"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(10, 12, 20, 0.9) 0%, rgba(26, 31, 46, 0.85) 100%)',
-                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 1px rgba(123, 188, 254, 0.1)'
-                    }}
-                  />
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Spacer to allow scroll */}
-        <div style={{ height: `${panelsData.length * 120}vh` }} />
+        {/* Spacer to allow scroll - positioned after sticky zone */}
+        <div style={{ height: `${panelsData.length * 120}vh`, minHeight: `${panelsData.length * 120}vh` }} />
       </section>
     </div>
   );
