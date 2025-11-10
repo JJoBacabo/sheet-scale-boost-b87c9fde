@@ -1072,7 +1072,7 @@ const HomePageTest = () => {
         className="py-20 px-4 sm:px-6 relative overflow-hidden"
       >
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#7BBCFE] via-[#7BBCFE] to-[#7BBCFE] opacity-20"
+          className="absolute inset-0 bg-gradient-to-br from-[#0066FF] via-[#7BBCFE] to-[#B8A8FE] opacity-20"
           style={{
             backgroundSize: "400% 400%",
             animation: "gradientShift 15s ease infinite",
