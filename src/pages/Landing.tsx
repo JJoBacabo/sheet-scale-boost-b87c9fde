@@ -477,10 +477,10 @@ const Landing = () => {
 
                   {/* Metrics */}
                   <div className="grid grid-cols-1 gap-4">
-                    <div className="bg-gradient-to-br from-[#B8A8FE] to-[#B8A8FE]/80 rounded-xl p-4 border border-[#B8A8FE]/30">
+                    <div className="bg-gradient-to-br from-[#7BBCFE] to-[#B8A8FE] rounded-xl p-4 border border-[#7BBCFE]/30">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="w-4 h-4 text-white" />
-                        <span className="text-xs text-white/80 font-medium">Stores Connected</span>
+                        <span className="text-xs text-white/90 font-medium">Stores Connected</span>
                       </div>
                       <div className="text-3xl font-bold text-white">
                         <span className="count-up" data-target="8">0</span>
@@ -513,13 +513,14 @@ const Landing = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.1 }}
+              className="h-full"
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
                   <Zap className="w-6 h-6 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Workflow Automation</h3>
-                <p className="text-gray-300/70 text-sm leading-relaxed">
+                <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
                   Save time by automating daily management tasks.
                 </p>
               </Card>
@@ -530,13 +531,14 @@ const Landing = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
+              className="h-full"
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#B8A8FE] to-[#B8A8FE]/80 flex items-center justify-center mb-4">
-                  <BarChart3 className="w-6 h-6 text-white" />
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
+                  <BarChart3 className="w-6 h-6 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Data Intelligence</h3>
-                <p className="text-gray-300/70 text-sm leading-relaxed">
+                <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
                   Access real-time insights and performance analytics.
                 </p>
               </Card>
@@ -547,13 +549,14 @@ const Landing = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.3 }}
+              className="h-full"
             >
-              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
                   <Shield className="w-6 h-6 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-3">Secure Infrastructure</h3>
-                <p className="text-gray-300/70 text-sm leading-relaxed">
+                <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
                   Your data stays protected and always synchronized.
                 </p>
               </Card>
