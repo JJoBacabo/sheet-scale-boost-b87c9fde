@@ -435,7 +435,9 @@ const Landing = () => {
           <div className="container mx-auto max-w-7xl relative">
             {/* Header */}
             <div className="mb-4 text-center">
-              
+              <span className="inline-block px-4 py-2 bg-primary/20 border border-primary/30 rounded-full text-sm text-primary font-medium">
+                Features
+              </span>
             </div>
 
             <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-[#B8A0FF] bg-clip-text text-transparent text-center">
@@ -448,33 +450,37 @@ const Landing = () => {
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[600px]">
               {[{
-              icon: Activity,
-              key: 'integration'
-            }, {
-              icon: BarChart3,
-              key: 'metrics'
-            }, {
-              icon: Brain,
-              key: 'ai'
-            }, {
-              icon: Zap,
-              key: 'automation'
-            }, {
-              icon: TrendingUp,
-              key: 'profit'
-            }, {
-              icon: Lock,
-              key: 'secure'
-            }].map((feature, index) => {
-              const Icon = feature.icon;
-              const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
-
-              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center">
+                icon: Activity,
+                key: 'integration'
+              }, {
+                icon: BarChart3,
+                key: 'metrics'
+              }, {
+                icon: Brain,
+                key: 'ai'
+              }, {
+                icon: Zap,
+                key: 'automation'
+              }, {
+                icon: TrendingUp,
+                key: 'profit'
+              }, {
+                icon: Lock,
+                key: 'secure'
+              }].map((feature, index) => {
+                const Icon = feature.icon;
+                const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
+                
+                return (
+                  <div
+                    key={index}
+                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
+                  >
                     <div className={`grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
                       {/* Text Content - Left for even, Right for odd */}
                       <div className={`space-y-8 ${isEven ? '' : 'md:col-start-2'}`}>
                         <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                          
+                          <Icon className="w-10 h-10 text-primary-foreground" />
                         </div>
                         <h3 className="text-5xl sm:text-6xl font-bold text-white leading-tight">{t(`landing.features.${feature.key}.title`)}</h3>
                         <p className="text-gray-300/70 text-xl sm:text-2xl leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
@@ -490,8 +496,9 @@ const Landing = () => {
                         </div>
                       </div>
                     </div>
-                  </div>;
-            })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
