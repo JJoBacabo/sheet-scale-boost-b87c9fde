@@ -742,11 +742,13 @@ const MetaDashboard = () => {
   };
 
   const fetchAdSetsAndAds = async (campaignId: string) => {
+    console.log("🔍 Fetching ad sets and ads for campaign:", campaignId);
     setLoadingAdSets(true);
     setLoadingAds(true);
     
     try {
       // Fetch Ad Sets
+      console.log("📋 Fetching ad sets...");
       const { data: adSetsData, error: adSetsError } = await supabase.functions.invoke("facebook-campaigns", {
         body: {
           action: "getAdSets",
@@ -754,9 +756,16 @@ const MetaDashboard = () => {
         },
       });
 
-      if (adSetsError) throw adSetsError;
+      console.log("📊 Ad Sets response:", adSetsData);
+      console.log("❌ Ad Sets error:", adSetsError);
+
+      if (adSetsError) {
+        console.error("Error fetching ad sets:", adSetsError);
+        throw adSetsError;
+      }
 
       if (adSetsData?.adSets && Array.isArray(adSetsData.adSets)) {
+        console.log(`✅ Found ${adSetsData.adSets.length} ad sets`);
         setAdSets(adSetsData.adSets);
         // Initialize edit data for each ad set
         const adSetsEditData: Record<string, any> = {};
@@ -771,11 +780,13 @@ const MetaDashboard = () => {
         });
         setEditAdSetsData(adSetsEditData);
       } else {
+        console.log("⚠️ No ad sets found or invalid data:", adSetsData);
         setAdSets([]);
         setEditAdSetsData({});
       }
 
       // Fetch Ads
+      console.log("📋 Fetching ads...");
       const { data: adsData, error: adsError } = await supabase.functions.invoke("facebook-campaigns", {
         body: {
           action: "getCreatives",
@@ -783,9 +794,16 @@ const MetaDashboard = () => {
         },
       });
 
-      if (adsError) throw adsError;
+      console.log("📊 Ads response:", adsData);
+      console.log("❌ Ads error:", adsError);
+
+      if (adsError) {
+        console.error("Error fetching ads:", adsError);
+        throw adsError;
+      }
 
       if (adsData?.ads && Array.isArray(adsData.ads)) {
+        console.log(`✅ Found ${adsData.ads.length} ads`);
         setAds(adsData.ads);
         // Initialize edit data for each ad
         const adsEditData: Record<string, any> = {};
@@ -799,11 +817,12 @@ const MetaDashboard = () => {
         });
         setEditAdsData(adsEditData);
       } else {
+        console.log("⚠️ No ads found or invalid data:", adsData);
         setAds([]);
         setEditAdsData({});
       }
     } catch (error: any) {
-      console.error("Error fetching ad sets and ads:", error);
+      console.error("❌ Error fetching ad sets and ads:", error);
       toast({
         title: t("metaDashboard.errorLoadingAdSets"),
         description: error.message || t("metaDashboard.unknownError"),
@@ -1832,6 +1851,10 @@ const MetaDashboard = () => {
 
               {/* Ad Sets Tab */}
               <TabsContent value="adsets" className="space-y-4 pt-4">
+                {(() => {
+                  console.log("🔍 Rendering Ad Sets tab - loadingAdSets:", loadingAdSets, "adSets.length:", adSets.length, "adSets:", adSets);
+                  return null;
+                })()}
                 {loadingAdSets ? (
                   <div className="flex items-center justify-center py-8">
                     <LoadingOverlay />
@@ -1952,6 +1975,10 @@ const MetaDashboard = () => {
 
               {/* Ads Tab */}
               <TabsContent value="ads" className="space-y-4 pt-4">
+                {(() => {
+                  console.log("🔍 Rendering Ads tab - loadingAds:", loadingAds, "ads.length:", ads.length, "ads:", ads);
+                  return null;
+                })()}
                 {loadingAds ? (
                   <div className="flex items-center justify-center py-8">
                     <LoadingOverlay />

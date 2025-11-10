@@ -326,38 +326,52 @@ serve(async (req) => {
 
     if (action === 'getAdSets' && campaignId) {
       // Get ad sets for a campaign
+      console.log(`Fetching ad sets for campaign: ${campaignId}`);
       const adSetsResponse = await fetch(
         `https://graph.facebook.com/v18.0/${campaignId}/adsets?fields=id,name,status,daily_budget,lifetime_budget,optimization_goal,billing_event,targeting,created_time,updated_time&access_token=${accessToken}`
       );
       const adSetsData = await adSetsResponse.json();
 
+      console.log(`Ad sets response for campaign ${campaignId}:`, JSON.stringify(adSetsData, null, 2));
+
       if (adSetsData.error) {
+        console.error(`Error fetching ad sets:`, adSetsData.error);
         return new Response(JSON.stringify({ error: adSetsData.error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      return new Response(JSON.stringify({ adSets: adSetsData.data || [] }), {
+      const adSets = adSetsData.data || [];
+      console.log(`Found ${adSets.length} ad sets for campaign ${campaignId}`);
+
+      return new Response(JSON.stringify({ adSets }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     if (action === 'getCreatives' && campaignId) {
       // Get creatives for a campaign via ads
+      console.log(`Fetching ads for campaign: ${campaignId}`);
       const adsResponse = await fetch(
         `https://graph.facebook.com/v18.0/${campaignId}/ads?fields=id,name,status,creative{id,name,title,body,image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
       );
       const adsData = await adsResponse.json();
 
+      console.log(`Ads response for campaign ${campaignId}:`, JSON.stringify(adsData, null, 2));
+
       if (adsData.error) {
+        console.error(`Error fetching ads:`, adsData.error);
         return new Response(JSON.stringify({ error: adsData.error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      return new Response(JSON.stringify({ ads: adsData.data || [] }), {
+      const ads = adsData.data || [];
+      console.log(`Found ${ads.length} ads for campaign ${campaignId}`);
+
+      return new Response(JSON.stringify({ ads }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
