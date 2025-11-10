@@ -151,12 +151,34 @@ const StackedScroll = () => {
           // Calculate scroll duration based on number of panels
           const scrollDuration = panels.length * 120; // 120% per panel
           
+          // Create quick setters for performance (no animation overhead)
+          const panelSetters = panels.map((panel) => ({
+            yPercent: gsap.quickSetter(panel, "yPercent", "%"),
+            scale: gsap.quickSetter(panel, "scale"),
+            opacity: gsap.quickSetter(panel, "opacity"),
+          }));
+          
+          const textSetters = textRefs.current.map((textRef) => 
+            textRef ? {
+              y: gsap.quickSetter(textRef, "y", "px"),
+              opacity: gsap.quickSetter(textRef, "opacity"),
+            } : null
+          );
+          
+          const imageSetters = imageRefs.current.map((imageRef) => 
+            imageRef ? {
+              y: gsap.quickSetter(imageRef, "y", "px"),
+              scale: gsap.quickSetter(imageRef, "scale"),
+              opacity: gsap.quickSetter(imageRef, "opacity"),
+            } : null
+          );
+          
           // Create ScrollTrigger that syncs perfectly with user scroll
           const trigger = ScrollTrigger.create({
             trigger: stackRef.current,
             start: "top top",
             end: `+=${scrollDuration}%`,
-            scrub: true, // Smooth scrubbing - syncs with scroll
+            scrub: 1, // Smooth scrubbing - syncs with scroll
             pin: stickyZoneRef.current,
             pinSpacing: true, // Allow spacing for scroll
             anticipatePin: 1,
@@ -165,81 +187,120 @@ const StackedScroll = () => {
               const totalPanels = panels.length;
               
               // Calculate which panel should be active based on scroll progress
+              // Divide progress into segments, one per panel
+              const segmentSize = 1 / totalPanels;
               const activeIndex = Math.min(
-                Math.floor(progress * totalPanels),
+                Math.floor(progress / segmentSize),
                 totalPanels - 1
               );
               
-              // Calculate progress within current panel segment
-              const segmentProgress = (progress * totalPanels) % 1;
+              // Calculate progress within current panel segment (0 to 1)
+              const segmentProgress = (progress % segmentSize) / segmentSize;
               
               // Update all panels based on scroll progress
               panels.forEach((panel, i) => {
-                const textRef = textRefs.current[i];
-                const imageRef = imageRefs.current[i];
+                const textSetter = textSetters[i];
+                const imageSetter = imageSetters[i];
+                const panelSetter = panelSetters[i];
                 const panelElement = panel as HTMLElement;
                 
                 if (i < activeIndex) {
-                  // Panels before active: already shown, keep dimmed
-                  gsap.set(panel, { 
-                    yPercent: 0, 
-                    scale: 0.92, 
-                    opacity: 0.6,
-                    zIndex: totalPanels - i
-                  });
-                  if (textRef) gsap.set(textRef, { y: 0, opacity: 0.6 });
-                  if (imageRef) gsap.set(imageRef, { y: 0, scale: 0.92, opacity: 0.6 });
+                  // Panels before active: already fully shown, keep dimmed behind
+                  panelElement.style.zIndex = `${totalPanels - i}`;
+                  panelSetter.yPercent(0);
+                  panelSetter.scale(0.92);
+                  panelSetter.opacity(0.6);
+                  
+                  if (textSetter) {
+                    textSetter.y(0);
+                    textSetter.opacity(0.6);
+                  }
+                  
+                  if (imageSetter) {
+                    imageSetter.y(0);
+                    imageSetter.scale(0.92);
+                    imageSetter.opacity(0.6);
+                  }
                 } else if (i === activeIndex) {
                   // Active panel: animate based on segment progress
-                  const panelProgress = Math.min(segmentProgress * 1.5, 1);
+                  panelElement.style.zIndex = `${totalPanels + 20}`;
                   
-                  // Panel animation
-                  gsap.set(panel, {
-                    yPercent: 20 * (1 - panelProgress),
-                    scale: 0.96 + (0.04 * panelProgress),
-                    opacity: panelProgress,
-                    zIndex: totalPanels + 10
-                  });
+                  // Panel enters: yPercent 20 → 0, scale 0.96 → 1, opacity 0 → 1
+                  const panelProgress = Math.min(segmentProgress * 1.2, 1);
+                  panelSetter.yPercent(20 * (1 - panelProgress));
+                  panelSetter.scale(0.96 + (0.04 * panelProgress));
+                  panelSetter.opacity(panelProgress);
                   
-                  // Text animation (slightly delayed)
-                  if (textRef) {
-                    const textProgress = Math.min((segmentProgress - 0.1) * 1.2, 1);
-                    gsap.set(textRef, {
-                      y: 60 * (1 - Math.max(0, textProgress)),
-                      opacity: Math.max(0, textProgress)
-                    });
+                  // Text animation (enters with slight delay for parallax)
+                  if (textSetter) {
+                    const textStart = 0.15;
+                    const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
+                    textSetter.y(60 * (1 - textProgress));
+                    textSetter.opacity(textProgress);
                   }
                   
-                  // Image animation (parallax effect)
-                  if (imageRef) {
-                    const imageProgress = Math.min((segmentProgress - 0.15) * 1.3, 1);
-                    gsap.set(imageRef, {
-                      y: 30 * (1 - Math.max(0, imageProgress)),
-                      scale: 0.95 + (0.05 * Math.max(0, imageProgress)),
-                      opacity: Math.max(0, imageProgress * 0.9)
-                    });
+                  // Image animation (parallax effect - enters slightly after text)
+                  if (imageSetter) {
+                    const imageStart = 0.2;
+                    const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
+                    imageSetter.y(30 * (1 - imageProgress));
+                    imageSetter.scale(0.95 + (0.05 * imageProgress));
+                    imageSetter.opacity(imageProgress);
                   }
                   
-                  // Dim previous panel when this one becomes active
-                  if (i > 0 && segmentProgress > 0.3) {
-                    const prevPanel = panels[i - 1];
-                    const dimProgress = Math.min((segmentProgress - 0.3) * 2, 1);
-                    gsap.set(prevPanel, {
-                      scale: 1 - (0.08 * dimProgress),
-                      opacity: 1 - (0.4 * dimProgress),
-                      zIndex: totalPanels - (i - 1)
-                    });
+                  // Dim previous panel when this one becomes active (after 40% of segment)
+                  if (i > 0 && segmentProgress > 0.4) {
+                    const prevPanelSetter = panelSetters[i - 1];
+                    const prevTextSetter = textSetters[i - 1];
+                    const prevImageSetter = imageSetters[i - 1];
+                    const dimProgress = Math.min((segmentProgress - 0.4) / 0.6, 1);
+                    
+                    prevPanelSetter.scale(1 - (0.08 * dimProgress));
+                    prevPanelSetter.opacity(1 - (0.4 * dimProgress));
+                    
+                    if (prevTextSetter) {
+                      prevTextSetter.opacity(1 - (0.4 * dimProgress));
+                    }
+                    
+                    if (prevImageSetter) {
+                      prevImageSetter.scale(1 - (0.08 * dimProgress));
+                      prevImageSetter.opacity(1 - (0.4 * dimProgress));
+                    }
+                  } else if (i > 0 && segmentProgress <= 0.4) {
+                    // Keep previous panel at full visibility until new one is 40% in
+                    const prevPanelSetter = panelSetters[i - 1];
+                    const prevTextSetter = textSetters[i - 1];
+                    const prevImageSetter = imageSetters[i - 1];
+                    
+                    prevPanelSetter.scale(1);
+                    prevPanelSetter.opacity(1);
+                    
+                    if (prevTextSetter) {
+                      prevTextSetter.opacity(1);
+                    }
+                    
+                    if (prevImageSetter) {
+                      prevImageSetter.scale(1);
+                      prevImageSetter.opacity(1);
+                    }
                   }
                 } else {
-                  // Panels after active: still hidden
-                  gsap.set(panel, {
-                    yPercent: 20,
-                    scale: 0.96,
-                    opacity: 0,
-                    zIndex: totalPanels - i
-                  });
-                  if (textRef) gsap.set(textRef, { y: 60, opacity: 0 });
-                  if (imageRef) gsap.set(imageRef, { y: 30, scale: 0.95, opacity: 0 });
+                  // Panels after active: still hidden, waiting
+                  panelElement.style.zIndex = `${totalPanels - i}`;
+                  panelSetter.yPercent(20);
+                  panelSetter.scale(0.96);
+                  panelSetter.opacity(0);
+                  
+                  if (textSetter) {
+                    textSetter.y(60);
+                    textSetter.opacity(0);
+                  }
+                  
+                  if (imageSetter) {
+                    imageSetter.y(30);
+                    imageSetter.scale(0.95);
+                    imageSetter.opacity(0);
+                  }
                 }
               });
             }
