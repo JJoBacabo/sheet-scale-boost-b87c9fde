@@ -232,8 +232,8 @@ const StackedScroll = () => {
                   // Active panel: animate based on segment progress
                   panelElement.style.zIndex = `${totalPanels + 20}`;
                   
-                  if (i === 0 && segmentProgress === 0) {
-                    // First panel at start: fully visible
+                  if (i === 0) {
+                    // First panel: always fully visible when active (stays until second panel starts)
                     panelSetter.yPercent(0);
                     panelSetter.scale(1);
                     panelSetter.opacity(1);
@@ -249,38 +249,28 @@ const StackedScroll = () => {
                       imageSetter.opacity(1);
                     }
                   } else {
+                    // Other panels: animate entrance based on segment progress
                     // Panel enters: yPercent 20 → 0, scale 0.96 → 1, opacity 0 → 1
                     const panelProgress = Math.min(segmentProgress * 1.2, 1);
                     panelSetter.yPercent(20 * (1 - panelProgress));
                     panelSetter.scale(0.96 + (0.04 * panelProgress));
-                    panelSetter.opacity(Math.max(panelProgress, i === 0 ? 1 : 0));
+                    panelSetter.opacity(panelProgress);
                     
                     // Text animation (enters with slight delay for parallax)
                     if (textSetter) {
-                      if (i === 0 && segmentProgress === 0) {
-                        textSetter.y(0);
-                        textSetter.opacity(1);
-                      } else {
-                        const textStart = 0.15;
-                        const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
-                        textSetter.y(60 * (1 - textProgress));
-                        textSetter.opacity(Math.max(textProgress, i === 0 ? 1 : 0));
-                      }
+                      const textStart = 0.15;
+                      const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
+                      textSetter.y(60 * (1 - textProgress));
+                      textSetter.opacity(textProgress);
                     }
                     
                     // Image animation (parallax effect - enters slightly after text)
                     if (imageSetter) {
-                      if (i === 0 && segmentProgress === 0) {
-                        imageSetter.y(0);
-                        imageSetter.scale(1);
-                        imageSetter.opacity(1);
-                      } else {
-                        const imageStart = 0.2;
-                        const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
-                        imageSetter.y(30 * (1 - imageProgress));
-                        imageSetter.scale(0.95 + (0.05 * imageProgress));
-                        imageSetter.opacity(Math.max(imageProgress, i === 0 ? 1 : 0));
-                      }
+                      const imageStart = 0.2;
+                      const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
+                      imageSetter.y(30 * (1 - imageProgress));
+                      imageSetter.scale(0.95 + (0.05 * imageProgress));
+                      imageSetter.opacity(imageProgress);
                     }
                   }
                   
