@@ -8,6 +8,7 @@ import {
   Lock,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Background3D } from "@/components/ui/Background3D";
 
 const ScrollDemo = () => {
   const [gsapLoaded, setGsapLoaded] = useState(false);
@@ -343,7 +344,9 @@ const ScrollDemo = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0A0C14] text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#0A0E27] text-[#F0F4F8] overflow-x-hidden relative">
+      {/* Background 3D */}
+      <Background3D />
       {/* Section 1: Scroll Hijacking / Smooth Scroll Sections */}
       <section
         ref={section1Ref}
@@ -355,16 +358,16 @@ const ScrollDemo = () => {
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
-            <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
+            <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
               Scroll Hijacking
             </span>
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#C5C7D0]">
+            <p className="text-xl text-[#F0F4F8]">
               Everything you need to optimize your campaigns in one platform
             </p>
           </div>
@@ -375,13 +378,13 @@ const ScrollDemo = () => {
               return (
                 <Card
                   key={index}
-                  className="feature-card-1 bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 backdrop-blur-sm hover:border-[#7BBCFE]/50 transition-all duration-300"
+                  className="feature-card-1 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-[#0A0C14]" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-[#C5C7D0] text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
                 </Card>
               );
             })}
@@ -390,26 +393,26 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 2: Scroll-Triggered Transitions */}
       <section
         ref={section2Ref}
-        className="min-h-screen py-20 px-4 sm:px-6 relative bg-[#0A0C14]"
+        className="min-h-screen py-20 px-4 sm:px-6 relative bg-[#0A0E27]"
       >
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
-            <span className="inline-block px-4 py-2 bg-[#B8A8FE]/20 border border-[#B8A8FE]/30 rounded-full text-sm text-[#B8A8FE] font-medium">
+            <span className="inline-block px-4 py-2 bg-[#A855F7]/20 border border-[#A855F7]/30 rounded-full text-sm text-[#A855F7] font-medium">
               Scroll Triggered
             </span>
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#C5C7D0]">
+            <p className="text-xl text-[#F0F4F8]">
               Everything you need to optimize your campaigns in one platform
             </p>
           </div>
@@ -420,13 +423,13 @@ const ScrollDemo = () => {
               return (
                 <Card
                   key={index}
-                  className="feature-card-2 bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 backdrop-blur-sm hover:border-[#7BBCFE]/50 transition-all duration-300"
+                  className="feature-card-2 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-[#0A0C14]" />
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
+                    <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-[#C5C7D0] text-sm leading-relaxed">{feature.description}</p>
+                  <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
                 </Card>
               );
             })}
@@ -435,12 +438,12 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 3: Scroll Snap + GSAP Timeline */}
       <section
         ref={section3Ref}
-        className="relative bg-[#0A0C14]"
+        className="relative bg-[#0A0E27]"
       >
         {features.map((feature, index) => {
           const Icon = feature.icon;
@@ -457,7 +460,7 @@ const ScrollDemo = () => {
                 {/* Label - only on first card */}
                 {index === 0 && (
                   <div className="mb-4">
-                    <span className="inline-block px-4 py-2 bg-[#0066FF]/20 border border-[#0066FF]/30 rounded-full text-sm text-[#0066FF] font-medium">
+                    <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
                       Scroll Snap
                     </span>
                   </div>
@@ -465,22 +468,22 @@ const ScrollDemo = () => {
 
                 {index === 0 && (
                   <>
-                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
                       Features that make the difference
                     </h2>
-                    <p className="text-xl text-[#C5C7D0] mb-12">
+                    <p className="text-xl text-[#F0F4F8] mb-12">
                       Everything you need to optimize your campaigns in one platform
                     </p>
                   </>
                 )}
 
-                <Card className="feature-card-3 bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6 mx-auto">
-                    <Icon className="w-10 h-10 text-[#0A0C14]" />
+                <Card className="feature-card-3 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
+                    <Icon className="w-10 h-10 text-[#0A0E27]" />
                   </div>
                   <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
-                  <p className="text-[#C5C7D0] text-lg leading-relaxed">{feature.description}</p>
-                  <div className="mt-8 text-sm text-[#C5C7D0]/50">
+                  <p className="text-[#F0F4F8] text-lg leading-relaxed">{feature.description}</p>
+                  <div className="mt-8 text-sm text-[#F0F4F8]/50">
                     {index + 1} / {features.length}
                   </div>
                 </Card>
@@ -491,23 +494,23 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
 
       {/* Section 4: Pinned Sections */}
-      <section ref={section4Ref} className="relative bg-[#0A0C14]">
+      <section ref={section4Ref} className="relative bg-[#0A0E27]">
         <div className="pinned-container min-h-screen flex items-center justify-center px-4 sm:px-6">
           <div className="container mx-auto max-w-4xl text-center relative">
             {/* Label */}
             <div className="mb-4">
-              <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
+              <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
                 Pinned Section
               </span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#C5C7D0] mb-12">
+            <p className="text-xl text-[#F0F4F8] mb-12">
               Everything you need to optimize your campaigns in one platform
             </p>
 
@@ -520,13 +523,13 @@ const ScrollDemo = () => {
                     key={index}
                     className="feature-card-4 absolute inset-0 flex items-center justify-center"
                   >
-                    <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
-                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6 mx-auto">
-                        <Icon className="w-10 h-10 text-[#0A0C14]" />
+                    <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
+                        <Icon className="w-10 h-10 text-[#0A0E27]" />
                       </div>
                       <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
-                      <p className="text-[#C5C7D0] text-lg leading-relaxed">{feature.description}</p>
-                      <div className="mt-8 text-sm text-[#C5C7D0]/50">
+                      <p className="text-[#F0F4F8] text-lg leading-relaxed">{feature.description}</p>
+                      <div className="mt-8 text-sm text-[#F0F4F8]/50">
                         {index + 1} / {features.length}
                       </div>
                     </Card>
