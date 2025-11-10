@@ -32,6 +32,7 @@ import TestPage from "./pages/TestPage";
 import HomePageTest from "./pages/HomePageTest";
 import ContactBusiness from "./pages/ContactBusiness";
 import ScrollDemo from "./pages/ScrollDemo";
+import StackedScroll from "./pages/StackedScroll";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const AppContent = () => {
         <Route path="/test-page" element={<TestPage />} />
         <Route path="/homepage-test" element={<HomePageTest />} />
         <Route path="/scroll-demo" element={<ScrollDemo />} />
+        <Route path="/stacked-scroll" element={<StackedScroll />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
