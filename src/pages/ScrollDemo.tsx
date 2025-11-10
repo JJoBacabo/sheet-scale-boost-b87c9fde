@@ -273,6 +273,9 @@ const ScrollDemo = () => {
       });
       scrollTriggersRef.current.push(pinTrigger);
 
+      // Track current visible card to avoid unnecessary animations
+      let currentVisibleIndex = 0;
+
       // Create scroll trigger that updates cards based on progress
       const scrollTrigger = ScrollTrigger.create({
         trigger: container as Element,
@@ -284,33 +287,38 @@ const ScrollDemo = () => {
           const totalCards = cards.length;
           
           // Calculate which card should be visible
-          const currentIndex = Math.min(
+          const newIndex = Math.min(
             Math.floor(progress * totalCards),
             totalCards - 1
           );
           
-          // Update all cards based on current index
-          cards.forEach((card, index) => {
-            if (index === currentIndex) {
-              // Show current card
-              gsap.to(card, {
-                opacity: 1,
-                y: 0,
-                scale: 1,
-                duration: 0.3,
-                ease: "power2.out",
-              });
-            } else {
-              // Hide other cards
-              gsap.to(card, {
-                opacity: 0,
-                y: index < currentIndex ? -50 : 50,
-                scale: 0.9,
-                duration: 0.3,
-                ease: "power2.out",
-              });
-            }
-          });
+          // Only update if index changed
+          if (newIndex !== currentVisibleIndex) {
+            currentVisibleIndex = newIndex;
+            
+            // Update all cards based on current index
+            cards.forEach((card, index) => {
+              if (index === currentVisibleIndex) {
+                // Show current card
+                gsap.to(card, {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  duration: 0.5,
+                  ease: "power2.out",
+                });
+              } else {
+                // Hide other cards
+                gsap.to(card, {
+                  opacity: 0,
+                  y: index < currentVisibleIndex ? -50 : 50,
+                  scale: 0.9,
+                  duration: 0.5,
+                  ease: "power2.out",
+                });
+              }
+            });
+          }
         },
       });
 
