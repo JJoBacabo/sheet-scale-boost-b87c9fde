@@ -148,80 +148,104 @@ const StackedScroll = () => {
             }
           });
 
-          // Create single timeline for stacked scroll
-          const tl = gsap.timeline({
-            scrollTrigger: {
-              trigger: stackRef.current,
-              start: "top top",
-              end: () => `+=${panels.length * 120}%`,
-              scrub: 1,
-              pin: stickyZoneRef.current,
-              pinSpacing: false,
-              anticipatePin: 1
+          // Calculate scroll duration based on number of panels
+          const scrollDuration = panels.length * 120; // 120% per panel
+          
+          // Create ScrollTrigger that syncs perfectly with user scroll
+          const trigger = ScrollTrigger.create({
+            trigger: stackRef.current,
+            start: "top top",
+            end: `+=${scrollDuration}%`,
+            scrub: true, // Smooth scrubbing - syncs with scroll
+            pin: stickyZoneRef.current,
+            pinSpacing: true, // Allow spacing for scroll
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              const progress = self.progress; // 0 to 1
+              const totalPanels = panels.length;
+              
+              // Calculate which panel should be active based on scroll progress
+              const activeIndex = Math.min(
+                Math.floor(progress * totalPanels),
+                totalPanels - 1
+              );
+              
+              // Calculate progress within current panel segment
+              const segmentProgress = (progress * totalPanels) % 1;
+              
+              // Update all panels based on scroll progress
+              panels.forEach((panel, i) => {
+                const textRef = textRefs.current[i];
+                const imageRef = imageRefs.current[i];
+                const panelElement = panel as HTMLElement;
+                
+                if (i < activeIndex) {
+                  // Panels before active: already shown, keep dimmed
+                  gsap.set(panel, { 
+                    yPercent: 0, 
+                    scale: 0.92, 
+                    opacity: 0.6,
+                    zIndex: totalPanels - i
+                  });
+                  if (textRef) gsap.set(textRef, { y: 0, opacity: 0.6 });
+                  if (imageRef) gsap.set(imageRef, { y: 0, scale: 0.92, opacity: 0.6 });
+                } else if (i === activeIndex) {
+                  // Active panel: animate based on segment progress
+                  const panelProgress = Math.min(segmentProgress * 1.5, 1);
+                  
+                  // Panel animation
+                  gsap.set(panel, {
+                    yPercent: 20 * (1 - panelProgress),
+                    scale: 0.96 + (0.04 * panelProgress),
+                    opacity: panelProgress,
+                    zIndex: totalPanels + 10
+                  });
+                  
+                  // Text animation (slightly delayed)
+                  if (textRef) {
+                    const textProgress = Math.min((segmentProgress - 0.1) * 1.2, 1);
+                    gsap.set(textRef, {
+                      y: 60 * (1 - Math.max(0, textProgress)),
+                      opacity: Math.max(0, textProgress)
+                    });
+                  }
+                  
+                  // Image animation (parallax effect)
+                  if (imageRef) {
+                    const imageProgress = Math.min((segmentProgress - 0.15) * 1.3, 1);
+                    gsap.set(imageRef, {
+                      y: 30 * (1 - Math.max(0, imageProgress)),
+                      scale: 0.95 + (0.05 * Math.max(0, imageProgress)),
+                      opacity: Math.max(0, imageProgress * 0.9)
+                    });
+                  }
+                  
+                  // Dim previous panel when this one becomes active
+                  if (i > 0 && segmentProgress > 0.3) {
+                    const prevPanel = panels[i - 1];
+                    const dimProgress = Math.min((segmentProgress - 0.3) * 2, 1);
+                    gsap.set(prevPanel, {
+                      scale: 1 - (0.08 * dimProgress),
+                      opacity: 1 - (0.4 * dimProgress),
+                      zIndex: totalPanels - (i - 1)
+                    });
+                  }
+                } else {
+                  // Panels after active: still hidden
+                  gsap.set(panel, {
+                    yPercent: 20,
+                    scale: 0.96,
+                    opacity: 0,
+                    zIndex: totalPanels - i
+                  });
+                  if (textRef) gsap.set(textRef, { y: 60, opacity: 0 });
+                  if (imageRef) gsap.set(imageRef, { y: 30, scale: 0.95, opacity: 0 });
+                }
+              });
             }
           });
 
-          // Staircase effect: each panel enters on top of the previous one
-          panels.forEach((panel, i) => {
-            const textRef = textRefs.current[i];
-            const imageRef = imageRefs.current[i];
-
-            if (i === 0) {
-              // First panel starts visible, but will dim when second panel enters
-              // Set it to dim when panel 1 enters (at position 1 in timeline)
-              if (panels.length > 1) {
-                tl.to(panel, {
-                  scale: 0.92,
-                  opacity: 0.6,
-                  duration: 0.6,
-                  ease: "power2.out"
-                }, 1);
-              }
-              return;
-            }
-
-            // Panel enters: comes to center (yPercent: 20 → 0), scales up, fades in
-            tl.to(panel, {
-              yPercent: 0,
-              scale: 1,
-              opacity: 1,
-              duration: 1,
-              ease: "power2.out"
-            }, i);
-
-            // Text parallax: enters slightly after panel starts
-            if (textRef) {
-              tl.to(textRef, {
-                y: 0,
-                opacity: 1,
-                duration: 0.8,
-                ease: "power3.out"
-              }, i + 0.1);
-            }
-
-            // Image parallax: enters with slight delay for parallax effect
-            if (imageRef) {
-              tl.to(imageRef, {
-                y: 0,
-                opacity: 1,
-                scale: 1,
-                duration: 0.8,
-                ease: "power3.out"
-              }, i + 0.2);
-            }
-
-            // Previous panel: scales down and dims when new one enters
-            if (panels[i - 1]) {
-              tl.to(panels[i - 1], {
-                scale: 0.92,
-                opacity: 0.6,
-                duration: 0.6,
-                ease: "power2.out"
-              }, i);
-            }
-          });
-
-          scrollTriggersRef.current.push(tl.scrollTrigger);
+          scrollTriggersRef.current.push(trigger);
         }
 
         ScrollTrigger.refresh();
@@ -379,8 +403,14 @@ const StackedScroll = () => {
           </div>
         </div>
 
-        {/* Spacer to allow scroll - positioned after sticky zone */}
-        <div style={{ height: `${panelsData.length * 120}vh`, minHeight: `${panelsData.length * 120}vh` }} />
+        {/* Spacer to allow scroll - creates scroll space for pinned section */}
+        <div 
+          className="w-full"
+          style={{ 
+            height: `${panelsData.length * 120}vh`,
+            minHeight: `${panelsData.length * 120}vh`
+          }} 
+        />
       </section>
     </div>
   );
