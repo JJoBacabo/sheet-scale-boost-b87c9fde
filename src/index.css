@@ -19,16 +19,16 @@
     /* Glass Effect Colors */
     --glass-bg: 210 20% 96% / 0.05;
     --glass-bg-hover: 210 20% 96% / 0.08;
-    --glass-border: 187 100% 50% / 0.2;
+    --glass-border: 207 98% 74% / 0.2;
 
-    /* Primary - Electric Cyan #00D9FF */
-    --primary: 187 100% 50%;
+    /* Primary - Blue #7BBCFE */
+    --primary: 207 98% 74%;
     --primary-foreground: 230 58% 10%;
-    --primary-dark: 187 100% 40%;
-    --primary-glow: 187 100% 50%;
+    --primary-dark: 207 98% 64%;
+    --primary-glow: 207 98% 74%;
 
-    /* Secondary - Vibrant Purple #A855F7 */
-    --secondary: 271 81% 66%;
+    /* Secondary - Light Purple #B8A8FE */
+    --secondary: 252 97% 83%;
     --secondary-foreground: 230 58% 10%;
 
     /* Success - Mint Green #10B981 */
@@ -51,38 +51,38 @@
     --muted: 230 45% 15%;
     --muted-foreground: 210 20% 75%;
 
-    --accent: 187 100% 50%;
+    --accent: 207 98% 74%;
     --accent-foreground: 230 58% 10%;
 
-    --border: 187 100% 50% / 0.2;
+    --border: 207 98% 74% / 0.2;
     --input: 230 45% 18%;
-    --ring: 187 100% 50%;
+    --ring: 207 98% 74%;
 
     --radius: 0.75rem;
 
-    /* Gradients - Cyan suave (gradiente muito sutil para funcionar com bg-gradient) */
-    --gradient-primary: linear-gradient(135deg, hsl(187 100% 48%) 0%, hsl(187 100% 52%) 100%);
+    /* Gradients - Blue to Purple (using official colors) */
+    --gradient-primary: linear-gradient(135deg, hsl(207 98% 74%) 0%, hsl(252 97% 83%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(160 84% 37%) 0%, hsl(160 84% 41%) 100%);
     --gradient-hero: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12% / 0.8) 50%, hsl(230 58% 10%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(187 100% 50% / 0.05), hsl(271 81% 66% / 0.03));
+    --gradient-card: linear-gradient(135deg, hsl(207 98% 74% / 0.05), hsl(252 97% 83% / 0.03));
     --gradient-sidebar: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12%) 50%, hsl(230 58% 10%) 100%);
     
-    /* Shadows - Cyan glow */
+    /* Shadows - Blue glow */
     --shadow-sm: 0 2px 8px hsl(230 58% 5% / 0.6);
     --shadow-md: 0 4px 16px hsl(230 58% 5% / 0.7);
-    --shadow-lg: 0 8px 25px hsl(187 100% 50% / 0.3);
-    --shadow-xl: 0 12px 40px hsl(187 100% 50% / 0.4);
-    --shadow-glow: 0 8px 30px hsl(187 100% 50% / 0.3);
+    --shadow-lg: 0 8px 25px hsl(207 98% 74% / 0.3);
+    --shadow-xl: 0 12px 40px hsl(207 98% 74% / 0.4);
+    --shadow-glow: 0 8px 30px hsl(207 98% 74% / 0.3);
 
     /* Sidebar */
     --sidebar-background: 230 58% 10%;
     --sidebar-foreground: 210 20% 96%;
-    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary: 207 98% 74%;
     --sidebar-primary-foreground: 230 58% 10%;
-    --sidebar-accent: 187 100% 50% / 0.1;
+    --sidebar-accent: 207 98% 74% / 0.1;
     --sidebar-accent-foreground: 210 20% 96%;
-    --sidebar-border: 187 100% 50% / 0.2;
-    --sidebar-ring: 187 100% 50%;
+    --sidebar-border: 207 98% 74% / 0.2;
+    --sidebar-ring: 207 98% 74%;
   }
 }
 
@@ -134,15 +134,15 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(271 81% 66%) 100%);
+    background: linear-gradient(135deg, hsl(207 98% 74%) 0%, hsl(252 97% 83%) 100%);
     border-radius: 10px;
     border: 2px solid hsl(230 58% 10%);
     transition: all 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(135deg, hsl(187 100% 60%) 0%, hsl(271 81% 76%) 100%);
-    box-shadow: 0 0 10px hsl(187 100% 50% / 0.5);
+    background: linear-gradient(135deg, hsl(207 98% 84%) 0%, hsl(252 97% 93%) 100%);
+    box-shadow: 0 0 10px hsl(207 98% 74% / 0.5);
   }
 
   ::-webkit-scrollbar-corner {
@@ -152,10 +152,10 @@
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(187 100% 50%) hsl(230 50% 12%);
+    scrollbar-color: hsl(207 98% 74%) hsl(230 50% 12%);
   }
 
-  /* Animated Background - Cyan and Purple */
+  /* Animated Background - Blue and Purple */
   body::before {
     content: '';
     position: fixed;
@@ -164,9 +164,9 @@
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 50%, hsl(187 100% 50% / 0.06), transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(271 81% 66% / 0.04), transparent 50%),
-      radial-gradient(circle at 40% 80%, hsl(160 84% 39% / 0.04), transparent 50%);
+      radial-gradient(circle at 20% 50%, hsl(207 98% 74% / 0.06), transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(252 97% 83% / 0.04), transparent 50%),
+      radial-gradient(circle at 40% 80%, hsl(217 100% 50% / 0.04), transparent 50%);
     animation: backgroundPulse 15s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;
@@ -279,23 +279,23 @@
   }
 
   .glass-card:hover {
-    border-color: hsl(187 100% 50% / 0.4);
+    border-color: hsl(207 98% 74% / 0.4);
     box-shadow: var(--shadow-glow);
     background: hsl(var(--glass-bg-hover));
   }
 
-  /* Logo Glow Effect - Roxo */
+  /* Logo Glow Effect - Blue */
   .logo-glow {
     animation: logoGlow 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 8px hsl(187 100% 50% / 0.5));
+    filter: drop-shadow(0 0 8px hsl(207 98% 74% / 0.5));
   }
 
   @keyframes logoGlow {
     0%, 100% {
-      filter: drop-shadow(0 0 8px hsl(187 100% 50% / 0.5));
+      filter: drop-shadow(0 0 8px hsl(207 98% 74% / 0.5));
     }
     50% {
-      filter: drop-shadow(0 0 16px hsl(187 100% 50% / 0.7));
+      filter: drop-shadow(0 0 16px hsl(207 98% 74% / 0.7));
     }
   }
 
@@ -309,7 +309,7 @@
 
   /* Button Variants */
   .btn-gradient {
-    background: hsl(187 100% 50%);
+    background: hsl(207 98% 74%);
     color: hsl(var(--primary-foreground));
     border: none;
     transition: all 0.3s ease;
@@ -333,8 +333,8 @@
   }
 
   .btn-gradient:hover {
-    background: hsl(187 100% 55%);
-    box-shadow: 0 8px 25px hsl(187 100% 50% / 0.4);
+    background: hsl(207 98% 79%);
+    box-shadow: 0 8px 25px hsl(207 98% 74% / 0.4);
     transform: translateY(-2px);
   }
 
@@ -348,7 +348,7 @@
 
   .btn-glass:hover {
     background: hsl(var(--glass-bg-hover));
-    border-color: hsl(187 100% 50% / 0.4);
+    border-color: hsl(207 98% 74% / 0.4);
     box-shadow: var(--shadow-glow);
   }
 }
