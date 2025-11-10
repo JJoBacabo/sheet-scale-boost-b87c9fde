@@ -167,6 +167,9 @@ export const AdminManagement = () => {
 
   const handleRemoveAdmin = async (adminId: string, userId: string) => {
     try {
+      // Log before deletion (trigger will also log, but this ensures it)
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
       const { error } = await supabase
         .from('user_roles')
         .delete()
@@ -174,6 +177,22 @@ export const AdminManagement = () => {
         .eq('role', 'admin');
 
       if (error) throw error;
+
+      // Additional log (trigger should handle it, but ensure it's logged)
+      try {
+        await supabase.from('audit_logs').insert({
+          user_id: userId,
+          event_type: 'admin_role_removed',
+          event_data: {
+            role: 'admin',
+            removed_by: currentUser?.id || 'system',
+            removed_by_email: currentUser?.email || 'system'
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log admin role removal:', logError);
+        // Don't fail if logging fails
+      }
 
       toast({
         title: isPortuguese ? 'Sucesso' : 'Success',

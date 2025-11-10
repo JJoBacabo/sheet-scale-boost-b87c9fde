@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg" | "xl";
@@ -18,13 +19,26 @@ const sizeClasses = {
 export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) {
   return (
     <div className="flex items-center justify-center">
-      <Loader2 
-        className={cn(
-          "animate-spin text-primary",
-          sizeClasses[size],
-          className
-        )} 
-      />
+      <motion.div
+        animate={{ 
+          rotateY: [0, 360],
+          rotateX: [0, 180, 360]
+        }}
+        transition={{ 
+          duration: 2, 
+          repeat: Infinity,
+          ease: "linear"
+        }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <Loader2 
+          className={cn(
+            "text-primary",
+            sizeClasses[size],
+            className
+          )} 
+        />
+      </motion.div>
     </div>
   );
 }
@@ -84,12 +98,22 @@ export function LoadingOverlay({ message, className }: LoadingOverlayProps) {
                           animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }} />
           
           {/* Logo image */}
-          <img 
+          <motion.img 
             src={logo} 
             alt="Sheet Tools" 
             className="relative w-32 h-32 object-contain z-10
-                       drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]
-                       animate-[logoFloat_3s_ease-in-out_infinite]" 
+                       drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
+            animate={{ 
+              y: [0, -10, 0],
+              scale: [1, 1.02, 1],
+              rotateY: [0, 180, 360]
+            }}
+            transition={{ 
+              duration: 3, 
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            style={{ transformStyle: 'preserve-3d' }}
           />
           
           {/* Enhanced orbiting dots with trail effect */}

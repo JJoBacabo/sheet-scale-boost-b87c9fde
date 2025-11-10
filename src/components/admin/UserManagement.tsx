@@ -144,12 +144,39 @@ export const UserManagement = () => {
 
   const handleUpdatePlan = async (userId: string, newPlan: string) => {
     try {
+      // Get current plan before update
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('subscription_plan')
+        .eq('user_id', userId)
+        .single();
+
+      const oldPlan = currentProfile?.subscription_plan || 'unknown';
+
       const { error } = await supabase
         .from('profiles')
         .update({ subscription_plan: newPlan })
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      // Log admin action (trigger will also log, but this ensures it)
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        await supabase.from('audit_logs').insert({
+          user_id: userId,
+          event_type: 'user_plan_updated',
+          event_data: {
+            previous_plan: oldPlan,
+            new_plan: newPlan,
+            updated_by: currentUser?.id || 'system',
+            updated_by_email: currentUser?.email || 'system'
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log plan update:', logError);
+        // Don't fail the operation if logging fails
+      }
 
       toast({
         title: isPortuguese ? 'Sucesso' : 'Success',
@@ -170,12 +197,39 @@ export const UserManagement = () => {
 
   const handleUpdateStatus = async (userId: string, newStatus: string) => {
     try {
+      // Get current status before update
+      const { data: currentProfile } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('user_id', userId)
+        .single();
+
+      const oldStatus = currentProfile?.subscription_status || 'unknown';
+
       const { error } = await supabase
         .from('profiles')
         .update({ subscription_status: newStatus })
         .eq('user_id', userId);
 
       if (error) throw error;
+
+      // Log admin action (trigger will also log, but this ensures it)
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        await supabase.from('audit_logs').insert({
+          user_id: userId,
+          event_type: 'user_status_updated',
+          event_data: {
+            previous_status: oldStatus,
+            new_status: newStatus,
+            updated_by: currentUser?.id || 'system',
+            updated_by_email: currentUser?.email || 'system'
+          }
+        });
+      } catch (logError) {
+        console.error('Failed to log status update:', logError);
+        // Don't fail the operation if logging fails
+      }
 
       toast({
         title: isPortuguese ? 'Sucesso' : 'Success',

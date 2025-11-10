@@ -1,5 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, ShoppingCart, Activity } from "lucide-react";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 
 interface StatsOverviewProps {
   stats: {
@@ -107,35 +109,51 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card 
-            key={index} 
-            className={`group relative overflow-hidden glass-card rounded-2xl border ${stat.border} hover:border-primary/40 transition-all duration-300 hover:shadow-glow`}
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 30, rotateX: -10 }}
+            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
           >
-            {/* Gradient Background */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-            
-            {/* Content */}
-            <div className="relative p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className={`p-3 rounded-xl ${stat.iconBg} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+            <Card3D 
+              intensity="medium" 
+              glow={stat.trend === "up"}
+            >
+              <div className="relative p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <motion.div
+                    className={`p-3 rounded-xl ${stat.iconBg}`}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+                  </motion.div>
+                  {stat.trend !== "neutral" && (
+                    <div
+                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        stat.trend === "up" 
+                          ? "bg-primary/10 text-primary" 
+                          : "bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      {stat.trend === "up" ? "↑" : "↓"}
+                    </div>
+                  )}
                 </div>
-                {stat.trend !== "neutral" && (
-                  <div className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                    stat.trend === "up" 
-                      ? "bg-primary/10 text-primary" 
-                      : "bg-destructive/10 text-destructive"
-                  }`}>
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </div>
-                )}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
+                  <motion.p
+                    className={`text-2xl font-bold ${stat.iconColor}`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
+                  >
+                    {stat.value}
+                  </motion.p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
-                <p className={`text-2xl font-bold ${stat.iconColor}`}>{stat.value}</p>
-              </div>
-            </div>
-          </Card>
+            </Card3D>
+          </motion.div>
         );
       })}
     </div>

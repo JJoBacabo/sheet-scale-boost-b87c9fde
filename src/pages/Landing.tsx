@@ -7,8 +7,14 @@ import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import logo from "@/assets/logo.png";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
+import { Background3D } from "@/components/ui/Background3D";
+import { useCinematicScroll } from "@/hooks/useCinematicScroll";
+
 const Landing = () => {
   const navigate = useNavigate();
   const {
@@ -56,33 +62,67 @@ const Landing = () => {
     }
     setMobileMenuOpen(false);
   };
-  return <div className="min-h-screen bg-black text-white relative">
+  return <div className="min-h-screen bg-black text-white relative overflow-hidden">
+      {/* CSS para remover fundo preto da seção Features */}
+      <style>{`
+        #features-storytelling {
+          background: transparent !important;
+        }
+        #features-storytelling > * {
+          background: transparent !important;
+        }
+      `}</style>
+      {/* Background 3D */}
+      <Background3D />
+      
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 sm:px-6 py-4 relative">
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <motion.div 
+              className="flex items-center gap-3 flex-shrink-0"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
-                <img src={logo} alt="Sheet Tools" className="h-12 sm:h-16 w-auto relative logo-glow" />
+                <motion.img 
+                  src={logo} 
+                  alt="Sheet Tools" 
+                  className="h-12 sm:h-16 w-auto relative logo-glow"
+                  animate={{ 
+                    filter: [
+                      "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))",
+                      "drop-shadow(0 0 16px rgba(74, 233, 189, 0.5))",
+                      "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))"
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
               </div>
-            </div>
+            </motion.div>
             
             {/* Nav - Center (absolute positioning for true center) - Desktop Only */}
             <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
-              <button onClick={() => scrollToSection('what-is-it')} className="text-white hover:text-primary transition-colors whitespace-nowrap">
-                {t('nav.whatIsIt')}
-              </button>
-              <button onClick={() => scrollToSection('features')} className="text-white hover:text-primary transition-colors whitespace-nowrap">
-                {t('nav.features')}
-              </button>
-              <button onClick={() => scrollToSection('pricing')} className="text-white hover:text-primary transition-colors whitespace-nowrap">
-                {t('nav.pricing')}
-              </button>
-              <button onClick={() => scrollToSection('faq')} className="text-white hover:text-primary transition-colors whitespace-nowrap">
-                {t('nav.faq')}
-              </button>
+              {['what-is-it', 'features', 'pricing', 'faq'].map((section, index) => (
+                <motion.button
+                  key={section}
+                  onClick={() => scrollToSection(section)}
+                  className="text-white hover:text-primary transition-colors whitespace-nowrap"
+                  whileHover={{ 
+                    rotateY: 5, 
+                    z: 10,
+                    scale: 1.05
+                  }}
+                  style={{ transformStyle: 'preserve-3d' }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, type: "spring" }}
+                >
+                  {t(`nav.${section === 'what-is-it' ? 'whatIsIt' : section}`)}
+                </motion.button>
+              ))}
             </nav>
 
             {/* Actions - Right */}
@@ -90,9 +130,15 @@ const Landing = () => {
               <div className="hidden sm:block">
                 <LanguageToggle />
               </div>
-              <Button className="hidden sm:flex btn-gradient shadow-glow font-semibold px-6 rounded-lg" onClick={() => navigate("/auth")}>
+              <Button3D 
+                variant="gradient" 
+                size="md"
+                glow
+                className="hidden sm:flex"
+                onClick={() => navigate("/auth")}
+              >
                 {t('header.getStarted')}
-              </Button>
+              </Button3D>
               
               {/* Mobile Menu */}
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -148,44 +194,86 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 sm:px-6 pt-32 pb-20 relative">
+      <section className="container mx-auto px-4 sm:px-6 pt-32 pb-20 relative z-10">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-3xl">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-8 leading-tight">
+            <motion.h1 
+              className="text-5xl sm:text-6xl md:text-7xl font-bold mb-8 leading-tight"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
               {t('landing.hero.title1')}{" "}
-              <span className="gradient-text">
+              <motion.span 
+                className="gradient-text"
+                style={{ transformStyle: 'preserve-3d', display: 'inline-block' }}
+                animate={{ 
+                  rotateY: [0, 5, 0],
+                  rotateX: [0, 2, 0]
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
                 {t('landing.hero.title2')}
-              </span>
-            </h1>
+              </motion.span>
+            </motion.h1>
             
-            <p className="text-xl text-gray-400 mb-8">
+            <motion.p 
+              className="text-xl text-gray-400 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+            >
               {t('landing.hero.subtitle')}
-            </p>
+            </motion.p>
 
-            <div className="space-y-4 mb-10">
-              <div className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary" />
-                <span className="text-gray-300">{t('landing.hero.benefit1')}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary" />
-                <span className="text-gray-300">{t('landing.hero.benefit2')}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary" />
-                <span className="text-gray-300">{t('landing.hero.benefit3')}</span>
-              </div>
-            </div>
+            <motion.div 
+              className="space-y-4 mb-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              {[1, 2, 3].map((num) => (
+                <motion.div
+                  key={num}
+                  className="flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + num * 0.1 }}
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: num * 0.3 }}
+                  >
+                    <Check className="w-5 h-5 text-primary" />
+                  </motion.div>
+                  <span className="text-gray-300">{t(`landing.hero.benefit${num}`)}</span>
+                </motion.div>
+              ))}
+            </motion.div>
 
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="btn-gradient shadow-glow font-semibold px-8 py-6 text-lg rounded-lg" onClick={() => navigate("/auth")}>
+            <motion.div 
+              className="flex flex-col sm:flex-row gap-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+            >
+              <Button3D 
+                variant="gradient" 
+                size="lg" 
+                glow
+                onClick={() => navigate("/auth")}
+              >
                 {t('landing.hero.ctaPrimary')}
                 <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8 py-6 text-lg rounded-lg" onClick={() => scrollToSection('what-is-it')}>
+              </Button3D>
+              <Button3D 
+                variant="glass" 
+                size="lg"
+                onClick={() => scrollToSection('what-is-it')}
+              >
                 {t('landing.hero.ctaSecondary')}
-              </Button>
-            </div>
+              </Button3D>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -203,66 +291,173 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            <Card className="p-8 bg-white/5 border border-white/10 hover:border-primary/50 transition-all rounded-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow">
-                <Brain className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">{t('landing.whatIsIt.smartAnalysis.title')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {t('landing.whatIsIt.smartAnalysis.description')}
-              </p>
-            </Card>
-
-            <Card className="p-8 bg-white/5 border border-white/10 hover:border-primary/50 transition-all rounded-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow">
-                <Gauge className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">{t('landing.whatIsIt.decisionAutomation.title')}</h3>
-              <p className="text-gray-400 leading-relaxed">
-                {t('landing.whatIsIt.decisionAutomation.description')}
-              </p>
-            </Card>
+            {[
+              { icon: Brain, key: 'smartAnalysis' },
+              { icon: Gauge, key: 'decisionAutomation' }
+            ].map((item, index) => (
+              <motion.div
+                key={item.key}
+                initial={{ opacity: 0, y: 50, rotateX: -15 }}
+                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                transition={{ delay: index * 0.2, type: "spring", stiffness: 100 }}
+              >
+                <Card3D intensity="medium" glow>
+                  <motion.div
+                    className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow"
+                    whileHover={{ rotateY: 360, scale: 1.1 }}
+                    transition={{ duration: 0.6 }}
+                  >
+                    <item.icon className="w-8 h-8 text-primary-foreground" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold mb-4">{t(`landing.whatIsIt.${item.key}.title`)}</h3>
+                  <p className="text-gray-400 leading-relaxed">
+                    {t(`landing.whatIsIt.${item.key}.description`)}
+                  </p>
+                </Card3D>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 sm:px-6 py-20 relative">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t('landing.features.title')}
-          </h2>
-          <p className="text-xl text-gray-400">
-            {t('landing.features.subtitle')}
-          </p>
+      {/* Features Section - Simple Text Only */}
+      <section id="features-storytelling" className="relative overflow-hidden bg-transparent min-h-screen flex items-center justify-center" aria-label="Features that make the difference">
+        {/* Background da homepage (partículas) */}
+        <Background3D />
+        
+        {/* Texto centralizado */}
+        <div className="relative z-10 text-center px-4 sm:px-6">
+          <motion.h2 
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            Features that make the difference
+          </motion.h2>
+          <motion.p 
+            className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            Everything you need to optimize your campaigns in one platform
+          </motion.p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {/* Features with Full Page Scroll - Cinematic Effect */}
+        <div className="features-container">
           {[{
-          icon: Activity,
-          key: 'integration'
-        }, {
-          icon: BarChart3,
-          key: 'metrics'
-        }, {
-          icon: Brain,
-          key: 'ai'
-        }, {
-          icon: Zap,
-          key: 'automation'
-        }, {
-          icon: TrendingUp,
-          key: 'profit'
-        }, {
-          icon: Lock,
-          key: 'secure'
-        }].map((feature, index) => <Card key={index} className="p-8 bg-white/5 border border-white/10 hover:border-primary/50 transition-all duration-300 rounded-2xl">
-              <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow">
-                <feature.icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <h3 className="text-xl font-bold mb-3">{t(`landing.features.${feature.key}.title`)}</h3>
-              <p className="text-gray-400 leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
-            </Card>)}
+            icon: Activity,
+            key: 'integration'
+          }, {
+            icon: BarChart3,
+            key: 'metrics'
+          }, {
+            icon: Brain,
+            key: 'ai'
+          }, {
+            icon: Zap,
+            key: 'automation'
+          }, {
+            icon: TrendingUp,
+            key: 'profit'
+          }, {
+            icon: Lock,
+            key: 'secure'
+          }].map((feature, index) => (
+            <motion.div
+              key={index}
+              className="feature-item snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ duration: 0.6 }}
+            >
+            <motion.div
+              className="max-w-4xl mx-auto w-full"
+              initial={{ opacity: 0, y: 80, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
+              transition={{ 
+                duration: 0.7, 
+                type: "spring",
+                stiffness: 100,
+                damping: 15
+              }}
+            >
+              <Card3D intensity="high" glow className="p-6 sm:p-10 md:p-14 lg:p-16">
+                <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 md:space-y-8">
+                  {/* Icon */}
+                  <motion.div
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
+                    whileInView={{ 
+                      rotateY: [0, 360],
+                      scale: [1, 1.15, 1]
+                    }}
+                    viewport={{ once: false }}
+                    transition={{ 
+                      duration: 1.2,
+                      repeat: Infinity,
+                      repeatDelay: 3
+                    }}
+                  >
+                    <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 text-primary-foreground" />
+                  </motion.div>
+
+                  {/* Title */}
+                  <motion.h3 
+                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold gradient-text"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.2, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.title`)}
+                  </motion.h3>
+
+                  {/* Description */}
+                  <motion.p 
+                    className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto px-4"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false }}
+                    transition={{ delay: 0.4, duration: 0.6 }}
+                  >
+                    {t(`landing.features.${feature.key}.description`)}
+                  </motion.p>
+
+                  {/* Scroll Indicator - Only on last feature */}
+                  {index === 5 && (
+                    <motion.div
+                      className="mt-6 sm:mt-8 flex flex-col items-center gap-2"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: false }}
+                      transition={{ delay: 0.6 }}
+                    >
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-gray-400 text-xs sm:text-sm"
+                      >
+                        Continue scrolling
+                      </motion.div>
+                      <motion.div
+                        animate={{ y: [0, 8, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
+                      >
+                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary rotate-90" />
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </div>
+              </Card3D>
+            </motion.div>
+          </motion.div>
+          ))}
         </div>
       </section>
 
@@ -277,31 +472,46 @@ const Landing = () => {
           </p>
           
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <button
+          <motion.div 
+            className="flex items-center justify-center gap-4 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.button
               onClick={() => setBillingPeriod('monthly')}
               className={`px-6 py-2 rounded-lg font-semibold transition-all ${
                 billingPeriod === 'monthly'
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
+              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ transformStyle: 'preserve-3d' }}
             >
               {t('landing.pricing.monthly')}
-            </button>
-            <button
+            </motion.button>
+            <motion.button
               onClick={() => setBillingPeriod('annual')}
               className={`px-6 py-2 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                 billingPeriod === 'annual'
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
+              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ transformStyle: 'preserve-3d' }}
             >
               {t('landing.pricing.annual')}
-              <span className="text-xs bg-primary/20 px-2 py-1 rounded">
+              <motion.span 
+                className="text-xs bg-primary/20 px-2 py-1 rounded"
+                animate={{ y: [0, -3, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
                 {t('landing.pricing.save3Months')}
-              </span>
-            </button>
-          </div>
+              </motion.span>
+            </motion.button>
+          </motion.div>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
@@ -311,17 +521,26 @@ const Landing = () => {
             { key: 'standard', popular: true },
             { key: 'expert', popular: false }
           ].map((plan, index) => (
-            <Card 
-              key={index} 
-              className={`p-6 bg-white/5 border relative flex flex-col ${
-                plan.popular ? 'border-primary scale-105 shadow-glow' : 'border-white/10'
-              } rounded-2xl transition-all hover:border-primary/70`}
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 50, rotateX: -15 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{ delay: index * 0.15, type: "spring", stiffness: 100 }}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground">
-                  {t('landing.pricing.popular')}
-                </div>
-              )}
+              <Card3D 
+                intensity={plan.popular ? "high" : "medium"}
+                glow={plan.popular}
+                className={`p-6 relative flex flex-col ${plan.popular ? 'scale-105' : ''}`}
+              >
+                {plan.popular && (
+                  <motion.div
+                    className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10"
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    {t('landing.pricing.popular')}
+                  </motion.div>
+                )}
               <h3 className="text-xl font-bold mb-2">{t(`landing.pricing.${plan.key}.name`)}</h3>
               
               {billingPeriod === 'monthly' ? (
@@ -373,18 +592,17 @@ const Landing = () => {
                 })}
               </ul>
               
-              <Button 
-                className={`w-full rounded-lg mt-auto ${
-                  plan.popular 
-                    ? 'btn-gradient shadow-glow' 
-                    : 'border-white/20 text-white hover:bg-white/10'
-                }`} 
-                variant={plan.popular ? 'default' : 'outline'} 
-                onClick={() => navigate("/auth")}
-              >
-                {t('landing.pricing.choosePlan')}
-              </Button>
-            </Card>
+                <Button3D
+                  variant={plan.popular ? 'gradient' : 'glass'}
+                  size="md"
+                  glow={plan.popular}
+                  className="w-full mt-auto"
+                  onClick={() => navigate("/auth")}
+                >
+                  {t('landing.pricing.choosePlan')}
+                </Button3D>
+              </Card3D>
+            </motion.div>
           ))}
         </div>
 
@@ -475,21 +693,44 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="container mx-auto px-4 sm:px-6 py-20 relative">
-        <Card className="p-16 text-center bg-white/5 border border-white/10 rounded-3xl max-w-4xl mx-auto">
-          <div className="space-y-6">
-            <h2 className="text-4xl sm:text-5xl font-bold">
-              {t('landing.cta.title')}
-            </h2>
-            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {t('landing.cta.description')}
-            </p>
-            <Button size="lg" className="btn-gradient shadow-glow font-semibold text-lg px-10 py-7 rounded-lg" onClick={() => navigate("/auth")}>
-              {t('landing.cta.button')}
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
-          </div>
-        </Card>
+      <section className="container mx-auto px-4 sm:px-6 py-20 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, rotateX: -10 }}
+          whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
+          viewport={{ once: true }}
+          transition={{ type: "spring", stiffness: 100 }}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          <Card3D intensity="high" glow className="p-16 text-center max-w-4xl mx-auto">
+            <div className="space-y-6">
+              <motion.h2 
+                className="text-4xl sm:text-5xl font-bold"
+                animate={{ 
+                  textShadow: [
+                    "0 0 20px rgba(74, 233, 189, 0.3)",
+                    "0 0 30px rgba(74, 233, 189, 0.5)",
+                    "0 0 20px rgba(74, 233, 189, 0.3)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                {t('landing.cta.title')}
+              </motion.h2>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                {t('landing.cta.description')}
+              </p>
+              <Button3D 
+                variant="gradient" 
+                size="lg" 
+                glow
+                onClick={() => navigate("/auth")}
+              >
+                {t('landing.cta.button')}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button3D>
+            </div>
+          </Card3D>
+        </motion.div>
       </section>
 
       {/* Footer */}

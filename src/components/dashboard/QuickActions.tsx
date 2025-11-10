@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Facebook, ShoppingBag, Plus, BarChart3, Zap, TrendingUp } from "lucide-react";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 
 interface QuickActionsProps {
   onConnectFacebook: () => void;
@@ -75,30 +77,43 @@ export const QuickActions = ({
         {actions.map((action, index) => {
           const Icon = action.icon;
           return (
-            <button
+            <motion.div
               key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
               onClick={action.onClick}
-              className={`group relative overflow-hidden glass-card rounded-xl border ${action.border} hover:border-primary/40 transition-all duration-300 hover:shadow-glow p-6 text-left w-full`}
+              className="cursor-pointer"
             >
-              {/* Gradient Background */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
-              
-              {/* Content */}
-              <div className="relative flex flex-col items-center text-center gap-4">
-                <div className={`p-4 rounded-xl ${action.iconBg} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-6 w-6 ${action.iconColor}`} />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1 text-foreground">{action.title}</h3>
-                  <p className="text-sm text-muted-foreground">{action.description}</p>
-                </div>
-                {action.connected && (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <Card3D 
+                intensity="low" 
+                glow={action.connected}
+                className="p-6 text-left w-full"
+              >
+                <div className="relative flex flex-col items-center text-center gap-4">
+                  <motion.div
+                    className={`p-4 rounded-xl ${action.iconBg}`}
+                    whileHover={{ rotateZ: 360, scale: 1.1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Icon className={`h-6 w-6 ${action.iconColor}`} />
+                  </motion.div>
+                  <div>
+                    <h3 className="font-semibold mb-1 text-foreground">{action.title}</h3>
+                    <p className="text-sm text-muted-foreground">{action.description}</p>
                   </div>
-                )}
-              </div>
-            </button>
+                  {action.connected && (
+                    <motion.div
+                      className="flex items-center gap-2"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <div className="w-2 h-2 rounded-full bg-primary" />
+                    </motion.div>
+                  )}
+                </div>
+              </Card3D>
+            </motion.div>
           );
         })}
       </div>

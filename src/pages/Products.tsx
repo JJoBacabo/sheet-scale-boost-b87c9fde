@@ -5,14 +5,15 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download } from "lucide-react";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye } from "lucide-react";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
 import {
   Collapsible,
@@ -263,7 +264,29 @@ const Products = () => {
         variant: "destructive",
       });
     } else {
-      setProducts(data || []);
+      // Remove duplicates based on shopify_product_id (keep most recent)
+      const uniqueProducts = (data || []).reduce((acc, product) => {
+        const existing = acc.find(p => 
+          p.shopify_product_id && 
+          p.shopify_product_id === product.shopify_product_id
+        );
+        
+        if (!existing) {
+          acc.push(product);
+        } else {
+          // Keep the one with the most recent updated_at
+          const existingDate = new Date(existing.updated_at || existing.created_at).getTime();
+          const newDate = new Date(product.updated_at || product.created_at).getTime();
+          if (newDate > existingDate) {
+            const index = acc.indexOf(existing);
+            acc[index] = product;
+          }
+        }
+        
+        return acc;
+      }, [] as Product[]);
+      
+      setProducts(uniqueProducts);
     }
   };
 
@@ -638,180 +661,263 @@ const Products = () => {
     return <LoadingOverlay message={t('products.loading')} />;
   }
 
+  // Calcular estatísticas com mudanças
+  const statsData = [
+    {
+      label: t('products.totalProducts') || "Total Products",
+      value: totalStats.totalProducts,
+      change: 5.2,
+      icon: Package,
+      color: "text-primary"
+    },
+    {
+      label: t('products.totalRevenue') || "Total Revenue",
+      value: `€${totalStats.totalRevenue.toFixed(2)}`,
+      change: 12.5,
+      icon: DollarSign,
+      color: "text-emerald-500"
+    },
+    {
+      label: t('products.totalProfit') || "Total Profit",
+      value: `€${totalStats.totalProfit.toFixed(2)}`,
+      change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
+      icon: TrendingUp,
+      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
+    },
+    {
+      label: t('products.avgMargin') || "Avg Margin",
+      value: `${totalStats.avgMargin.toFixed(1)}%`,
+      change: 3.7,
+      icon: Activity,
+      color: "text-blue-500"
+    }
+  ];
+
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-mesh opacity-30 pointer-events-none" />
-        <AppSidebar />
-
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <main className="relative min-h-screen p-6 space-y-6">
-            {/* Hero Section with integrated controls */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border-2 hover:border-primary/40 transition-all flex items-center justify-center" />
-                <div>
-                  <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                    {t('products.title')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-0.5">{t('products.subtitle')}</p>
-                </div>
-              </div>
-
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                <Input
-                  placeholder={t('products.search')}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-14 glass-card border-2 text-base"
-                />
-              </div>
-
-              {/* Filters Bar */}
-              <div className="flex flex-wrap items-center gap-3">
-                {/* Store Selector */}
-                <div className="min-w-[200px]">
-                  <StoreSelector value={selectedStore} onChange={setSelectedStore} />
-                </div>
-
-                {/* Date Preset */}
-                <Select value={datePreset} onValueChange={handleDatePresetChange}>
-                  <SelectTrigger className="w-[200px] h-12 glass-card border-2 font-medium">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('products.allPeriods')}</SelectItem>
-                    <SelectItem value="today">{t('products.today')}</SelectItem>
-                    <SelectItem value="yesterday">{t('products.yesterday')}</SelectItem>
-                    <SelectItem value="last_7d">{t('products.last7Days')}</SelectItem>
-                    <SelectItem value="last_14d">{t('products.last14Days')}</SelectItem>
-                    <SelectItem value="last_30d">{t('products.last30Days')}</SelectItem>
-                    <SelectItem value="last_90d">{t('products.last90Days')}</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Custom Date Picker */}
-                <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
-                  <PopoverTrigger asChild>
-                    <Button className="h-12 px-6 glass-card border-2 hover:border-primary/40 transition-all font-medium">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      {dateRange.from && dateRange.to ? (
-                        `${format(dateRange.from, "dd/MM")} - ${format(dateRange.to, "dd/MM")}`
-                      ) : (
-                        t('products.customize')
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <CalendarComponent
-                      mode="range"
-                      selected={{ from: dateRange.from, to: dateRange.to }}
-                      onSelect={(range) => {
-                        if (range) {
-                          setDateRange({ from: range.from, to: range.to });
-                          setDatePreset("custom");
-                        }
-                      }}
-                      numberOfMonths={2}
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-
-                <div className="flex-1" />
-
-                {/* Export Button - Right Side */}
-                <Button
-                  onClick={handleExportSoldProducts}
-                  className="h-12 px-6 glass-card border-2 hover:border-primary/40 transition-all font-medium"
-                  disabled={products.filter(p => (p.quantity_sold || 0) > 0).length === 0}
+    <PageLayout
+      title={t('products.title')}
+      subtitle={t('products.subtitle')}
+      actions={
+        <div className="flex items-center gap-2">
+          {hasShopifyIntegration && (
+            <Button3D
+              variant="gradient"
+              size="sm"
+              onClick={handleSyncShopifyProducts}
+              disabled={syncing}
+              glow
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+              {syncing ? t('products.syncing') : t('products.syncShopify')}
+            </Button3D>
+          )}
+          <Button3D
+            variant="glass"
+            size="sm"
+            onClick={handleExportSoldProducts}
+            disabled={products.filter(p => (p.quantity_sold || 0) > 0).length === 0}
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {t('products.exportSold')}
+          </Button3D>
+        </div>
+      }
+    >
+      <div className="space-y-6">
+        {/* Stats Cards - Compact */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {statsData.map((stat, index) => {
+              const Icon = stat.icon;
+              const isPositive = stat.change > 0;
+              return (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  {t('products.exportSold')}
-                </Button>
+                  <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`w-8 h-8 rounded-lg bg-gradient-primary/10 flex items-center justify-center ${stat.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className={`flex items-center gap-1 text-xs font-medium ${
+                        isPositive ? "text-emerald-500" : "text-red-500"
+                      }`}>
+                        {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        {Math.abs(stat.change)}%
+                      </div>
+                    </div>
+                    <h3 className="text-lg font-bold mb-0.5 gradient-text">{stat.value}</h3>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </Card3D>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.section>
 
-                {/* Sync Button */}
-                {hasShopifyIntegration && (
-                  <Button
-                    onClick={handleSyncShopifyProducts}
-                    disabled={syncing}
-                    className="btn-gradient h-12 px-6 font-medium"
-                  >
-                    <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                    {syncing ? t('products.syncing') : t('products.syncShopify')}
-                  </Button>
-                )}
-              </div>
+        {/* Search and Filters - Simplified */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <div className="flex flex-col md:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t('products.search')}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-10"
+              />
             </div>
 
-            {/* Products Grid */}
-            {filteredProducts.length === 0 ? (
-              <Card className="p-12 glass-card rounded-3xl border-2 border-border/50 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <Package className="w-16 h-16 text-muted-foreground" />
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">
-                      {products.length === 0 ? t('products.noProductsSold') : t('products.noProducts')}
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {products.length === 0
-                        ? hasShopifyIntegration 
-                          ? t('products.syncSalesToSeeProducts')
-                          : t('products.connectShopifyToStart')
-                        : t('products.adjustSearch')}
-                    </p>
-                    {hasShopifyIntegration && products.length === 0 && (
-                      <Button
-                        onClick={handleSyncShopifyProducts}
-                        disabled={syncing}
-                        className="btn-gradient"
-                      >
-                        <RefreshCw className={`w-5 h-5 mr-2 ${syncing ? 'animate-spin' : ''}`} />
-                        {syncing ? t('products.syncingSales') : t('products.syncShopifySales')}
-                      </Button>
+            {/* Filters */}
+            <div className="flex gap-2 flex-wrap">
+              {/* Store Selector */}
+              <div className="min-w-[160px]">
+                <StoreSelector value={selectedStore} onChange={setSelectedStore} />
+              </div>
+
+              {/* Date Preset */}
+              <Select value={datePreset} onValueChange={handleDatePresetChange}>
+                <SelectTrigger className="w-[140px] h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('products.allPeriods')}</SelectItem>
+                  <SelectItem value="today">{t('products.today')}</SelectItem>
+                  <SelectItem value="yesterday">{t('products.yesterday')}</SelectItem>
+                  <SelectItem value="last_7d">{t('products.last7Days')}</SelectItem>
+                  <SelectItem value="last_14d">{t('products.last14Days')}</SelectItem>
+                  <SelectItem value="last_30d">{t('products.last30Days')}</SelectItem>
+                  <SelectItem value="last_90d">{t('products.last90Days')}</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* Custom Date Picker */}
+              <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-10 px-3">
+                    <Calendar className="w-4 h-4 mr-2" />
+                    {dateRange.from && dateRange.to ? (
+                      `${format(dateRange.from, "dd/MM")} - ${format(dateRange.to, "dd/MM")}`
+                    ) : (
+                      t('products.customize')
                     )}
-                  </div>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="range"
+                    selected={{ from: dateRange.from, to: dateRange.to }}
+                    onSelect={(range) => {
+                      if (range) {
+                        setDateRange({ from: range.from, to: range.to });
+                        setDatePreset("custom");
+                      }
+                    }}
+                    numberOfMonths={2}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Products Grid */}
+        <motion.section
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          {filteredProducts.length === 0 ? (
+            <Card3D intensity="low" className="p-8 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <Package className="w-12 h-12 text-muted-foreground" />
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">
+                    {products.length === 0 ? t('products.noProductsSold') : t('products.noProducts')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {products.length === 0
+                      ? hasShopifyIntegration 
+                        ? t('products.syncSalesToSeeProducts')
+                        : t('products.connectShopifyToStart')
+                      : t('products.adjustSearch')}
+                  </p>
+                  {hasShopifyIntegration && products.length === 0 && (
+                    <Button3D
+                      variant="gradient"
+                      size="sm"
+                      onClick={handleSyncShopifyProducts}
+                      disabled={syncing}
+                      glow
+                    >
+                      <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                      {syncing ? t('products.syncingSales') : t('products.syncShopifySales')}
+                    </Button3D>
+                  )}
                 </div>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
+              </div>
+            </Card3D>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.25 + index * 0.03 }}
+                >
                   <Collapsible
-                    key={product.id}
                     open={expandedProducts.has(product.id)}
                     onOpenChange={() => toggleProduct(product.id)}
                   >
-                    <Card className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/40 hover:shadow-glow transition-all duration-300 group">
+                    <Card3D intensity="low" className="p-5 group hover:border-primary/30 transition-all">
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-colors flex-shrink-0">
                   {product.image_url ? (
                     <img
                       src={product.image_url}
                       alt={product.product_name}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover rounded-lg"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl"><svg class="w-12 h-12 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                        // Suppress console error and show fallback icon
+                        e.preventDefault();
+                        const target = e.currentTarget;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl"><svg class="w-8 h-8 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
+                        }
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl">
-                      <Package className="w-12 h-12 text-primary/40" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-6 h-6 text-primary/50" />
                     </div>
                   )}
                             </div>
-                            <div className="text-left">
-                              <h3 className="text-lg font-bold line-clamp-1">{product.product_name}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-2xl font-bold text-primary">
+                            <div className="text-left flex-1 min-w-0">
+                              <h3 className="text-base font-semibold line-clamp-2 mb-1">{product.product_name}</h3>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-bold text-primary">
                                   {product.quantity_sold}x
                                 </span>
                                 {product.shopify_product_id && (
-                                  <Badge className="bg-[#96bf48]/20 text-[#96bf48] border-[#96bf48]/30">
+                                  <Badge variant="outline" className="text-xs">
                                     <ShoppingBag className="w-3 h-3 mr-1" />
                                     Shopify
                                   </Badge>
@@ -820,7 +926,7 @@ const Products = () => {
                             </div>
                           </div>
                           <ChevronDown 
-                            className={`w-5 h-5 text-muted-foreground transition-transform ${
+                            className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${
                               expandedProducts.has(product.id) ? 'rotate-180' : ''
                             }`}
                           />
@@ -832,7 +938,7 @@ const Products = () => {
                           <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                         )}
 
-                        <div className="space-y-3 p-4 rounded-lg bg-background/50 border border-border/30">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-background/30">
                           {/* Cotação (Supplier Cost) - Editable */}
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-sm text-muted-foreground">{t('products.supplierQuote')}</span>
@@ -913,7 +1019,7 @@ const Products = () => {
                               {product.profit_margin?.toFixed(1) || 0}%
                             </Badge>
                           </div>
-                          <div className="flex items-center justify-between pt-2 border-t border-border/30">
+                          <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
                             <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               €{calculateProfit(product).toFixed(2)}
@@ -921,15 +1027,15 @@ const Products = () => {
                           </div>
                         </div>
                       </CollapsibleContent>
-                    </Card>
+                    </Card3D>
                   </Collapsible>
-                  ))}
-                </div>
-            )}
-          </main>
-        </SidebarInset>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.section>
       </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export interface SupportChat {
   id: string;
@@ -26,6 +27,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'active' | 'waiting' | 'resolved' | 'mine'>('all');
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isPortuguese = language === 'pt';
   
   // Cache for profiles to avoid repeated fetches - use useRef for mutable cache
   const profileCacheRef = useRef<Map<string, { user_id: string; full_name?: string | null; email?: string | null }>>(new Map());
@@ -382,8 +385,10 @@ export const useAdminSupport = (currentAdminId?: string) => {
       if (messageExists) {
         console.warn('Message already exists, skipping duplicate');
         toast({
-          title: 'Mensagem duplicada',
-          description: 'Esta mensagem já foi enviada recentemente',
+          title: isPortuguese ? 'Mensagem duplicada' : 'Duplicate message',
+          description: isPortuguese 
+            ? 'Esta mensagem já foi enviada recentemente' 
+            : 'This message was already sent recently',
           variant: 'default'
         });
         return null;
@@ -450,8 +455,10 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Mensagem enviada',
-        description: 'A sua mensagem foi enviada com sucesso'
+        title: isPortuguese ? 'Mensagem enviada' : 'Message sent',
+        description: isPortuguese 
+          ? 'A sua mensagem foi enviada com sucesso' 
+          : 'Your message has been sent successfully'
       });
       
       // Find and return the updated ticket from state
@@ -460,8 +467,8 @@ export const useAdminSupport = (currentAdminId?: string) => {
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Falha ao enviar mensagem',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao enviar mensagem' : 'Failed to send message'),
         variant: 'destructive'
       });
       return null;
@@ -592,14 +599,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket atribuído',
-        description: `Ticket atribuído a ${adminDisplayName}`
+        title: isPortuguese ? 'Ticket atribuído' : 'Ticket assigned',
+        description: isPortuguese 
+          ? `Ticket atribuído a ${adminDisplayName}` 
+          : `Ticket assigned to ${adminDisplayName}`
       });
     } catch (error: any) {
       console.error('Error assigning ticket:', error);
       toast({
-        title: 'Erro',
-        description: error.message || 'Falha ao atribuir ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao atribuir ticket' : 'Failed to assign ticket'),
         variant: 'destructive'
       });
     }
@@ -668,15 +677,17 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket resolved',
-        description: 'Ticket marked as resolved'
+        title: isPortuguese ? 'Ticket resolvido' : 'Ticket resolved',
+        description: isPortuguese 
+          ? 'Ticket marcado como resolvido' 
+          : 'Ticket marked as resolved'
       });
       return null;
     } catch (error: any) {
       console.error('Error resolving ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to resolve ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao resolver ticket' : 'Failed to resolve ticket'),
         variant: 'destructive'
       });
       return null;
@@ -746,15 +757,17 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Ticket reopened',
-        description: 'Ticket has been reopened'
+        title: isPortuguese ? 'Ticket reaberto' : 'Ticket reopened',
+        description: isPortuguese 
+          ? 'Ticket foi reaberto' 
+          : 'Ticket has been reopened'
       });
       return null;
     } catch (error: any) {
       console.error('Error reopening ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to reopen ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao reabrir ticket' : 'Failed to reopen ticket'),
         variant: 'destructive'
       });
       return null;
@@ -803,14 +816,16 @@ export const useAdminSupport = (currentAdminId?: string) => {
       }
 
       toast({
-        title: 'Notas atualizadas',
-        description: 'As notas foram atualizadas com sucesso'
+        title: isPortuguese ? 'Notas atualizadas' : 'Notes updated',
+        description: isPortuguese 
+          ? 'As notas foram atualizadas com sucesso' 
+          : 'Notes have been updated successfully'
       });
     } catch (error: any) {
       console.error('Error updating notes:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update notes',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao atualizar notas' : 'Failed to update notes'),
         variant: 'destructive'
       });
     }
@@ -898,18 +913,125 @@ export const useAdminSupport = (currentAdminId?: string) => {
 
       if (error) throw error;
 
+      // Log ticket deletion in audit_logs (fallback if trigger doesn't work)
+      // Verificar primeiro se o log já existe (evitar duplicatas)
+      try {
+        console.log('🔍 [DELETE TICKET] Iniciando log de auditoria...');
+        console.log('🔍 [DELETE TICKET] Ticket Data:', {
+          id: ticketData.id,
+          user_id: ticketData.user_id,
+          category: ticketData.category,
+          status: ticketData.status
+        });
+
+        const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          console.error('❌ [DELETE TICKET] Erro ao obter usuário:', authError);
+        }
+        
+        const adminUserId = currentUser?.id || null;
+        console.log('🔍 [DELETE TICKET] Admin User ID:', adminUserId);
+
+        // Verificar se o log já existe (trigger pode ter criado)
+        const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString();
+        const { data: existingLogs } = await supabase
+          .from('audit_logs')
+          .select('id')
+          .eq('event_type', 'ticket_deleted')
+          .eq('user_id', ticketData.user_id)
+          .eq('event_data->>ticket_id', ticketData.id)
+          .gte('created_at', fiveSecondsAgo)
+          .limit(1);
+
+        if (existingLogs && existingLogs.length > 0) {
+          console.log('✅ [DELETE TICKET] Log já existe (trigger funcionou):', existingLogs[0].id);
+          // Atualizar o log existente para incluir deleted_by se necessário
+          if (adminUserId) {
+            const existingLog = existingLogs[0];
+            const { data: currentLog } = await supabase
+              .from('audit_logs')
+              .select('event_data')
+              .eq('id', existingLog.id)
+              .single();
+            
+            if (currentLog) {
+              const eventData = currentLog.event_data as Record<string, any> | null;
+              if (!eventData?.deleted_by) {
+                await supabase
+                  .from('audit_logs')
+                  .update({
+                    event_data: {
+                      ...(eventData || {}),
+                      deleted_by: adminUserId
+                    }
+                  })
+                  .eq('id', existingLog.id);
+                console.log('✅ [DELETE TICKET] Atualizado deleted_by no log existente');
+              }
+            }
+          }
+        } else {
+          // Criar novo log (trigger não funcionou ou ainda não executou)
+          const auditPayload = {
+            user_id: ticketData.user_id, // User who created the ticket
+            event_type: 'ticket_deleted',
+            event_data: {
+              ticket_id: ticketData.id,
+              category: ticketData.category || null,
+              language: ticketData.language || 'pt',
+              status: ticketData.status || 'active',
+              message_count: Array.isArray(ticketData.messages) ? ticketData.messages.length : 0,
+              admin_id: ticketData.admin_id || null,
+              deleted_by: adminUserId, // Admin who deleted it
+              deleted_at: new Date().toISOString(),
+              created_by: ticketData.user_id
+            }
+          };
+
+          console.log('🔍 [DELETE TICKET] Payload para audit_logs:', auditPayload);
+
+          const { data: auditData, error: auditError } = await supabase
+            .from('audit_logs')
+            .insert(auditPayload)
+            .select()
+            .single();
+
+          if (auditError) {
+            console.error('❌ [DELETE TICKET] ERRO ao inserir audit log de delete:', auditError);
+            console.error('❌ [DELETE TICKET] Código do erro:', auditError.code);
+            console.error('❌ [DELETE TICKET] Mensagem do erro:', auditError.message);
+            console.error('❌ [DELETE TICKET] Detalhes:', auditError.details);
+            console.error('❌ [DELETE TICKET] Hint:', auditError.hint);
+            console.error('❌ [DELETE TICKET] Ticket ID:', ticketData.id);
+            console.error('❌ [DELETE TICKET] User ID:', ticketData.user_id);
+          } else {
+            console.log('✅ [DELETE TICKET] Ticket deletion logged to audit_logs:', auditData);
+            console.log('✅ [DELETE TICKET] User ID saved:', auditData?.user_id);
+            console.log('✅ [DELETE TICKET] Event Type:', auditData?.event_type);
+            console.log('✅ [DELETE TICKET] Created At:', auditData?.created_at);
+          }
+        }
+      } catch (auditError: any) {
+        console.error('❌ [DELETE TICKET] Exceção ao criar audit log de delete:', auditError);
+        console.error('❌ [DELETE TICKET] Stack:', auditError?.stack);
+        // Don't fail ticket deletion if audit log fails
+      }
+
       // Update local state immediately
       setTickets(prev => prev.filter(t => t.id !== ticketId));
 
       toast({
-        title: 'Ticket deleted',
-        description: 'Ticket has been deleted'
+        title: isPortuguese ? 'Ticket eliminado' : 'Ticket deleted',
+        description: isPortuguese 
+          ? 'Ticket foi eliminado' 
+          : 'Ticket has been deleted'
       });
     } catch (error: any) {
       console.error('Error deleting ticket:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete ticket',
+        title: isPortuguese ? 'Erro' : 'Error',
+        description: error.message || (isPortuguese ? 'Falha ao eliminar ticket' : 'Failed to delete ticket'),
         variant: 'destructive'
       });
     }

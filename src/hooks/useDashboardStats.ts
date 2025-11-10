@@ -31,7 +31,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
   });
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setStats(prev => ({ ...prev, loading: false }));
+      return;
+    }
 
     const fetchStats = async () => {
       try {

@@ -79,6 +79,15 @@ serve(async (req) => {
       updates.archived_at = new Date().toISOString();
     }
 
+    // Get current subscription state before update
+    const { data: currentSub } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, state')
+      .eq('user_id', user_id)
+      .single();
+
+    const oldState = currentSub?.state || 'unknown';
+
     const { data: subscription, error: updateError } = await supabaseAdmin
       .from('subscriptions')
       .update(updates)
@@ -90,7 +99,7 @@ serve(async (req) => {
       throw updateError;
     }
 
-    // Log the admin action
+    // Log the admin action with correct old_state
     await supabaseAdmin.from('audit_logs').insert({
       user_id: user_id,
       subscription_id: subscription.id,
@@ -98,10 +107,12 @@ serve(async (req) => {
       event_data: {
         admin_user_id: user.id,
         admin_email: user.email,
-        old_state: subscription.state,
+        old_state: oldState,
         new_state: new_state,
         reason: reason || 'Admin force update',
       },
+      old_state: oldState as any,
+      new_state: new_state as any,
     });
 
     console.log(`✅ Admin ${user.email} forced user ${user_id} subscription to ${new_state}`);

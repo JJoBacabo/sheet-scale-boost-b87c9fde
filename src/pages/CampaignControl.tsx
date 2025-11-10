@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Card3D } from "@/components/ui/Card3D";
+import { Button3D } from "@/components/ui/Button3D";
 import { useToast } from "@/hooks/use-toast";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { 
@@ -1475,128 +1476,137 @@ const CampaignControl = () => {
 
   if (!hasFacebookIntegration || !hasShopifyIntegration) {
     return (
-      <SidebarProvider>
-        <div className="flex w-full bg-background">
-          <AppSidebar />
-          <main className="flex-1 p-6">
-            <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto mt-20 border-2 border-border/50">
-              <h2 className="text-2xl font-bold mb-4">{t("dailyRoas.integrationsNeeded")}</h2>
-              <p className="text-muted-foreground mb-6">
-                {t("dailyRoas.integrationsDesc")}
+      <PageLayout
+        title={t("dailyRoas.integrationsNeeded")}
+        subtitle={t("dailyRoas.integrationsDesc")}
+      >
+        <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto border-2 border-border/50">
+          <div className="space-y-4">
+            <div className={`p-4 rounded-lg border ${hasFacebookIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
+              <h3 className="font-semibold mb-1">
+                {hasFacebookIntegration ? '✅ ' : '❌ '}{t("dailyRoas.facebookAds")}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {hasFacebookIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForCampaigns")}
               </p>
-              <div className="space-y-4">
-                <div className={`p-4 rounded-lg border ${hasFacebookIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                  <h3 className="font-semibold mb-1">
-                    {hasFacebookIntegration ? '✅ ' : '❌ '}{t("dailyRoas.facebookAds")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {hasFacebookIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForCampaigns")}
-                  </p>
-                </div>
-                <div className={`p-4 rounded-lg border ${hasShopifyIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
-                  <h3 className="font-semibold mb-1">
-                    {hasShopifyIntegration ? '✅ ' : '❌ '}{t("dailyRoas.shopify")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {hasShopifyIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForProducts")}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <Button onClick={() => navigate("/settings")} className="w-full">
-                  {t("dailyRoas.goToSettings")}
-                </Button>
-              </div>
-            </Card>
-          </main>
-        </div>
-      </SidebarProvider>
+            </div>
+            <div className={`p-4 rounded-lg border ${hasShopifyIntegration ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'}`}>
+              <h3 className="font-semibold mb-1">
+                {hasShopifyIntegration ? '✅ ' : '❌ '}{t("dailyRoas.shopify")}
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {hasShopifyIntegration ? t("dailyRoas.integrationActive") : t("dailyRoas.neededForProducts")}
+              </p>
+            </div>
+          </div>
+          <div className="mt-6">
+            <Button onClick={() => navigate("/settings")} className="w-full">
+              {t("dailyRoas.goToSettings")}
+            </Button>
+          </div>
+        </Card>
+      </PageLayout>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex w-full bg-background">
-        <AppSidebar />
-        <main className="flex-1 p-6">
-          {/* Header */}
-          <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">{t('dailyRoas.title')}</h1>
-                <p className="text-sm md:text-base text-muted-foreground">{t('dailyRoas.subtitle')}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {/* Market Type Selector */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.market')}</label>
-                  <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder={t('dailyRoas.selectMarket')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
-                      <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
-                      <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+    <PageLayout
+      title={t('dailyRoas.title')}
+      subtitle={t('dailyRoas.subtitle')}
+    >
+      <div className="space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Controls Section - Modern Design */}
+        <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+            {/* Market Type Selector */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t('dailyRoas.market')}
+              </label>
+              <Select value={marketType} onValueChange={(value: "low" | "mid" | "high") => setMarketType(value)}>
+                <SelectTrigger className="h-10 sm:h-11 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
+                  <SelectValue placeholder={t('dailyRoas.selectMarket')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">{t('dailyRoas.lowBudget')}</SelectItem>
+                  <SelectItem value="mid">{t('dailyRoas.midBudget')}</SelectItem>
+                  <SelectItem value="high">{t('dailyRoas.highBudget')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                {adAccounts.length > 0 && (
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.adAccountLabel')}</label>
-                    <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
-                      <SelectTrigger className="w-[280px]">
-                        <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {adAccounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            {account.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                
-                {/* Ações - Empilhadas */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-medium text-muted-foreground">{t('dailyRoas.actions')}</label>
-                  <div className="flex flex-col gap-1">
-                    <Button
-                      variant="outline"
-                      onClick={() => fetchFacebookCampaigns()}
-                      disabled={isFetchingCampaigns || !selectedAdAccount}
-                      className="h-9 text-sm"
-                    >
-                      <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
-                      {t('dailyRoas.updateCampaigns')}
-                    </Button>
-                    <Button variant="outline" onClick={exportToCSV} className="h-9 text-sm">
-                      <Download className="w-4 h-4 mr-2" />
-                      {t('dailyRoas.exportReport')}
-                    </Button>
-                  </div>
-                </div>
+            {/* Ad Account Selector */}
+            {adAccounts.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  {t('dailyRoas.adAccountLabel')}
+                </label>
+                <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
+                  <SelectTrigger className="h-10 sm:h-11 bg-background/50 border-primary/20 hover:border-primary/40 transition-colors">
+                    <SelectValue placeholder={t('dailyRoas.selectAdAccount')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {adAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs sm:text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                {t('dailyRoas.actions')}
+              </label>
+              <div className="flex flex-col gap-2">
+                <Button3D
+                  variant="gradient"
+                  size="sm"
+                  onClick={() => fetchFacebookCampaigns()}
+                  disabled={isFetchingCampaigns || !selectedAdAccount}
+                  glow
+                  className="w-full"
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${isFetchingCampaigns ? 'animate-spin' : ''}`} />
+                  {t('dailyRoas.updateCampaigns')}
+                </Button3D>
+                <Button3D
+                  variant="glass"
+                  size="sm"
+                  onClick={exportToCSV}
+                  className="w-full"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  {t('dailyRoas.exportReport')}
+                </Button3D>
               </div>
             </div>
           </div>
+        </Card3D>
 
           {/* Daily Tabs */}
-          <Card className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
+          <Card3D intensity="low" className="p-4 sm:p-5 md:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
               <h2 className="text-lg md:text-xl font-bold">{t('dailyRoas.title')} - {t('dailyRoas.campaignsByDay')}</h2>
               {!showAddCampaign && (
-                <Button onClick={() => setShowAddCampaign(true)} size="sm" className="w-full sm:w-auto">
+                <Button3D 
+                  variant="gradient" 
+                  size="sm" 
+                  onClick={() => setShowAddCampaign(true)}
+                  glow
+                  className="w-full sm:w-auto"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('dailyRoas.addCampaign')}
-                </Button>
+                </Button3D>
               )}
             </div>
 
             {showAddCampaign && (
-              <Card className="p-3 md:p-4 mb-4 border border-primary/30 bg-primary/5">
+              <Card3D intensity="low" className="p-4 sm:p-5 md:p-6 mb-4 border-primary/30">
                 <h3 className="font-semibold mb-3 md:mb-4 text-sm md:text-base">{t('dailyRoas.selectFacebookCampaign')}</h3>
                 
                 {/* Show selected Ad Account */}
@@ -1755,7 +1765,7 @@ const CampaignControl = () => {
                     {t('dailyRoas.add')}
                   </Button>
                 </div>
-              </Card>
+              </Card3D>
             )}
 
             <Tabs value={selectedDay} onValueChange={setSelectedDay} className="w-full">
@@ -1773,30 +1783,30 @@ const CampaignControl = () => {
               <TabsContent value={selectedDay} className="mt-6">
                 {/* KPIs for selected day */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-4 md:mb-6">
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalSpend || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
-                    <p className="text-lg md:text-2xl font-bold text-green-500">{((kpis.totalRevenue || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgROAS || 0)).toFixed(2)}</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.totalMargemEuros || 0)).toFixed(2)}€</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{((kpis.avgMargemPerc || 0)).toFixed(1)}%</p>
-                  </Card>
-                  <Card className="glass-card rounded-xl md:rounded-2xl p-3 md:p-4 border-2 border-border/50">
-                    <p className="text-xs md:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
-                    <p className="text-lg md:text-2xl font-bold">{kpis.totalVendas}</p>
-                  </Card>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSpend')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold">{((kpis.totalSpend || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalRevenue')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-500">{((kpis.totalRevenue || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageROAS')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{((kpis.avgROAS || 0)).toFixed(2)}</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalMargin')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-500">{((kpis.totalMargemEuros || 0)).toFixed(2)}€</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.averageMargin')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-primary">{((kpis.avgMargemPerc || 0)).toFixed(1)}%</p>
+                  </Card3D>
+                  <Card3D intensity="low" className="p-3 sm:p-4 md:p-5">
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t('dailyRoas.totalSales')}</p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold">{kpis.totalVendas}</p>
+                  </Card3D>
                 </div>
 
                 {/* Table for selected day */}
@@ -1883,9 +1893,9 @@ const CampaignControl = () => {
                               <TableCell className="font-semibold text-xs md:text-sm">{data.units_sold || 0}</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_euros || 0)).toFixed(2)}€</TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">{((calculated.margin_percentage || 0)).toFixed(1)}%</TableCell>
-                              <TableCell>
+                              <TableCell className="text-center">
                                 <div 
-                                  className={`px-2 py-1 rounded text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
+                                  className={`inline-flex items-center justify-center px-2 py-1 rounded text-xs font-semibold whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
                                     decisao === "SCALE" ? "bg-green-500/20 text-green-700 dark:text-green-400" :
                                     decisao === "KILL" ? "bg-red-500/20 text-red-700 dark:text-red-400" :
                                     decisao === "DESCALE" ? "bg-orange-500/20 text-orange-700 dark:text-orange-400" :
@@ -1944,14 +1954,14 @@ const CampaignControl = () => {
                 </div>
 
               </TabsContent>
-            </Tabs>
-          </Card>
+              </Tabs>
+            </Card3D>
 
           {/* Decision Modal */}
           <Dialog open={showDecisionModal} onOpenChange={setShowDecisionModal}>
             <DialogContent className="max-w-full sm:max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-lg font-semibold">
+                <DialogTitle className="text-lg font-semibold text-gray-100">
                   {selectedDecisionData?.campaign_name}
                 </DialogTitle>
               </DialogHeader>
@@ -1960,74 +1970,74 @@ const CampaignControl = () => {
                   {/* Decision */}
                   <div className={`p-4 rounded-lg border ${
                     selectedDecisionData.decisao === "KILL" 
-                      ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800" :
+                      ? "bg-red-950/60 border-red-800/50" :
                     selectedDecisionData.decisao === "SCALE" 
-                      ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" :
-                    "bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800"
+                      ? "bg-green-950/60 border-green-800/50" :
+                    "bg-yellow-950/60 border-yellow-800/50"
                   }`}>
                     <div className="flex items-center gap-3 mb-3">
-                      {selectedDecisionData.decisao === "KILL" && <X className="w-5 h-5 text-red-600 dark:text-red-400" />}
-                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />}
-                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />}
+                      {selectedDecisionData.decisao === "KILL" && <X className="w-5 h-5 text-red-400" />}
+                      {selectedDecisionData.decisao === "SCALE" && <TrendingUp className="w-5 h-5 text-green-400" />}
+                      {selectedDecisionData.decisao === "MANTER" && <Minus className="w-5 h-5 text-yellow-400" />}
                       <h3 className={`text-lg font-semibold ${
-                        selectedDecisionData.decisao === "KILL" ? "text-red-600 dark:text-red-400" :
-                        selectedDecisionData.decisao === "SCALE" ? "text-green-600 dark:text-green-400" :
-                        "text-yellow-600 dark:text-yellow-400"
+                        selectedDecisionData.decisao === "KILL" ? "text-red-400" :
+                        selectedDecisionData.decisao === "SCALE" ? "text-green-400" :
+                        "text-yellow-400"
                       }`}>
                         {translateDecision(selectedDecisionData.decisao)}
                       </h3>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
+                    <p className="text-sm text-gray-300 mb-2 font-medium">
                       {selectedDecisionData.dateRange}
                       {selectedDecisionData.dayRange && ` • ${selectedDecisionData.dayRange}`}
                     </p>
-                    <div className="mt-3 pt-3 border-t border-border/50">
-                      <p className="text-sm font-medium mb-1">{t("dailyRoas.reason")}</p>
-                      <p className="text-sm text-foreground">
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <p className="text-sm font-semibold mb-1 text-gray-200">{t("dailyRoas.reason")}</p>
+                      <p className="text-sm text-gray-100 font-medium">
                         {selectedDecisionData.motivo || `${selectedDecisionData.dateRange}: ${isPortuguese ? 'Margem' : 'Margin'} ${((selectedDecisionData.margin_percentage || 0)).toFixed(1)}%`}
                       </p>
                     </div>
                   </div>
 
                   {/* Decision Logic */}
-                  <div className="p-4 rounded-lg border border-border bg-muted/30">
-                    <h5 className="font-semibold mb-3 text-sm">{t("dailyRoas.decisionLogic")}</h5>
+                  <div className="p-4 rounded-lg border border-white/10 bg-black/40">
+                    <h5 className="font-semibold mb-3 text-sm text-gray-100">{t("dailyRoas.decisionLogic")}</h5>
                     <div className="space-y-3">
                       <div>
-                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                        <p className="text-xs font-semibold mb-2 text-gray-300">
                           {t("dailyRoas.days12").replace('{{marketType}}', marketType.toUpperCase())}
                         </p>
                         <ul className="space-y-1 ml-4 list-disc text-xs">
                           <li>
-                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.killReason1")}</span>
+                            <span className="font-semibold text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.killReason1")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.scaleReason1")}</span>
+                            <span className="font-semibold text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.scaleReason1")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.keepReason1")}</span>
+                            <span className="font-semibold text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.keepReason1")}</span>
                           </li>
                         </ul>
                       </div>
                       <div>
-                        <p className="text-xs font-medium mb-2 text-muted-foreground">
+                        <p className="text-xs font-semibold mb-2 text-gray-300">
                           {t("dailyRoas.days3Plus")}
                         </p>
                         <ul className="space-y-1 ml-4 list-disc text-xs">
                           <li>
-                            <span className="font-medium text-green-600 dark:text-green-400">{translateDecision("SCALE")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.scaleReason2")}</span>
+                            <span className="font-semibold text-green-400">{translateDecision("SCALE")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.scaleReason2")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-yellow-600 dark:text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.keepReason2")}</span>
+                            <span className="font-semibold text-yellow-400">{translateDecision("MANTER")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.keepReason2")}</span>
                           </li>
                           <li>
-                            <span className="font-medium text-red-600 dark:text-red-400">{translateDecision("KILL")}:</span>{" "}
-                            <span className="text-foreground">{t("dailyRoas.killReason2")}</span>
+                            <span className="font-semibold text-red-400">{translateDecision("KILL")}:</span>{" "}
+                            <span className="text-gray-200">{t("dailyRoas.killReason2")}</span>
                           </li>
                         </ul>
                       </div>
@@ -2037,9 +2047,8 @@ const CampaignControl = () => {
               )}
             </DialogContent>
           </Dialog>
-        </main>
       </div>
-    </SidebarProvider>
+    </PageLayout>
   );
 };
 

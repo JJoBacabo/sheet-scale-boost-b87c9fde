@@ -3,17 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Button3D } from "@/components/ui/Button3D";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ExternalLink, AlertCircle, CheckCircle2, Plus, Trash2, RefreshCw, ShoppingBag, Lock } from "lucide-react";
-import { AppSidebar } from "@/components/AppSidebar";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LanguageToggle } from "@/components/LanguageToggle";
+import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Card3D } from "@/components/ui/Card3D";
+import { motion } from "framer-motion";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
@@ -367,11 +368,25 @@ export default function Integrations() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'connected':
-        return <Badge className="bg-green-500/20 text-green-500 border-green-500/30"><CheckCircle2 className="w-3 h-3 mr-1" />{t('settings.integrationsPage.connected')}</Badge>;
+        return (
+          <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 px-2 py-1">
+            <CheckCircle2 className="w-3 h-3 mr-1.5" />
+            <span className="text-xs sm:text-sm">{t('settings.integrationsPage.connected')}</span>
+          </Badge>
+        );
       case 'expired':
-        return <Badge variant="destructive"><AlertCircle className="w-3 h-3 mr-1" />{t('settings.integrationsPage.expired')}</Badge>;
+        return (
+          <Badge variant="destructive" className="px-2 py-1">
+            <AlertCircle className="w-3 h-3 mr-1.5" />
+            <span className="text-xs sm:text-sm">{t('settings.integrationsPage.expired')}</span>
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{t('settings.integrationsPage.disconnected')}</Badge>;
+        return (
+          <Badge variant="secondary" className="px-2 py-1">
+            <span className="text-xs sm:text-sm">{t('settings.integrationsPage.disconnected')}</span>
+          </Badge>
+        );
     }
   };
 
@@ -380,139 +395,166 @@ export default function Integrations() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen w-full flex bg-background relative">
-        <div className="fixed inset-0 bg-gradient-hero opacity-40 pointer-events-none" />
-        <AppSidebar />
-        
-        <SidebarInset className="flex-1 transition-all duration-300">
-          <header className="sticky top-0 z-40 glass-card border-0 border-b border-border/50">
-            <div className="flex items-center gap-4 px-6 py-4">
-              <SidebarTrigger className="h-10 w-10 rounded-xl glass-card border border-border/50 hover:border-primary/40 hover:bg-primary/5 transition-all duration-300" />
-              <div className="flex items-center justify-between flex-1">
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-                    {t('settings.integrationsPage.title')}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.integrationsPage.subtitle')}
+    <PageLayout
+      title={t('settings.integrationsPage.title')}
+      subtitle={t('settings.integrationsPage.subtitle')}
+    >
+            {/* Summary Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card3D intensity="high" glow className="p-6 sm:p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-primary opacity-10 rounded-full blur-3xl" />
+                <div className="relative z-10">
+                  <h2 className="text-xl sm:text-2xl font-bold mb-3">{t('settings.integrationsPage.summary')}</h2>
+                  <p className="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text">
+                    {activeIntegrations} {activeIntegrations === 1 ? t('settings.integrationsPage.activeIntegrations') : t('settings.integrationsPage.activeIntegrationsPlural')}
                   </p>
                 </div>
-                <LanguageToggle />
-              </div>
-            </div>
-          </header>
-
-          <main className="container mx-auto px-6 py-8 relative space-y-8">
-            {/* Summary Card */}
-            <Card className="p-6 glass-card rounded-3xl border-2 border-primary/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-primary opacity-10 rounded-full blur-3xl" />
-              <div className="relative z-10">
-                <h2 className="text-xl font-bold mb-2">{t('settings.integrationsPage.summary')}</h2>
-                <p className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                  {activeIntegrations} {activeIntegrations === 1 ? t('settings.integrationsPage.activeIntegrations') : t('settings.integrationsPage.activeIntegrationsPlural')}
-                </p>
-              </div>
-            </Card>
+              </Card3D>
+            </motion.div>
 
             {/* Integration Cards */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Facebook Ads */}
-              <Card className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#1877F2]/10 rounded-full blur-3xl" />
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-14 h-14 rounded-xl bg-[#1877F2] flex items-center justify-center shadow-lg">
-                        <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                        </svg>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Card3D intensity="medium" glow className="p-5 sm:p-6 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#1877F2]/10 rounded-full blur-3xl" />
+                  <div className="relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-4 flex-1">
+                        <motion.div 
+                          className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#1877F2] flex items-center justify-center shadow-lg flex-shrink-0"
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ type: "spring", stiffness: 300 }}
+                        >
+                          <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                          </svg>
+                        </motion.div>
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold">{t('settings.integrationsPage.facebookAdsTitle')}</h3>
+                          <p className="text-sm text-muted-foreground">{t('settings.integrationsPage.facebookAdsDesc')}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-bold">{t('settings.integrationsPage.facebookAdsTitle')}</h3>
-                        <p className="text-sm text-muted-foreground">{t('settings.integrationsPage.facebookAdsDesc')}</p>
-                      </div>
+                      <Button3D
+                        variant="gradient"
+                        size="sm"
+                        onClick={handleConnectFacebook}
+                        disabled={connectingFacebook}
+                        glow
+                        className="w-full sm:w-auto"
+                      >
+                        {connectingFacebook ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            {t('settings.integrationsPage.connecting')}
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            {t('settings.integrationsPage.connectFacebook')}
+                          </>
+                        )}
+                      </Button3D>
                     </div>
-                    <Button
-                      className="btn-gradient"
-                      onClick={handleConnectFacebook}
-                      disabled={connectingFacebook}
-                    >
-                      {connectingFacebook ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          {t('settings.integrationsPage.connecting')}
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          {t('settings.integrationsPage.connectFacebook')}
-                        </>
-                      )}
-                    </Button>
-                  </div>
 
                   {facebookIntegrations.length === 0 ? null : (
-                    <div className="space-y-3">
-                      {facebookIntegrations.map((fb) => (
-                        <Card key={fb.id} className="p-4 glass-card border border-border/30">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-semibold">
-                                  {fb.metadata?.primary_account_name || 'Facebook Ads Account'}
-                                </h4>
-                                {fb.metadata?.ad_accounts && (
-                                  <p className="text-sm text-muted-foreground">
-                                    {fb.metadata.ad_accounts.length} {fb.metadata.ad_accounts.length === 1 ? 'conta' : 'contas'} de anúncios
-                                  </p>
-                                )}
+                    <div className="space-y-3 sm:space-y-4">
+                      {facebookIntegrations.map((fb, index) => (
+                        <motion.div
+                          key={fb.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <Card3D intensity="low" className="p-4 sm:p-5">
+                            <div className="space-y-3 sm:space-y-4">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-semibold text-base sm:text-lg mb-1">
+                                    {fb.metadata?.primary_account_name || 'Facebook Ads Account'}
+                                  </h4>
+                                  {fb.metadata?.ad_accounts && (
+                                    <p className="text-xs sm:text-sm text-muted-foreground">
+                                      {fb.metadata.ad_accounts.length} {fb.metadata.ad_accounts.length === 1 ? 'conta' : 'contas'} de anúncios
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex-shrink-0">
+                                  {getStatusBadge(getStatus(fb))}
+                                </div>
                               </div>
-                              {getStatusBadge(getStatus(fb))}
-                            </div>
-                            
-                            <div className="flex justify-between text-sm py-2 border-t border-border/30">
-                              <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
-                              <span>{new Date(fb.connected_at).toLocaleDateString('pt-PT')}</span>
-                            </div>
-                            
-                            {fb.expires_at && (
-                              <div className="flex justify-between text-sm py-2 border-t border-border/30">
-                                <span className="text-muted-foreground">{t('settings.integrationsPage.expiresOn')}</span>
-                                <span>{new Date(fb.expires_at).toLocaleDateString('pt-PT')}</span>
+                              
+                              <div className="flex justify-between text-xs sm:text-sm py-2 border-t border-border/30">
+                                <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
+                                <span>{new Date(fb.connected_at).toLocaleDateString('pt-PT')}</span>
                               </div>
-                            )}
+                              
+                              {fb.expires_at && (
+                                <div className="flex justify-between text-xs sm:text-sm py-2 border-t border-border/30">
+                                  <span className="text-muted-foreground">{t('settings.integrationsPage.expiresOn')}</span>
+                                  <span>{new Date(fb.expires_at).toLocaleDateString('pt-PT')}</span>
+                                </div>
+                              )}
 
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              className="w-full"
-                              onClick={() => setDisconnectDialog({type: 'facebook', id: fb.id})}
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              {t('settings.integrationsPage.disconnect')}
-                            </Button>
-                          </div>
-                        </Card>
+                              <Button3D
+                                variant="glass"
+                                size="sm"
+                                className="w-full"
+                                onClick={() => setDisconnectDialog({type: 'facebook', id: fb.id})}
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                {t('settings.integrationsPage.disconnect')}
+                              </Button3D>
+                            </div>
+                          </Card3D>
+                        </motion.div>
                       ))}
                     </div>
                   )}
                 </div>
-              </Card>
+              </Card3D>
+              </motion.div>
 
               {/* Shopify Stores */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="space-y-4 sm:space-y-6"
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-[#96BF48] flex items-center justify-center">
-                      <ShoppingBag className="w-5 h-5 text-white" />
+                    <motion.div 
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-[#96BF48] flex items-center justify-center shadow-lg flex-shrink-0"
+                      whileHover={{ scale: 1.1, rotate: -5 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    </motion.div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl font-bold">{t('settings.integrationsPage.shopifyTitle')}</h2>
+                      {usageData && (
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {usageData.storesUsed}/{usageData.storesLimit} {t('settings.integrationsPage.storesUsage')}
+                        </p>
+                      )}
                     </div>
-                    <h2 className="text-xl font-bold">{t('settings.integrationsPage.shopifyTitle')}</h2>
                   </div>
-                  <Button
-                    className="btn-gradient"
+                  <Button3D
+                    variant="gradient"
+                    size="sm"
                     onClick={handleConnectShopify}
                     disabled={usageData && usageData.storesUsed >= usageData.storesLimit}
+                    glow
+                    className="w-full sm:w-auto"
                   >
                     {usageData && usageData.storesUsed >= usageData.storesLimit ? (
                       <>
@@ -525,95 +567,113 @@ export default function Integrations() {
                         {t('settings.integrationsPage.addStore')}
                       </>
                     )}
-                  </Button>
+                  </Button3D>
                 </div>
 
                 {shopifyIntegrations.length === 0 ? (
-                  <Card className="p-8 glass-card rounded-3xl border-2 border-dashed border-border/50 text-center">
-                    <ShoppingBag className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                    <p className="text-muted-foreground mb-4">{t('settings.integrationsPage.noStores')}</p>
-                    {usageData && (
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {t('settings.integrationsPage.storesUsage')}: {usageData.storesUsed}/{usageData.storesLimit}
-                      </p>
-                    )}
-                    <Button 
-                      className="btn-gradient" 
-                      onClick={handleConnectShopify}
-                      disabled={usageData && usageData.storesUsed >= usageData.storesLimit}
+                  <Card3D intensity="low" className="p-6 sm:p-8 border-dashed text-center">
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.5 }}
                     >
-                      {usageData && usageData.storesUsed >= usageData.storesLimit ? (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          {t('subscription.upgradeRequired')}
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4 mr-2" />
-                          {t('settings.integrationsPage.connectFirstStore')}
-                        </>
-                      )}
-                    </Button>
-                  </Card>
+                      <ShoppingBag className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-sm sm:text-base text-muted-foreground mb-4">{t('settings.integrationsPage.noStores')}</p>
+                      <Button3D 
+                        variant="gradient" 
+                        size="md"
+                        onClick={handleConnectShopify}
+                        disabled={usageData && usageData.storesUsed >= usageData.storesLimit}
+                        glow
+                        className="w-full sm:w-auto"
+                      >
+                        {usageData && usageData.storesUsed >= usageData.storesLimit ? (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            {t('subscription.upgradeRequired')}
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            {t('settings.integrationsPage.connectFirstStore')}
+                          </>
+                        )}
+                      </Button3D>
+                    </motion.div>
+                  </Card3D>
                 ) : (
-                  <div className="grid gap-4">
-                    {shopifyIntegrations.map((shop) => (
-                      <Card key={shop.id} className="p-6 glass-card rounded-3xl border-2 border-border/50 hover:border-primary/30 transition-all relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#96BF48]/10 rounded-full blur-3xl" />
-                        <div className="relative z-10">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center gap-4 flex-1">
-                              <div className="w-12 h-12 rounded-lg bg-[#96BF48] flex items-center justify-center shadow-lg">
-                                <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.332-.134-1.332-.134-1.057-1.027-1.17-1.139c-.114-.112-.251-.078-.327-.058-.077.019-1.407.515-1.407.515s-.58-.618-1.314-1.293c-.734-.675-1.369-1.104-2.125-1.104-.756 0-1.59.755-2.267 1.521-.678.766-1.332 1.639-1.332 1.639l-2.125.666s-.619.172-.766.461c-.147.288-.251.634-.251.634L.745 22.374l14.592 1.605zm-4.653-19.086c-.154.019-.308.038-.462.058 0-.134-.019-.327-.077-.538-.231-.866-.848-1.293-1.467-1.293-.077 0-.154.019-.231.038-.058-1.122-.676-1.679-1.254-1.679-.733 0-1.428.692-1.948 1.755-.366.751-.636 1.697-.733 2.41-.827.25-1.409.423-1.467.442-.462.135-.481.154-.539.577-.038.327-1.061 8.166-1.061 8.166l7.423 1.447c0-.019 1.909-9.783 1.816-9.383zm-2.392-1.368c-.058 1.465-.463 2.872-.925 3.816-.385-.789-.656-1.735-.656-2.756 0-.27.019-.52.058-.789.231-.058.463-.096.694-.135.193-.039.387-.077.58-.096.154-.019.308-.019.444-.019.019.25.019.5-.195.979zm-.827-2.314c.077 0 .154.019.231.058-.077.116-.154.25-.231.404-.385.616-.733 1.485-.79 2.545-.251.058-.5.116-.752.173 0-.019.019-.019.019-.038.232-1.332.925-2.872 1.523-3.142z"/>
-                                </svg>
+                  <div className="grid gap-4 sm:gap-5">
+                    {shopifyIntegrations.map((shop, index) => (
+                      <motion.div
+                        key={shop.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card3D intensity="medium" glow className="p-5 sm:p-6 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-32 h-32 bg-[#96BF48]/10 rounded-full blur-3xl" />
+                          <div className="relative z-10">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                              <div className="flex items-center gap-4 flex-1 min-w-0">
+                                <motion.div 
+                                  className="w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-[#96BF48] flex items-center justify-center shadow-lg flex-shrink-0"
+                                  whileHover={{ scale: 1.1, rotate: -5 }}
+                                  transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                  <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.337 23.979l7.216-1.561s-2.604-17.613-2.625-17.73c-.018-.116-.114-.192-.211-.192s-1.332-.134-1.332-.134-1.057-1.027-1.17-1.139c-.114-.112-.251-.078-.327-.058-.077.019-1.407.515-1.407.515s-.58-.618-1.314-1.293c-.734-.675-1.369-1.104-2.125-1.104-.756 0-1.59.755-2.267 1.521-.678.766-1.332 1.639-1.332 1.639l-2.125.666s-.619.172-.766.461c-.147.288-.251.634-.251.634L.745 22.374l14.592 1.605zm-4.653-19.086c-.154.019-.308.038-.462.058 0-.134-.019-.327-.077-.538-.231-.866-.848-1.293-1.467-1.293-.077 0-.154.019-.231.038-.058-1.122-.676-1.679-1.254-1.679-.733 0-1.428.692-1.948 1.755-.366.751-.636 1.697-.733 2.41-.827.25-1.409.423-1.467.442-.462.135-.481.154-.539.577-.038.327-1.061 8.166-1.061 8.166l7.423 1.447c0-.019 1.909-9.783 1.816-9.383zm-2.392-1.368c-.058 1.465-.463 2.872-.925 3.816-.385-.789-.656-1.735-.656-2.756 0-.27.019-.52.058-.789.231-.058.463-.096.694-.135.193-.039.387-.077.58-.096.154-.019.308-.019.444-.019.019.25.019.5-.195.979zm-.827-2.314c.077 0 .154.019.231.058-.077.116-.154.25-.231.404-.385.616-.733 1.485-.79 2.545-.251.058-.5.116-.752.173 0-.019.019-.019.019-.038.232-1.332.925-2.872 1.523-3.142z"/>
+                                  </svg>
+                                </motion.div>
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="text-base sm:text-lg font-bold truncate">{shop.metadata?.shop_name || shop.metadata?.shop_domain || `Loja ${shop.id.slice(0, 8)}`}</h3>
+                                  <p className="text-xs sm:text-sm text-muted-foreground truncate">{shop.metadata?.shop_domain}</p>
+                                </div>
                               </div>
-                              <div>
-                                <h3 className="text-lg font-bold">{shop.metadata?.shop_name || shop.metadata?.shop_domain || `Loja ${shop.id.slice(0, 8)}`}</h3>
-                                <p className="text-sm text-muted-foreground">{shop.metadata?.shop_domain}</p>
+                              <div className="flex-shrink-0">
+                                {getStatusBadge(getStatus(shop))}
                               </div>
                             </div>
-                            {getStatusBadge(getStatus(shop))}
-                          </div>
 
-                          <div className="space-y-3 text-sm mb-4">
-                            <div className="flex justify-between py-2 border-b border-border/50">
-                              <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
-                              <span>{new Date(shop.connected_at).toLocaleDateString('pt-PT')}</span>
+                            <div className="space-y-3 text-xs sm:text-sm mb-4">
+                              <div className="flex justify-between py-2 border-b border-border/50">
+                                <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
+                                <span>{new Date(shop.connected_at).toLocaleDateString('pt-PT')}</span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <Button3D
+                                variant="glass"
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => handleSyncShopify(shop.id)}
+                                disabled={syncing === shop.id}
+                              >
+                                <RefreshCw className={`w-4 h-4 mr-2 ${syncing === shop.id ? 'animate-spin' : ''}`} />
+                                {syncing === shop.id ? t('settings.integrationsPage.syncing') : t('settings.integrationsPage.sync')}
+                              </Button3D>
+                              <Button3D
+                                variant="glass"
+                                size="sm"
+                                className="sm:w-auto"
+                                onClick={() => setDisconnectDialog({type: 'shopify', id: shop.id})}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span className="sm:hidden ml-2">{t('settings.integrationsPage.disconnect')}</span>
+                              </Button3D>
                             </div>
                           </div>
-
-                          <div className="flex gap-2">
-                            <Button
-                              className="flex-1 btn-glass"
-                              onClick={() => handleSyncShopify(shop.id)}
-                              disabled={syncing === shop.id}
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-2 ${syncing === shop.id ? 'animate-spin' : ''}`} />
-                              {syncing === shop.id ? t('settings.integrationsPage.syncing') : t('settings.integrationsPage.sync')}
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              onClick={() => setDisconnectDialog({type: 'shopify', id: shop.id})}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
+                        </Card3D>
+                      </motion.div>
                     ))}
                   </div>
                 )}
-              </div>
+              </motion.div>
             </div>
-          </main>
-        </SidebarInset>
-      </div>
 
       {/* Shopify Connection Dialog */}
       <Dialog open={showShopifyDialog} onOpenChange={setShowShopifyDialog}>
-        <DialogContent className="glass-card max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background/95 backdrop-blur-md border-primary/20">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-[#96BF48] flex items-center justify-center">
@@ -628,7 +688,7 @@ export default function Integrations() {
 
           <div className="space-y-6">
             {/* Step-by-step instructions */}
-            <div className="space-y-4 p-4 glass-card rounded-2xl border border-border/50">
+            <Card3D intensity="low" className="p-4 sm:p-5 md:p-6">
               <h3 className="font-semibold text-primary flex items-center gap-2">
                 <AlertCircle className="w-5 h-5" />
                 {t('settings.shopifyDialog.instructions')}
@@ -710,11 +770,9 @@ export default function Integrations() {
               </ol>
 
               <div className="flex gap-2 mt-4">
-                <Button 
-                  type="button"
-                  variant="outline" 
+                <Button3D 
+                  variant="glass"
                   size="sm"
-                  className="btn-glass" 
                   onClick={(e) => {
                     e.preventDefault();
                     window.open('https://admin.shopify.com/settings/apps/development', '_blank');
@@ -722,9 +780,9 @@ export default function Integrations() {
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   {t('settings.shopifyDialog.openAdmin')}
-                </Button>
+                </Button3D>
               </div>
-            </div>
+            </Card3D>
 
             {/* Important notes */}
             <div className="space-y-3">
@@ -782,11 +840,16 @@ export default function Integrations() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowShopifyDialog(false)}>
+          <DialogFooter className="gap-2">
+            <Button3D variant="glass" onClick={() => setShowShopifyDialog(false)}>
               {t('settings.shopifyDialog.cancel')}
-            </Button>
-            <Button className="btn-gradient" onClick={handleShopifySubmit} disabled={connectingShopify}>
+            </Button3D>
+            <Button3D 
+              variant="gradient" 
+              onClick={handleShopifySubmit} 
+              disabled={connectingShopify}
+              glow
+            >
               {connectingShopify ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -795,7 +858,7 @@ export default function Integrations() {
               ) : (
                 t('settings.shopifyDialog.connect')
               )}
-            </Button>
+            </Button3D>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -837,6 +900,6 @@ export default function Integrations() {
         current={usageData?.storesUsed}
         limit={usageData?.storesLimit}
       />
-    </SidebarProvider>
+    </PageLayout>
   );
 }

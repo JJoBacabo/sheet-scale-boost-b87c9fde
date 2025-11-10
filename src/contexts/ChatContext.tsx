@@ -308,6 +308,107 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data && !error) {
           setChatId(data.id);
+          
+          // GARANTIR QUE O USER_ID SEJA SEMPRE SALVO - MÚLTIPLAS TENTATIVAS
+          const userId = user.id;
+          console.log('🔵 CRIANDO TICKET - User ID:', userId);
+          console.log('🔵 Ticket ID:', data.id);
+          
+          // Verificar primeiro se o log já existe (evitar duplicatas do trigger)
+          try {
+            const fiveSecondsAgo = new Date(Date.now() - 5000).toISOString();
+            const { data: existingLogs } = await supabase
+              .from('audit_logs')
+              .select('id, user_id')
+              .eq('event_type', 'ticket_created')
+              .eq('event_data->>ticket_id', data.id)
+              .gte('created_at', fiveSecondsAgo)
+              .limit(1);
+
+            if (existingLogs && existingLogs.length > 0) {
+              console.log('✅ [TICKET CREATED] Log já existe (trigger funcionou):', existingLogs[0].id);
+              // Verificar se o user_id está correto
+              if (existingLogs[0].user_id !== userId) {
+                console.warn('⚠️ [TICKET CREATED] user_id no log difere do esperado. Atualizando...');
+                await supabase
+                  .from('audit_logs')
+                  .update({
+                    user_id: userId,
+                    event_data: {
+                      ticket_id: data.id,
+                      category: category || null,
+                      language: language || 'pt',
+                      status: 'waiting',
+                      message_count: validMessages.length,
+                      created_by: userId,
+                      user_id: userId,
+                      creator_id: userId
+                    }
+                  })
+                  .eq('id', existingLogs[0].id);
+                console.log('✅ [TICKET CREATED] Log atualizado com user_id correto');
+              }
+            } else {
+              // Tentativa 1: Insert direto (fallback se trigger não funcionar)
+              const insertData = {
+                user_id: userId, // OBRIGATÓRIO - campo principal
+                event_type: 'ticket_created',
+                event_data: {
+                  ticket_id: data.id,
+                  category: category || null,
+                  language: language || 'pt',
+                  status: 'waiting',
+                  message_count: validMessages.length,
+                  created_by: userId, // Backup no event_data
+                  user_id: userId, // Backup extra no event_data
+                  creator_id: userId // Backup triplo
+                }
+              };
+              
+              console.log('🔵 Tentando inserir audit log:', insertData);
+              
+              const { data: auditData, error: auditError } = await supabase
+                .from('audit_logs')
+                .insert(insertData)
+                .select()
+                .single();
+              
+              if (auditError) {
+                console.error('❌ ERRO ao inserir audit log:', auditError);
+                console.error('❌ User ID tentado:', userId);
+                console.error('❌ Ticket ID:', data.id);
+                
+                // Tentativa 2: Sem event_data complexo
+                try {
+                  const { error: retryError } = await supabase
+                    .from('audit_logs')
+                    .insert({
+                      user_id: userId,
+                      event_type: 'ticket_created',
+                      event_data: { ticket_id: data.id, user_id: userId, created_by: userId }
+                    });
+                  
+                  if (retryError) {
+                    console.error('❌ ERRO na segunda tentativa:', retryError);
+                  } else {
+                    console.log('✅ Audit log inserido na segunda tentativa');
+                  }
+                } catch (retryErr) {
+                  console.error('❌ Exceção na segunda tentativa:', retryErr);
+                }
+              } else {
+                console.log('✅ Audit log inserido com sucesso:', auditData);
+                console.log('✅ User ID salvo no log:', auditData?.user_id);
+                
+                // Verificar se realmente foi salvo
+                if (auditData?.user_id !== userId) {
+                  console.error('⚠️ AVISO: user_id não corresponde! Esperado:', userId, 'Recebido:', auditData?.user_id);
+                }
+              }
+            }
+          } catch (auditError) {
+            console.error('❌ Exceção ao criar/verificar audit log:', auditError);
+          }
         } else if (error) {
           console.error('Error creating chat:', error);
           toast({
