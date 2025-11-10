@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, BarChart3, ShoppingCart, Zap, TrendingUp, Target, Shield, Sparkles, Brain, Gauge, Lock, Activity, Search, CheckCircle2, Check, Menu } from "lucide-react";
+import { ArrowRight, BarChart3, ShoppingCart, Zap, TrendingUp, Target, Shield, Sparkles, Brain, Gauge, Lock, Activity, Search, CheckCircle2, Check, Menu, Settings, Database } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 const Landing = () => {
   const navigate = useNavigate();
   const {
@@ -25,6 +26,8 @@ const Landing = () => {
 
   // Refs for Features Pinned Section
   const featuresRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
   const gsapRef = useRef<any>(null);
   const ScrollTriggerRef = useRef<any>(null);
   const scrollTriggersRef = useRef<any[]>([]);
@@ -44,6 +47,107 @@ const Landing = () => {
       });
     }
   }, []);
+
+  // Hero section animations
+  useEffect(() => {
+    if (!gsapLoaded || !gsapRef.current) return;
+
+    const gsap = gsapRef.current;
+    const ctx = gsap.context(() => {
+      const heroTitle = heroRef.current?.querySelector(".hero-title");
+      const heroSubtitle = heroRef.current?.querySelector(".hero-subtitle");
+      const heroDescription = heroRef.current?.querySelector(".hero-description");
+      const heroButtons = heroRef.current?.querySelectorAll(".hero-button");
+
+      const tl = gsap.timeline();
+
+      if (heroTitle) {
+        tl.from(heroTitle, {
+          opacity: 0,
+          y: 50,
+          duration: 0.8,
+          ease: "power3.out",
+        });
+      }
+
+      if (heroSubtitle) {
+        tl.from(
+          heroSubtitle,
+          {
+            opacity: 0,
+            y: 30,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.5"
+        );
+      }
+
+      if (heroDescription) {
+        tl.from(
+          heroDescription,
+          {
+            opacity: 0,
+            y: 30,
+            duration: 0.8,
+            ease: "power3.out",
+          },
+          "-=0.5"
+        );
+      }
+
+      if (heroButtons && heroButtons.length > 0) {
+        tl.from(
+          heroButtons,
+          {
+            opacity: 0,
+            y: 20,
+            duration: 0.6,
+            stagger: 0.1,
+            ease: "power2.out",
+          },
+          "-=0.4"
+        );
+      }
+
+      // Dashboard animation
+      if (dashboardRef.current) {
+        gsap.from(dashboardRef.current, {
+          opacity: 0,
+          x: 100,
+          scale: 0.9,
+          duration: 1.2,
+          delay: 0.3,
+          ease: "power3.out",
+        });
+
+        // Number counting animation
+        const numbers = dashboardRef.current.querySelectorAll(".count-up");
+        numbers.forEach((num, index) => {
+          const target = parseFloat(num.getAttribute("data-target") || "0");
+          const prefix = num.getAttribute("data-prefix") || "";
+          const suffix = num.getAttribute("data-suffix") || "";
+          const obj = { value: 0 };
+
+          gsap.to(obj, {
+            value: target,
+            duration: 2,
+            delay: 1 + index * 0.1,
+            ease: "power2.out",
+            onUpdate: function () {
+              if (num) {
+                // Format numbers with commas for thousands
+                const formatted = Math.round(obj.value).toLocaleString();
+                num.textContent = `${prefix}${formatted}${suffix}`;
+              }
+            },
+          });
+        });
+      }
+    }, heroRef);
+
+    return () => ctx.revert();
+  }, [gsapLoaded]);
 
   // Features Pinned Section animation
   useEffect(() => {
@@ -288,93 +392,171 @@ const Landing = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 sm:px-6 pt-32 pb-20 relative z-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl">
-            <motion.h1 className="text-5xl sm:text-6xl md:text-7xl font-bold mb-8 leading-tight" initial={{
-            opacity: 0,
-            y: 30
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            duration: 0.6
-          }}>
-              {t('landing.hero.title1')}{" "}
-              <motion.span className="gradient-text" style={{
-              transformStyle: 'preserve-3d',
-              display: 'inline-block'
-            }} animate={{
-                  rotateY: [0, 5, 0],
-                  rotateX: [0, 2, 0]
-            }} transition={{
-              duration: 4,
-              repeat: Infinity
-            }}>
-                {t('landing.hero.title2')}
-              </motion.span>
-            </motion.h1>
-            
-            <motion.p className="text-xl text-gray-400 mb-8" initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.2,
-            duration: 0.6
-          }}>
-              {t('landing.hero.subtitle')}
-            </motion.p>
+      <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left: Hero Content */}
+            <div>
+              <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight text-white">
+                Your All-in-One Platform to Power Efficient eCommerce Operations
+              </h1>
+              <p className="hero-subtitle text-xl text-gray-300 mb-4 leading-relaxed">
+                Automate processes, centralize data and gain full control over your business performance.
+              </p>
+              <p className="hero-description text-lg text-gray-400 mb-10 leading-relaxed">
+                Sheet Tools helps modern brands streamline operations, monitor results and scale efficiently — all from one intelligent dashboard.
+              </p>
 
-            <motion.div className="space-y-4 mb-10" initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1
-          }} transition={{
-            delay: 0.4,
-            duration: 0.6
-          }}>
-              {[1, 2, 3].map(num => <motion.div key={num} className="flex items-center gap-3" initial={{
-              opacity: 0,
-              x: -20
-            }} animate={{
-              opacity: 1,
-              x: 0
-            }} transition={{
-              delay: 0.5 + num * 0.1
-            }}>
-                  <motion.div animate={{
-                rotate: [0, 10, -10, 0]
-              }} transition={{
-                duration: 2,
-                repeat: Infinity,
-                delay: num * 0.3
-              }}>
-                    <Check className="w-5 h-5 text-primary" />
-                  </motion.div>
-                  <span className="text-gray-300">{t(`landing.hero.benefit${num}`)}</span>
-                </motion.div>)}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  onClick={() => navigate("/auth")}
+                  size="lg"
+                  className="hero-button bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30"
+                >
+                  Start Free for 10 Days
+                </Button>
+                <Button
+                  onClick={() => scrollToSection('features')}
+                  size="lg"
+                  variant="outline"
+                  className="hero-button bg-[#0A0E27]/80 border border-white/30 text-white hover:bg-white/10 hover:border-white/50 text-lg px-8 py-6 font-semibold"
+                >
+                  Explore Features
+                </Button>
+              </div>
+            </div>
+
+            {/* Right: Dashboard Card */}
+            <div ref={dashboardRef} className="relative">
+              <Card className="bg-[#0A0E27]/90 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
+                <div className="space-y-6">
+                  <h3 className="text-xl font-semibold text-white">Performance Overview</h3>
+                  
+                  {/* Chart */}
+                  <div className="h-48 -mx-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={[
+                          { name: "Mon", value: 2400 },
+                          { name: "Tue", value: 3200 },
+                          { name: "Wed", value: 2800 },
+                          { name: "Thu", value: 3900 },
+                          { name: "Fri", value: 4200 },
+                          { name: "Sat", value: 4800 },
+                          { name: "Sun", value: 5200 },
+                        ]}
+                      >
+                        <defs>
+                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#7BBCFE" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#7BBCFE" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(123, 188, 254, 0.2)" />
+                        <XAxis dataKey="name" stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
+                        <YAxis stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#0A0E27",
+                            border: "1px solid rgba(123, 188, 254, 0.3)",
+                            borderRadius: "8px",
+                            color: "#F0F4F8",
+                          }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#7BBCFE"
+                          strokeWidth={2}
+                          fillOpacity={1}
+                          fill="url(#colorSales)"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Metrics */}
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="bg-gradient-to-br from-[#B8A8FE] to-[#B8A8FE]/80 rounded-xl p-4 border border-[#B8A8FE]/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Database className="w-4 h-4 text-white" />
+                        <span className="text-xs text-white/80 font-medium">Stores Connected</span>
+                      </div>
+                      <div className="text-3xl font-bold text-white">
+                        <span className="count-up" data-target="8">0</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Orders Processed</div>
+                        <div className="text-2xl font-bold text-white">
+                          <span className="count-up" data-target="2140">0</span>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-400 mb-1">Efficiency Boost</div>
+                        <div className="text-2xl font-bold text-[#7BBCFE]">
+                          <span className="count-up" data-target="27" data-suffix="%">0</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+
+          {/* Feature Cards - Bottom Section */}
+          <div className="grid md:grid-cols-3 gap-6 mt-20">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
+                  <Zap className="w-6 h-6 text-[#0A0E27]" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Workflow Automation</h3>
+                <p className="text-gray-300/70 text-sm leading-relaxed">
+                  Save time by automating daily management tasks.
+                </p>
+              </Card>
             </motion.div>
 
-            <motion.div className="flex flex-col sm:flex-row gap-4" initial={{
-            opacity: 0,
-            y: 20
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.8,
-            duration: 0.6
-          }}>
-              <Button3D variant="gradient" size="lg" glow onClick={() => navigate("/auth")}>
-                {t('landing.hero.ctaPrimary')}
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button3D>
-              <Button3D variant="glass" size="lg" onClick={() => scrollToSection('what-is-it')}>
-                {t('landing.hero.ctaSecondary')}
-              </Button3D>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#B8A8FE] to-[#B8A8FE]/80 flex items-center justify-center mb-4">
+                  <BarChart3 className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Data Intelligence</h3>
+                <p className="text-gray-300/70 text-sm leading-relaxed">
+                  Access real-time insights and performance analytics.
+                </p>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-sm hover:border-[#7BBCFE]/40 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#7BBCFE]/80 flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-[#0A0E27]" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">Secure Infrastructure</h3>
+                <p className="text-gray-300/70 text-sm leading-relaxed">
+                  Your data stays protected and always synchronized.
+                </p>
+              </Card>
             </motion.div>
           </div>
         </div>
