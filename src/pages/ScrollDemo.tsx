@@ -478,18 +478,26 @@ const ScrollDemo = () => {
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[600px]">
               {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center">
-                    <div className="grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center">
-                      {/* Left: Title and Description */}
-                      <div className="space-y-8">
-                        
+                const Icon = feature.icon;
+                const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
+                
+                return (
+                  <div
+                    key={index}
+                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
+                  >
+                    <div className={`grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
+                      {/* Text Content - Left for even, Right for odd */}
+                      <div className={`space-y-8 ${isEven ? '' : 'md:col-start-2'}`}>
+                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center shadow-lg shadow-[#00D9FF]/30">
+                          <Icon className="w-10 h-10 text-[#0A0E27]" />
+                        </div>
                         <h3 className="text-5xl sm:text-6xl font-bold text-[#F0F4F8] leading-tight">{feature.title}</h3>
                         <p className="text-[#F0F4F8]/70 text-xl sm:text-2xl leading-relaxed">{feature.description}</p>
                       </div>
 
-                      {/* Right: Two Image Placeholders */}
-                      <div className="grid grid-cols-2 gap-6">
+                      {/* Images - Right for even, Left for odd */}
+                      <div className={`grid grid-cols-2 gap-6 ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
                         <div className="aspect-square rounded-3xl bg-[#0A0E27]/40 border border-[#00D9FF]/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
                           <span className="text-[#F0F4F8]/20 text-xs font-medium">Image 1</span>
                         </div>
@@ -498,8 +506,9 @@ const ScrollDemo = () => {
                         </div>
                       </div>
                     </div>
-                  </div>;
-            })}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
