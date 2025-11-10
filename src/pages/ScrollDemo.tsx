@@ -97,7 +97,7 @@ const ScrollDemo = () => {
         const pinTrigger = ScrollTrigger.create({
           trigger: container as Element,
           start: "top top",
-          end: "+=500%",
+          end: "+=600%",
           pin: true,
           pinSpacing: true,
         });
@@ -110,20 +110,23 @@ const ScrollDemo = () => {
         const scrollTrigger = ScrollTrigger.create({
           trigger: container as Element,
           start: "top top",
-          end: "+=500%",
+          end: "+=600%",
           scrub: 1,
           onUpdate: (self) => {
             const progress = self.progress;
             const totalCards = cards.length;
             
             // Calculate which card should be visible
+            // Each card gets 1/totalCards of the progress range
+            // Add a small buffer to ensure last card shows
+            const cardProgress = progress * (totalCards - 0.1);
             const newIndex = Math.min(
-              Math.floor(progress * totalCards),
+              Math.floor(cardProgress),
               totalCards - 1
             );
             
-            // Only update if index changed
-            if (newIndex !== currentVisibleIndex) {
+            // Always update to ensure smooth transitions
+            if (newIndex !== currentVisibleIndex || progress === 0 || progress === 1) {
               currentVisibleIndex = newIndex;
               
               // Update all cards based on current index
@@ -134,7 +137,7 @@ const ScrollDemo = () => {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    duration: 0.5,
+                    duration: 0.3,
                     ease: "power2.out",
                   });
                 } else {
@@ -143,7 +146,7 @@ const ScrollDemo = () => {
                     opacity: 0,
                     y: index < currentVisibleIndex ? -50 : 50,
                     scale: 0.9,
-                    duration: 0.5,
+                    duration: 0.3,
                     ease: "power2.out",
                   });
                 }
