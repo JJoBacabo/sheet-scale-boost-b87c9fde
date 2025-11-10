@@ -1433,26 +1433,80 @@ const MetaDashboard = () => {
                           setShowDetailsDialog(true);
                         }}
                         onEdit={async () => {
-                          console.log("✏️ Edit button clicked for campaign:", campaign.id, campaign.name);
-                          setEditingCampaign(campaign);
-                          setEditFormData({
-                            name: campaign.name,
-                            daily_budget: campaign.daily_budget ? (parseFloat(campaign.daily_budget) / 100).toString() : "",
-                            lifetime_budget: campaign.lifetime_budget ? (parseFloat(campaign.lifetime_budget) / 100).toString() : "",
-                            start_time: campaign.start_time ? format(new Date(campaign.start_time), "yyyy-MM-dd'T'HH:mm") : "",
-                            stop_time: campaign.stop_time ? format(new Date(campaign.stop_time), "yyyy-MM-dd'T'HH:mm") : "",
-                            newImage: "",
-                          });
-                          setShowEditDialog(true);
-                          setActiveTab("campaign");
-                          
-                          // Fetch ad sets and ads
-                          console.log("📞 Calling fetchAdSetsAndAds for campaign:", campaign.id);
                           try {
-                            await fetchAdSetsAndAds(campaign.id);
-                            console.log("✅ fetchAdSetsAndAds completed for campaign:", campaign.id);
-                          } catch (error) {
-                            console.error("❌ Error in fetchAdSetsAndAds:", error);
+                            console.log("✏️ Edit button clicked for campaign:", campaign.id, campaign.name);
+                            
+                            if (!campaign || !campaign.id) {
+                              toast({
+                                title: t("metaDashboard.error"),
+                                description: t("metaDashboard.invalidCampaignId"),
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+
+                            setEditingCampaign(campaign);
+                            
+                            // Safely format dates
+                            let startTime = "";
+                            let stopTime = "";
+                            
+                            try {
+                              if (campaign.start_time) {
+                                const startDate = new Date(campaign.start_time);
+                                if (!isNaN(startDate.getTime())) {
+                                  startTime = format(startDate, "yyyy-MM-dd'T'HH:mm");
+                                }
+                              }
+                            } catch (e) {
+                              console.warn("Error formatting start_time:", e);
+                            }
+                            
+                            try {
+                              if (campaign.stop_time) {
+                                const stopDate = new Date(campaign.stop_time);
+                                if (!isNaN(stopDate.getTime())) {
+                                  stopTime = format(stopDate, "yyyy-MM-dd'T'HH:mm");
+                                }
+                              }
+                            } catch (e) {
+                              console.warn("Error formatting stop_time:", e);
+                            }
+                            
+                            setEditFormData({
+                              name: campaign.name || "",
+                              daily_budget: campaign.daily_budget ? (parseFloat(campaign.daily_budget) / 100).toString() : "",
+                              lifetime_budget: campaign.lifetime_budget ? (parseFloat(campaign.lifetime_budget) / 100).toString() : "",
+                              start_time: startTime,
+                              stop_time: stopTime,
+                              newImage: "",
+                            });
+                            setShowEditDialog(true);
+                            setActiveTab("campaign");
+                            
+                            // Reset ad sets and ads before fetching
+                            setAdSets([]);
+                            setAds([]);
+                            setEditAdSetsData({});
+                            setEditAdsData({});
+                            
+                            // Fetch ad sets and ads
+                            console.log("📞 Calling fetchAdSetsAndAds for campaign:", campaign.id);
+                            try {
+                              await fetchAdSetsAndAds(campaign.id);
+                              console.log("✅ fetchAdSetsAndAds completed for campaign:", campaign.id);
+                            } catch (error: any) {
+                              console.error("❌ Error in fetchAdSetsAndAds:", error);
+                              // Don't show error toast here as fetchAdSetsAndAds already handles it
+                              // Just log it for debugging
+                            }
+                          } catch (error: any) {
+                            console.error("❌ Error in onEdit handler:", error);
+                            toast({
+                              title: t("metaDashboard.error"),
+                              description: error?.message || t("metaDashboard.unknownError"),
+                              variant: "destructive",
+                            });
                           }
                         }}
                         onPause={() => setCampaignToPause(campaign.id)}
