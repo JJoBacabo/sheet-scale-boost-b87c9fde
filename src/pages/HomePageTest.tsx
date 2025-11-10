@@ -810,7 +810,7 @@ const HomePageTest = () => {
           >
             <Card className="bg-[#0A0E27]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
               <div className="h-64 bg-gradient-to-r from-[#7BBCFE]/20 via-[#B8A8FE]/20 to-[#7BBCFE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
-                <Target className="w-24 h-24 text-[#7BBCFE] opacity-50" />
+                <Target className="w-24 h-24 text-[#0066FF] opacity-50" />
               </div>
             </Card>
           </motion.div>
