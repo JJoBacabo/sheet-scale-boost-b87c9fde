@@ -4,177 +4,204 @@
 
 ### 🆓 FREE
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                    FREE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço:           €0.00 (Sem acesso)
-🏪 Lojas:           0 lojas
-📊 Campanhas:       0 campanhas
-⚡ Recursos:        Nenhum
-⏱️  Duração:         Ilimitada
-
-📝 Nota: Utilizadores sem trial ativo ou 
-         assinatura paga não têm acesso a 
-         funcionalidades
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                  🆓 FREE                  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                           ┃
+┃ 💰 Preço:        €0.00 (Sem acesso)      ┃
+┃ 🏪 Lojas:        0 lojas                 ┃
+┃ 📊 Campanhas:    0 campanhas             ┃
+┃ ⏱️  Duração:      Ilimitada               ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ⚡ RECURSOS:                              ┃
+┃    ❌ Nenhum                              ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ 📝 NOTA:                                  ┃
+┃    Utilizadores sem trial ou assinatura  ┃
+┃    paga não têm acesso a funcionalidades ┃
+┃                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ---
 
 ### 🎁 TRIAL (10 dias)
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-              TRIAL - 10 DIAS
-      (Acesso COMPLETO ao Plano Standard)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço:           €0.00 (Grátis)
-🏪 Lojas:           2 lojas
-📊 Campanhas:       40 campanhas
-⏱️  Duração:         10 dias
-
-⚡ RECURSOS INCLUÍDOS:
-   ✅ Daily ROAS (Automático)
-   ✅ Profit Sheet
-   ✅ Gestão de Campanhas
-   ✅ Cotação com IA
-   ✅ Todas as funcionalidades do Standard
-
-📝 Após Expiração:
-   • Modal/banner informa o utilizador
-   • Acesso bloqueado até escolher plano pago
-   • Dados são preservados
-   • Obrigado a subscrever para continuar
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃            🎁 TRIAL - 10 DIAS            ┃
+┃     (Acesso COMPLETO ao Plano Standard)  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                           ┃
+┃ 💰 Preço:        €0.00 (GRÁTIS)          ┃
+┃ 🏪 Lojas:        2 lojas                 ┃
+┃ 📊 Campanhas:    40 campanhas            ┃
+┃ ⏱️  Duração:      10 dias                 ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ⚡ RECURSOS INCLUÍDOS:                    ┃
+┃    ✅ Daily ROAS (Automático)            ┃
+┃    ✅ Profit Sheet                       ┃
+┃    ✅ Gestão de Campanhas                ┃
+┃    ✅ Cotação com IA                     ┃
+┃    ✅ Todas as funcionalidades Standard  ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ 🎯 APÓS EXPIRAÇÃO:                        ┃
+┃    • Modal/banner de notificação         ┃
+┃    • Acesso bloqueado até upgrade        ┃
+┃    • Dados preservados                   ┃
+┃                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ---
 
 ### 💼 BASIC
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                   BASIC
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço Mensal:    €14.99/mês
-💰 Preço Anual:     €134.91/ano (Poupa €44.97)
-🏪 Lojas:           1 loja
-📊 Campanhas:       15 campanhas
-
-⚡ RECURSOS INCLUÍDOS:
-   ✅ Daily ROAS (Automático em todos)
-   ✅ Profit Sheet
-   ✅ Análises básicas
-   ✅ Sincronização de produtos
-   ✅ Integração Facebook
-
-🎯 IDEAL PARA:
-   • Pequenos negócios
-   • Iniciantes em e-commerce
-   • Quem quer testar a plataforma
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                 💼 BASIC                  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                           ┃
+┃ 💰 Mensal:       €14.99/mês               ┃
+┃ 💰 Anual:        €134.91/ano              ┃
+┃                  (Poupa €44.97)           ┃
+┃ 🏪 Lojas:        1 loja                   ┃
+┃ 📊 Campanhas:    15 campanhas             ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ⚡ RECURSOS INCLUÍDOS:                    ┃
+┃    ✅ Daily ROAS (Automático)            ┃
+┃    ✅ Profit Sheet                       ┃
+┃    ✅ Análises básicas                   ┃
+┃    ✅ Sincronização de produtos          ┃
+┃    ✅ Integração Facebook                ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ 🎯 IDEAL PARA:                            ┃
+┃    • Pequenos negócios                   ┃
+┃    • Iniciantes em e-commerce            ┃
+┃    • Testar a plataforma                 ┃
+┃                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ---
 
-### ⭐ STANDARD (Mais Popular)
+### ⭐ STANDARD (Mais Popular) ⭐
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-              ⭐ STANDARD ⭐
-           (PLANO MAIS POPULAR)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço Mensal:    €34.99/mês
-💰 Preço Anual:     €314.91/ano (Poupa €104.97)
-🏪 Lojas:           2 lojas
-📊 Campanhas:       40 campanhas
-
-⚡ RECURSOS INCLUÍDOS:
-   ✅ Daily ROAS (Automático em todos)
-   ✅ Profit Sheet
-   ✅ Gestão de Campanhas
-   ✅ Cotação com IA
-   ✅ Análises avançadas
-   ✅ Meta Dashboard
-   ✅ Integração Facebook/Shopify
-
-🎯 IDEAL PARA:
-   • Negócios em crescimento
-   • Gestão de múltiplas campanhas
-   • Otimização contínua de ROAS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+╔═══════════════════════════════════════════╗
+║                                           ║
+║         ⭐⭐⭐ STANDARD ⭐⭐⭐           ║
+║         🔥 PLANO MAIS POPULAR 🔥          ║
+║                                           ║
+╠═══════════════════════════════════════════╣
+║                                           ║
+║ 💰 Mensal:       €34.99/mês               ║
+║ 💰 Anual:        €314.91/ano              ║
+║                  🎁 Poupa €104.97         ║
+║ 🏪 Lojas:        2 lojas                  ║
+║ 📊 Campanhas:    40 campanhas             ║
+║                                           ║
+╠═══════════════════════════════════════════╣
+║ ⚡ RECURSOS INCLUÍDOS:                    ║
+║    ✅ Daily ROAS (Automático)            ║
+║    ✅ Profit Sheet                       ║
+║    ✅ Gestão de Campanhas                ║
+║    ✅ Cotação com IA                     ║
+║    ✅ Análises avançadas                 ║
+║    ✅ Meta Dashboard                     ║
+║    ✅ Integração Facebook/Shopify        ║
+║                                           ║
+╠═══════════════════════════════════════════╣
+║ 🎯 IDEAL PARA:                            ║
+║    • Negócios em crescimento             ║
+║    • Gestão de múltiplas campanhas       ║
+║    • Otimização contínua de ROAS         ║
+║                                           ║
+║    💡 RECOMENDAÇÃO: Melhor custo-benefício║
+║                                           ║
+╚═══════════════════════════════════════════╝
 ```
 
 ---
 
 ### 🚀 EXPERT
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                  🚀 EXPERT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço Mensal:    €49.99/mês
-💰 Preço Anual:     €449.91/ano (Poupa €149.97)
-🏪 Lojas:           4 lojas
-📊 Campanhas:       ILIMITADAS
-
-⚡ RECURSOS INCLUÍDOS:
-   ✅ Daily ROAS (Automático em todos)
-   ✅ Profit Sheet
-   ✅ Gestão de Campanhas
-   ✅ Cotação com IA
-   ✅ Product Research
-   ✅ Análises avançadas
-   ✅ Meta Dashboard
-   ✅ Suporte Prioritário
-   ✅ Histórico Completo
-   ✅ Todas as funcionalidades avançadas
-
-🎯 IDEAL PARA:
-   • Negócios estabelecidos
-   • Múltiplas lojas
-   • Campanhas em larga escala
-   • Necessidade de análises profundas
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                🚀 EXPERT                  ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                           ┃
+┃ 💰 Mensal:       €49.99/mês               ┃
+┃ 💰 Anual:        €449.91/ano              ┃
+┃                  (Poupa €149.97)          ┃
+┃ 🏪 Lojas:        4 lojas                  ┃
+┃ 📊 Campanhas:    ♾️  ILIMITADAS           ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ⚡ RECURSOS INCLUÍDOS:                    ┃
+┃    ✅ Daily ROAS (Automático)            ┃
+┃    ✅ Profit Sheet                       ┃
+┃    ✅ Gestão de Campanhas                ┃
+┃    ✅ Cotação com IA                     ┃
+┃    ✅ Product Research                   ┃
+┃    ✅ Análises avançadas                 ┃
+┃    ✅ Meta Dashboard                     ┃
+┃    ✅ Suporte Prioritário                ┃
+┃    ✅ Histórico Completo                 ┃
+┃    ✅ Todas funcionalidades avançadas    ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ 🎯 IDEAL PARA:                            ┃
+┃    • Negócios estabelecidos              ┃
+┃    • Múltiplas lojas                     ┃
+┃    • Campanhas em larga escala           ┃
+┃    • Análises profundas                  ┃
+┃                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ---
 
 ### 🏢 BUSINESS (Enterprise)
 ```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-            🏢 BUSINESS
-          (Enterprise Solution)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💰 Preço:           SOB CONSULTA (Customizado)
-🏪 Lojas:           ILIMITADAS (Customizado)
-📊 Campanhas:       ILIMITADAS (Customizado)
-
-⚡ RECURSOS INCLUÍDOS:
-   ✅ Todas as funcionalidades do Expert
-   ✅ Daily ROAS (Automático em todos)
-   ✅ Profit Sheet
-   ✅ Gestão de Campanhas
-   ✅ Cotação com IA
-   ✅ Product Research
-   ✅ Lojas Ilimitadas
-   ✅ Suporte Dedicado 24/7
-   ✅ Onboarding Personalizado
-   ✅ Funcionalidades Customizadas
-   ✅ Integrações Sob Demanda
-   ✅ SLA Garantido
-   ✅ Account Manager dedicado
-
-🎯 IDEAL PARA:
-   • Grandes empresas
-   • Necessidades específicas
-   • Volume alto de operações
-   • Integrações customizadas
-   
-📧 CONTACTO: info@sheet-tools.com
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃              🏢 BUSINESS                  ┃
+┃           (Enterprise Solution)           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                           ┃
+┃ 💰 Preço:        SOB CONSULTA             ┃
+┃                  (Customizado)            ┃
+┃ 🏪 Lojas:        ♾️  ILIMITADAS           ┃
+┃ 📊 Campanhas:    ♾️  ILIMITADAS           ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ ⚡ RECURSOS INCLUÍDOS:                    ┃
+┃    ✅ Tudo do Expert                     ┃
+┃    ✅ Daily ROAS (Automático)            ┃
+┃    ✅ Profit Sheet                       ┃
+┃    ✅ Gestão de Campanhas                ┃
+┃    ✅ Cotação com IA                     ┃
+┃    ✅ Product Research                   ┃
+┃    ✅ Lojas Ilimitadas                   ┃
+┃    ✅ Suporte Dedicado 24/7              ┃
+┃    ✅ Onboarding Personalizado           ┃
+┃    ✅ Funcionalidades Customizadas       ┃
+┃    ✅ Integrações Sob Demanda            ┃
+┃    ✅ SLA Garantido                      ┃
+┃    ✅ Account Manager dedicado           ┃
+┃                                           ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃ 🎯 IDEAL PARA:                            ┃
+┃    • Grandes empresas                    ┃
+┃    • Necessidades específicas            ┃
+┃    • Volume alto de operações            ┃
+┃    • Integrações customizadas            ┃
+┃                                           ┃
+┃ 📧 CONTACTO: info@sheet-tools.com         ┃
+┃                                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
 ---
