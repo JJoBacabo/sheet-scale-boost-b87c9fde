@@ -141,7 +141,7 @@ const Landing = () => {
       scrollTriggersRef.current = [];
     };
   }, [gsapLoaded]);
-
+  
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
     let mounted = true;
@@ -160,7 +160,7 @@ const Landing = () => {
       }
     };
     checkSession();
-
+    
     // Também escutar mudanças no estado de autenticação
     const {
       data: {
@@ -221,9 +221,9 @@ const Landing = () => {
             {/* Nav - Center (absolute positioning for true center) - Desktop Only */}
             <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
               {['what-is-it', 'features', 'pricing', 'faq'].map((section, index) => <motion.button key={section} onClick={() => scrollToSection(section)} className="text-white hover:text-primary transition-colors whitespace-nowrap" whileHover={{
-              rotateY: 5,
-              z: 10,
-              scale: 1.05
+                    rotateY: 5, 
+                    z: 10,
+                    scale: 1.05
             }} style={{
               transformStyle: 'preserve-3d'
             }} initial={{
@@ -274,8 +274,8 @@ const Landing = () => {
                       <LanguageToggle />
                     </div>
                     <Button className="btn-gradient shadow-glow font-semibold rounded-lg w-full" onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate("/auth");
+                        setMobileMenuOpen(false);
+                        navigate("/auth");
                   }}>
                       {t('header.getStarted')}
                     </Button>
@@ -305,8 +305,8 @@ const Landing = () => {
               transformStyle: 'preserve-3d',
               display: 'inline-block'
             }} animate={{
-              rotateY: [0, 5, 0],
-              rotateX: [0, 2, 0]
+                  rotateY: [0, 5, 0],
+                  rotateX: [0, 2, 0]
             }} transition={{
               duration: 4,
               repeat: Infinity
@@ -452,24 +452,24 @@ const Landing = () => {
           <div className="container mx-auto max-w-7xl relative w-full">
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[500px] sm:min-h-[600px] w-full pt-8 sm:pt-12">
-              {[{
-              icon: Activity,
-              key: 'integration'
-            }, {
-              icon: BarChart3,
-              key: 'metrics'
-            }, {
-              icon: Brain,
-              key: 'ai'
-            }, {
-              icon: Zap,
-              key: 'automation'
-            }, {
-              icon: TrendingUp,
-              key: 'profit'
-            }, {
-              icon: Lock,
-              key: 'secure'
+          {[{
+            icon: Activity,
+            key: 'integration'
+          }, {
+            icon: BarChart3,
+            key: 'metrics'
+          }, {
+            icon: Brain,
+            key: 'ai'
+          }, {
+            icon: Zap,
+            key: 'automation'
+          }, {
+            icon: TrendingUp,
+            key: 'profit'
+          }, {
+            icon: Lock,
+            key: 'secure'
             }].map((feature, index) => {
               const Icon = feature.icon;
               const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
@@ -479,15 +479,12 @@ const Landing = () => {
                     <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
                       {/* Text Content - Top on mobile, Left/Right on desktop */}
                       <div className={`space-y-4 sm:space-y-6 md:space-y-8 order-1 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg shadow-primary/30 mx-auto md:mx-0">
-                          <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
-                        </div>
                         <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center md:text-left">{t(`landing.features.${feature.key}.title`)}</h3>
                         <p className="text-lg sm:text-xl md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed text-center md:text-left">{t(`landing.features.${feature.key}.description`)}</p>
                       </div>
 
-                      {/* Images - Stacked vertically on mobile, side by side on desktop */}
-                      <div className={`flex flex-col md:grid md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-2 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
+                      {/* Images - Side by side */}
+                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-2 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
                         <div 
                           onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 1 ? null : {featureIndex: index, imageIndex: 1})}
                           className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
@@ -514,8 +511,8 @@ const Landing = () => {
                 className="fixed inset-0 bg-black/80 z-40"
                 onClick={() => setZoomedImage(null)}
               />
-            )}
-            </div>
+                  )}
+                </div>
           </div>
         </div>
       </section>
@@ -598,8 +595,8 @@ const Landing = () => {
               <Card3D intensity={plan.popular ? "high" : "medium"} glow={plan.popular} className={`p-6 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(74,233,189,0.3)]" : ""}`}>
                 {plan.popular && <>
                     <motion.div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow" animate={{
-                y: [0, -5, 0],
-                scale: [1, 1.05, 1]
+                        y: [0, -5, 0],
+                        scale: [1, 1.05, 1]
               }} transition={{
                 duration: 2,
                 repeat: Infinity
@@ -654,13 +651,13 @@ const Landing = () => {
               
               <ul className="space-y-2 mb-6 flex-1 min-h-[200px]">
                 {['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7'].map((feat, i) => {
-                const featureText = t(`landing.pricing.${plan.key}.${feat}`);
-                if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
+                  const featureText = t(`landing.pricing.${plan.key}.${feat}`);
+                  if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
                 return <li key={i} className="flex items-start gap-2">
                       <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? 'text-primary' : 'text-primary/80'}`} />
                       <span className="text-xs text-gray-300">{featureText}</span>
                     </li>;
-              })}
+                })}
               </ul>
               
                 {plan.key === 'business' ? <Button3D variant="glass" size="md" className="w-full mt-auto" onClick={() => navigate("/contact-business")}>
