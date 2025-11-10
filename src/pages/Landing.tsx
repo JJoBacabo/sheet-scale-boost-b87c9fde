@@ -303,7 +303,7 @@ const Landing = () => {
       <Background3D />
       
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050F2A]/80 backdrop-blur-md border-b border-[#B8A0FF]/20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050F2A]/80 backdrop-blur-md border-b border-[#7BBCFE]/20">
         <div className="container mx-auto px-4 sm:px-6 py-4 relative">
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
@@ -314,7 +314,7 @@ const Landing = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-primary blur-xl opacity-30 animate-pulse" />
                 <motion.img src={logo} alt="Sheet Tools" className="h-12 sm:h-16 w-auto relative logo-glow" animate={{
-                filter: ["drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))", "drop-shadow(0 0 16px rgba(74, 233, 189, 0.5))", "drop-shadow(0 0 8px rgba(74, 233, 189, 0.3))"]
+                filter: ["drop-shadow(0 0 8px rgba(123, 188, 254, 0.3))", "drop-shadow(0 0 16px rgba(123, 188, 254, 0.5))", "drop-shadow(0 0 8px rgba(123, 188, 254, 0.3))"]
               }} transition={{
                 duration: 3,
                 repeat: Infinity
@@ -495,7 +495,7 @@ const Landing = () => {
                       </div>
                       <div>
                         <div className="text-xs text-gray-400 mb-1">Efficiency Boost</div>
-                        <div className="text-2xl font-bold text-[#7BBCFE]">
+                        <div className="text-2xl font-bold text-[#0066FF]">
                           <span className="count-up" data-target="27" data-suffix="%">0</span>
                         </div>
                       </div>
@@ -777,7 +777,7 @@ const Landing = () => {
           type: "spring",
           stiffness: 100
         }} className={plan.popular ? "lg:scale-110 lg:z-10" : ""}>
-              <Card3D intensity={plan.popular ? "high" : "medium"} glow={plan.popular} className={`p-6 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(74,233,189,0.3)]" : ""}`}>
+              <Card3D intensity={plan.popular ? "high" : "medium"} glow={plan.popular} className={`p-6 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(123,188,254,0.3)]" : ""}`}>
                 {plan.popular && <>
                     <motion.div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow" animate={{
                         y: [0, -5, 0],
@@ -974,7 +974,7 @@ const Landing = () => {
             delay: index * 0.1,
             duration: 0.5
           }}>
-                <AccordionItem value={`item-${index}`} className="glass-card border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-primary/30 data-[state=open]:border-primary/50 data-[state=open]:shadow-[0_0_20px_rgba(74,233,189,0.2)]">
+                <AccordionItem value={`item-${index}`} className="glass-card border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-primary/30 data-[state=open]:border-primary/50 data-[state=open]:shadow-[0_0_20px_rgba(123,188,254,0.2)]">
                   <AccordionTrigger className="text-left text-base sm:text-lg font-bold hover:no-underline py-5 sm:py-6 px-6 hover:text-primary transition-colors group">
                     <span className="flex items-center gap-3">
                       <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors flex-shrink-0">
@@ -1015,7 +1015,7 @@ const Landing = () => {
           <Card3D intensity="high" glow className="p-16 text-center max-w-4xl mx-auto">
             <div className="space-y-6">
               <motion.h2 className="text-4xl sm:text-5xl font-bold" animate={{
-              textShadow: ["0 0 20px rgba(74, 233, 189, 0.3)", "0 0 30px rgba(74, 233, 189, 0.5)", "0 0 20px rgba(74, 233, 189, 0.3)"]
+              textShadow: ["0 0 20px rgba(123, 188, 254, 0.3)", "0 0 30px rgba(123, 188, 254, 0.5)", "0 0 20px rgba(123, 188, 254, 0.3)"]
             }} transition={{
               duration: 3,
               repeat: Infinity
