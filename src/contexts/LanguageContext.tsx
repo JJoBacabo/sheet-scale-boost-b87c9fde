@@ -1733,11 +1733,6 @@ const translations = {
       placeholderBudget: '0.00',
       billingEvent: 'Billing Event',
       billingEventPlaceholder: 'Ex: IMPRESSIONS, LINK_CLICKS',
-      imageUpdated: 'Image updated',
-      imageUpdatedDesc: 'Campaign image has been updated successfully.',
-      errorUpdatingImage: 'Error updating image',
-      noImage: 'No image available',
-      imageUploadDesc: 'Supported formats: JPG, PNG, GIF. Max size: 5MB',
     },
       storeSelector: {
         selectStore: 'Select store',
