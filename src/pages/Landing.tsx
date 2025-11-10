@@ -430,23 +430,25 @@ const Landing = () => {
       </section>
 
       {/* Features Section - Pinned Section with GSAP */}
-      <section id="features" ref={featuresRef} className="py-20 px-4 sm:px-6 bg-transparent relative" aria-label="Features that make the difference">
-        <div className="pinned-features-container min-h-screen flex items-center justify-center px-4 sm:px-6">
-          <div className="container mx-auto max-w-7xl relative">
+      <section id="features" ref={featuresRef} className="py-12 sm:py-20 px-4 sm:px-6 bg-transparent relative" aria-label="Features that make the difference">
+        <div className="pinned-features-container min-h-[80vh] sm:min-h-screen flex items-center justify-center px-4 sm:px-6">
+          <div className="container mx-auto max-w-7xl relative w-full">
             {/* Header */}
-            <div className="mb-4 text-center">
-              
+            <div className="mb-6 sm:mb-8 text-center">
+              <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/20 border border-primary/30 rounded-full text-xs sm:text-sm text-primary font-medium">
+                Features
+              </span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-white text-center">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white text-center px-4">
               Features that make the difference
             </h2>
-            <p className="text-xl text-gray-300 mb-12 text-center">
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 text-center px-4">
               Everything you need to optimize your campaigns in one platform
             </p>
 
             {/* Pinned content that changes - 2 Column Layout */}
-            <div className="relative min-h-[600px]">
+            <div className="relative min-h-[500px] sm:min-h-[600px] w-full">
               {[{
               icon: Activity,
               key: 'integration'
@@ -469,22 +471,24 @@ const Landing = () => {
               const Icon = feature.icon;
               const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
 
-              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center">
-                    <div className={`grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
+              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center px-4 sm:px-6">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
                       {/* Text Content - Left for even, Right for odd */}
-                      <div className={`space-y-8 ${isEven ? '' : 'md:col-start-2'}`}>
-                        
-                        <h3 className="text-5xl sm:text-6xl font-bold text-white leading-tight">{t(`landing.features.${feature.key}.title`)}</h3>
-                        <p className="text-gray-300/70 text-xl sm:text-2xl leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
+                      <div className={`space-y-4 sm:space-y-6 md:space-y-8 order-2 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-lg shadow-primary/30 mx-auto md:mx-0">
+                          <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
+                        </div>
+                        <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center md:text-left">{t(`landing.features.${feature.key}.title`)}</h3>
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed text-center md:text-left">{t(`landing.features.${feature.key}.description`)}</p>
                       </div>
 
                       {/* Images - Right for even, Left for odd */}
-                      <div className={`grid grid-cols-2 gap-6 ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
-                        <div className="aspect-square rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
-                          <span className="text-gray-300/20 text-xs font-medium">Image 1</span>
+                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-1 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
+                        <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                          <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 1</span>
                         </div>
-                        <div className="aspect-square rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
-                          <span className="text-gray-300/20 text-xs font-medium">Image 2</span>
+                        <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                          <span className="text-gray-300/20 text-[10px] sm:text-xs font-medium">Image 2</span>
                         </div>
                       </div>
                     </div>
