@@ -26,6 +26,8 @@ import {
   RefreshCw,
   ExternalLink,
   Settings2,
+  Pencil,
+  Clock,
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -84,6 +86,7 @@ const CampaignCard = memo(({
   campaign, 
   insights, 
   onViewDetails, 
+  onEdit,
   onPause, 
   onActivate,
   t 
@@ -91,6 +94,7 @@ const CampaignCard = memo(({
   campaign: FacebookCampaign; 
   insights: ReturnType<typeof getInsightData>; 
   onViewDetails: () => void;
+  onEdit: () => void;
   onPause: () => void;
   onActivate: () => void;
   t: (key: string) => string;
@@ -98,15 +102,27 @@ const CampaignCard = memo(({
   return (
     <Card className="p-5 glass-card hover:border-primary/30 transition-all group relative">
       <div className="flex flex-col lg:flex-row gap-6 relative">
-        {/* Eye icon in top-right */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary z-10"
-          onClick={onViewDetails}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
+        {/* Eye and Edit icons in top-right */}
+        <div className="absolute top-0 right-0 flex gap-1 z-10">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+            onClick={onViewDetails}
+            title={t("metaDashboard.viewDetails") || "Ver detalhes"}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+            onClick={onEdit}
+            title={t("metaDashboard.editCampaign") || "Editar campanha"}
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+        </div>
 
         {/* Campaign Image */}
         {(campaign.image_url || campaign.thumbnail_url) && (
@@ -281,6 +297,15 @@ const MetaDashboard = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [selectedCampaign, setSelectedCampaign] = useState<FacebookCampaign | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<FacebookCampaign | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    daily_budget: "",
+    lifetime_budget: "",
+    start_time: "",
+    stop_time: "",
+  });
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [selectedAdAccount, setSelectedAdAccount] = useState<string>("");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -588,6 +613,94 @@ const MetaDashboard = () => {
     }
   };
 
+
+  const handleUpdateCampaign = async () => {
+    if (!editingCampaign) return;
+
+    try {
+      const updates: any = {};
+      
+      if (editFormData.name && editFormData.name !== editingCampaign.name) {
+        updates.name = editFormData.name;
+      }
+      
+      if (editFormData.daily_budget) {
+        updates.daily_budget = Math.round(parseFloat(editFormData.daily_budget) * 100);
+      }
+      
+      if (editFormData.lifetime_budget) {
+        updates.lifetime_budget = Math.round(parseFloat(editFormData.lifetime_budget) * 100);
+      }
+      
+      if (editFormData.start_time) {
+        // Facebook API expects timestamp in seconds or ISO string
+        updates.start_time = new Date(editFormData.start_time).toISOString();
+      }
+      
+      if (editFormData.stop_time) {
+        // Facebook API expects timestamp in seconds or ISO string
+        updates.stop_time = new Date(editFormData.stop_time).toISOString();
+      }
+      
+      // Clear budget if switching between daily and lifetime
+      if (editFormData.daily_budget && editingCampaign.lifetime_budget) {
+        // Remove lifetime_budget when switching to daily
+        updates.lifetime_budget = 0; // Set to 0 to clear it
+      }
+      if (editFormData.lifetime_budget && editingCampaign.daily_budget) {
+        // Remove daily_budget when switching to lifetime
+        updates.daily_budget = 0; // Set to 0 to clear it
+      }
+
+      // Remove undefined values
+      Object.keys(updates).forEach(key => {
+        if (updates[key] === undefined || updates[key] === null || updates[key] === '') {
+          delete updates[key];
+        }
+      });
+
+      if (Object.keys(updates).length === 0) {
+        toast({
+          title: t("metaDashboard.noChanges"),
+          description: t("metaDashboard.noChangesDesc"),
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "update",
+          campaignId: editingCampaign.id,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: t("metaDashboard.errorUpdating"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.updatedSuccess"),
+          description: t("metaDashboard.updatedDesc"),
+        });
+        setShowEditDialog(false);
+        setEditingCampaign(null);
+        fetchCampaigns();
+      }
+    } catch (error: any) {
+      console.error("Error updating campaign:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAdAccountChange = (accountId: string) => {
     if (!accountId) {
@@ -1081,6 +1194,17 @@ const MetaDashboard = () => {
                           setSelectedCampaign(campaign);
                           setShowDetailsDialog(true);
                         }}
+                        onEdit={() => {
+                          setEditingCampaign(campaign);
+                          setEditFormData({
+                            name: campaign.name,
+                            daily_budget: campaign.daily_budget ? (parseFloat(campaign.daily_budget) / 100).toString() : "",
+                            lifetime_budget: campaign.lifetime_budget ? (parseFloat(campaign.lifetime_budget) / 100).toString() : "",
+                            start_time: campaign.start_time ? format(new Date(campaign.start_time), "yyyy-MM-dd'T'HH:mm") : "",
+                            stop_time: campaign.stop_time ? format(new Date(campaign.stop_time), "yyyy-MM-dd'T'HH:mm") : "",
+                          });
+                          setShowEditDialog(true);
+                        }}
                         onPause={() => setCampaignToPause(campaign.id)}
                         onActivate={() => setCampaignToActivate(campaign.id)}
                         t={t}
@@ -1297,6 +1421,139 @@ const MetaDashboard = () => {
                 onClick={() => campaignToActivate && handleActivateCampaign(campaignToActivate)}
               >
                 {t("metaDashboard.confirmActivate")}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Campaign Dialog */}
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="glass-card max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="w-5 h-5" />
+                {t("metaDashboard.editCampaign") || "Editar Campanha"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingCampaign?.name}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 pt-4">
+              {/* Campaign Name */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t("metaDashboard.campaignName") || "Nome da Campanha"}</label>
+                <Input
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder={t("metaDashboard.campaignNamePlaceholder") || "Nome da campanha"}
+                />
+              </div>
+
+              {/* Budget Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  {t("metaDashboard.budget") || "Orçamento"}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Daily Budget */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.dailyBudget") || "Orçamento Diário"} (€)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editFormData.daily_budget}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditFormData({ 
+                          ...editFormData, 
+                          daily_budget: value,
+                          lifetime_budget: value ? "" : editFormData.lifetime_budget 
+                        });
+                      }}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("metaDashboard.dailyBudgetDesc") || "Deixe vazio se usar orçamento total"}
+                    </p>
+                  </div>
+
+                  {/* Lifetime Budget */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.lifetimeBudget") || "Orçamento Total"} (€)
+                    </label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editFormData.lifetime_budget}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setEditFormData({ 
+                          ...editFormData, 
+                          lifetime_budget: value,
+                          daily_budget: value ? "" : editFormData.daily_budget 
+                        });
+                      }}
+                      placeholder="0.00"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("metaDashboard.lifetimeBudgetDesc") || "Deixe vazio se usar orçamento diário"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule Section */}
+              <div className="space-y-4 p-4 rounded-lg bg-background/30 border border-border/20">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  {t("metaDashboard.schedule") || "Horários"}
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Start Time */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.startTime") || "Data/Hora de Início"}
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editFormData.start_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, start_time: e.target.value })}
+                    />
+                  </div>
+
+                  {/* Stop Time */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {t("metaDashboard.stopTime") || "Data/Hora de Fim"}
+                    </label>
+                    <Input
+                      type="datetime-local"
+                      value={editFormData.stop_time}
+                      onChange={(e) => setEditFormData({ ...editFormData, stop_time: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 justify-end pt-6 border-t border-border/50">
+              <Button variant="outline" onClick={() => {
+                setShowEditDialog(false);
+                setEditingCampaign(null);
+              }}>
+                {t("metaDashboard.cancel") || "Cancelar"}
+              </Button>
+              <Button className="btn-gradient" onClick={handleUpdateCampaign}>
+                {t("metaDashboard.saveChanges") || "Salvar Alterações"}
               </Button>
             </div>
           </DialogContent>
