@@ -330,6 +330,16 @@ const ScrollDemo = () => {
     };
   }, [gsapLoaded]);
 
+  // Apply scroll snap to body when component mounts (only for section 3)
+  useEffect(() => {
+    if (section3Ref.current) {
+      document.documentElement.style.scrollSnapType = "y mandatory";
+      return () => {
+        document.documentElement.style.scrollSnapType = "";
+      };
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0A0C14] text-white overflow-x-hidden">
       {/* Section 1: Scroll Hijacking / Smooth Scroll Sections */}
@@ -428,19 +438,14 @@ const ScrollDemo = () => {
       {/* Section 3: Scroll Snap + GSAP Timeline */}
       <section
         ref={section3Ref}
-        className="relative bg-[#0A0C14] snap-container"
-        style={{
-          scrollSnapType: "y mandatory",
-          height: "100vh",
-          overflowY: "auto",
-        }}
+        className="relative bg-[#0A0C14]"
       >
         {features.map((feature, index) => {
           const Icon = feature.icon;
           return (
             <div
               key={index}
-              className="min-h-screen flex items-center justify-center px-4 sm:px-6 snap-start snap-always"
+              className="min-h-screen flex items-center justify-center px-4 sm:px-6"
               style={{
                 scrollSnapAlign: "start",
                 scrollSnapStop: "always",
