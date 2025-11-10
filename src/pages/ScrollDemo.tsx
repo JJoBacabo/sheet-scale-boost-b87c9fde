@@ -345,16 +345,16 @@ const ScrollDemo = () => {
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
-            <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
+            <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
               Scroll Hijacking
             </span>
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#F0F4F8]">
+            <p className="text-xl text-white">
               Everything you need to optimize your campaigns in one platform
             </p>
           </div>
@@ -362,12 +362,12 @@ const ScrollDemo = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => {
             const Icon = feature.icon;
-            return <Card key={index} className="feature-card-1 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
+            return <Card key={index} className="feature-card-1 bg-[#0A0E27]/90 border-2 border-[#7BBCFE]/30 p-6 backdrop-blur-md rounded-2xl hover:border-[#7BBCFE]/50 hover:shadow-lg hover:shadow-[#7BBCFE]/20 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold mb-3 text-white">{feature.title}</h3>
+                  <p className="text-gray-300 text-sm leading-relaxed">{feature.description}</p>
                 </Card>;
           })}
           </div>
@@ -375,23 +375,23 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
 
       {/* Section 2: Scroll-Triggered Transitions */}
       <section ref={section2Ref} className="min-h-screen py-20 px-4 sm:px-6 relative">
         <div className="container mx-auto max-w-7xl relative z-10">
           {/* Label */}
           <div className="text-center mb-4">
-            <span className="inline-block px-4 py-2 bg-[#A855F7]/20 border border-[#A855F7]/30 rounded-full text-sm text-[#A855F7] font-medium">
+            <span className="inline-block px-4 py-2 bg-[#B8A8FE]/20 border border-[#B8A8FE]/30 rounded-full text-sm text-[#B8A8FE] font-medium">
               Scroll Triggered
             </span>
           </div>
 
           <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#F0F4F8]">
+            <p className="text-xl text-white">
               Everything you need to optimize your campaigns in one platform
             </p>
           </div>
@@ -399,12 +399,12 @@ const ScrollDemo = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((feature, index) => {
             const Icon = feature.icon;
-            return <Card key={index} className="feature-card-2 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm hover:border-[#00D9FF]/50 transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-4">
+            return <Card key={index} className="feature-card-2 bg-[#0A0E27]/90 border-2 border-[#7BBCFE]/30 p-6 backdrop-blur-md rounded-2xl hover:border-[#7BBCFE]/50 hover:shadow-lg hover:shadow-[#7BBCFE]/20 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
                     <Icon className="w-6 h-6 text-[#0A0E27]" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-[#F0F4F8] text-sm leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold mb-3 text-white">{feature.title}</h3>
+                  <p className="text-gray-300 text-sm leading-relaxed">{feature.description}</p>
                 </Card>;
           })}
           </div>
@@ -412,7 +412,7 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
 
       {/* Section 3: Scroll Snap + GSAP Timeline */}
       <section ref={section3Ref} className="relative">
@@ -425,27 +425,27 @@ const ScrollDemo = () => {
               <div className="container mx-auto max-w-4xl text-center">
                 {/* Label - only on first card */}
                 {index === 0 && <div className="mb-4">
-                    <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
+                    <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
                       Scroll Snap
                     </span>
                   </div>}
 
                 {index === 0 && <>
-                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+                    <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
                       Features that make the difference
                     </h2>
-                    <p className="text-xl text-[#F0F4F8] mb-12">
+                    <p className="text-xl text-white mb-12">
                       Everything you need to optimize your campaigns in one platform
                     </p>
                   </>}
 
-                <Card className="feature-card-3 bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
+                <Card className="feature-card-3 bg-[#0A0E27]/90 border-2 border-[#7BBCFE]/30 p-12 backdrop-blur-md rounded-3xl max-w-2xl mx-auto shadow-2xl shadow-[#7BBCFE]/10">
+                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6 mx-auto shadow-lg shadow-[#7BBCFE]/30">
                     <Icon className="w-10 h-10 text-[#0A0E27]" />
                   </div>
-                  <h3 className="text-3xl font-bold mb-4">{feature.title}</h3>
-                  <p className="text-[#F0F4F8] text-lg leading-relaxed">{feature.description}</p>
-                  <div className="mt-8 text-sm text-[#F0F4F8]/50">
+                  <h3 className="text-3xl font-bold mb-4 text-white">{feature.title}</h3>
+                  <p className="text-gray-300 text-lg leading-relaxed">{feature.description}</p>
+                  <div className="mt-8 text-sm text-gray-400/50">
                     {index + 1} / {features.length}
                   </div>
                 </Card>
@@ -455,7 +455,7 @@ const ScrollDemo = () => {
       </section>
 
       {/* Divider */}
-      <div className="h-px bg-gradient-to-r from-transparent via-[#00D9FF]/50 to-transparent" />
+      <div className="h-px bg-gradient-to-r from-transparent via-[#7BBCFE]/50 to-transparent" />
 
       {/* Section 4: Pinned Sections */}
       <section ref={section4Ref} className="relative">
@@ -463,52 +463,54 @@ const ScrollDemo = () => {
           <div className="container mx-auto max-w-7xl relative">
             {/* Label */}
             <div className="mb-4 text-center">
-              <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
+              <span className="inline-block px-4 py-2 bg-[#7BBCFE]/20 border border-[#7BBCFE]/30 rounded-full text-sm text-[#7BBCFE] font-medium">
                 Pinned Section
               </span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent text-center">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent text-center">
               Features that make the difference
             </h2>
-            <p className="text-xl text-[#F0F4F8] mb-12 text-center">
+            <p className="text-xl text-white mb-12 text-center">
               Everything you need to optimize your campaigns in one platform
             </p>
 
-            {/* Pinned content that changes - 2 Column Layout */}
-            <div className="relative min-h-[600px]">
-              {features.map((feature, index) => {
-                const Icon = feature.icon;
-                const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
-                
-                return (
-                  <div
-                    key={index}
-                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
-                  >
-                    <div className={`grid md:grid-cols-2 gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
-                      {/* Text Content - Left for even, Right for odd */}
-                      <div className={`space-y-8 ${isEven ? '' : 'md:col-start-2'}`}>
-                        <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center shadow-lg shadow-[#00D9FF]/30">
-                          <Icon className="w-10 h-10 text-[#0A0E27]" />
+            {/* Pinned content that changes - 2 Column Layout with Cards */}
+            <div className="relative min-h-[600px] flex items-center justify-center">
+              <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative">
+                {features.map((feature, index) => {
+                  const Icon = feature.icon;
+                  const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
+                  
+                  return (
+                    <Card
+                      key={index}
+                      className="feature-card-4 absolute inset-0 bg-[#0A0E27]/90 border-2 border-[#7BBCFE]/30 backdrop-blur-md rounded-3xl p-8 sm:p-12 shadow-2xl shadow-[#7BBCFE]/10"
+                    >
+                      <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 w-full h-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
+                        {/* Text Content - Left for even, Right for odd */}
+                        <div className={`space-y-6 sm:space-y-8 order-1 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center shadow-lg shadow-[#7BBCFE]/30">
+                            <Icon className="w-8 h-8 sm:w-10 sm:h-10 text-[#0A0E27]" />
+                          </div>
+                          <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">{feature.title}</h3>
+                          <p className="text-gray-300/70 text-lg sm:text-xl md:text-2xl leading-relaxed">{feature.description}</p>
                         </div>
-                        <h3 className="text-5xl sm:text-6xl font-bold text-[#F0F4F8] leading-tight">{feature.title}</h3>
-                        <p className="text-[#F0F4F8]/70 text-xl sm:text-2xl leading-relaxed">{feature.description}</p>
-                      </div>
 
-                      {/* Images - Right for even, Left for odd */}
-                      <div className={`grid grid-cols-2 gap-6 ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
-                        <div className="aspect-square rounded-3xl bg-[#0A0E27]/40 border border-[#00D9FF]/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
-                          <span className="text-[#F0F4F8]/20 text-xs font-medium">Image 1</span>
-                        </div>
-                        <div className="aspect-square rounded-3xl bg-[#0A0E27]/40 border border-[#00D9FF]/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
-                          <span className="text-[#F0F4F8]/20 text-xs font-medium">Image 2</span>
+                        {/* Images - Right for even, Left for odd */}
+                        <div className={`grid grid-cols-2 gap-4 sm:gap-6 order-2 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
+                          <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-[#7BBCFE]/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                            <span className="text-gray-400/30 text-[10px] sm:text-xs font-medium">Image 1</span>
+                          </div>
+                          <div className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-[#7BBCFE]/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg">
+                            <span className="text-gray-400/30 text-[10px] sm:text-xs font-medium">Image 2</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
