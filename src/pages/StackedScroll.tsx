@@ -267,46 +267,48 @@ const StackedScroll = () => {
                   } else {
                     // Previous panels: stay visible in staircase formation
                     // Each step goes down and gets smaller/transparent
-                    const stepOffset = stepsBehind * 40; // Vertical offset for each step (px)
-                    const scaleReduction = stepsBehind * 0.08; // Scale reduction per step
-                    const opacityReduction = stepsBehind * 0.25; // Opacity reduction per step
+                    const scaleReduction = stepsBehind * 0.1; // Scale reduction per step (10% per step)
+                    const opacityReduction = stepsBehind * 0.3; // Opacity reduction per step (30% per step)
+                    const yOffsetPercent = stepsBehind * 8; // Vertical offset in percentage (8% per step)
                     
                     // Position in staircase: offset down, scaled down, dimmed
-                    panelElement.style.zIndex = `${totalPanels + 40 - stepsBehind}`;
+                    // Higher z-index for panels that appeared more recently
+                    panelElement.style.zIndex = `${totalPanels + 30 + (activeIndex - i)}`;
                     
                     // Panel position: offset down to create stair effect
-                    panelSetter.yPercent(stepOffset * 0.5); // Convert px offset to percentage-like
-                    panelSetter.scale(Math.max(0.75, 1 - scaleReduction));
-                    panelSetter.opacity(Math.max(0.4, 1 - opacityReduction));
+                    // Each previous panel goes down more
+                    panelSetter.yPercent(yOffsetPercent);
+                    panelSetter.scale(Math.max(0.7, 1 - scaleReduction));
+                    panelSetter.opacity(Math.max(0.35, 1 - opacityReduction));
                     
-                    // Content also moves down
+                    // Content stays relative to panel (no extra offset needed)
                     if (textSetter) {
-                      textSetter.y(stepOffset * 0.3);
-                      textSetter.opacity(Math.max(0.4, 1 - opacityReduction));
+                      textSetter.y(0); // Text stays centered in its panel
+                      textSetter.opacity(Math.max(0.35, 1 - opacityReduction));
                     }
                     
                     if (imageSetter) {
-                      imageSetter.y(stepOffset * 0.2);
-                      imageSetter.scale(Math.max(0.75, 1 - scaleReduction));
-                      imageSetter.opacity(Math.max(0.4, 1 - opacityReduction));
+                      imageSetter.y(0); // Image stays centered in its panel
+                      imageSetter.scale(Math.max(0.7, 1 - scaleReduction));
+                      imageSetter.opacity(Math.max(0.35, 1 - opacityReduction));
                     }
                     
-                    // If a new panel is entering, dim this one more
-                    if (i === activeIndex - 1 && segmentProgress > 0.3) {
-                      const dimProgress = Math.min((segmentProgress - 0.3) / 0.7, 1);
-                      const extraScaleReduction = 0.05 * dimProgress;
-                      const extraOpacityReduction = 0.15 * dimProgress;
+                    // If a new panel is entering above this one, dim it slightly more
+                    if (i === activeIndex - 1 && segmentProgress > 0.2) {
+                      const dimProgress = Math.min((segmentProgress - 0.2) / 0.8, 1);
+                      const extraScaleReduction = 0.08 * dimProgress;
+                      const extraOpacityReduction = 0.2 * dimProgress;
                       
-                      panelSetter.scale(Math.max(0.7, 1 - scaleReduction - extraScaleReduction));
-                      panelSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                      panelSetter.scale(Math.max(0.6, 1 - scaleReduction - extraScaleReduction));
+                      panelSetter.opacity(Math.max(0.25, 1 - opacityReduction - extraOpacityReduction));
                       
                       if (textSetter) {
-                        textSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                        textSetter.opacity(Math.max(0.25, 1 - opacityReduction - extraOpacityReduction));
                       }
                       
                       if (imageSetter) {
-                        imageSetter.scale(Math.max(0.7, 1 - scaleReduction - extraScaleReduction));
-                        imageSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                        imageSetter.scale(Math.max(0.6, 1 - scaleReduction - extraScaleReduction));
+                        imageSetter.opacity(Math.max(0.25, 1 - opacityReduction - extraOpacityReduction));
                       }
                     }
                   }
