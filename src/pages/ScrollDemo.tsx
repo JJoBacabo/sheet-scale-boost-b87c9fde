@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import {
   Activity,
   BarChart3,
@@ -23,6 +22,7 @@ const ScrollDemo = () => {
   const gsapRef = useRef<any>(null);
   const ScrollTriggerRef = useRef<any>(null);
   const lenisRef = useRef<any>(null);
+  const scrollTriggersRef = useRef<any[]>([]);
 
   const features = [
     {
@@ -73,10 +73,9 @@ const ScrollDemo = () => {
     }
   }, []);
 
-  // Load Lenis for smooth scroll
+  // Load Lenis for smooth scroll (Section 1 only)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Try to load Lenis from CDN or npm
+    if (typeof window !== "undefined" && section1Ref.current) {
       const script = document.createElement("script");
       script.src = "https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js";
       script.async = true;
@@ -110,7 +109,9 @@ const ScrollDemo = () => {
         if (lenisRef.current) {
           lenisRef.current.destroy();
         }
-        document.head.removeChild(script);
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     }
   }, []);
@@ -120,49 +121,77 @@ const ScrollDemo = () => {
     if (!gsapLoaded || !gsapRef.current || !section1Ref.current) return;
 
     const gsap = gsapRef.current;
-    const cards = section1Ref.current.querySelectorAll(".feature-card-1");
+    const ScrollTrigger = ScrollTriggerRef.current;
+    const ctx = gsap.context(() => {
+      const cards = section1Ref.current?.querySelectorAll(".feature-card-1");
 
-    cards.forEach((card, index) => {
-      gsap.from(card, {
-        opacity: 0,
-        y: 100,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: card,
+      // Set initial state
+      gsap.set(cards, { opacity: 0, y: 100 });
+
+      cards?.forEach((card, index) => {
+        const trigger = ScrollTrigger.create({
+          trigger: card as Element,
           start: "top 80%",
           end: "top 50%",
           toggleActions: "play none none reverse",
-        },
-        delay: index * 0.2,
+          onEnter: () => {
+            gsap.to(card, {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              ease: "power3.out",
+              delay: index * 0.15,
+            });
+          },
+        });
+        scrollTriggersRef.current.push(trigger);
       });
-    });
-  }, [gsapLoaded, lenisLoaded]);
+    }, section1Ref);
 
-  // Section 2: Scroll-Triggered Transitions
+    return () => {
+      ctx.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
+    };
+  }, [gsapLoaded]);
+
+  // Section 2: Scroll-Triggered Transitions with scrub
   useEffect(() => {
     if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current || !section2Ref.current) return;
 
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
-    const cards = section2Ref.current.querySelectorAll(".feature-card-2");
+    const ctx = gsap.context(() => {
+      const cards = section2Ref.current?.querySelectorAll(".feature-card-2");
 
-    cards.forEach((card, index) => {
-      gsap.from(card, {
-        opacity: 0,
-        y: 100,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: card,
+      // Set initial state
+      gsap.set(cards, { opacity: 0, y: 100 });
+
+      cards?.forEach((card, index) => {
+        const trigger = ScrollTrigger.create({
+          trigger: card as Element,
           start: "top 80%",
-          end: "top 50%",
-          scrub: true,
-          toggleActions: "play none none reverse",
-        },
-        delay: index * 0.2,
+          end: "top 20%",
+          scrub: 1,
+          onUpdate: (self) => {
+            const progress = self.progress;
+            gsap.to(card, {
+              opacity: progress,
+              y: 100 * (1 - progress),
+              duration: 0.1,
+              ease: "none",
+            });
+          },
+        });
+        scrollTriggersRef.current.push(trigger);
       });
-    });
+    }, section2Ref);
+
+    return () => {
+      ctx.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
+    };
   }, [gsapLoaded]);
 
   // Section 3: Scroll Snap + GSAP Timeline
@@ -171,23 +200,51 @@ const ScrollDemo = () => {
 
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
-    const cards = section3Ref.current.querySelectorAll(".feature-card-3");
+    const ctx = gsap.context(() => {
+      const cards = section3Ref.current?.querySelectorAll(".feature-card-3");
 
-    cards.forEach((card, index) => {
-      gsap.from(card, {
-        opacity: 0,
-        scale: 0.8,
-        duration: 0.8,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: card,
+      // Set initial state
+      gsap.set(cards, { opacity: 0, scale: 0.8 });
+
+      cards?.forEach((card, index) => {
+        const trigger = ScrollTrigger.create({
+          trigger: card as Element,
           start: "top center",
           end: "bottom center",
           toggleActions: "play none none reverse",
-        },
-        delay: index * 0.1,
+          onEnter: () => {
+            gsap.to(card, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.8,
+              ease: "power2.out",
+            });
+          },
+          onLeave: () => {
+            gsap.to(card, {
+              opacity: 0.3,
+              scale: 0.95,
+              duration: 0.3,
+            });
+          },
+          onEnterBack: () => {
+            gsap.to(card, {
+              opacity: 1,
+              scale: 1,
+              duration: 0.8,
+              ease: "power2.out",
+            });
+          },
+        });
+        scrollTriggersRef.current.push(trigger);
       });
-    });
+    }, section3Ref);
+
+    return () => {
+      ctx.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
+    };
   }, [gsapLoaded]);
 
   // Section 4: Pinned Sections
@@ -196,69 +253,80 @@ const ScrollDemo = () => {
 
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
-    const container = section4Ref.current.querySelector(".pinned-container");
-    const cards = section4Ref.current.querySelectorAll(".feature-card-4");
+    const ctx = gsap.context(() => {
+      const container = section4Ref.current?.querySelector(".pinned-container");
+      const cards = section4Ref.current?.querySelectorAll(".feature-card-4");
 
-    if (!container) return;
+      if (!container || !cards || cards.length === 0) return;
 
-    // Set initial state - all cards hidden except first
-    gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
-    gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
+      // Set initial state - all cards hidden except first
+      gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
+      gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
 
-    // Pin the container
-    const pinTrigger = ScrollTrigger.create({
-      trigger: container,
-      start: "top top",
-      end: "+=400%",
-      pin: true,
-      pinSpacing: true,
-    });
-
-    // Create timeline for card transitions
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: container,
+      // Pin the container
+      const pinTrigger = ScrollTrigger.create({
+        trigger: container as Element,
         start: "top top",
         end: "+=400%",
-        scrub: 1,
-      },
-    });
+        pin: true,
+        pinSpacing: true,
+      });
+      scrollTriggersRef.current.push(pinTrigger);
 
-    // Animate each card transition
-    cards.forEach((card, index) => {
-      if (index === 0) return; // First card is already visible
-
-      const startProgress = index / cards.length;
-      const endProgress = (index + 1) / cards.length;
-
-      // Hide previous card
-      tl.to(
-        cards[index - 1],
-        {
-          opacity: 0,
-          y: -50,
-          scale: 0.9,
-          duration: 0.3,
+      // Create timeline for card transitions based on scroll progress
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: container as Element,
+          start: "top top",
+          end: "+=400%",
+          scrub: 1,
         },
-        startProgress
-      );
+      });
 
-      // Show current card
-      tl.to(
-        card,
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.3,
-        },
-        startProgress
-      );
-    });
+      // Calculate progress points for each card
+      cards.forEach((card, index) => {
+        if (index === 0) {
+          // First card stays visible until second card starts
+          tl.to(card, {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            duration: 0.1,
+          }, index / cards.length);
+        } else {
+          // Hide previous card
+          tl.to(
+            cards[index - 1],
+            {
+              opacity: 0,
+              y: -50,
+              scale: 0.9,
+              duration: 0.3,
+            },
+            index / cards.length
+          );
+
+          // Show current card
+          tl.to(
+            card,
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.3,
+            },
+            index / cards.length
+          );
+        }
+      });
+
+      scrollTriggersRef.current.push(tl.scrollTrigger);
+    }, section4Ref);
 
     return () => {
-      pinTrigger?.kill();
-      tl?.kill();
+      ctx.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
     };
   }, [gsapLoaded]);
 
@@ -360,9 +428,11 @@ const ScrollDemo = () => {
       {/* Section 3: Scroll Snap + GSAP Timeline */}
       <section
         ref={section3Ref}
-        className="relative bg-[#0A0C14] snap-y snap-mandatory"
+        className="relative bg-[#0A0C14] snap-container"
         style={{
           scrollSnapType: "y mandatory",
+          height: "100vh",
+          overflowY: "auto",
         }}
       >
         {features.map((feature, index) => {
@@ -370,7 +440,7 @@ const ScrollDemo = () => {
           return (
             <div
               key={index}
-              className="min-h-screen flex items-center justify-center px-4 sm:px-6"
+              className="min-h-screen flex items-center justify-center px-4 sm:px-6 snap-start snap-always"
               style={{
                 scrollSnapAlign: "start",
                 scrollSnapStop: "always",
@@ -435,7 +505,7 @@ const ScrollDemo = () => {
             </p>
 
             {/* Pinned content that changes */}
-            <div className="relative min-h-[400px]">
+            <div className="relative min-h-[500px] flex items-center justify-center">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
                 return (
@@ -465,4 +535,3 @@ const ScrollDemo = () => {
 };
 
 export default ScrollDemo;
-
