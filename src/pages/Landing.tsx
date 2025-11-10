@@ -431,24 +431,26 @@ const Landing = () => {
 
       {/* Features Section - Pinned Section with GSAP */}
       <section id="features" ref={featuresRef} className="py-12 sm:py-20 px-4 sm:px-6 bg-transparent relative" aria-label="Features that make the difference">
+        {/* Header - Outside pinned container */}
+        <div className="container mx-auto max-w-7xl mb-8 sm:mb-12">
+          <div className="mb-6 sm:mb-8 text-center">
+            <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/20 border border-primary/30 rounded-full text-xs sm:text-sm text-primary font-medium">
+              Features
+            </span>
+          </div>
+
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white text-center px-4">
+            Features that make the difference
+          </h2>
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 text-center px-4">
+            Everything you need to optimize your campaigns in one platform
+          </p>
+        </div>
+
         <div className="pinned-features-container min-h-[80vh] sm:min-h-screen flex items-center justify-center px-4 sm:px-6">
           <div className="container mx-auto max-w-7xl relative w-full">
-            {/* Header */}
-            <div className="mb-6 sm:mb-8 text-center">
-              <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/20 border border-primary/30 rounded-full text-xs sm:text-sm text-primary font-medium">
-                Features
-              </span>
-            </div>
-
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white text-center px-4">
-              Features that make the difference
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 text-center px-4">
-              Everything you need to optimize your campaigns in one platform
-            </p>
-
             {/* Pinned content that changes - 2 Column Layout */}
-            <div className="relative min-h-[500px] sm:min-h-[600px] w-full">
+            <div className="relative min-h-[500px] sm:min-h-[600px] w-full pt-8 sm:pt-12">
               {[{
               icon: Activity,
               key: 'integration'
