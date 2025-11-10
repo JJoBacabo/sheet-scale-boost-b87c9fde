@@ -435,9 +435,7 @@ const Landing = () => {
           <div className="container mx-auto max-w-7xl relative">
             {/* Header */}
             <div className="mb-4 text-center">
-              <span className="inline-block px-4 py-2 bg-primary/20 border border-primary/30 rounded-full text-sm text-primary font-medium">
-                Features
-              </span>
+              
             </div>
 
             <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-[#B8A0FF] bg-clip-text text-transparent text-center">
