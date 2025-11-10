@@ -62,7 +62,7 @@ const Landing = () => {
     }
     setMobileMenuOpen(false);
   };
-  return <div className="min-h-screen bg-black text-white relative overflow-hidden">
+  return <div className="min-h-screen bg-[#050F2A] text-[#F2F0FF] relative overflow-hidden">
       {/* CSS para remover fundo preto da seção Features */}
       <style>{`
         #features-storytelling {
@@ -76,7 +76,7 @@ const Landing = () => {
       <Background3D />
       
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-white/10">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#050F2A]/80 backdrop-blur-md border-b border-[#B8A0FF]/20">
         <div className="container mx-auto px-4 sm:px-6 py-4 relative">
           <div className="flex items-center justify-between">
             {/* Logo - Left */}
