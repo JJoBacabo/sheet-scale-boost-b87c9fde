@@ -452,39 +452,39 @@ const Landing = () => {
           <div className="container mx-auto max-w-7xl relative w-full">
             {/* Pinned content that changes - 2 Column Layout */}
             <div className="relative min-h-[500px] sm:min-h-[600px] w-full pt-8 sm:pt-12">
-          {[{
-            icon: Activity,
-            key: 'integration'
-          }, {
-            icon: BarChart3,
-            key: 'metrics'
-          }, {
-            icon: Brain,
-            key: 'ai'
-          }, {
-            icon: Zap,
-            key: 'automation'
-          }, {
-            icon: TrendingUp,
-            key: 'profit'
-          }, {
-            icon: Lock,
-            key: 'secure'
+              {[{
+              icon: Activity,
+              key: 'integration'
+            }, {
+              icon: BarChart3,
+              key: 'metrics'
+            }, {
+              icon: Brain,
+              key: 'ai'
+            }, {
+              icon: Zap,
+              key: 'automation'
+            }, {
+              icon: TrendingUp,
+              key: 'profit'
+            }, {
+              icon: Lock,
+              key: 'secure'
             }].map((feature, index) => {
               const Icon = feature.icon;
               const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
               const isZoomed = zoomedImage?.featureIndex === index;
 
               return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center px-4 sm:px-6">
-                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 w-full items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-10 md:gap-12 lg:gap-16 w-full max-w-6xl mx-auto items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
                       {/* Text Content - Top on mobile, Left/Right on desktop */}
-                      <div className={`space-y-4 sm:space-y-6 md:space-y-8 order-1 md:order-none ${isEven ? '' : 'md:col-start-2'}`}>
-                        <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight text-center md:text-left">{t(`landing.features.${feature.key}.title`)}</h3>
-                        <p className="text-lg sm:text-xl md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed text-center md:text-left">{t(`landing.features.${feature.key}.description`)}</p>
+                      <div className={`space-y-4 sm:space-y-5 md:space-y-6 order-1 md:order-none text-center md:text-left ${isEven ? '' : 'md:col-start-2'}`}>
+                        <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">{t(`landing.features.${feature.key}.title`)}</h3>
+                        <p className="text-lg sm:text-xl md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
                       </div>
 
                       {/* Images - Side by side */}
-                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-2 md:order-none ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
+                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 order-2 md:order-none justify-center ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
                         <div 
                           onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 1 ? null : {featureIndex: index, imageIndex: 1})}
                           className={`aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md flex items-center justify-center overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 ${
