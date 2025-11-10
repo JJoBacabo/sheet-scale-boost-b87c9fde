@@ -60,9 +60,9 @@
 
     --radius: 0.75rem;
 
-    /* Gradients - Cyan to Purple */
-    --gradient-primary: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(271 81% 66%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(187 100% 50%) 100%);
+    /* Gradients - Cyan sólido elegante (sem gradiente contrastante) */
+    --gradient-primary: hsl(187 100% 50%);
+    --gradient-success: hsl(160 84% 39%);
     --gradient-hero: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12% / 0.8) 50%, hsl(230 58% 10%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(187 100% 50% / 0.05), hsl(271 81% 66% / 0.03));
     --gradient-sidebar: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12%) 50%, hsl(230 58% 10%) 100%);
@@ -300,14 +300,33 @@
 
   /* Button Variants */
   .btn-gradient {
-    background: var(--gradient-primary);
+    background: hsl(187 100% 50%);
     color: hsl(var(--primary-foreground));
     border: none;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-gradient::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+
+  .btn-gradient:hover::before {
+    left: 100%;
   }
 
   .btn-gradient:hover {
-    box-shadow: var(--shadow-lg);
+    background: hsl(187 100% 55%);
+    box-shadow: 0 8px 25px hsl(187 100% 50% / 0.4);
+    transform: translateY(-2px);
   }
 
   .btn-glass {

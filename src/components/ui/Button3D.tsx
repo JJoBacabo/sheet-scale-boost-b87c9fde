@@ -45,7 +45,7 @@ export const Button3D = ({
         transformStyle: 'preserve-3d',
         perspective: '1000px',
         willChange: 'transform',
-        boxShadow: glow ? '0 0 0 rgba(74, 233, 189, 0)' : undefined,
+        boxShadow: glow ? '0 0 0 rgba(0, 217, 255, 0)' : undefined,
       }}
       className={cn(
         'rounded-xl font-semibold',
@@ -77,10 +77,10 @@ export const Button3D = ({
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
           style={{
-            boxShadow: '0 10px 30px rgba(74, 233, 189, 0)',
+            boxShadow: '0 10px 30px rgba(0, 217, 255, 0)',
           }}
           whileHover={{
-            boxShadow: '0 10px 30px rgba(74, 233, 189, 0.4)',
+            boxShadow: '0 10px 30px rgba(0, 217, 255, 0.4)',
           }}
           transition={{ duration: 0.2 }}
         />
