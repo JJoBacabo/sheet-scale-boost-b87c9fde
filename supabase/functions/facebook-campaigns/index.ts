@@ -35,8 +35,8 @@ serve(async (req) => {
     const requestBody = await req.json();
     
     // Validate input
-    const allowedActions = ['list', 'update', 'pause', 'activate', 'delete', 'listAdAccounts', 'getAdSets', 'getCreatives'];
-    const { action, campaignId, updates, adAccountId: requestedAdAccountId } = requestBody;
+    const allowedActions = ['list', 'update', 'pause', 'activate', 'delete', 'listAdAccounts', 'getAdSets', 'getCreatives', 'updateAdSet', 'updateAd'];
+    const { action, campaignId, adSetId, adId, updates, adAccountId: requestedAdAccountId } = requestBody;
     
     if (!action || !allowedActions.includes(action)) {
       console.error('Invalid action:', action);
@@ -50,12 +50,50 @@ serve(async (req) => {
     const noIdActions = ['list', 'listAdAccounts'];
     const requiresId = !noIdActions.includes(action);
     
-    if (requiresId && (!campaignId || !/^\d+$/.test(campaignId))) {
-      console.error('Invalid or missing campaignId for action:', action, campaignId);
-      return new Response(
-        JSON.stringify({ error: 'Campaign ID is required for this action' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Validate IDs based on action
+    if (requiresId) {
+      if (action === 'getAdSets') {
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'getCreatives') {
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'updateAdSet') {
+        if (!adSetId || !/^\d+$/.test(adSetId)) {
+          console.error('Invalid or missing adSetId for action:', action, adSetId);
+          return new Response(
+            JSON.stringify({ error: 'Ad Set ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else if (action === 'updateAd') {
+        if (!adId || !/^\d+$/.test(adId)) {
+          console.error('Invalid or missing adId for action:', action, adId);
+          return new Response(
+            JSON.stringify({ error: 'Ad ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        // For other actions (update, pause, activate, delete)
+        if (!campaignId || !/^\d+$/.test(campaignId)) {
+          console.error('Invalid or missing campaignId for action:', action, campaignId);
+          return new Response(
+            JSON.stringify({ error: 'Campaign ID is required for this action' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
     }
 
     // Get Facebook Ads integration
@@ -393,6 +431,154 @@ serve(async (req) => {
       const deleteData = await deleteResponse.json();
 
       return new Response(JSON.stringify({ success: true, data: deleteData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'updateAdSet' && adSetId) {
+      // Update ad set - prepare clean updates object
+      const cleanUpdates: any = {};
+      
+      // Only include valid fields
+      if (updates.name !== undefined) cleanUpdates.name = updates.name;
+      if (updates.daily_budget !== undefined) cleanUpdates.daily_budget = updates.daily_budget;
+      if (updates.lifetime_budget !== undefined) cleanUpdates.lifetime_budget = updates.lifetime_budget;
+      if (updates.optimization_goal !== undefined) cleanUpdates.optimization_goal = updates.optimization_goal;
+      if (updates.billing_event !== undefined) cleanUpdates.billing_event = updates.billing_event;
+      
+      // If switching between daily and lifetime budget, clear the other
+      if (cleanUpdates.daily_budget && cleanUpdates.daily_budget > 0) {
+        cleanUpdates.lifetime_budget = 0; // Clear lifetime budget
+      } else if (cleanUpdates.lifetime_budget && cleanUpdates.lifetime_budget > 0) {
+        cleanUpdates.daily_budget = 0; // Clear daily budget
+      }
+      
+      if (Object.keys(cleanUpdates).length === 0) {
+        return new Response(JSON.stringify({ error: 'No valid updates provided' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const updateResponse = await fetch(
+        `https://graph.facebook.com/v18.0/${adSetId}?access_token=${accessToken}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cleanUpdates),
+        }
+      );
+      const updateData = await updateResponse.json();
+
+      if (updateData.error) {
+        return new Response(JSON.stringify({ error: updateData.error.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, data: updateData }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'updateAd' && adId) {
+      // Update ad - handle both ad name and creative updates
+      const updatePayload: any = {};
+      let creativeUpdated = false;
+      
+      // If name is provided, update the ad name
+      if (updates.name !== undefined && updates.name !== '') {
+        updatePayload.name = updates.name;
+      }
+      
+      // If creative updates are provided, we need to update the creative separately
+      if (updates.creative && Object.keys(updates.creative).length > 0) {
+        // First, get the creative ID from the ad
+        const adResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${adId}?fields=creative{id}&access_token=${accessToken}`
+        );
+        const adData = await adResponse.json();
+        
+        if (adData.error) {
+          return new Response(JSON.stringify({ error: adData.error.message }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        const creativeId = adData.creative?.id;
+        
+        if (creativeId) {
+          // Update the creative - only include valid fields
+          const creativeUpdates: any = {};
+          if (updates.creative.title !== undefined && updates.creative.title !== '') {
+            creativeUpdates.title = updates.creative.title;
+          }
+          if (updates.creative.body !== undefined && updates.creative.body !== '') {
+            creativeUpdates.body = updates.creative.body;
+          }
+          
+          // Note: Image updates require uploading to Facebook first via Ad Image API
+          // For now, we'll skip image_url updates as they require a different process
+          // The user would need to upload the image first and then reference it by hash
+          
+          if (Object.keys(creativeUpdates).length > 0) {
+            const creativeResponse = await fetch(
+              `https://graph.facebook.com/v18.0/${creativeId}?access_token=${accessToken}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(creativeUpdates),
+              }
+            );
+            const creativeData = await creativeResponse.json();
+            
+            if (creativeData.error) {
+              return new Response(JSON.stringify({ error: `Creative update failed: ${creativeData.error.message}` }), {
+                status: 400,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              });
+            }
+            creativeUpdated = true;
+          }
+        } else {
+          return new Response(JSON.stringify({ error: 'Creative ID not found for this ad' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      // Update the ad itself if there are any updates
+      if (Object.keys(updatePayload).length > 0) {
+        const adUpdateResponse = await fetch(
+          `https://graph.facebook.com/v18.0/${adId}?access_token=${accessToken}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatePayload),
+          }
+        );
+        const adUpdateData = await adUpdateResponse.json();
+        
+        if (adUpdateData.error) {
+          return new Response(JSON.stringify({ error: `Ad update failed: ${adUpdateData.error.message}` }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
+      
+      // Check if any updates were made
+      if (Object.keys(updatePayload).length === 0 && !creativeUpdated) {
+        return new Response(JSON.stringify({ error: 'No valid updates provided' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

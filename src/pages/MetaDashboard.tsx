@@ -35,8 +35,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 interface FacebookCampaign {
   id: string;
@@ -70,6 +73,34 @@ interface AdAccount {
   name: string;
   account_id: string;
   account_status: number;
+}
+
+interface AdSet {
+  id: string;
+  name: string;
+  status: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+  optimization_goal?: string;
+  billing_event?: string;
+  targeting?: any;
+  created_time?: string;
+  updated_time?: string;
+}
+
+interface Ad {
+  id: string;
+  name: string;
+  status: string;
+  creative?: {
+    id: string;
+    name?: string;
+    title?: string;
+    body?: string;
+    image_url?: string;
+    thumbnail_url?: string;
+    object_story_spec?: any;
+  };
 }
 
 interface ColumnConfig {
@@ -299,6 +330,11 @@ const MetaDashboard = () => {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<FacebookCampaign | null>(null);
+  const [adSets, setAdSets] = useState<AdSet[]>([]);
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [loadingAdSets, setLoadingAdSets] = useState(false);
+  const [loadingAds, setLoadingAds] = useState(false);
+  const [activeTab, setActiveTab] = useState("campaign");
   const [editFormData, setEditFormData] = useState({
     name: "",
     daily_budget: "",
@@ -307,6 +343,8 @@ const MetaDashboard = () => {
     stop_time: "",
     newImage: "",
   });
+  const [editAdSetsData, setEditAdSetsData] = useState<Record<string, any>>({});
+  const [editAdsData, setEditAdsData] = useState<Record<string, any>>({});
   const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
   const [selectedAdAccount, setSelectedAdAccount] = useState<string>("");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -697,6 +735,180 @@ const MetaDashboard = () => {
       console.error("Error updating campaign:", error);
       toast({
         title: t("metaDashboard.errorUpdatingCampaign"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchAdSetsAndAds = async (campaignId: string) => {
+    setLoadingAdSets(true);
+    setLoadingAds(true);
+    
+    try {
+      // Fetch Ad Sets
+      const { data: adSetsData, error: adSetsError } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "getAdSets",
+          campaignId,
+        },
+      });
+
+      if (adSetsError) throw adSetsError;
+
+      if (adSetsData?.adSets) {
+        setAdSets(adSetsData.adSets);
+        // Initialize edit data for each ad set
+        const adSetsEditData: Record<string, any> = {};
+        adSetsData.adSets.forEach((adSet: AdSet) => {
+          adSetsEditData[adSet.id] = {
+            name: adSet.name || "",
+            daily_budget: adSet.daily_budget ? (parseFloat(adSet.daily_budget) / 100).toString() : "",
+            lifetime_budget: adSet.lifetime_budget ? (parseFloat(adSet.lifetime_budget) / 100).toString() : "",
+            optimization_goal: adSet.optimization_goal || "",
+            billing_event: adSet.billing_event || "",
+          };
+        });
+        setEditAdSetsData(adSetsEditData);
+      }
+
+      // Fetch Ads
+      const { data: adsData, error: adsError } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "getCreatives",
+          campaignId,
+        },
+      });
+
+      if (adsError) throw adsError;
+
+      if (adsData?.ads) {
+        setAds(adsData.ads);
+        // Initialize edit data for each ad
+        const adsEditData: Record<string, any> = {};
+        adsData.ads.forEach((ad: Ad) => {
+          adsEditData[ad.id] = {
+            name: ad.name || "",
+            title: ad.creative?.title || "",
+            body: ad.creative?.body || "",
+            image_url: ad.creative?.image_url || ad.creative?.thumbnail_url || "",
+          };
+        });
+        setEditAdsData(adsEditData);
+      }
+    } catch (error: any) {
+      console.error("Error fetching ad sets and ads:", error);
+      toast({
+        title: t("metaDashboard.errorLoadingAdSets"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingAdSets(false);
+      setLoadingAds(false);
+    }
+  };
+
+  const handleUpdateAdSet = async (adSetId: string) => {
+    try {
+      const updates: any = {};
+      const adSetData = editAdSetsData[adSetId];
+      
+      if (!adSetData) return;
+
+      if (adSetData.name) updates.name = adSetData.name;
+      if (adSetData.daily_budget) {
+        updates.daily_budget = Math.round(parseFloat(adSetData.daily_budget) * 100);
+      }
+      if (adSetData.lifetime_budget) {
+        updates.lifetime_budget = Math.round(parseFloat(adSetData.lifetime_budget) * 100);
+      }
+      if (adSetData.optimization_goal) updates.optimization_goal = adSetData.optimization_goal;
+      if (adSetData.billing_event) updates.billing_event = adSetData.billing_event;
+
+      if (Object.keys(updates).length === 0) return;
+
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "updateAdSet",
+          adSetId,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: t("metaDashboard.errorUpdatingAdSet"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.adSetUpdated"),
+          description: t("metaDashboard.adSetUpdatedDesc"),
+        });
+        if (editingCampaign) {
+          await fetchAdSetsAndAds(editingCampaign.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating ad set:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingAdSet"),
+        description: error.message || t("metaDashboard.unknownError"),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateAd = async (adId: string) => {
+    try {
+      const updates: any = {};
+      const adData = editAdsData[adId];
+      
+      if (!adData) return;
+
+      if (adData.name) updates.name = adData.name;
+      if (adData.title || adData.body) {
+        updates.creative = {};
+        if (adData.title) updates.creative.title = adData.title;
+        if (adData.body) updates.creative.body = adData.body;
+        if (adData.image_url) updates.creative.image_url = adData.image_url;
+      }
+
+      if (Object.keys(updates).length === 0) return;
+
+      const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
+        body: {
+          action: "updateAd",
+          adId,
+          updates,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: t("metaDashboard.errorUpdatingAd"),
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: t("metaDashboard.adUpdated"),
+          description: t("metaDashboard.adUpdatedDesc"),
+        });
+        if (editingCampaign) {
+          await fetchAdSetsAndAds(editingCampaign.id);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating ad:", error);
+      toast({
+        title: t("metaDashboard.errorUpdatingAd"),
         description: error.message || t("metaDashboard.unknownError"),
         variant: "destructive",
       });
@@ -1195,7 +1407,7 @@ const MetaDashboard = () => {
                           setSelectedCampaign(campaign);
                           setShowDetailsDialog(true);
                         }}
-                        onEdit={() => {
+                        onEdit={async () => {
                           setEditingCampaign(campaign);
                           setEditFormData({
                             name: campaign.name,
@@ -1203,8 +1415,13 @@ const MetaDashboard = () => {
                             lifetime_budget: campaign.lifetime_budget ? (parseFloat(campaign.lifetime_budget) / 100).toString() : "",
                             start_time: campaign.start_time ? format(new Date(campaign.start_time), "yyyy-MM-dd'T'HH:mm") : "",
                             stop_time: campaign.stop_time ? format(new Date(campaign.stop_time), "yyyy-MM-dd'T'HH:mm") : "",
+                            newImage: "",
                           });
                           setShowEditDialog(true);
+                          setActiveTab("campaign");
+                          
+                          // Fetch ad sets and ads
+                          await fetchAdSetsAndAds(campaign.id);
                         }}
                         onPause={() => setCampaignToPause(campaign.id)}
                         onActivate={() => setCampaignToActivate(campaign.id)}
@@ -1429,7 +1646,7 @@ const MetaDashboard = () => {
 
         {/* Edit Campaign Dialog */}
         <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-          <DialogContent className="glass-card max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Pencil className="w-5 h-5" />
@@ -1440,7 +1657,19 @@ const MetaDashboard = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="space-y-4 pt-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="campaign">{t("metaDashboard.campaign")}</TabsTrigger>
+                <TabsTrigger value="adsets">
+                  {t("metaDashboard.adSets")} ({adSets.length})
+                </TabsTrigger>
+                <TabsTrigger value="ads">
+                  {t("metaDashboard.ads")} ({ads.length})
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Campaign Tab */}
+              <TabsContent value="campaign" className="space-y-4 pt-4">
               {/* Campaign Name */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t("metaDashboard.campaignName")}</label>
@@ -1593,12 +1822,234 @@ const MetaDashboard = () => {
                   </p>
                 </div>
               </div>
-            </div>
+              </TabsContent>
+
+              {/* Ad Sets Tab */}
+              <TabsContent value="adsets" className="space-y-4 pt-4">
+                {loadingAdSets ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingOverlay />
+                  </div>
+                ) : adSets.length === 0 ? (
+                  <Card className="p-8 text-center glass-card">
+                    <p className="text-muted-foreground">{t("metaDashboard.noAdSets")}</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {adSets.map((adSet) => (
+                      <Card key={adSet.id} className="p-4 glass-card">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{adSet.name || adSet.id}</h4>
+                            <Badge className={adSet.status === "ACTIVE" ? "bg-success/20 text-success" : "bg-muted"}>
+                              {adSet.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adSetName")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.name || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], name: e.target.value },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.dailyBudget")} (€)</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editAdSetsData[adSet.id]?.daily_budget || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { 
+                                      ...editAdSetsData[adSet.id], 
+                                      daily_budget: e.target.value,
+                                      lifetime_budget: e.target.value ? "" : editAdSetsData[adSet.id]?.lifetime_budget 
+                                    },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.lifetimeBudget")} (€)</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editAdSetsData[adSet.id]?.lifetime_budget || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { 
+                                      ...editAdSetsData[adSet.id], 
+                                      lifetime_budget: e.target.value,
+                                      daily_budget: e.target.value ? "" : editAdSetsData[adSet.id]?.daily_budget 
+                                    },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.optimizationGoal")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.optimization_goal || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], optimization_goal: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.optimizationGoalPlaceholder")}
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="btn-gradient w-full" 
+                            onClick={() => handleUpdateAdSet(adSet.id)}
+                          >
+                            {t("metaDashboard.saveAdSet")}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Ads Tab */}
+              <TabsContent value="ads" className="space-y-4 pt-4">
+                {loadingAds ? (
+                  <div className="flex items-center justify-center py-8">
+                    <LoadingOverlay />
+                  </div>
+                ) : ads.length === 0 ? (
+                  <Card className="p-8 text-center glass-card">
+                    <p className="text-muted-foreground">{t("metaDashboard.noAds")}</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {ads.map((ad) => (
+                      <Card key={ad.id} className="p-4 glass-card">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">{ad.name || ad.id}</h4>
+                            <Badge className={ad.status === "ACTIVE" ? "bg-success/20 text-success" : "bg-muted"}>
+                              {ad.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adName")}</Label>
+                              <Input
+                                value={editAdsData[ad.id]?.name || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], name: e.target.value },
+                                  });
+                                }}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adTitle")}</Label>
+                              <Input
+                                value={editAdsData[ad.id]?.title || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], title: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.adTitlePlaceholder")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.adBody")}</Label>
+                              <Textarea
+                                value={editAdsData[ad.id]?.body || ""}
+                                onChange={(e) => {
+                                  setEditAdsData({
+                                    ...editAdsData,
+                                    [ad.id]: { ...editAdsData[ad.id], body: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.adBodyPlaceholder")}
+                                rows={4}
+                              />
+                            </div>
+                            
+                            {editAdsData[ad.id]?.image_url && (
+                              <div className="space-y-2">
+                                <Label>{t("metaDashboard.currentImage")}</Label>
+                                <div className="relative w-full h-48 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+                                  <img
+                                    src={editAdsData[ad.id].image_url}
+                                    alt={ad.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.uploadImage")}</Label>
+                              <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      const base64String = reader.result as string;
+                                      setEditAdsData({
+                                        ...editAdsData,
+                                        [ad.id]: { ...editAdsData[ad.id], image_url: base64String },
+                                      });
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                                className="cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="btn-gradient w-full" 
+                            onClick={() => handleUpdateAd(ad.id)}
+                          >
+                            {t("metaDashboard.saveAd")}
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
 
             <div className="flex gap-4 justify-end pt-6 border-t border-border/50">
               <Button variant="outline" onClick={() => {
                 setShowEditDialog(false);
                 setEditingCampaign(null);
+                setAdSets([]);
+                setAds([]);
                 setEditFormData({
                   name: "",
                   daily_budget: "",
@@ -1607,12 +2058,16 @@ const MetaDashboard = () => {
                   stop_time: "",
                   newImage: "",
                 });
+                setEditAdSetsData({});
+                setEditAdsData({});
               }}>
                 {t("metaDashboard.cancel")}
               </Button>
-              <Button className="btn-gradient" onClick={handleUpdateCampaign}>
-                {t("metaDashboard.saveChanges")}
-              </Button>
+              {activeTab === "campaign" && (
+                <Button className="btn-gradient" onClick={handleUpdateCampaign}>
+                  {t("metaDashboard.saveChanges")}
+                </Button>
+              )}
             </div>
           </DialogContent>
         </Dialog>
