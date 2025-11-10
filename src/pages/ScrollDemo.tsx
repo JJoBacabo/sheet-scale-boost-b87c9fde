@@ -111,22 +111,31 @@ const ScrollDemo = () => {
           trigger: container as Element,
           start: "top top",
           end: "+=600%",
-          scrub: 1,
+          scrub: 0.5,
           onUpdate: (self) => {
             const progress = self.progress;
             const totalCards = cards.length;
             
             // Calculate which card should be visible
-            // Each card gets 1/totalCards of the progress range
-            // Add a small buffer to ensure last card shows
-            const cardProgress = progress * (totalCards - 0.1);
-            const newIndex = Math.min(
-              Math.floor(cardProgress),
-              totalCards - 1
-            );
+            // Map progress (0-1) to card index (0 to totalCards-1)
+            // Each card occupies 1/totalCards of the progress
+            let newIndex: number;
             
-            // Always update to ensure smooth transitions
-            if (newIndex !== currentVisibleIndex || progress === 0 || progress === 1) {
+            if (progress >= 1) {
+              newIndex = totalCards - 1; // Last card
+            } else if (progress <= 0) {
+              newIndex = 0; // First card
+            } else {
+              // Calculate index based on progress segments
+              const segmentSize = 1 / totalCards;
+              newIndex = Math.min(
+                Math.floor(progress / segmentSize),
+                totalCards - 1
+              );
+            }
+            
+            // Update if index changed
+            if (newIndex !== currentVisibleIndex) {
               currentVisibleIndex = newIndex;
               
               // Update all cards based on current index
@@ -137,7 +146,7 @@ const ScrollDemo = () => {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    duration: 0.3,
+                    duration: 0.4,
                     ease: "power2.out",
                   });
                 } else {
@@ -146,7 +155,7 @@ const ScrollDemo = () => {
                     opacity: 0,
                     y: index < currentVisibleIndex ? -50 : 50,
                     scale: 0.9,
-                    duration: 0.3,
+                    duration: 0.4,
                     ease: "power2.out",
                   });
                 }
