@@ -397,7 +397,7 @@ const Landing = () => {
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Hero Content */}
             <div>
-              <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight text-white">
+              <h1 className="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight text-white">
                 Your All-in-One Platform to Power Efficient eCommerce Operations
               </h1>
               <p className="hero-subtitle text-xl text-gray-300 mb-4 leading-relaxed">
