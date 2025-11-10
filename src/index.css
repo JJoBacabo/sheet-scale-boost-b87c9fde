@@ -270,7 +270,7 @@
   }
 
   .glass-card:hover {
-    border-color: hsl(258 100% 81% / 0.4);
+    border-color: hsl(187 100% 50% / 0.4);
     box-shadow: var(--shadow-glow);
     background: hsl(var(--glass-bg-hover));
   }
@@ -278,15 +278,15 @@
   /* Logo Glow Effect - Roxo */
   .logo-glow {
     animation: logoGlow 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 8px hsl(258 100% 81% / 0.4));
+    filter: drop-shadow(0 0 8px hsl(187 100% 50% / 0.5));
   }
 
   @keyframes logoGlow {
     0%, 100% {
-      filter: drop-shadow(0 0 8px hsl(258 100% 81% / 0.4));
+      filter: drop-shadow(0 0 8px hsl(187 100% 50% / 0.5));
     }
     50% {
-      filter: drop-shadow(0 0 16px hsl(258 100% 81% / 0.6));
+      filter: drop-shadow(0 0 16px hsl(187 100% 50% / 0.7));
     }
   }
 
@@ -320,7 +320,7 @@
 
   .btn-glass:hover {
     background: hsl(var(--glass-bg-hover));
-    border-color: hsl(258 100% 81% / 0.4);
+    border-color: hsl(187 100% 50% / 0.4);
     box-shadow: var(--shadow-glow);
   }
 }
