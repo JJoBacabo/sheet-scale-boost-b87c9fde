@@ -853,7 +853,7 @@ const Settings = () => {
                           <Button 
                             className="w-full btn-gradient mt-auto" 
                             size="sm"
-                            onClick={() => window.location.href = 'mailto:info@sheet-tools.com?subject=Business Plan Inquiry'}
+                            onClick={() => navigate('/contact-business')}
                           >
                             {t('landing.pricing.business.contactUs')}
                           </Button>

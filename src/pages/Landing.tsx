@@ -620,7 +620,7 @@ const Landing = () => {
                     variant="glass"
                     size="md"
                     className="w-full mt-auto"
-                    onClick={() => window.location.href = 'mailto:info@sheet-tools.com?subject=Business Plan Inquiry'}
+                    onClick={() => navigate("/contact-business")}
                   >
                     {t(`landing.pricing.${plan.key}.contactUs`)}
                   </Button3D>
