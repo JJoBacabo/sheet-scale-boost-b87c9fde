@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -29,8 +29,6 @@ import {
 } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Card3D } from "@/components/ui/Card3D";
-import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,6 +46,8 @@ interface FacebookCampaign {
   created_time: string;
   start_time?: string;
   stop_time?: string;
+  image_url?: string;
+  thumbnail_url?: string;
   insights?: {
     data: Array<{
       impressions: string;
@@ -78,6 +78,196 @@ interface ColumnConfig {
   getValue: (campaign: FacebookCampaign, insights: any) => any;
   render: (value: any, campaign: FacebookCampaign, insights: any) => React.ReactNode;
 }
+
+// Memoized Campaign Card Component for better performance
+const CampaignCard = memo(({ 
+  campaign, 
+  insights, 
+  onViewDetails, 
+  onPause, 
+  onActivate,
+  t 
+}: { 
+  campaign: FacebookCampaign; 
+  insights: ReturnType<typeof getInsightData>; 
+  onViewDetails: () => void;
+  onPause: () => void;
+  onActivate: () => void;
+  t: (key: string) => string;
+}) => {
+  return (
+    <Card className="p-5 glass-card hover:border-primary/30 transition-all group relative">
+      <div className="flex flex-col lg:flex-row gap-6 relative">
+        {/* Eye icon in top-right */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary z-10"
+          onClick={onViewDetails}
+        >
+          <Eye className="w-4 h-4" />
+        </Button>
+
+        {/* Campaign Image */}
+        {(campaign.image_url || campaign.thumbnail_url) && (
+          <div className="w-full lg:w-48 h-48 lg:h-auto flex-shrink-0 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+            <img
+              src={campaign.image_url || campaign.thumbnail_url}
+              alt={campaign.name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        {/* Campaign Info */}
+        <div className="flex-1 space-y-3">
+          <div className="flex items-start justify-between gap-4 pr-10">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
+              <p className="text-xs text-muted-foreground">{campaign.objective}</p>
+            </div>
+          </div>
+
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
+              <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
+              <p className="text-lg font-bold">{insights.results}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">CPC</p>
+              <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
+              <p className="text-xs text-muted-foreground mb-1">ROAS</p>
+              <p className="text-lg font-bold">
+                {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
+              </p>
+            </div>
+            <div className="p-3 flex flex-col items-center justify-center gap-2">
+              <Badge
+                className={
+                  campaign.status === "ACTIVE"
+                    ? "bg-success/20 text-success border-success/30"
+                    : campaign.status === "PAUSED"
+                      ? "bg-warning/20 text-warning border-warning/30"
+                      : "bg-muted/50 text-muted-foreground border-muted"
+                }
+              >
+                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
+              </Badge>
+              {campaign.status === "ACTIVE" ? (
+                <Button
+                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
+                  onClick={onPause}
+                >
+                  <Pause className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.pause")}</span>
+                </Button>
+              ) : (
+                <Button
+                  className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
+                  onClick={onActivate}
+                >
+                  <Play className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.activate")}</span>
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Budget Info */}
+          <div className="text-xs text-muted-foreground">
+            <span>{t("metaDashboard.budget")}: </span>
+            <span className="font-medium">
+              {campaign.daily_budget
+                ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
+                : campaign.lifetime_budget
+                  ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
+                  : "—"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+});
+CampaignCard.displayName = 'CampaignCard';
+
+// Helper function for insight data (moved outside component)
+const getInsightData = (campaign: FacebookCampaign) => {
+  const insights = campaign.insights?.data?.[0];
+  if (!insights)
+    return {
+      impressions: 0,
+      clicks: 0,
+      spend: 0,
+      conversions: 0,
+      cpc: 0,
+      cpm: 0,
+      ctr: 0,
+      reach: 0,
+      linkClicks: 0,
+      landingPageViews: 0,
+      costPerLandingPageView: 0,
+      costPerResult: 0,
+      roas: 0,
+      results: 0,
+    };
+
+  const conversions = insights.actions?.find((a) => a.action_type === "purchase")?.value || "0";
+  const linkClicks =
+    insights.actions?.find((a) => a.action_type === "link_click")?.value ||
+    insights.actions?.find((a) => a.action_type === "outbound_click")?.value ||
+    "0";
+  const landingPageViews = insights.actions?.find((a) => a.action_type === "landing_page_view")?.value || "0";
+  const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value || "0";
+
+  const spend = parseFloat(insights.spend || "0");
+  const revenue = parseFloat(purchaseValue);
+  const roas = spend > 0 ? revenue / spend : 0;
+
+  const allResults =
+    insights.actions?.reduce((sum, action) => {
+      if (
+        action.action_type === "purchase" ||
+        action.action_type === "lead" ||
+        action.action_type === "link_click" ||
+        action.action_type === "post_engagement"
+      ) {
+        return sum + parseInt(action.value || "0");
+      }
+      return sum;
+    }, 0) || 0;
+
+  const costPerResult = allResults > 0 ? spend / allResults : 0;
+  const costPerLandingPageView = parseInt(landingPageViews) > 0 ? spend / parseInt(landingPageViews) : 0;
+
+  return {
+    impressions: parseInt(insights.impressions || "0"),
+    clicks: parseInt(insights.clicks || "0"),
+    spend,
+    conversions: parseInt(conversions),
+    cpc: parseFloat(insights.cpc || "0"),
+    cpm: parseFloat(insights.cpm || "0"),
+    ctr: parseFloat(insights.ctr || "0"),
+    reach: parseInt(insights.reach || "0"),
+    linkClicks: parseInt(linkClicks),
+    landingPageViews: parseInt(landingPageViews),
+    costPerLandingPageView,
+    costPerResult,
+    roas,
+    results: allResults,
+  };
+};
 
 const MetaDashboard = () => {
   const navigate = useNavigate();
@@ -398,71 +588,6 @@ const MetaDashboard = () => {
     }
   };
 
-  const getInsightData = (campaign: FacebookCampaign) => {
-    const insights = campaign.insights?.data?.[0];
-    if (!insights)
-      return {
-        impressions: 0,
-        clicks: 0,
-        spend: 0,
-        conversions: 0,
-        cpc: 0,
-        cpm: 0,
-        ctr: 0,
-        reach: 0,
-        linkClicks: 0,
-        landingPageViews: 0,
-        costPerLandingPageView: 0,
-        costPerResult: 0,
-        roas: 0,
-        results: 0,
-      };
-
-    const conversions = insights.actions?.find((a) => a.action_type === "purchase")?.value || "0";
-    const linkClicks =
-      insights.actions?.find((a) => a.action_type === "link_click")?.value ||
-      insights.actions?.find((a) => a.action_type === "outbound_click")?.value ||
-      "0";
-    const landingPageViews = insights.actions?.find((a) => a.action_type === "landing_page_view")?.value || "0";
-    const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value || "0";
-
-    const spend = parseFloat(insights.spend || "0");
-    const revenue = parseFloat(purchaseValue);
-    const roas = spend > 0 ? revenue / spend : 0;
-
-    const allResults =
-      insights.actions?.reduce((sum, action) => {
-        if (
-          action.action_type === "purchase" ||
-          action.action_type === "lead" ||
-          action.action_type === "link_click" ||
-          action.action_type === "post_engagement"
-        ) {
-          return sum + parseInt(action.value || "0");
-        }
-        return sum;
-      }, 0) || 0;
-
-    const costPerResult = allResults > 0 ? spend / allResults : 0;
-    const costPerLandingPageView = parseInt(landingPageViews) > 0 ? spend / parseInt(landingPageViews) : 0;
-
-    return {
-      impressions: parseInt(insights.impressions || "0"),
-      clicks: parseInt(insights.clicks || "0"),
-      spend,
-      conversions: parseInt(conversions),
-      cpc: parseFloat(insights.cpc || "0"),
-      cpm: parseFloat(insights.cpm || "0"),
-      ctr: parseFloat(insights.ctr || "0"),
-      reach: parseInt(insights.reach || "0"),
-      linkClicks: parseInt(linkClicks),
-      landingPageViews: parseInt(landingPageViews),
-      costPerLandingPageView,
-      costPerResult,
-      roas,
-      results: allResults,
-    };
-  };
 
   const handleAdAccountChange = (accountId: string) => {
     if (!accountId) {
@@ -719,7 +844,7 @@ const MetaDashboard = () => {
         subtitle={t("metaDashboard.connectFacebookDesc")}
       >
         <div className="container max-w-4xl mx-auto">
-          <Card3D intensity="low" className="p-8 text-center">
+          <Card className="p-8 text-center glass-card">
             <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-warning" />
             <h2 className="text-2xl font-bold mb-2">{t("metaDashboard.connectTitle")}</h2>
             <p className="text-muted-foreground mb-6">{t("metaDashboard.connectDesc")}</p>
@@ -727,7 +852,7 @@ const MetaDashboard = () => {
               <ExternalLink className="w-4 h-4 mr-2" />
               {t("metaDashboard.goToSettings")}
             </Button>
-          </Card3D>
+          </Card>
         </div>
       </PageLayout>
     );
@@ -753,7 +878,7 @@ const MetaDashboard = () => {
       }
     >
             {/* Ad Account Selector & Filters */}
-            <Card3D intensity="low" className="p-5">
+            <Card className="p-5 glass-card">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">{t("metaDashboard.adAccount")}</label>
@@ -862,10 +987,10 @@ const MetaDashboard = () => {
                   {t("metaDashboard.refresh")}
                 </Button>
               </div>
-            </Card3D>
+            </Card>
 
             {/* Search & Filter */}
-            <Card intensity="low" className="p-5 glass-card">
+            <Card className="p-5 glass-card">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -940,108 +1065,26 @@ const MetaDashboard = () => {
               </div>
 
               {filteredCampaigns.length === 0 ? (
-                <Card3D intensity="low" className="p-8 text-center">
+                <Card className="p-8 text-center glass-card">
                   <p className="text-muted-foreground">{t("metaDashboard.noCampaigns")}</p>
-                </Card3D>
+                </Card>
               ) : (
                 <div className="grid gap-4">
                   {filteredCampaigns.map((campaign) => {
                     const insights = getInsightData(campaign);
                     return (
-                      <Card3D
+                      <CampaignCard
                         key={campaign.id}
-                        intensity="low"
-                        className="p-5 hover:border-primary/30 transition-all group relative"
-                      >
-                        <div className="flex flex-col lg:flex-row gap-6 relative">
-                          {/* Eye icon in top-right */}
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="absolute top-0 right-0 h-8 w-8 hover:bg-primary/10 hover:text-primary z-10"
-                            onClick={() => {
-                              setSelectedCampaign(campaign);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-
-                          {/* Campaign Info */}
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between gap-4 pr-10">
-                              <div className="flex-1">
-                                <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
-                                <p className="text-xs text-muted-foreground">{campaign.objective}</p>
-                              </div>
-                            </div>
-
-                            {/* Key Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
-                                <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
-                                <p className="text-lg font-bold">{insights.results}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">CPC</p>
-                                <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
-                              </div>
-                              <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-                                <p className="text-xs text-muted-foreground mb-1">ROAS</p>
-                                <p className="text-lg font-bold">
-                                  {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
-                                </p>
-                              </div>
-                              <div className="p-3 flex flex-col items-center justify-center gap-2">
-                                <Badge
-                                  className={
-                                    campaign.status === "ACTIVE"
-                                      ? "bg-success/20 text-success border-success/30"
-                                      : campaign.status === "PAUSED"
-                                        ? "bg-warning/20 text-warning border-warning/30"
-                                        : "bg-muted/50 text-muted-foreground border-muted"
-                                  }
-                                >
-                                  {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
-                                </Badge>
-                                {campaign.status === "ACTIVE" ? (
-                                  <Button
-                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
-                                    onClick={() => setCampaignToPause(campaign.id)}
-                                  >
-                                    <Pause className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">{t("metaDashboard.pause")}</span>
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
-                                    onClick={() => setCampaignToActivate(campaign.id)}
-                                  >
-                                    <Play className="w-4 h-4 mr-1.5" />
-                                    <span className="text-sm">{t("metaDashboard.activate")}</span>
-                                  </Button>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Budget Info */}
-                            <div className="text-xs text-muted-foreground">
-                              <span>{t("metaDashboard.budget")}: </span>
-                              <span className="font-medium">
-                                {campaign.daily_budget
-                                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
-                                  : campaign.lifetime_budget
-                                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
-                                    : "—"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </Card3D>
+                        campaign={campaign}
+                        insights={insights}
+                        onViewDetails={() => {
+                          setSelectedCampaign(campaign);
+                          setShowDetailsDialog(true);
+                        }}
+                        onPause={() => setCampaignToPause(campaign.id)}
+                        onActivate={() => setCampaignToActivate(campaign.id)}
+                        t={t}
+                      />
                     );
                   })}
                 </div>

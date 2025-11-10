@@ -161,10 +161,55 @@ serve(async (req) => {
 
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
+      // Fetch images for campaigns in batches to avoid rate limiting (non-blocking)
+      // Limit to first 20 campaigns to avoid timeout
+      const campaignsToFetchImages = allCampaigns.slice(0, 20);
+      const imagePromises = campaignsToFetchImages.map(async (campaign) => {
+        try {
+          // Get first ad's creative image for this campaign
+          const adsResponse = await fetch(
+            `https://graph.facebook.com/v18.0/${campaign.id}/ads?limit=1&fields=creative{image_url,thumbnail_url}&access_token=${accessToken}`
+          );
+          const adsData = await adsResponse.json();
+          
+          if (adsData.data && adsData.data.length > 0 && adsData.data[0].creative) {
+            const creative = adsData.data[0].creative;
+            return {
+              campaignId: campaign.id,
+              image_url: creative.image_url || null,
+              thumbnail_url: creative.thumbnail_url || creative.image_url || null,
+            };
+          }
+        } catch (error) {
+          console.error(`Error fetching image for campaign ${campaign.id}:`, error);
+        }
+        return { campaignId: campaign.id, image_url: null, thumbnail_url: null };
+      });
+
+      // Wait for all image fetches with timeout
+      const imageResults = await Promise.allSettled(imagePromises);
+      const imageMap = new Map();
+      imageResults.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value) {
+          imageMap.set(result.value.campaignId, {
+            image_url: result.value.image_url,
+            thumbnail_url: result.value.thumbnail_url,
+          });
+        }
+      });
+
+      // Merge images into campaigns
+      const campaignsWithImages = allCampaigns.map((campaign) => {
+        const imageData = imageMap.get(campaign.id);
+        return imageData
+          ? { ...campaign, ...imageData }
+          : campaign;
+      });
+
       return new Response(JSON.stringify({ 
-        campaigns: allCampaigns,
+        campaigns: campaignsWithImages,
         adAccountId: targetAdAccountId,
-        total: allCampaigns.length
+        total: campaignsWithImages.length
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
