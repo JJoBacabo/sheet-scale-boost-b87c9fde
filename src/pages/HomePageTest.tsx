@@ -21,6 +21,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Background3D } from "@/components/ui/Background3D";
 import logo from "@/assets/logo.png";
 
 const HomePageTest = () => {
@@ -64,27 +65,7 @@ const HomePageTest = () => {
   const pricingRef = useRef<HTMLDivElement>(null);
   const faqRef = useRef<HTMLDivElement>(null);
   const contactRef = useRef<HTMLDivElement>(null);
-  const particlesRef = useRef<HTMLDivElement>(null);
-
-  // Background particles animation
-  useEffect(() => {
-    if (!gsapLoaded || !gsapRef.current || !particlesRef.current) return;
-
-    const gsap = gsapRef.current;
-    const particles = particlesRef.current.querySelectorAll(".particle");
-
-    particles.forEach((particle, index) => {
-      gsap.to(particle, {
-        y: "random(-100, 100)",
-        x: "random(-100, 100)",
-        duration: "random(3, 6)",
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-        delay: index * 0.2,
-      });
-    });
-  }, [gsapLoaded]);
+  const scrollTriggersRef = useRef<any[]>([]);
 
   // Hero section animations
   useEffect(() => {
@@ -190,33 +171,87 @@ const HomePageTest = () => {
     return () => ctx.revert();
   }, [gsapLoaded]);
 
-  // Features scroll reveal animation
+  // Features Pinned Section animation
   useEffect(() => {
     if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
-      const cards = featuresRef.current?.querySelectorAll(".feature-card");
+      const container = featuresRef.current?.querySelector(".pinned-features-container");
+      const featureItems = featuresRef.current?.querySelectorAll(".feature-item");
 
-      cards?.forEach((card, index) => {
-        gsap.from(card, {
-          opacity: 0,
-          x: index % 2 === 0 ? -100 : 100,
-          scale: 0.9,
-          duration: 0.8,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: card as Element,
-            start: "top 80%",
-            end: "top 50%",
-            toggleActions: "play none none reverse",
-          },
-        });
+      if (!container || !featureItems || featureItems.length === 0) return;
+
+      // Set initial state - all items hidden except first
+      gsap.set(featureItems, { opacity: 0, y: 50 });
+      gsap.set(featureItems[0], { opacity: 1, y: 0 });
+
+      // Pin the container
+      const pinTrigger = ScrollTrigger.create({
+        trigger: container as Element,
+        start: "top top",
+        end: "+=500%",
+        pin: true,
+        pinSpacing: true,
       });
+      scrollTriggersRef.current.push(pinTrigger);
+
+      // Track current visible item
+      let currentVisibleIndex = 0;
+
+      // Create scroll trigger that updates items based on progress
+      const scrollTrigger = ScrollTrigger.create({
+        trigger: container as Element,
+        start: "top top",
+        end: "+=500%",
+        scrub: 1,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const totalItems = featureItems.length;
+
+          // Calculate which item should be visible
+          const newIndex = Math.min(
+            Math.floor(progress * totalItems),
+            totalItems - 1
+          );
+
+          // Only update if index changed
+          if (newIndex !== currentVisibleIndex) {
+            currentVisibleIndex = newIndex;
+
+            // Update all items based on current index
+            featureItems.forEach((item, index) => {
+              if (index === currentVisibleIndex) {
+                // Show current item
+                gsap.to(item, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.5,
+                  ease: "power2.out",
+                });
+              } else {
+                // Hide other items
+                gsap.to(item, {
+                  opacity: 0,
+                  y: index < currentVisibleIndex ? -50 : 50,
+                  duration: 0.5,
+                  ease: "power2.out",
+                });
+              }
+            });
+          }
+        },
+      });
+
+      scrollTriggersRef.current.push(scrollTrigger);
     }, featuresRef);
 
-    return () => ctx?.revert();
+    return () => {
+      ctx?.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
+    };
   }, [gsapLoaded]);
 
   // Pricing section animation with timeline
@@ -485,46 +520,12 @@ const HomePageTest = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0A0C14] text-white overflow-x-hidden relative">
-      {/* Animated Background Particles */}
-      <div ref={particlesRef} className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="particle absolute w-1 h-1 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              background: `rgba(123, 188, 254, ${0.3 + Math.random() * 0.3})`,
-              boxShadow: `0 0 ${4 + Math.random() * 4}px rgba(123, 188, 254, 0.5)`,
-            }}
-          />
-        ))}
-        {/* Network lines background */}
-        <svg className="absolute inset-0 w-full h-full opacity-10">
-          <defs>
-            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7BBCFE" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#B8A8FE" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#7BBCFE" stopOpacity="0.3" />
-            </linearGradient>
-          </defs>
-          {[...Array(15)].map((_, i) => (
-            <line
-              key={i}
-              x1={Math.random() * 100 + "%"}
-              y1={Math.random() * 100 + "%"}
-              x2={Math.random() * 100 + "%"}
-              y2={Math.random() * 100 + "%"}
-              stroke="url(#lineGradient)"
-              strokeWidth="0.5"
-            />
-          ))}
-        </svg>
-      </div>
+    <div className="min-h-screen bg-[#0A0E27] text-[#F0F4F8] overflow-x-hidden relative">
+      {/* Background 3D */}
+      <Background3D />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0C14]/90 backdrop-blur-md border-b border-[#7BBCFE]/20">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-[#0A0E27]/90 backdrop-blur-md border-b border-[#00D9FF]/20">
         <div className="container mx-auto px-4 sm:px-6 py-4 max-w-7xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -533,26 +534,26 @@ const HomePageTest = () => {
             <nav className="hidden md:flex items-center gap-8">
               <button
                 onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
               >
                 Features
               </button>
               <button
                 onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
               >
                 Pricing
               </button>
               <button
                 onClick={() => document.getElementById("faq")?.scrollIntoView({ behavior: "smooth" })}
-                className="text-[#C5C7D0] hover:text-[#7BBCFE] transition-colors"
+                className="text-[#F0F4F8] hover:text-[#00D9FF] transition-colors"
               >
                 FAQ
               </button>
             </nav>
             <Button
               onClick={() => navigate("/auth")}
-              className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 font-semibold"
+              className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 font-semibold"
             >
               Get Started
             </Button>
@@ -562,39 +563,39 @@ const HomePageTest = () => {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0C14] via-[#0A0C14] to-[#0A0C14] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0A0E27] via-[#0A0E27] to-[#0A0E27] opacity-90" />
         <div className="container mx-auto max-w-7xl relative z-10">
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl font-bold mb-6 leading-tight">
                 Automate Your{" "}
-                <span className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
                   Facebook Campaigns
                 </span>
               </h1>
-              <p className="hero-subtitle text-xl text-[#C5C7D0] mb-8">
+              <p className="hero-subtitle text-xl text-[#F0F4F8] mb-8">
                 Your smart platform for automatic metrics calculation and action recommendations.
               </p>
 
               <div className="space-y-4 mb-10">
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
-                  <span className="text-[#C5C7D0]">Calculates metrics automatically</span>
+                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
+                  <span className="text-[#F0F4F8]">Calculates metrics automatically</span>
                 </div>
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
-                  <span className="text-[#C5C7D0]">CPC, ROAS, CPA, Profit Margin in real-time</span>
+                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
+                  <span className="text-[#F0F4F8]">CPC, ROAS, CPA, Profit Margin in real-time</span>
                 </div>
                 <div className="hero-bullet flex items-center gap-3">
-                  <Check className="w-6 h-6 text-[#7BBCFE] flex-shrink-0" />
-                  <span className="text-[#C5C7D0]">Smart recommendations: Kill, Scale, Maintain</span>
+                  <Check className="w-6 h-6 text-[#00D9FF] flex-shrink-0" />
+                  <span className="text-[#F0F4F8]">Smart recommendations: Kill, Scale, Maintain</span>
                 </div>
               </div>
 
               <Button
                 onClick={() => navigate("/auth")}
                 size="lg"
-                className="hero-button bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30"
+                className="hero-button bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30"
               >
                 Start Free for 10 Days
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -603,40 +604,40 @@ const HomePageTest = () => {
 
             {/* Animated Dashboard */}
             <div ref={dashboardRef} className="relative">
-              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md">
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 rounded-2xl backdrop-blur-md">
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold">Campaign Performance</h3>
-                    <Sparkles className="w-5 h-5 text-[#7BBCFE]" />
+                    <Sparkles className="w-5 h-5 text-[#00D9FF]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
-                      <div className="text-sm text-[#C5C7D0] mb-2">ROAS</div>
-                      <div className="text-2xl font-bold text-[#7BBCFE]">
+                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
+                      <div className="text-sm text-[#F0F4F8] mb-2">ROAS</div>
+                      <div className="text-2xl font-bold text-[#00D9FF]">
                         <span className="count-up" data-target="4.2" data-format="decimal" data-suffix="x">0</span>
                       </div>
                     </div>
-                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
-                      <div className="text-sm text-[#C5C7D0] mb-2">CPC</div>
-                      <div className="text-2xl font-bold text-[#7BBCFE]">
+                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
+                      <div className="text-sm text-[#F0F4F8] mb-2">CPC</div>
+                      <div className="text-2xl font-bold text-[#00D9FF]">
                         <span className="count-up" data-target="0.45" data-format="decimal" data-prefix="€">0</span>
                       </div>
                     </div>
-                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
-                      <div className="text-sm text-[#C5C7D0] mb-2">CPA</div>
-                      <div className="text-2xl font-bold text-[#7BBCFE]">
+                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
+                      <div className="text-sm text-[#F0F4F8] mb-2">CPA</div>
+                      <div className="text-2xl font-bold text-[#00D9FF]">
                         <span className="count-up" data-target="12.5" data-format="decimal" data-prefix="€">0</span>
                       </div>
                     </div>
-                    <div className="bg-[#7BBCFE]/10 rounded-lg p-4 border border-[#7BBCFE]/20">
-                      <div className="text-sm text-[#C5C7D0] mb-2">Profit</div>
-                      <div className="text-2xl font-bold text-[#7BBCFE]">
+                    <div className="bg-[#00D9FF]/10 rounded-lg p-4 border border-[#00D9FF]/20">
+                      <div className="text-sm text-[#F0F4F8] mb-2">Profit</div>
+                      <div className="text-2xl font-bold text-[#00D9FF]">
                         <span className="count-up" data-target="2340" data-prefix="€">0</span>
                       </div>
                     </div>
                   </div>
-                  <div className="h-32 bg-gradient-to-r from-[#7BBCFE]/20 to-[#B8A8FE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
-                    <BarChart3 className="w-12 h-12 text-[#7BBCFE] opacity-50" />
+                  <div className="h-32 bg-gradient-to-r from-[#00D9FF]/20 to-[#A855F7]/20 rounded-lg flex items-center justify-center border border-[#00D9FF]/20">
+                    <BarChart3 className="w-12 h-12 text-[#00D9FF] opacity-50" />
                   </div>
                 </div>
               </Card>
@@ -648,12 +649,12 @@ const HomePageTest = () => {
       {/* What Sheet Tools does for you */}
       <section
         id="analysis-section"
-        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
+        className="py-20 px-4 sm:px-6 bg-[#0A0E27] relative"
       >
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">Smart Campaign Analysis</h2>
-            <p className="text-xl text-[#C5C7D0] max-w-4xl mx-auto">
+            <p className="text-xl text-[#F0F4F8] max-w-4xl mx-auto">
               Sheet Tools revolutionizes how you manage your Facebook Ads campaigns. Our platform
               automatically analyzes your metrics and offers precise recommendations to maximize your results.
             </p>
@@ -667,12 +668,12 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
-                  <Brain className="w-8 h-8 text-[#0A0C14]" />
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6">
+                  <Brain className="w-8 h-8 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Smart Analysis</h3>
-                <p className="text-[#C5C7D0] leading-relaxed">
+                <p className="text-[#F0F4F8] leading-relaxed">
                   Automatic calculation of CPC, ROAS, COGS, CPA, and Profit Margin. Get real-time
                   insights into your campaign performance without manual calculations.
                 </p>
@@ -686,12 +687,12 @@ const HomePageTest = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 h-full backdrop-blur-sm">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-6">
-                  <Gauge className="w-8 h-8 text-[#0A0C14]" />
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 h-full backdrop-blur-sm">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6">
+                  <Gauge className="w-8 h-8 text-[#0A0E27]" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4">Decision Automation</h3>
-                <p className="text-[#C5C7D0] leading-relaxed">
+                <p className="text-[#F0F4F8] leading-relaxed">
                   Get automatic recommendations: kill underperforming campaigns, scale winners, or
                   maintain steady performers. Make data-driven decisions effortlessly.
                 </p>
@@ -706,63 +707,103 @@ const HomePageTest = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
-              <div className="h-64 bg-gradient-to-r from-[#7BBCFE]/20 via-[#B8A8FE]/20 to-[#7BBCFE]/20 rounded-lg flex items-center justify-center border border-[#7BBCFE]/20">
-                <Target className="w-24 h-24 text-[#7BBCFE] opacity-50" />
+            <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 backdrop-blur-sm">
+              <div className="h-64 bg-gradient-to-r from-[#00D9FF]/20 via-[#A855F7]/20 to-[#00D9FF]/20 rounded-lg flex items-center justify-center border border-[#00D9FF]/20">
+                <Target className="w-24 h-24 text-[#00D9FF] opacity-50" />
               </div>
             </Card>
           </motion.div>
         </div>
       </section>
 
-      {/* Features Section */}
+      {/* Features Section - Pinned with Alternating Layout */}
       <section
         id="features"
         ref={featuresRef}
-        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
+        className="py-20 px-4 sm:px-6 bg-[#0A0E27] relative"
       >
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <motion.h2
-              className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              Features that make the difference
-            </motion.h2>
-            <motion.p
-              className="text-xl text-[#C5C7D0]"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              Everything you need to optimize your campaigns in one platform.
-            </motion.p>
-          </div>
+        <div className="pinned-features-container min-h-screen flex items-center justify-center relative">
+          <div className="container mx-auto max-w-7xl relative z-10">
+            {/* Header - only shown once */}
+            <div className="text-center mb-16">
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+                Features that make the difference
+              </h2>
+              <p className="text-xl text-[#F0F4F8]/80">
+                Everything you need to optimize your campaigns in one platform.
+              </p>
+            </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <motion.div
-                  key={index}
-                  className="feature-card"
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 h-full hover:border-[#7BBCFE]/50 transition-all duration-300 backdrop-blur-sm hover:shadow-lg hover:shadow-[#7BBCFE]/20">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4">
-                      <Icon className="w-6 h-6 text-[#0A0C14]" />
+            {/* Pinned content that changes - alternating layout */}
+            <div className="relative min-h-[600px] flex items-center justify-center">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                const isEven = index % 2 === 0;
+
+                return (
+                  <div
+                    key={index}
+                    className="feature-item absolute inset-0 flex items-center justify-center"
+                  >
+                    <div className="container mx-auto max-w-7xl px-4">
+                      <div
+                        className={`grid md:grid-cols-2 gap-12 items-center ${
+                          isEven ? "" : "md:flex-row-reverse"
+                        }`}
+                      >
+                        {/* Text Content */}
+                        <div
+                          className={`space-y-6 ${
+                            isEven ? "md:text-left" : "md:text-right"
+                          } text-center ${isEven ? "md:order-1" : "md:order-2"}`}
+                        >
+                          <div className={`inline-flex items-center gap-3 mb-4 ${isEven ? "md:justify-start" : "md:justify-end"} justify-center`}>
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center">
+                              <Icon className="w-8 h-8 text-[#0A0E27]" />
+                            </div>
+                            <span className="text-sm font-semibold text-[#00D9FF]">
+                              {String(index + 1).padStart(2, "0")} / {String(features.length).padStart(2, "0")}
+                            </span>
+                          </div>
+                          <h3 className="text-4xl sm:text-5xl font-bold text-[#F0F4F8]">
+                            {feature.title}
+                          </h3>
+                          <p className={`text-lg text-[#F0F4F8]/70 leading-relaxed max-w-xl ${isEven ? "md:mx-0" : "md:ml-auto"} mx-auto`}>
+                            {feature.description}
+                          </p>
+                        </div>
+
+                        {/* Image/Visual Content */}
+                        <div
+                          className={`relative ${
+                            isEven ? "md:order-2" : "md:order-1"
+                          }`}
+                        >
+                          <div className="relative h-[400px] rounded-2xl overflow-hidden border border-[#00D9FF]/20 backdrop-blur-sm">
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/10 via-[#A855F7]/10 to-[#00D9FF]/10" />
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="relative w-full h-full flex items-center justify-center">
+                                {/* Animated gradient background */}
+                                <div className="absolute inset-0 bg-gradient-to-r from-[#00D9FF]/20 via-[#A855F7]/20 to-[#00D9FF]/20 animate-pulse" />
+                                {/* Icon/Visual */}
+                                <div className="relative z-10">
+                                  <div className="w-32 h-32 rounded-3xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center shadow-2xl shadow-[#00D9FF]/30">
+                                    <Icon className="w-16 h-16 text-[#0A0E27]" />
+                                  </div>
+                                </div>
+                                {/* Decorative elements */}
+                                <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-[#00D9FF]/10 blur-2xl" />
+                                <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full bg-[#A855F7]/10 blur-2xl" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                    <p className="text-[#C5C7D0] text-sm leading-relaxed">{feature.description}</p>
-                  </Card>
-                </motion.div>
-              );
-            })}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -771,12 +812,12 @@ const HomePageTest = () => {
       <section
         id="pricing"
         ref={pricingRef}
-        className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative"
+        className="py-20 px-4 sm:px-6 bg-[#0A0E27] relative"
       >
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-4xl sm:text-5xl font-bold mb-4">Choose Your Perfect Plan</h2>
-            <p className="text-xl text-[#C5C7D0] mb-8">
+            <p className="text-xl text-[#F0F4F8] mb-8">
               Simple and transparent plans to automate your Facebook campaigns.
             </p>
 
@@ -786,8 +827,8 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("monthly")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all ${
                   billingPeriod === "monthly"
-                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] shadow-lg shadow-[#7BBCFE]/30"
-                    : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 text-[#C5C7D0] hover:text-white hover:border-[#7BBCFE]/40"
+                    ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] shadow-lg shadow-[#00D9FF]/30"
+                    : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 text-[#F0F4F8] hover:text-white hover:border-[#00D9FF]/40"
                 }`}
               >
                 Monthly
@@ -796,12 +837,12 @@ const HomePageTest = () => {
                 onClick={() => setBillingPeriod("annual")}
                 className={`px-6 py-3 rounded-lg font-semibold transition-all flex items-center gap-2 ${
                   billingPeriod === "annual"
-                    ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] shadow-lg shadow-[#7BBCFE]/30"
-                    : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 text-[#C5C7D0] hover:text-white hover:border-[#7BBCFE]/40"
+                    ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] shadow-lg shadow-[#00D9FF]/30"
+                    : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 text-[#F0F4F8] hover:text-white hover:border-[#00D9FF]/40"
                 }`}
               >
                 Annual
-                <span className="text-xs bg-[#7BBCFE]/20 px-2 py-1 rounded text-[#7BBCFE]">SAVE 3 MONTHS</span>
+                <span className="text-xs bg-[#00D9FF]/20 px-2 py-1 rounded text-[#00D9FF]">SAVE 3 MONTHS</span>
               </button>
             </div>
           </div>
@@ -810,49 +851,49 @@ const HomePageTest = () => {
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Left: Feature Comparison Table */}
             <div className="comparison-table">
-              <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-6 backdrop-blur-sm">
+              <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-6 backdrop-blur-sm">
                 <h3 className="text-2xl font-bold mb-6">Feature Comparison</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-[#7BBCFE]/25">
-                        <th className="text-left p-4 text-[#C5C7D0] font-semibold">Feature</th>
-                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Basic</th>
-                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Standard</th>
-                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Expert</th>
-                        <th className="text-center p-4 text-[#C5C7D0] font-semibold">Business</th>
+                      <tr className="border-b border-[#00D9FF]/25">
+                        <th className="text-left p-4 text-[#F0F4F8] font-semibold">Feature</th>
+                        <th className="text-center p-4 text-[#F0F4F8] font-semibold">Basic</th>
+                        <th className="text-center p-4 text-[#F0F4F8] font-semibold">Standard</th>
+                        <th className="text-center p-4 text-[#F0F4F8] font-semibold">Expert</th>
+                        <th className="text-center p-4 text-[#F0F4F8] font-semibold">Business</th>
                       </tr>
                     </thead>
                     <tbody>
                       {featureComparison.map((item, i) => (
-                        <tr key={i} className="border-b border-[#7BBCFE]/10 last:border-0">
-                          <td className="p-4 text-[#C5C7D0]">{item.feature}</td>
+                        <tr key={i} className="border-b border-[#00D9FF]/10 last:border-0">
+                          <td className="p-4 text-[#F0F4F8]">{item.feature}</td>
                           <td className="p-4 text-center">
                             {item.basic ? (
-                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
                             ) : (
-                              <span className="text-[#C5C7D0]/30">—</span>
+                              <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.standard ? (
-                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
                             ) : (
-                              <span className="text-[#C5C7D0]/30">—</span>
+                              <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.expert ? (
-                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
                             ) : (
-                              <span className="text-[#C5C7D0]/30">—</span>
+                              <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                           <td className="p-4 text-center">
                             {item.business ? (
-                              <Check className="w-5 h-5 text-[#7BBCFE] mx-auto" />
+                              <Check className="w-5 h-5 text-[#00D9FF] mx-auto" />
                             ) : (
-                              <span className="text-[#C5C7D0]/30">—</span>
+                              <span className="text-[#F0F4F8]/30">—</span>
                             )}
                           </td>
                         </tr>
@@ -873,14 +914,14 @@ const HomePageTest = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <Card
-                    className={`bg-[#0A0C14]/80 border p-6 h-full flex flex-col backdrop-blur-sm transition-all duration-300 ${
+                    className={`bg-[#0A0E27]/80 border p-6 h-full flex flex-col backdrop-blur-sm transition-all duration-300 ${
                       plan.popular
-                        ? "border-[#7BBCFE]/50 shadow-lg shadow-[#7BBCFE]/20 scale-105"
-                        : "border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40"
+                        ? "border-[#00D9FF]/50 shadow-lg shadow-[#00D9FF]/20 scale-105"
+                        : "border-[#00D9FF]/20 hover:border-[#00D9FF]/40"
                     }`}
                   >
                     {plan.popular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] rounded-full text-sm font-bold text-[#0A0C14] z-10">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] rounded-full text-sm font-bold text-[#0A0E27] z-10">
                         Most Popular
                       </div>
                     )}
@@ -889,13 +930,13 @@ const HomePageTest = () => {
                       <span className="text-3xl font-bold">
                         {billingPeriod === "monthly" ? plan.monthlyPrice : plan.annualPrice}
                       </span>
-                      <span className="text-[#C5C7D0]">/month</span>
+                      <span className="text-[#F0F4F8]">/month</span>
                     </div>
                     <ul className="space-y-2 mb-6 flex-1 text-sm">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2">
-                          <Check className="w-4 h-4 text-[#7BBCFE] flex-shrink-0 mt-0.5" />
-                          <span className="text-[#C5C7D0]">{feature}</span>
+                          <Check className="w-4 h-4 text-[#00D9FF] flex-shrink-0 mt-0.5" />
+                          <span className="text-[#F0F4F8]">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -903,8 +944,8 @@ const HomePageTest = () => {
                       onClick={() => navigate("/auth")}
                       className={`w-full transition-all duration-300 ${
                         plan.popular
-                          ? "bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 hover:shadow-lg hover:shadow-[#7BBCFE]/30"
-                          : "bg-[#0A0C14]/80 border border-[#7BBCFE]/20 hover:bg-[#7BBCFE]/10 hover:border-[#7BBCFE]/40 text-[#7BBCFE]"
+                          ? "bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 hover:shadow-lg hover:shadow-[#00D9FF]/30"
+                          : "bg-[#0A0E27]/80 border border-[#00D9FF]/20 hover:bg-[#00D9FF]/10 hover:border-[#00D9FF]/40 text-[#00D9FF]"
                       }`}
                     >
                       Choose Plan
@@ -918,21 +959,21 @@ const HomePageTest = () => {
       </section>
 
       {/* FAQ + Contact Section - 2 Columns */}
-      <section id="faq" ref={faqRef} className="py-20 px-4 sm:px-6 bg-[#0A0C14] relative">
+      <section id="faq" ref={faqRef} className="py-20 px-4 sm:px-6 bg-[#0A0E27] relative">
         <div className="container mx-auto max-w-7xl">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Left: FAQ Info + Contact Button */}
             <div className="faq-left">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">Frequently Asked Questions</h2>
-              <p className="text-xl text-[#C5C7D0] mb-4">Clear your doubts about Sheet.Tools</p>
-              <p className="text-[#C5C7D0] mb-8 leading-relaxed">
+              <p className="text-xl text-[#F0F4F8] mb-4">Clear your doubts about Sheet.Tools</p>
+              <p className="text-[#F0F4F8] mb-8 leading-relaxed">
                 Find answers to common questions about our platform, pricing, and features. If you
                 can't find what you're looking for, don't hesitate to contact us.
               </p>
               <Button
                 onClick={scrollToContact}
                 size="lg"
-                className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full sm:w-auto"
+                className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30 w-full sm:w-auto"
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
                 Contact Us
@@ -946,17 +987,17 @@ const HomePageTest = () => {
                   <AccordionItem
                     key={index}
                     value={`item-${index}`}
-                    className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 rounded-2xl px-6 data-[state=open]:border-[#7BBCFE]/50 backdrop-blur-sm"
+                    className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 rounded-2xl px-6 data-[state=open]:border-[#00D9FF]/50 backdrop-blur-sm"
                   >
                     <AccordionTrigger className="text-lg font-bold hover:no-underline py-6 text-left">
                       <div className="flex items-center gap-3">
-                        <span className="w-8 h-8 rounded-full bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center text-[#0A0C14] font-bold text-sm flex-shrink-0">
+                        <span className="w-8 h-8 rounded-full bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center text-[#0A0E27] font-bold text-sm flex-shrink-0">
                           {index + 1}
                         </span>
                         {faq.question}
                       </div>
                     </AccordionTrigger>
-                    <AccordionContent className="text-[#C5C7D0] leading-relaxed pb-6 pl-11">
+                    <AccordionContent className="text-[#F0F4F8] leading-relaxed pb-6 pl-11">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -973,7 +1014,7 @@ const HomePageTest = () => {
         className="py-20 px-4 sm:px-6 relative overflow-hidden"
       >
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#0066FF] via-[#7BBCFE] to-[#0066FF] opacity-20"
+          className="absolute inset-0 bg-gradient-to-br from-[#00D9FF] via-[#00D9FF] to-[#00D9FF] opacity-20"
           style={{
             backgroundSize: "400% 400%",
             animation: "gradientShift 15s ease infinite",
@@ -994,15 +1035,15 @@ const HomePageTest = () => {
             transition={{ duration: 0.8 }}
           >
             <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">Let's Talk</h2>
-            <p className="text-xl text-[#C5C7D0] mb-10 max-w-2xl mx-auto">
+            <p className="text-xl text-[#F0F4F8] mb-10 max-w-2xl mx-auto">
               Have a question or want to learn more? Send us a message and we'll get back to you
               within 24 hours.
             </p>
 
-            <Card className="bg-[#0A0C14]/80 border border-[#7BBCFE]/20 p-8 backdrop-blur-sm">
+            <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-8 backdrop-blur-sm">
               <form onSubmit={handleContactSubmit} className="space-y-6">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                  <label htmlFor="name" className="block text-sm font-medium text-[#F0F4F8] mb-2">
                     Name
                   </label>
                   <Input
@@ -1011,12 +1052,12 @@ const HomePageTest = () => {
                     placeholder="Your name"
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
+                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF]"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-[#F0F4F8] mb-2">
                     Email
                   </label>
                   <Input
@@ -1025,12 +1066,12 @@ const HomePageTest = () => {
                     placeholder="your.email@example.com"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE]"
+                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF]"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-[#C5C7D0] mb-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-[#F0F4F8] mb-2">
                     Message
                   </label>
                   <Textarea
@@ -1038,19 +1079,19 @@ const HomePageTest = () => {
                     placeholder="Tell us about your needs..."
                     value={contactForm.message}
                     onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                    className="bg-[#0A0C14]/50 border-[#7BBCFE]/20 text-white placeholder:text-[#C5C7D0]/50 focus:border-[#7BBCFE] focus:ring-[#7BBCFE] min-h-[120px]"
+                    className="bg-[#0A0E27]/50 border-[#00D9FF]/20 text-white placeholder:text-[#F0F4F8]/50 focus:border-[#00D9FF] focus:ring-[#00D9FF] min-h-[120px]"
                     required
                   />
                 </div>
                 <Button
                   type="submit"
                   size="lg"
-                  className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] text-[#0A0C14] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#7BBCFE]/30 w-full"
+                  className="bg-gradient-to-r from-[#00D9FF] to-[#A855F7] text-[#0A0E27] hover:opacity-90 text-lg px-8 py-6 font-semibold shadow-lg shadow-[#00D9FF]/30 w-full"
                 >
                   <Send className="w-5 h-5 mr-2" />
                   Send Message
                 </Button>
-                <p className="text-sm text-[#C5C7D0]/70 mt-4">
+                <p className="text-sm text-[#F0F4F8]/70 mt-4">
                   We'll get back to you within 24 hours.
                 </p>
               </form>
@@ -1060,9 +1101,9 @@ const HomePageTest = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#7BBCFE]/20 py-16 bg-[#0A0C14]">
+      <footer className="border-t border-[#00D9FF]/20 py-16 bg-[#0A0E27]">
         <div className="container mx-auto px-4 sm:px-6 max-w-7xl">
-          <div className="text-center text-[#C5C7D0]">
+          <div className="text-center text-[#F0F4F8]">
             <p>&copy; 2024 Sheet Tools. All rights reserved.</p>
           </div>
         </div>
