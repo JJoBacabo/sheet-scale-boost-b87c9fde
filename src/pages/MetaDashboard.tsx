@@ -756,7 +756,7 @@ const MetaDashboard = () => {
 
       if (adSetsError) throw adSetsError;
 
-      if (adSetsData?.adSets) {
+      if (adSetsData?.adSets && Array.isArray(adSetsData.adSets)) {
         setAdSets(adSetsData.adSets);
         // Initialize edit data for each ad set
         const adSetsEditData: Record<string, any> = {};
@@ -770,6 +770,9 @@ const MetaDashboard = () => {
           };
         });
         setEditAdSetsData(adSetsEditData);
+      } else {
+        setAdSets([]);
+        setEditAdSetsData({});
       }
 
       // Fetch Ads
@@ -782,7 +785,7 @@ const MetaDashboard = () => {
 
       if (adsError) throw adsError;
 
-      if (adsData?.ads) {
+      if (adsData?.ads && Array.isArray(adsData.ads)) {
         setAds(adsData.ads);
         // Initialize edit data for each ad
         const adsEditData: Record<string, any> = {};
@@ -795,6 +798,9 @@ const MetaDashboard = () => {
           };
         });
         setEditAdsData(adsEditData);
+      } else {
+        setAds([]);
+        setEditAdsData({});
       }
     } catch (error: any) {
       console.error("Error fetching ad sets and ads:", error);
@@ -1691,7 +1697,7 @@ const MetaDashboard = () => {
                   {/* Daily Budget */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.dailyBudget")} (€)
+                      {t("metaDashboard.dailyBudget")} {t("metaDashboard.currencySymbol")}
                     </label>
                     <Input
                       type="number"
@@ -1706,7 +1712,7 @@ const MetaDashboard = () => {
                           lifetime_budget: value ? "" : editFormData.lifetime_budget 
                         });
                       }}
-                      placeholder="0.00"
+                      placeholder={t("metaDashboard.placeholderBudget")}
                     />
                     <p className="text-xs text-muted-foreground">
                       {t("metaDashboard.dailyBudgetDesc")}
@@ -1716,7 +1722,7 @@ const MetaDashboard = () => {
                   {/* Lifetime Budget */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {t("metaDashboard.lifetimeBudget")} (€)
+                      {t("metaDashboard.lifetimeBudget")} {t("metaDashboard.currencySymbol")}
                     </label>
                     <Input
                       type="number"
@@ -1731,7 +1737,7 @@ const MetaDashboard = () => {
                           daily_budget: value ? "" : editFormData.daily_budget 
                         });
                       }}
-                      placeholder="0.00"
+                      placeholder={t("metaDashboard.placeholderBudget")}
                     />
                     <p className="text-xs text-muted-foreground">
                       {t("metaDashboard.lifetimeBudgetDesc")}
@@ -1861,7 +1867,7 @@ const MetaDashboard = () => {
                             </div>
                             
                             <div className="space-y-2">
-                              <Label>{t("metaDashboard.dailyBudget")} (€)</Label>
+                              <Label>{t("metaDashboard.dailyBudget")} {t("metaDashboard.currencySymbol")}</Label>
                               <Input
                                 type="number"
                                 step="0.01"
@@ -1877,11 +1883,12 @@ const MetaDashboard = () => {
                                     },
                                   });
                                 }}
+                                placeholder={t("metaDashboard.placeholderBudget")}
                               />
                             </div>
                             
                             <div className="space-y-2">
-                              <Label>{t("metaDashboard.lifetimeBudget")} (€)</Label>
+                              <Label>{t("metaDashboard.lifetimeBudget")} {t("metaDashboard.currencySymbol")}</Label>
                               <Input
                                 type="number"
                                 step="0.01"
@@ -1897,6 +1904,7 @@ const MetaDashboard = () => {
                                     },
                                   });
                                 }}
+                                placeholder={t("metaDashboard.placeholderBudget")}
                               />
                             </div>
                             
@@ -1911,6 +1919,20 @@ const MetaDashboard = () => {
                                   });
                                 }}
                                 placeholder={t("metaDashboard.optimizationGoalPlaceholder")}
+                              />
+                            </div>
+                            
+                            <div className="space-y-2">
+                              <Label>{t("metaDashboard.billingEvent")}</Label>
+                              <Input
+                                value={editAdSetsData[adSet.id]?.billing_event || ""}
+                                onChange={(e) => {
+                                  setEditAdSetsData({
+                                    ...editAdSetsData,
+                                    [adSet.id]: { ...editAdSetsData[adSet.id], billing_event: e.target.value },
+                                  });
+                                }}
+                                placeholder={t("metaDashboard.billingEventPlaceholder")}
                               />
                             </div>
                           </div>
