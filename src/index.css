@@ -2,87 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System - Sheet-Tools Dark + Purple Theme */
+/* Design System - Deep Space Tech Theme */
 
 @layer base {
   :root {
-    /* Background Colors - Azul escuro #050F2A */
-    --background: 220 75% 10%;
-    --bg-secondary: 220 75% 11%;
-    --bg-tertiary: 220 75% 13%;
+    /* Background Colors - Deep Space Blue #0A0E27 */
+    --background: 230 58% 10%;
+    --bg-secondary: 230 50% 12%;
+    --bg-tertiary: 230 45% 15%;
     
-    /* Text Colors - Mistura de #7BBBFF com #F2F0FF */
-    --foreground: 210 100% 90%;
-    --text-secondary: 210 100% 85%;
-    --text-muted: 210 100% 75%;
+    /* Text Colors - Soft White #F0F4F8 */
+    --foreground: 210 20% 96%;
+    --text-secondary: 210 20% 90%;
+    --text-muted: 210 20% 75%;
 
     /* Glass Effect Colors */
-    --glass-bg: 210 100% 90% / 0.05;
-    --glass-bg-hover: 210 100% 90% / 0.08;
-    --glass-border: 258 100% 81% / 0.15;
+    --glass-bg: 210 20% 96% / 0.05;
+    --glass-bg-hover: 210 20% 96% / 0.08;
+    --glass-border: 187 100% 50% / 0.2;
 
-    /* Accent Colors - Roxo #B8A0FF */
-    --primary: 258 100% 81%;
-    --primary-foreground: 210 100% 90%;
-    --primary-dark: 258 100% 71%;
-    --primary-glow: 258 100% 81%;
+    /* Primary - Electric Cyan #00D9FF */
+    --primary: 187 100% 50%;
+    --primary-foreground: 230 58% 10%;
+    --primary-dark: 187 100% 40%;
+    --primary-glow: 187 100% 50%;
 
-    /* Secondary - Azul claro #7BBBFF */
-    --secondary: 208 100% 74%;
-    --secondary-foreground: 220 75% 10%;
+    /* Secondary - Vibrant Purple #A855F7 */
+    --secondary: 271 81% 66%;
+    --secondary-foreground: 230 58% 10%;
 
-    /* Success - Azul claro #7BBBFF */
-    --success: 208 100% 74%;
-    --success-foreground: 220 75% 10%;
+    /* Success - Mint Green #10B981 */
+    --success: 160 84% 39%;
+    --success-foreground: 230 58% 10%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 100% 90%;
+    --warning: 43 96% 56%;
+    --warning-foreground: 230 58% 10%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 100% 90%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 20% 96%;
 
     /* UI Elements */
-    --card: 220 75% 11%;
-    --card-foreground: 210 100% 90%;
+    --card: 230 50% 12%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 220 75% 10%;
-    --popover-foreground: 210 100% 90%;
+    --popover: 230 58% 10%;
+    --popover-foreground: 210 20% 96%;
 
-    --muted: 220 75% 13%;
-    --muted-foreground: 210 100% 75%;
+    --muted: 230 45% 15%;
+    --muted-foreground: 210 20% 75%;
 
-    --accent: 208 100% 74%;
-    --accent-foreground: 220 75% 10%;
+    --accent: 187 100% 50%;
+    --accent-foreground: 230 58% 10%;
 
-    --border: 258 100% 81% / 0.2;
-    --input: 220 75% 15%;
-    --ring: 258 100% 81%;
+    --border: 187 100% 50% / 0.2;
+    --input: 230 45% 18%;
+    --ring: 187 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Gradients - Roxo suave */
-    --gradient-primary: linear-gradient(135deg, hsl(258 100% 75%) 0%, hsl(258 100% 85%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(208 100% 70%) 0%, hsl(208 100% 80%) 100%);
-    --gradient-hero: linear-gradient(to bottom, hsl(220 75% 10%) 0%, hsl(220 75% 12% / 0.8) 50%, hsl(220 75% 10%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(258 100% 81% / 0.05), hsl(208 100% 74% / 0.03));
-    --gradient-sidebar: linear-gradient(to bottom, hsl(220 75% 10%) 0%, hsl(220 75% 12%) 50%, hsl(220 75% 10%) 100%);
+    /* Gradients - Cyan to Purple */
+    --gradient-primary: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(271 81% 66%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%) 0%, hsl(187 100% 50%) 100%);
+    --gradient-hero: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12% / 0.8) 50%, hsl(230 58% 10%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(187 100% 50% / 0.05), hsl(271 81% 66% / 0.03));
+    --gradient-sidebar: linear-gradient(to bottom, hsl(230 58% 10%) 0%, hsl(230 50% 12%) 50%, hsl(230 58% 10%) 100%);
     
-    /* Shadows - Roxo glow */
-    --shadow-sm: 0 2px 8px hsl(220 75% 5% / 0.5);
-    --shadow-md: 0 4px 16px hsl(220 75% 5% / 0.6);
-    --shadow-lg: 0 8px 25px hsl(258 100% 81% / 0.3);
-    --shadow-xl: 0 12px 40px hsl(258 100% 81% / 0.4);
-    --shadow-glow: 0 8px 30px hsl(258 100% 81% / 0.25);
+    /* Shadows - Cyan glow */
+    --shadow-sm: 0 2px 8px hsl(230 58% 5% / 0.6);
+    --shadow-md: 0 4px 16px hsl(230 58% 5% / 0.7);
+    --shadow-lg: 0 8px 25px hsl(187 100% 50% / 0.3);
+    --shadow-xl: 0 12px 40px hsl(187 100% 50% / 0.4);
+    --shadow-glow: 0 8px 30px hsl(187 100% 50% / 0.3);
 
     /* Sidebar */
-    --sidebar-background: 220 75% 10%;
-    --sidebar-foreground: 210 100% 90%;
-    --sidebar-primary: 258 100% 81%;
-    --sidebar-primary-foreground: 220 75% 10%;
-    --sidebar-accent: 258 100% 81% / 0.1;
-    --sidebar-accent-foreground: 210 100% 90%;
-    --sidebar-border: 258 100% 81% / 0.15;
-    --sidebar-ring: 258 100% 81%;
+    --sidebar-background: 230 58% 10%;
+    --sidebar-foreground: 210 20% 96%;
+    --sidebar-primary: 187 100% 50%;
+    --sidebar-primary-foreground: 230 58% 10%;
+    --sidebar-accent: 187 100% 50% / 0.1;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 187 100% 50% / 0.2;
+    --sidebar-ring: 187 100% 50%;
   }
 }
 
@@ -128,34 +128,34 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(220 75% 12%);
+    background: hsl(230 50% 12%);
     border-radius: 10px;
     margin: 4px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(258 100% 81%);
+    background: linear-gradient(135deg, hsl(187 100% 50%) 0%, hsl(271 81% 66%) 100%);
     border-radius: 10px;
-    border: 2px solid hsl(220 75% 10%);
+    border: 2px solid hsl(230 58% 10%);
     transition: all 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(258 100% 85%);
-    box-shadow: 0 0 10px hsl(258 100% 81% / 0.5);
+    background: linear-gradient(135deg, hsl(187 100% 60%) 0%, hsl(271 81% 76%) 100%);
+    box-shadow: 0 0 10px hsl(187 100% 50% / 0.5);
   }
 
   ::-webkit-scrollbar-corner {
-    background: hsl(220 75% 12%);
+    background: hsl(230 50% 12%);
   }
 
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(258 100% 81%) hsl(220 75% 12%);
+    scrollbar-color: hsl(187 100% 50%) hsl(230 50% 12%);
   }
 
-  /* Animated Background - Roxo e Azul */
+  /* Animated Background - Cyan and Purple */
   body::before {
     content: '';
     position: fixed;
@@ -164,9 +164,9 @@
     right: 0;
     bottom: 0;
     background: 
-      radial-gradient(circle at 20% 50%, hsl(258 100% 81% / 0.04), transparent 50%),
-      radial-gradient(circle at 80% 20%, hsl(208 100% 74% / 0.03), transparent 50%),
-      radial-gradient(circle at 40% 80%, hsl(258 100% 71% / 0.03), transparent 50%);
+      radial-gradient(circle at 20% 50%, hsl(187 100% 50% / 0.06), transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(271 81% 66% / 0.04), transparent 50%),
+      radial-gradient(circle at 40% 80%, hsl(160 84% 39% / 0.04), transparent 50%);
     animation: backgroundPulse 15s ease-in-out infinite;
     pointer-events: none;
     z-index: 0;

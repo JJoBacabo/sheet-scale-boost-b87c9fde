@@ -99,7 +99,7 @@ export const MouseInteraction = () => {
           particlesRef.current.forEach((particle) => {
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(184, 160, 255, ${particle.opacity})`;
+            ctx.fillStyle = `rgba(0, 217, 255, ${particle.opacity})`;
             ctx.fill();
             
             // Draw connection to mouse if close
@@ -111,7 +111,7 @@ export const MouseInteraction = () => {
               ctx.beginPath();
               ctx.moveTo(particle.x, particle.y);
               ctx.lineTo(mousePos.x, mousePos.y);
-              ctx.strokeStyle = `rgba(184, 160, 255, ${0.2 * (1 - distance / 200)})`;
+              ctx.strokeStyle = `rgba(0, 217, 255, ${0.2 * (1 - distance / 200)})`;
               ctx.lineWidth = 1;
               ctx.stroke();
             }

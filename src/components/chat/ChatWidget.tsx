@@ -40,7 +40,7 @@ export const ChatWidget = () => {
                   {language === 'pt' ? 'Suporte Sheet Boost' : 'Sheet Boost Support'}
                 </h3>
                 <p className="text-white/95 text-sm flex items-center gap-2 font-medium">
-                  <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(184,160,255,0.8)] animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(0,217,255,0.8)] animate-pulse" />
                   {language === 'pt' ? 'Online agora' : 'Online now'}
                 </p>
               </div>
