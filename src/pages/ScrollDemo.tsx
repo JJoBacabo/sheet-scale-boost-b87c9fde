@@ -288,7 +288,7 @@ const ScrollDemo = () => {
         const pinTrigger = ScrollTrigger.create({
           trigger: container as Element,
           start: "top top",
-          end: "+=600%",
+          end: "+=500%",
           pin: true,
           pinSpacing: true,
         });
@@ -301,34 +301,22 @@ const ScrollDemo = () => {
         const scrollTrigger = ScrollTrigger.create({
           trigger: container as Element,
           start: "top top",
-          end: "+=600%",
-          scrub: 0.5,
+          end: "+=500%",
+          scrub: 1,
           onUpdate: (self) => {
             const progress = self.progress;
             const totalCards = cards.length;
-            
+
             // Calculate which card should be visible
-            // Map progress (0-1) to card index (0 to totalCards-1)
-            // Each card occupies 1/totalCards of the progress
-            let newIndex: number;
-            
-            if (progress >= 1) {
-              newIndex = totalCards - 1; // Last card
-            } else if (progress <= 0) {
-              newIndex = 0; // First card
-            } else {
-              // Calculate index based on progress segments
-              const segmentSize = 1 / totalCards;
-              newIndex = Math.min(
-                Math.floor(progress / segmentSize),
-                totalCards - 1
-              );
-            }
-            
-            // Update if index changed
+            const newIndex = Math.min(
+              Math.floor(progress * totalCards),
+              totalCards - 1
+            );
+
+            // Only update if index changed
             if (newIndex !== currentVisibleIndex) {
               currentVisibleIndex = newIndex;
-              
+
               // Update all cards based on current index
               cards.forEach((card, index) => {
                 if (index === currentVisibleIndex) {
@@ -337,7 +325,7 @@ const ScrollDemo = () => {
                     opacity: 1,
                     y: 0,
                     scale: 1,
-                    duration: 0.4,
+                    duration: 0.5,
                     ease: "power2.out",
                   });
                 } else {
@@ -346,7 +334,7 @@ const ScrollDemo = () => {
                     opacity: 0,
                     y: index < currentVisibleIndex ? -50 : 50,
                     scale: 0.9,
-                    duration: 0.4,
+                    duration: 0.5,
                     ease: "power2.out",
                   });
                 }
