@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -206,28 +206,26 @@ const CampaignControl = () => {
 
   // Fetch campaign history when a campaign is selected
   useEffect(() => {
+    if (!selectedCampaign || !user?.id) {
+      setCampaignHistory([]);
+      return;
+    }
+
     const fetchCampaignHistory = async () => {
-      if (!selectedCampaign || !user) {
-        setCampaignHistory([]);
-        return;
-      }
-
-      const campaign = facebookCampaigns.find(c => c.id === selectedCampaign);
-      if (!campaign) return;
-
       try {
+        // Use selectedCampaign directly as campaign_id - don't rely on facebookCampaigns state
         const { data: history, error } = await supabase
           .from('daily_roas')
           .select('*')
           .eq('user_id', user.id)
-          .or(`campaign_id.eq.${campaign.id},campaign_name.eq.${campaign.name}`)
+          .or(`campaign_id.eq.${selectedCampaign}`)
           .order('date', { ascending: false });
 
         if (error) {
           console.error("Error fetching campaign history:", error);
           setCampaignHistory([]);
         } else {
-          console.log(`📊 Found ${history?.length || 0} historical entries for campaign: ${campaign.name}`);
+          console.log(`📊 Found ${history?.length || 0} historical entries for campaign: ${selectedCampaign}`);
           setCampaignHistory((history || []) as DailyROASData[]);
         }
       } catch (error) {
@@ -237,7 +235,7 @@ const CampaignControl = () => {
     };
 
     fetchCampaignHistory();
-  }, [selectedCampaign, user, facebookCampaigns]);
+  }, [selectedCampaign, user?.id]); // Only depend on selectedCampaign and user.id
 
   // Auto-load campaigns when ad account is selected
   useEffect(() => {
@@ -246,11 +244,12 @@ const CampaignControl = () => {
       // Clear old campaigns first
       setFacebookCampaigns([]);
       fetchFacebookCampaigns(selectedAdAccount);
-    } else {
+    } else if (!selectedAdAccount) {
       // Clear campaigns if no account selected
       setFacebookCampaigns([]);
     }
-  }, [selectedAdAccount, hasFacebookIntegration]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAdAccount, hasFacebookIntegration]); // fetchFacebookCampaigns is stable, no need to include
 
   // Real-time updates for products - recalcula Daily ROAS quando produto muda
   useEffect(() => {
@@ -1140,10 +1139,10 @@ const CampaignControl = () => {
     return dailyData.filter(d => d.date === selectedDay);
   };
 
-  const filteredData = getFilteredData();
+  const filteredData = useMemo(() => getFilteredData(), [dailyData, selectedDay]);
   
-  // Aggregate data by campaign when "total" is selected
-  const getAggregatedCampaignData = () => {
+  // Aggregate data by campaign when "total" is selected - memoized to prevent recalculation
+  const getAggregatedCampaignData = useCallback(() => {
     if (selectedDay !== "total") {
       // Return individual day data as-is, but ensure each entry has the necessary structure
       return filteredData.map(data => ({
@@ -1242,12 +1241,12 @@ const CampaignControl = () => {
         aggregated: true // Flag to indicate this is aggregated data
       } as DailyROASData & { total_days: number; aggregated: boolean };
     });
-  };
+  }, [filteredData, selectedDay]);
   
-  const aggregatedData = getAggregatedCampaignData();
+  const aggregatedData = useMemo(() => getAggregatedCampaignData(), [getAggregatedCampaignData]);
   
-  // Calculate KPIs for filtered data
-  const calculateFilteredKPIs = () => {
+  // Calculate KPIs for filtered data - memoized
+  const kpis = useMemo(() => {
     const dataToUse = selectedDay === "total" ? aggregatedData : filteredData;
     const totalSpend = dataToUse.reduce((sum: number, d: any) => sum + (d.total_spent || 0), 0);
     const totalRevenue = dataToUse.reduce((sum: number, d: any) => sum + ((d.units_sold || 0) * (d.product_price || 0)), 0);
@@ -1266,18 +1265,16 @@ const CampaignControl = () => {
       avgMargemPerc: avgMargemPerc || 0, 
       totalVendas: totalVendas || 0 
     };
-  };
+  }, [selectedDay, aggregatedData, filteredData]);
 
-  const kpis = calculateFilteredKPIs();
-
-  const chartData = aggregatedData.map(d => ({
+  const chartData = useMemo(() => aggregatedData.map(d => ({
     nome: (d.campaign_name || '').substring(0, 15),
     CPC: d.cpc || 0,
     ROAS: d.roas || 0,
     Margem: d.margin_percentage || 0,
     Gasto: d.total_spent || 0,
     Receita: (d.units_sold || 0) * (d.product_price || 0),
-  }));
+  })), [aggregatedData]);
 
   // Helper function to get day number since campaign start
   const getCampaignDayNumber = (campaignDays: DailyROASData[], currentDate: string): number => {
@@ -1479,9 +1476,9 @@ const CampaignControl = () => {
   if (!hasFacebookIntegration || !hasShopifyIntegration) {
     return (
       <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-background">
+        <div className="flex w-full bg-background">
           <AppSidebar />
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 p-6">
             <Card className="glass-card rounded-3xl p-8 max-w-2xl mx-auto mt-20 border-2 border-border/50">
               <h2 className="text-2xl font-bold mb-4">{t("dailyRoas.integrationsNeeded")}</h2>
               <p className="text-muted-foreground mb-6">
@@ -1519,9 +1516,9 @@ const CampaignControl = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex w-full bg-background">
         <AppSidebar />
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6">
           {/* Header */}
           <div className="glass-card rounded-2xl md:rounded-3xl p-4 md:p-6 mb-4 md:mb-6 border-2 border-border/50">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4">
