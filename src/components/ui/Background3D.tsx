@@ -67,7 +67,7 @@ export const Background3D = () => {
         // Draw particle
         ctx.beginPath();
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(74, 233, 189, ${particle.opacity})`;
+        ctx.fillStyle = `rgba(184, 160, 255, ${particle.opacity})`;
         ctx.fill();
 
         // Draw connections between particles
@@ -80,7 +80,7 @@ export const Background3D = () => {
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = `rgba(74, 233, 189, ${0.1 * (1 - distance / 150)})`;
+            ctx.strokeStyle = `rgba(184, 160, 255, ${0.1 * (1 - distance / 150)})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -97,10 +97,10 @@ export const Background3D = () => {
           ctx.beginPath();
           ctx.moveTo(particle.x, particle.y);
           ctx.lineTo(mousePos.x, mousePos.y);
-          ctx.strokeStyle = `rgba(74, 233, 189, ${opacity})`;
+          ctx.strokeStyle = `rgba(184, 160, 255, ${opacity})`;
           ctx.lineWidth = 1.5;
           ctx.shadowBlur = 10;
-          ctx.shadowColor = 'rgba(74, 233, 189, 0.8)';
+          ctx.shadowColor = 'rgba(184, 160, 255, 0.8)';
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
@@ -128,7 +128,7 @@ export const Background3D = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 1 }}
       style={{
-        background: 'radial-gradient(circle at 20% 50%, rgba(74, 233, 189, 0.03) 0%, transparent 50%)',
+        background: 'radial-gradient(circle at 20% 50%, rgba(184, 160, 255, 0.03) 0%, transparent 50%)',
       }}
     />
   );
