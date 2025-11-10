@@ -13,7 +13,6 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
-import { useCinematicScroll } from "@/hooks/useCinematicScroll";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -22,6 +21,126 @@ const Landing = () => {
   } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [gsapLoaded, setGsapLoaded] = useState(false);
+  
+  // Refs for Features Pinned Section
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const gsapRef = useRef<any>(null);
+  const ScrollTriggerRef = useRef<any>(null);
+  const scrollTriggersRef = useRef<any[]>([]);
+  
+  // Load GSAP
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("gsap").then((gsapModule) => {
+        import("gsap/ScrollTrigger").then((ScrollTriggerModule) => {
+          const gsap = gsapModule.default;
+          const ScrollTrigger = ScrollTriggerModule.default;
+          gsap.registerPlugin(ScrollTrigger);
+          gsapRef.current = gsap;
+          ScrollTriggerRef.current = ScrollTrigger;
+          setGsapLoaded(true);
+        });
+      });
+    }
+  }, []);
+
+  // Features Pinned Section animation
+  useEffect(() => {
+    if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
+
+    let timeoutId: NodeJS.Timeout;
+    let ctx: any;
+
+    // Wait a bit for DOM to be ready
+    timeoutId = setTimeout(() => {
+      const gsap = gsapRef.current;
+      const ScrollTrigger = ScrollTriggerRef.current;
+      if (!gsap || !ScrollTrigger || !featuresRef.current) return;
+
+      ctx = gsap.context(() => {
+        const container = featuresRef.current?.querySelector(".pinned-features-container");
+        const cards = featuresRef.current?.querySelectorAll(".feature-card-4");
+
+        if (!container || !cards || cards.length === 0) return;
+
+        // Set initial state - all cards hidden except first
+        gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
+        gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
+
+        // Pin the container
+        const pinTrigger = ScrollTrigger.create({
+          trigger: container as Element,
+          start: "top top",
+          end: "+=500%",
+          pin: true,
+          pinSpacing: true,
+        });
+        scrollTriggersRef.current.push(pinTrigger);
+
+        // Track current visible card to avoid unnecessary animations
+        let currentVisibleIndex = 0;
+
+        // Create scroll trigger that updates cards based on progress
+        const scrollTrigger = ScrollTrigger.create({
+          trigger: container as Element,
+          start: "top top",
+          end: "+=500%",
+          scrub: 1,
+          onUpdate: (self) => {
+            const progress = self.progress;
+            const totalCards = cards.length;
+
+            // Calculate which card should be visible
+            const newIndex = Math.min(
+              Math.floor(progress * totalCards),
+              totalCards - 1
+            );
+
+            // Only update if index changed
+            if (newIndex !== currentVisibleIndex) {
+              currentVisibleIndex = newIndex;
+
+              // Update all cards based on current index
+              cards.forEach((card, index) => {
+                if (index === currentVisibleIndex) {
+                  // Show current card
+                  gsap.to(card, {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    duration: 0.5,
+                    ease: "power2.out",
+                  });
+                } else {
+                  // Hide other cards
+                  gsap.to(card, {
+                    opacity: 0,
+                    y: index < currentVisibleIndex ? -50 : 50,
+                    scale: 0.9,
+                    duration: 0.5,
+                    ease: "power2.out",
+                  });
+                }
+              });
+            }
+          },
+        });
+
+        scrollTriggersRef.current.push(scrollTrigger);
+
+        // Refresh ScrollTrigger after setup
+        ScrollTrigger.refresh();
+      }, featuresRef);
+    }, 100);
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (ctx) ctx?.revert();
+      scrollTriggersRef.current.forEach((trigger) => trigger?.kill());
+      scrollTriggersRef.current = [];
+    };
+  }, [gsapLoaded]);
   
   // Verificar se o usuário já está autenticado ao carregar a página
   useEffect(() => {
@@ -319,35 +438,31 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section - Simple Text Only */}
-      <section id="features-storytelling" className="relative overflow-hidden bg-transparent min-h-screen flex items-center justify-center" aria-label="Features that make the difference">
-        {/* Background da homepage (partículas) */}
-        <Background3D />
-        
-        {/* Texto centralizado */}
-        <div className="relative z-10 text-center px-4 sm:px-6">
-          <motion.h2 
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            Features that make the difference
-          </motion.h2>
-          <motion.p 
-            className="text-lg sm:text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            Everything you need to optimize your campaigns in one platform
-          </motion.p>
-        </div>
+      {/* Features Section - Pinned Section with GSAP */}
+      <section 
+        id="features" 
+        ref={featuresRef}
+        className="py-20 px-4 sm:px-6 bg-transparent relative"
+        aria-label="Features that make the difference"
+      >
+        <div className="pinned-features-container min-h-screen flex items-center justify-center px-4 sm:px-6">
+          <div className="container mx-auto max-w-4xl text-center relative">
+            {/* Header */}
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-primary/20 border border-primary/30 rounded-full text-sm text-primary font-medium">
+                Features
+              </span>
+            </div>
 
-        {/* Features with Full Page Scroll - Cinematic Effect */}
-        <div className="features-container">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-[#B8A0FF] bg-clip-text text-transparent">
+            Features that make the difference
+            </h2>
+            <p className="text-xl text-gray-300 mb-12">
+            Everything you need to optimize your campaigns in one platform
+            </p>
+
+            {/* Pinned content that changes */}
+            <div className="relative min-h-[500px] flex items-center justify-center">
           {[{
             icon: Activity,
             key: 'integration'
@@ -366,97 +481,28 @@ const Landing = () => {
           }, {
             icon: Lock,
             key: 'secure'
-          }].map((feature, index) => (
-            <motion.div
+              }].map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div
               key={index}
-              className="feature-item snap-start snap-always min-h-screen flex items-center justify-center px-4 sm:px-6 relative"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
-              transition={{ duration: 0.6 }}
-            >
-            <motion.div
-              className="max-w-4xl mx-auto w-full"
-              initial={{ opacity: 0, y: 80, scale: 0.95 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: false, margin: "-50px", amount: 0.3 }}
-              transition={{ 
-                duration: 0.7, 
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-              }}
-            >
-              <Card3D intensity="high" glow className="p-6 sm:p-10 md:p-14 lg:p-16">
-                <div className="flex flex-col items-center text-center space-y-4 sm:space-y-6 md:space-y-8">
-                  {/* Icon */}
-                  <motion.div
-                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow"
-                    whileInView={{ 
-                      rotateY: [0, 360],
-                      scale: [1, 1.15, 1]
-                    }}
-                    viewport={{ once: false }}
-                    transition={{ 
-                      duration: 1.2,
-                      repeat: Infinity,
-                      repeatDelay: 3
-                    }}
+                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
                   >
-                    <feature.icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 text-primary-foreground" />
-                  </motion.div>
-
-                  {/* Title */}
-                  <motion.h3 
-                    className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold gradient-text"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false }}
-                    transition={{ delay: 0.2, duration: 0.6 }}
-                  >
-                    {t(`landing.features.${feature.key}.title`)}
-                  </motion.h3>
-
-                  {/* Description */}
-                  <motion.p 
-                    className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto px-4"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: false }}
-                    transition={{ delay: 0.4, duration: 0.6 }}
-                  >
-                    {t(`landing.features.${feature.key}.description`)}
-                  </motion.p>
-
-                  {/* Scroll Indicator - Only on last feature */}
-                  {index === 5 && (
-                    <motion.div
-                      className="mt-6 sm:mt-8 flex flex-col items-center gap-2"
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: false }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      <motion.div
-                        animate={{ y: [0, 8, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="text-gray-400 text-xs sm:text-sm"
-                      >
-                        Continue scrolling
-                      </motion.div>
-                      <motion.div
-                        animate={{ y: [0, 8, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: 0.2 }}
-                      >
-                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-primary rotate-90" />
-                      </motion.div>
-                    </motion.div>
-                  )}
+                    <Card3D intensity="high" glow className="p-12 max-w-2xl mx-auto">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 mx-auto shadow-glow">
+                        <Icon className="w-10 h-10 text-primary-foreground" />
+                      </div>
+                      <h3 className="text-3xl font-bold mb-4 text-white">{t(`landing.features.${feature.key}.title`)}</h3>
+                      <p className="text-gray-300 text-lg leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
+                      <div className="mt-8 text-sm text-gray-400">
+                        {index + 1} / 6
                 </div>
               </Card3D>
-            </motion.div>
-          </motion.div>
-          ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
