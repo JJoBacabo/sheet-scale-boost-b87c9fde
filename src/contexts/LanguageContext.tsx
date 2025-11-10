@@ -598,6 +598,8 @@ const translations = {
       imageUpdated: 'Image updated',
       imageUpdatedDesc: 'Campaign image has been updated successfully.',
       errorUpdatingImage: 'Error updating image',
+      noImage: 'No image available',
+      imageUploadDesc: 'Supported formats: JPG, PNG, GIF. Max size: 5MB',
     },
       storeSelector: {
         selectStore: 'Selecionar loja',
@@ -1653,6 +1655,8 @@ const translations = {
       imageUpdated: 'Image updated',
       imageUpdatedDesc: 'Campaign image has been updated successfully.',
       errorUpdatingImage: 'Error updating image',
+      noImage: 'No image available',
+      imageUploadDesc: 'Supported formats: JPG, PNG, GIF. Max size: 5MB',
     },
       storeSelector: {
         selectStore: 'Select store',
