@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
 import {
   Check,
@@ -21,12 +19,37 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Card } from "@/components/ui/card";
 import logo from "@/assets/logo.png";
 
-// Register GSAP plugins
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
-
 const HomePageTest = () => {
+  // Lazy load GSAP to avoid SSR issues
+  const [gsapLoaded, setGsapLoaded] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      import("gsap").then((gsapModule) => {
+        import("gsap/ScrollTrigger").then((ScrollTriggerModule) => {
+          const gsap = gsapModule.default;
+          const ScrollTrigger = ScrollTriggerModule.default;
+          gsap.registerPlugin(ScrollTrigger);
+          setGsapLoaded(true);
+        });
+      });
+    }
+  }, []);
+
+  // Store gsap in a ref to use in other effects
+  const gsapRef = useRef<any>(null);
+  const ScrollTriggerRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (gsapLoaded && typeof window !== "undefined") {
+      import("gsap").then((gsapModule) => {
+        import("gsap/ScrollTrigger").then((ScrollTriggerModule) => {
+          gsapRef.current = gsapModule.default;
+          ScrollTriggerRef.current = ScrollTriggerModule.default;
+        });
+      });
+    }
+  }, [gsapLoaded]);
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annual">("monthly");
   const heroRef = useRef<HTMLDivElement>(null);
@@ -36,6 +59,9 @@ const HomePageTest = () => {
 
   // Hero section animations
   useEffect(() => {
+    if (!gsapLoaded || !gsapRef.current) return;
+
+    const gsap = gsapRef.current;
     const ctx = gsap.context(() => {
       // Animate hero text elements
       const heroTitle = heroRef.current?.querySelector(".hero-title");
@@ -134,12 +160,14 @@ const HomePageTest = () => {
     }, heroRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [gsapLoaded]);
 
   // Features scroll reveal animation
   useEffect(() => {
-    if (!featuresRef.current) return;
+    if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
+    const gsap = gsapRef.current;
+    const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const cards = featuresRef.current?.querySelectorAll(".feature-card");
       
@@ -161,12 +189,14 @@ const HomePageTest = () => {
     }, featuresRef);
 
     return () => ctx?.revert();
-  }, []);
+  }, [gsapLoaded]);
 
   // CTA gradient animation
   useEffect(() => {
-    if (!ctaRef.current) return;
+    if (!ctaRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
+    const gsap = gsapRef.current;
+    const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const gradient = ctaRef.current?.querySelector(".animated-gradient") as HTMLElement;
       const ctaContent = ctaRef.current?.querySelector(".cta-content");
@@ -196,13 +226,17 @@ const HomePageTest = () => {
     }, ctaRef);
 
     return () => ctx?.revert();
-  }, []);
+  }, [gsapLoaded]);
 
   // Smart Campaign Analysis scroll reveal
   useEffect(() => {
+    if (!gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
+
     const analysisSection = document.querySelector("#analysis-section");
     if (!analysisSection) return;
 
+    const gsap = gsapRef.current;
+    const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const leftBlock = analysisSection.querySelector(".analysis-left");
       const rightBlock = analysisSection.querySelector(".analysis-right");
@@ -251,7 +285,7 @@ const HomePageTest = () => {
     });
 
     return () => ctx?.revert();
-  }, []);
+  }, [gsapLoaded]);
 
   const features = [
     {
