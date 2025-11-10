@@ -648,16 +648,6 @@ const Settings = () => {
 
   const plans = [
     { 
-      name: "Beginner",
-      price: t('settings.plans.beginner.price'), 
-      annualOriginal: t('settings.plans.beginner.annualOriginal'),
-      annualPrice: t('settings.plans.beginner.annualPrice'),
-      annualSavings: t('settings.plans.beginner.annualSavings'),
-      features: t('settings.plans.beginner.features') as unknown as string[], 
-      current: profile?.subscription_plan === "beginner",
-      popular: false
-    },
-    { 
       name: "Basic", 
       price: t('settings.plans.basic.price'), 
       annualOriginal: t('settings.plans.basic.annualOriginal'),
@@ -686,6 +676,14 @@ const Settings = () => {
       features: t('settings.plans.expert.features') as unknown as string[], 
       current: profile?.subscription_plan === "expert",
       popular: false
+    },
+    { 
+      name: "Business", 
+      price: t('settings.plans.business.price'), 
+      features: t('settings.plans.business.features') as unknown as string[], 
+      current: profile?.subscription_plan === "business",
+      popular: false,
+      isCustom: true
     },
   ];
 
@@ -828,7 +826,9 @@ const Settings = () => {
                         )}
                       </div>
                       
-                      {billingPeriod === 'monthly' ? (
+                      {plan.isCustom ? (
+                        <p className="text-2xl font-bold mb-6">{plan.price}</p>
+                      ) : billingPeriod === 'monthly' ? (
                         <>
                           <p className="text-2xl font-bold mb-6">{plan.price}</p>
                         </>
@@ -849,29 +849,39 @@ const Settings = () => {
                         ))}
                       </ul>
                       {!plan.current && (
-                        <Button 
-                          className="w-full btn-gradient mt-auto" 
-                          size="sm"
-                          onClick={() => {
-                            const planKey = plan.name.toLowerCase();
-                            const priceId = stripePrices[planKey]?.[billingPeriod];
-                            
-                            if (!priceId) {
-                              toast({
-                                title: "Erro",
-                                description: "Preços ainda não carregados. Tente novamente.",
-                                variant: "destructive",
-                              });
-                              return;
-                            }
-                            
-                            handleSubscribe(plan.name, priceId);
-                          }}
-                          disabled={subscribing || Object.keys(stripePrices).length === 0}
-                        >
-                          <Sparkles className="w-4 h-4 mr-2" />
-                          {subscribing ? t('settings.processing') : t('settings.upgrade')}
-                        </Button>
+                        plan.isCustom ? (
+                          <Button 
+                            className="w-full btn-gradient mt-auto" 
+                            size="sm"
+                            onClick={() => window.location.href = 'mailto:info@sheet-tools.com?subject=Business Plan Inquiry'}
+                          >
+                            {t('landing.pricing.business.contactUs')}
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full btn-gradient mt-auto" 
+                            size="sm"
+                            onClick={() => {
+                              const planKey = plan.name.toLowerCase();
+                              const priceId = stripePrices[planKey]?.[billingPeriod];
+                              
+                              if (!priceId) {
+                                toast({
+                                  title: "Erro",
+                                  description: "Preços ainda não carregados. Tente novamente.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
+                              handleSubscribe(plan.name, priceId);
+                            }}
+                            disabled={subscribing || Object.keys(stripePrices).length === 0}
+                          >
+                            <Sparkles className="w-4 h-4 mr-2" />
+                            {subscribing ? t('settings.processing') : t('settings.upgrade')}
+                          </Button>
+                        )
                       )}
                     </Card3D>
                   ))}

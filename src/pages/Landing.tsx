@@ -515,10 +515,10 @@ const Landing = () => {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
           {[
-            { key: 'beginner', popular: false },
             { key: 'basic', popular: false },
             { key: 'standard', popular: true },
-            { key: 'expert', popular: false }
+            { key: 'expert', popular: false },
+            { key: 'business', popular: false }
           ].map((plan, index) => (
             <motion.div
               key={index}
@@ -542,7 +542,18 @@ const Landing = () => {
                 )}
               <h3 className="text-xl font-bold mb-2">{t(`landing.pricing.${plan.key}.name`)}</h3>
               
-              {billingPeriod === 'monthly' ? (
+              {plan.key === 'business' ? (
+                <>
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold">
+                      {t(`landing.pricing.${plan.key}.price`)}
+                    </span>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-6 min-h-[40px]">
+                    {t(`landing.pricing.${plan.key}.description`)}
+                  </p>
+                </>
+              ) : billingPeriod === 'monthly' ? (
                 <>
                   <div className="mb-4">
                     <span className="text-3xl font-bold">
@@ -578,7 +589,7 @@ const Landing = () => {
               )}
               
               <ul className="space-y-2 mb-6 flex-1">
-                {['feature1', 'feature2', 'feature3', 'feature4', 'feature5'].map((feat, i) => {
+                {['feature1', 'feature2', 'feature3', 'feature4', 'feature5', 'feature6', 'feature7'].map((feat, i) => {
                   const featureText = t(`landing.pricing.${plan.key}.${feat}`);
                   if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
                   
@@ -591,15 +602,26 @@ const Landing = () => {
                 })}
               </ul>
               
-                <Button3D
-                  variant={plan.popular ? 'gradient' : 'glass'}
-                  size="md"
-                  glow={plan.popular}
-                  className="w-full mt-auto"
-                  onClick={() => navigate("/auth")}
-                >
-                  {t('landing.pricing.choosePlan')}
-                </Button3D>
+                {plan.key === 'business' ? (
+                  <Button3D
+                    variant="glass"
+                    size="md"
+                    className="w-full mt-auto"
+                    onClick={() => window.location.href = 'mailto:info@sheet-tools.com?subject=Business Plan Inquiry'}
+                  >
+                    {t(`landing.pricing.${plan.key}.contactUs`)}
+                  </Button3D>
+                ) : (
+                  <Button3D
+                    variant={plan.popular ? 'gradient' : 'glass'}
+                    size="md"
+                    glow={plan.popular}
+                    className="w-full mt-auto"
+                    onClick={() => navigate("/auth")}
+                  >
+                    {t('landing.pricing.choosePlan')}
+                  </Button3D>
+                )}
               </Card3D>
             </motion.div>
           ))}
@@ -607,7 +629,10 @@ const Landing = () => {
 
         {/* Feature Comparison Table */}
         <div className="max-w-5xl mx-auto mt-16">
-          <h3 className="text-2xl font-bold text-center mb-8">{t('landing.pricing.featureComparison.title')}</h3>
+          <h3 className="text-2xl font-bold text-center mb-4">{t('landing.pricing.featureComparison.title')}</h3>
+          <p className="text-center text-gray-400 text-sm mb-8">
+            {t('landing.pricing.featureComparison.note')}
+          </p>
           <Card className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -617,16 +642,18 @@ const Landing = () => {
                     <th className="text-center p-4 text-gray-400 font-semibold">Basic</th>
                     <th className="text-center p-4 text-gray-400 font-semibold">Standard</th>
                     <th className="text-center p-4 text-gray-400 font-semibold">Expert</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">Business</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    { key: 'roasSheet', basic: true, standard: true, expert: true },
-                    { key: 'quotation', basic: false, standard: true, expert: true },
-                    { key: 'campaigns', basic: false, standard: true, expert: true },
-                    { key: 'productResearch', basic: false, standard: false, expert: true },
-                    { key: 'prioritySupport', basic: false, standard: false, expert: true },
-                    { key: 'completeHistory', basic: false, standard: false, expert: true },
+                    { key: 'dailyRoas', basic: true, standard: true, expert: true, business: true },
+                    { key: 'profitSheet', basic: true, standard: true, expert: true, business: true },
+                    { key: 'quotation', basic: false, standard: true, expert: true, business: true },
+                    { key: 'campaigns', basic: false, standard: true, expert: true, business: true },
+                    { key: 'productResearch', basic: false, standard: false, expert: true, business: true },
+                    { key: 'prioritySupport', basic: false, standard: false, expert: true, business: true },
+                    { key: 'completeHistory', basic: false, standard: false, expert: true, business: true },
                   ].map((feature, i) => (
                     <tr key={i} className="border-b border-white/10 last:border-0">
                       <td className="p-4 text-gray-300">{t(`landing.pricing.featureComparison.${feature.key}`)}</td>
@@ -646,6 +673,13 @@ const Landing = () => {
                       </td>
                       <td className="p-4 text-center">
                         {feature.expert ? (
+                          <Check className="w-5 h-5 text-primary mx-auto" />
+                        ) : (
+                          <span className="text-gray-600">—</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-center">
+                        {feature.business ? (
                           <Check className="w-5 h-5 text-primary mx-auto" />
                         ) : (
                           <span className="text-gray-600">—</span>

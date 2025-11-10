@@ -24,13 +24,6 @@ Ao criar uma conta, o utilizador recebe automaticamente **10 dias de acesso COMP
   - Dados são preservados
   - Obrigado a subscrever para continuar
 
-## Plano Beginner (Pago)
-- **Lojas**: 1 loja
-- **Campanhas**: 0 campanhas (sem gestão de campanhas)
-- **Recursos**: 
-  - Daily ROAS básico
-  - Sem automação
-
 ## Plano Basic (Pago)
 - **Lojas**: 1 loja
 - **Campanhas**: 15 campanhas
@@ -57,6 +50,18 @@ Ao criar uma conta, o utilizador recebe automaticamente **10 dias de acesso COMP
   - Cotação (IA)
   - Product Research
   - Todas as funcionalidades avançadas
+
+## Plano Business (Customizado)
+- **Lojas**: Customizado baseado nas necessidades
+- **Campanhas**: Customizado baseado nas necessidades
+- **Recursos**: 
+  - Todas as funcionalidades do Expert
+  - Suporte dedicado
+  - Onboarding personalizado
+  - Funcionalidades customizadas
+  - Integrações adicionais sob demanda
+- **Preço**: Sob consulta (Contact Us)
+- **Nota**: Este plano é totalmente customizado baseado nas necessidades específicas de cada cliente
 
 ---
 
