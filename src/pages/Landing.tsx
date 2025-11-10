@@ -710,29 +710,50 @@ const Landing = () => {
       {/* FAQ Section */}
       <section id="faq" className="container mx-auto px-4 sm:px-6 py-20 relative">
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold mb-4">
-            {t('landing.faq.title')}
-          </h2>
-          <p className="text-xl text-gray-400">
-            {t('landing.faq.subtitle')}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 gradient-text">
+              {t('landing.faq.title')}
+            </h2>
+            <p className="text-xl text-gray-400">
+              {t('landing.faq.subtitle')}
+            </p>
+          </motion.div>
         </div>
 
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <Accordion type="single" collapsible className="space-y-4">
             {['q1', 'q2', 'q3', 'q4', 'q5'].map((key, index) => (
-              <AccordionItem 
-                key={index} 
-                value={`item-${index}`}
-                className="bg-white/5 border border-white/10 rounded-2xl px-6 data-[state=open]:border-primary/50"
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
               >
-                <AccordionTrigger className="text-lg font-bold hover:no-underline py-6">
-                  {t(`faq.${key}.question`)}
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-400 leading-relaxed pb-6">
-                  {t(`faq.${key}.answer`)}
-                </AccordionContent>
-              </AccordionItem>
+                <AccordionItem 
+                  value={`item-${index}`}
+                  className="glass-card border border-white/10 rounded-2xl overflow-hidden backdrop-blur-sm transition-all duration-300 hover:border-primary/30 data-[state=open]:border-primary/50 data-[state=open]:shadow-[0_0_20px_rgba(74,233,189,0.2)]"
+                >
+                  <AccordionTrigger className="text-left text-base sm:text-lg font-bold hover:no-underline py-5 sm:py-6 px-6 hover:text-primary transition-colors group">
+                    <span className="flex items-center gap-3">
+                      <span className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                        {index + 1}
+                      </span>
+                      <span className="flex-1">{t(`faq.${key}.question`)}</span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-400 leading-relaxed px-6 pb-6">
+                    <div className="pl-11 text-sm sm:text-base">
+                      {t(`faq.${key}.answer`)}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
             ))}
           </Accordion>
         </div>
