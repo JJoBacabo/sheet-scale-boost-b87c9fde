@@ -123,7 +123,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
                 <div className="flex items-start justify-between mb-3">
                   <motion.div
                     className={`p-3 rounded-xl ${stat.iconBg}`}
-                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    whileHover={{ rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
                     <Icon className={`h-5 w-5 ${stat.iconColor}`} />

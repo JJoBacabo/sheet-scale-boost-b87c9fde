@@ -655,7 +655,7 @@ const MetaDashboard = () => {
           {campaign.status === "ACTIVE" ? (
             <Button
               size="sm"
-              className="mt-4 bg-warning/90 hover:bg-warning text-warning-foreground border-2 border-warning shadow-lg hover:shadow-warning/50 transition-all duration-300 hover:scale-110 font-semibold"
+              className="mt-4 bg-warning/90 hover:bg-warning text-warning-foreground border-2 border-warning shadow-lg hover:shadow-warning/50 transition-all duration-300 font-semibold"
               onClick={() => setCampaignToPause(campaign.id)}
             >
               <Pause className="w-4 h-4 mr-1" />
@@ -664,7 +664,7 @@ const MetaDashboard = () => {
           ) : (
             <Button
               size="sm"
-              className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-110 font-semibold"
+              className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold"
               onClick={() => setCampaignToActivate(campaign.id)}
             >
               <Play className="w-4 h-4 mr-1" />
@@ -1010,7 +1010,7 @@ const MetaDashboard = () => {
                                 </Badge>
                                 {campaign.status === "ACTIVE" ? (
                                   <Button
-                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 hover:scale-105 font-bold w-full h-auto py-2"
+                                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
                                     onClick={() => setCampaignToPause(campaign.id)}
                                   >
                                     <Pause className="w-4 h-4 mr-1.5" />
@@ -1018,7 +1018,7 @@ const MetaDashboard = () => {
                                   </Button>
                                 ) : (
                                   <Button
-                                    className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 hover:scale-105 font-semibold w-full h-auto py-2"
+                                    className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
                                     onClick={() => setCampaignToActivate(campaign.id)}
                                   >
                                     <Play className="w-4 h-4 mr-1.5" />
@@ -1074,99 +1074,99 @@ const MetaDashboard = () => {
                     const insights = getInsightData(selectedCampaign);
                     return (
                       <>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.impressions")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.impressions.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.reach")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.reach.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.clicks")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.clicks.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.linkClicks")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.linkClicks.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.results")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.results.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.landingPageViews")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.landingPageViews.toLocaleString()}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.spend")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.spend.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.cpc")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.cpc.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.cpm")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.cpm.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.ctr")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             {insights.ctr.toFixed(2)}%
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.costPerResult")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.costPerResult.toFixed(2)}
                           </p>
                         </div>
-                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 hover:scale-110 group cursor-pointer">
-                          <p className="text-xs text-muted-foreground mb-2 transition-transform duration-300 group-hover:scale-110">
+                        <div className="p-4 glass-card rounded-lg text-center transition-all duration-300 group cursor-pointer">
+                          <p className="text-xs text-muted-foreground mb-2">
                             {t("metaDashboard.costPerLandingPageView")}
                           </p>
-                          <p className="text-2xl font-bold transition-transform duration-300 group-hover:scale-110">
+                          <p className="text-2xl font-bold">
                             €{insights.costPerLandingPageView.toFixed(2)}
                           </p>
                         </div>

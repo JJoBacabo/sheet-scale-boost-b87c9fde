@@ -241,7 +241,6 @@ const TestPage = () => {
             {/* Logo */}
             <motion.div 
               className="flex items-center gap-3"
-              whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="relative">

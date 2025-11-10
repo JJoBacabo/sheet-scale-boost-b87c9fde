@@ -23,7 +23,7 @@ const EnhancedStatCard = ({ title, value, change, icon: Icon, positive, trend = 
       <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-primary" />
       
       <div className="flex items-start justify-between mb-6">
-        <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-glow group-hover:scale-110 transition-all duration-300">
+        <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-glow transition-all duration-300">
           <Icon className="w-7 h-7 text-primary-foreground" />
         </div>
         <span className={`text-sm font-semibold px-3 py-1.5 rounded-full transition-all duration-300 flex items-center gap-1.5 ${
@@ -135,7 +135,7 @@ export function StatCardsDemo() {
             <h3 className="text-2xl font-bold mb-2">Performance Geral</h3>
             <p className="text-muted-foreground">Últimos 30 dias comparado ao mês anterior</p>
           </div>
-          <div className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-glow group-hover:scale-110 transition-all duration-300">
+          <div className="w-16 h-16 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg group-hover:shadow-glow transition-all duration-300">
             <Activity className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>

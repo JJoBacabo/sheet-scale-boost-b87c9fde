@@ -93,7 +93,7 @@ export const QuickActions = ({
                 <div className="relative flex flex-col items-center text-center gap-4">
                   <motion.div
                     className={`p-4 rounded-xl ${action.iconBg}`}
-                    whileHover={{ rotateZ: 360, scale: 1.1 }}
+                    whileHover={{ rotateZ: 360 }}
                     transition={{ duration: 0.5 }}
                   >
                     <Icon className={`h-6 w-6 ${action.iconColor}`} />

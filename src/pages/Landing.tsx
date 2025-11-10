@@ -82,7 +82,6 @@ const Landing = () => {
             {/* Logo - Left */}
             <motion.div 
               className="flex items-center gap-3 flex-shrink-0"
-              whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <div className="relative">
@@ -304,7 +303,7 @@ const Landing = () => {
                 <Card3D intensity="medium" glow>
                   <motion.div
                     className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow"
-                    whileHover={{ rotateY: 360, scale: 1.1 }}
+                    whileHover={{ rotateY: 360 }}
                     transition={{ duration: 0.6 }}
                   >
                     <item.icon className="w-8 h-8 text-primary-foreground" />
@@ -485,7 +484,7 @@ const Landing = () => {
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
-              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileHover={{ rotateY: 5 }}
               whileTap={{ scale: 0.95 }}
               style={{ transformStyle: 'preserve-3d' }}
             >
@@ -498,7 +497,7 @@ const Landing = () => {
                   ? 'bg-gradient-primary text-primary-foreground shadow-glow'
                   : 'text-gray-400 hover:text-white'
               }`}
-              whileHover={{ scale: 1.05, rotateY: 5 }}
+              whileHover={{ rotateY: 5 }}
               whileTap={{ scale: 0.95 }}
               style={{ transformStyle: 'preserve-3d' }}
             >

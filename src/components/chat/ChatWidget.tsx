@@ -51,7 +51,7 @@ export const ChatWidget = () => {
               aria-label="Close chat"
               title={language === 'pt' ? 'Fechar chat' : 'Close chat'}
             >
-              <X className="w-6 h-6 text-white group-hover:scale-110 transition-transform drop-shadow-md" />
+              <X className="w-6 h-6 text-white drop-shadow-md" />
             </button>
           </div>
 
