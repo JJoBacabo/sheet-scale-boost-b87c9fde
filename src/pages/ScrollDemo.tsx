@@ -267,60 +267,54 @@ const ScrollDemo = () => {
       const pinTrigger = ScrollTrigger.create({
         trigger: container as Element,
         start: "top top",
-        end: "+=400%",
+        end: "+=500%",
         pin: true,
         pinSpacing: true,
       });
       scrollTriggersRef.current.push(pinTrigger);
 
-      // Create timeline for card transitions based on scroll progress
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: container as Element,
-          start: "top top",
-          end: "+=400%",
-          scrub: 1,
+      // Create scroll trigger that updates cards based on progress
+      const scrollTrigger = ScrollTrigger.create({
+        trigger: container as Element,
+        start: "top top",
+        end: "+=500%",
+        scrub: 1,
+        onUpdate: (self) => {
+          const progress = self.progress;
+          const totalCards = cards.length;
+          
+          // Calculate which card should be visible
+          const currentIndex = Math.min(
+            Math.floor(progress * totalCards),
+            totalCards - 1
+          );
+          
+          // Update all cards based on current index
+          cards.forEach((card, index) => {
+            if (index === currentIndex) {
+              // Show current card
+              gsap.to(card, {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.3,
+                ease: "power2.out",
+              });
+            } else {
+              // Hide other cards
+              gsap.to(card, {
+                opacity: 0,
+                y: index < currentIndex ? -50 : 50,
+                scale: 0.9,
+                duration: 0.3,
+                ease: "power2.out",
+              });
+            }
+          });
         },
       });
 
-      // Calculate progress points for each card
-      cards.forEach((card, index) => {
-        if (index === 0) {
-          // First card stays visible until second card starts
-          tl.to(card, {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            duration: 0.1,
-          }, index / cards.length);
-        } else {
-          // Hide previous card
-          tl.to(
-            cards[index - 1],
-            {
-              opacity: 0,
-              y: -50,
-              scale: 0.9,
-              duration: 0.3,
-            },
-            index / cards.length
-          );
-
-          // Show current card
-          tl.to(
-            card,
-            {
-              opacity: 1,
-              y: 0,
-              scale: 1,
-              duration: 0.3,
-            },
-            index / cards.length
-          );
-        }
-      });
-
-      scrollTriggersRef.current.push(tl.scrollTrigger);
+      scrollTriggersRef.current.push(scrollTrigger);
     }, section4Ref);
 
     return () => {
