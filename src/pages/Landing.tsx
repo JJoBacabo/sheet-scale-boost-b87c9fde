@@ -529,7 +529,7 @@ const Landing = () => {
               <Card3D 
                 intensity={plan.popular ? "high" : "medium"}
                 glow={plan.popular}
-                className={`p-6 relative flex flex-col ${plan.popular ? 'scale-105' : ''}`}
+                className="p-6 relative flex flex-col"
               >
                 {plan.popular && (
                   <motion.div

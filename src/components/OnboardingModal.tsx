@@ -72,7 +72,7 @@ export const OnboardingModal = ({ open, onClose }: OnboardingModalProps) => {
                 key={index}
                 className={`flex items-start gap-4 p-4 rounded-xl transition-all duration-300 ${
                   index === currentStep
-                    ? "glass-card border-2 border-primary/30 scale-[1.02]"
+                    ? "glass-card border-2 border-primary/30"
                     : "glass-card border border-border/50"
                 }`}
               >

@@ -809,7 +809,7 @@ const Settings = () => {
                         plan.current
                           ? "border-primary/40"
                           : plan.popular
-                          ? "border-primary scale-105 shadow-glow"
+                          ? "border-primary shadow-glow"
                           : "border-border/50 hover:border-primary/30"
                       }`}
                     >
