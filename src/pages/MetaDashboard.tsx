@@ -1433,6 +1433,7 @@ const MetaDashboard = () => {
                           setShowDetailsDialog(true);
                         }}
                         onEdit={async () => {
+                          console.log("✏️ Edit button clicked for campaign:", campaign.id, campaign.name);
                           setEditingCampaign(campaign);
                           setEditFormData({
                             name: campaign.name,
@@ -1446,7 +1447,13 @@ const MetaDashboard = () => {
                           setActiveTab("campaign");
                           
                           // Fetch ad sets and ads
-                          await fetchAdSetsAndAds(campaign.id);
+                          console.log("📞 Calling fetchAdSetsAndAds for campaign:", campaign.id);
+                          try {
+                            await fetchAdSetsAndAds(campaign.id);
+                            console.log("✅ fetchAdSetsAndAds completed for campaign:", campaign.id);
+                          } catch (error) {
+                            console.error("❌ Error in fetchAdSetsAndAds:", error);
+                          }
                         }}
                         onPause={() => setCampaignToPause(campaign.id)}
                         onActivate={() => setCampaignToActivate(campaign.id)}
@@ -1682,7 +1689,10 @@ const MetaDashboard = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={(value) => {
+              console.log("🔄 Tab changed to:", value, "adSets.length:", adSets.length, "ads.length:", ads.length);
+              setActiveTab(value);
+            }} className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="campaign">{t("metaDashboard.campaign")}</TabsTrigger>
                 <TabsTrigger value="adsets">
