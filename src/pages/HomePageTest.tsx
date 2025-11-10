@@ -179,13 +179,13 @@ const HomePageTest = () => {
     const ScrollTrigger = ScrollTriggerRef.current;
     const ctx = gsap.context(() => {
       const container = featuresRef.current?.querySelector(".pinned-features-container");
-      const featureItems = featuresRef.current?.querySelectorAll(".feature-item");
+      const cards = featuresRef.current?.querySelectorAll(".feature-card-4");
 
-      if (!container || !featureItems || featureItems.length === 0) return;
+      if (!container || !cards || cards.length === 0) return;
 
-      // Set initial state - all items hidden except first
-      gsap.set(featureItems, { opacity: 0, y: 50, scale: 0.9 });
-      gsap.set(featureItems[0], { opacity: 1, y: 0, scale: 1 });
+      // Set initial state - all cards hidden except first
+      gsap.set(cards, { opacity: 0, y: 50, scale: 0.9 });
+      gsap.set(cards[0], { opacity: 1, y: 0, scale: 1 });
 
       // Pin the container
       const pinTrigger = ScrollTrigger.create({
@@ -197,10 +197,10 @@ const HomePageTest = () => {
       });
       scrollTriggersRef.current.push(pinTrigger);
 
-      // Track current visible item to avoid unnecessary animations
+      // Track current visible card to avoid unnecessary animations
       let currentVisibleIndex = 0;
 
-      // Create scroll trigger that updates items based on progress
+      // Create scroll trigger that updates cards based on progress
       const scrollTrigger = ScrollTrigger.create({
         trigger: container as Element,
         start: "top top",
@@ -208,23 +208,23 @@ const HomePageTest = () => {
         scrub: 1,
         onUpdate: (self) => {
           const progress = self.progress;
-          const totalItems = featureItems.length;
+          const totalCards = cards.length;
 
-          // Calculate which item should be visible
+          // Calculate which card should be visible
           const newIndex = Math.min(
-            Math.floor(progress * totalItems),
-            totalItems - 1
+            Math.floor(progress * totalCards),
+            totalCards - 1
           );
 
           // Only update if index changed
           if (newIndex !== currentVisibleIndex) {
             currentVisibleIndex = newIndex;
 
-            // Update all items based on current index
-            featureItems.forEach((item, index) => {
+            // Update all cards based on current index
+            cards.forEach((card, index) => {
               if (index === currentVisibleIndex) {
-                // Show current item
-                gsap.to(item, {
+                // Show current card
+                gsap.to(card, {
                   opacity: 1,
                   y: 0,
                   scale: 1,
@@ -232,8 +232,8 @@ const HomePageTest = () => {
                   ease: "power2.out",
                 });
               } else {
-                // Hide other items
-                gsap.to(item, {
+                // Hide other cards
+                gsap.to(card, {
                   opacity: 0,
                   y: index < currentVisibleIndex ? -50 : 50,
                   scale: 0.9,
@@ -747,7 +747,7 @@ const HomePageTest = () => {
                 return (
                   <div
                     key={index}
-                    className="feature-item absolute inset-0 flex items-center justify-center"
+                    className="feature-card-4 absolute inset-0 flex items-center justify-center"
                   >
                     <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
                       <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
