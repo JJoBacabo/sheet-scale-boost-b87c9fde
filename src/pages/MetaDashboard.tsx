@@ -86,7 +86,6 @@ const MetaDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<FacebookCampaign[]>([]);
-  const [filteredCampaigns, setFilteredCampaigns] = useState<FacebookCampaign[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isConnected, setIsConnected] = useState(false);
@@ -236,7 +235,6 @@ const MetaDashboard = () => {
         });
       } else {
         setCampaigns(data.campaigns || []);
-        setFilteredCampaigns(data.campaigns || []);
         console.log(`Loaded ${data.campaigns?.length || 0} campaigns`);
       }
     } catch (error: any) {
