@@ -87,9 +87,9 @@ ${formData.message}
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-[#050F2A] text-[#D4EBFF]">
       {/* Header */}
-      <header className="border-b border-white/10 bg-black/80 backdrop-blur-md">
+      <header className="border-b border-[#B8A0FF]/20 bg-[#050F2A]/80 backdrop-blur-md">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <Button3D
             variant="glass"

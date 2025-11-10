@@ -62,7 +62,7 @@ const Landing = () => {
     }
     setMobileMenuOpen(false);
   };
-  return <div className="min-h-screen bg-[#050F2A] text-[#F2F0FF] relative overflow-hidden">
+  return <div className="min-h-screen bg-[#050F2A] text-[#D4EBFF] relative overflow-hidden">
       {/* CSS para remover fundo preto da seção Features */}
       <style>{`
         #features-storytelling {
