@@ -167,7 +167,16 @@ const StackedScroll = () => {
             const imageRef = imageRefs.current[i];
 
             if (i === 0) {
-              // First panel: already visible, just ensure it stays
+              // First panel starts visible, but will dim when second panel enters
+              // Set it to dim when panel 1 enters (at position 1 in timeline)
+              if (panels.length > 1) {
+                tl.to(panel, {
+                  scale: 0.92,
+                  opacity: 0.6,
+                  duration: 0.6,
+                  ease: "power2.out"
+                }, 1);
+              }
               return;
             }
 
@@ -202,7 +211,7 @@ const StackedScroll = () => {
             }
 
             // Previous panel: scales down and dims when new one enters
-            if (i > 0 && panels[i - 1]) {
+            if (panels[i - 1]) {
               tl.to(panels[i - 1], {
                 scale: 0.92,
                 opacity: 0.6,
