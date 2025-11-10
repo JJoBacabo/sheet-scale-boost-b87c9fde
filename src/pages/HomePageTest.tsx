@@ -171,7 +171,7 @@ const HomePageTest = () => {
     return () => ctx.revert();
   }, [gsapLoaded]);
 
-  // Features Pinned Section animation
+  // Features Pinned Section animation (from ScrollDemo)
   useEffect(() => {
     if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
 
@@ -184,8 +184,8 @@ const HomePageTest = () => {
       if (!container || !featureItems || featureItems.length === 0) return;
 
       // Set initial state - all items hidden except first
-      gsap.set(featureItems, { opacity: 0, y: 50 });
-      gsap.set(featureItems[0], { opacity: 1, y: 0 });
+      gsap.set(featureItems, { opacity: 0, y: 50, scale: 0.9 });
+      gsap.set(featureItems[0], { opacity: 1, y: 0, scale: 1 });
 
       // Pin the container
       const pinTrigger = ScrollTrigger.create({
@@ -197,7 +197,7 @@ const HomePageTest = () => {
       });
       scrollTriggersRef.current.push(pinTrigger);
 
-      // Track current visible item
+      // Track current visible item to avoid unnecessary animations
       let currentVisibleIndex = 0;
 
       // Create scroll trigger that updates items based on progress
@@ -227,6 +227,7 @@ const HomePageTest = () => {
                 gsap.to(item, {
                   opacity: 1,
                   y: 0,
+                  scale: 1,
                   duration: 0.5,
                   ease: "power2.out",
                 });
@@ -235,6 +236,7 @@ const HomePageTest = () => {
                 gsap.to(item, {
                   opacity: 0,
                   y: index < currentVisibleIndex ? -50 : 50,
+                  scale: 0.9,
                   duration: 0.5,
                   ease: "power2.out",
                 });
@@ -716,90 +718,47 @@ const HomePageTest = () => {
         </div>
       </section>
 
-      {/* Features Section - Pinned with Alternating Layout */}
+      {/* Features Section - Pinned Section (from ScrollDemo) */}
       <section
         id="features"
         ref={featuresRef}
         className="py-20 px-4 sm:px-6 bg-[#0A0E27] relative"
       >
-        <div className="pinned-features-container min-h-screen flex items-center justify-center relative">
-          <div className="container mx-auto max-w-7xl relative z-10">
-            {/* Header - only shown once */}
-            <div className="text-center mb-16">
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
-                Features that make the difference
-              </h2>
-              <p className="text-xl text-[#F0F4F8]/80">
-                Everything you need to optimize your campaigns in one platform.
-              </p>
+        <div className="pinned-features-container min-h-screen flex items-center justify-center px-4 sm:px-6">
+          <div className="container mx-auto max-w-4xl text-center relative">
+            {/* Header */}
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-[#00D9FF]/20 border border-[#00D9FF]/30 rounded-full text-sm text-[#00D9FF] font-medium">
+                Features
+              </span>
             </div>
 
-            {/* Pinned content that changes - alternating layout */}
-            <div className="relative min-h-[600px] flex items-center justify-center">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6 bg-gradient-to-r from-[#00D9FF] to-[#A855F7] bg-clip-text text-transparent">
+              Features that make the difference
+            </h2>
+            <p className="text-xl text-[#F0F4F8]/80 mb-12">
+              Everything you need to optimize your campaigns in one platform
+            </p>
+
+            {/* Pinned content that changes */}
+            <div className="relative min-h-[500px] flex items-center justify-center">
               {features.map((feature, index) => {
                 const Icon = feature.icon;
-                const isEven = index % 2 === 0;
-
                 return (
                   <div
                     key={index}
                     className="feature-item absolute inset-0 flex items-center justify-center"
                   >
-                    <div className="container mx-auto max-w-7xl px-4">
-                      <div
-                        className={`grid md:grid-cols-2 gap-12 items-center ${
-                          isEven ? "" : "md:flex-row-reverse"
-                        }`}
-                      >
-                        {/* Text Content */}
-                        <div
-                          className={`space-y-6 ${
-                            isEven ? "md:text-left" : "md:text-right"
-                          } text-center ${isEven ? "md:order-1" : "md:order-2"}`}
-                        >
-                          <div className={`inline-flex items-center gap-3 mb-4 ${isEven ? "md:justify-start" : "md:justify-end"} justify-center`}>
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center">
-                              <Icon className="w-8 h-8 text-[#0A0E27]" />
-                            </div>
-                            <span className="text-sm font-semibold text-[#00D9FF]">
-                              {String(index + 1).padStart(2, "0")} / {String(features.length).padStart(2, "0")}
-                            </span>
-                          </div>
-                          <h3 className="text-4xl sm:text-5xl font-bold text-[#F0F4F8]">
-                            {feature.title}
-                          </h3>
-                          <p className={`text-lg text-[#F0F4F8]/70 leading-relaxed max-w-xl ${isEven ? "md:mx-0" : "md:ml-auto"} mx-auto`}>
-                            {feature.description}
-                          </p>
-                        </div>
-
-                        {/* Image/Visual Content */}
-                        <div
-                          className={`relative ${
-                            isEven ? "md:order-2" : "md:order-1"
-                          }`}
-                        >
-                          <div className="relative h-[400px] rounded-2xl overflow-hidden border border-[#00D9FF]/20 backdrop-blur-sm">
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/10 via-[#A855F7]/10 to-[#00D9FF]/10" />
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="relative w-full h-full flex items-center justify-center">
-                                {/* Animated gradient background */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#00D9FF]/20 via-[#A855F7]/20 to-[#00D9FF]/20 animate-pulse" />
-                                {/* Icon/Visual */}
-                                <div className="relative z-10">
-                                  <div className="w-32 h-32 rounded-3xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center shadow-2xl shadow-[#00D9FF]/30">
-                                    <Icon className="w-16 h-16 text-[#0A0E27]" />
-                                  </div>
-                                </div>
-                                {/* Decorative elements */}
-                                <div className="absolute top-4 right-4 w-20 h-20 rounded-full bg-[#00D9FF]/10 blur-2xl" />
-                                <div className="absolute bottom-4 left-4 w-20 h-20 rounded-full bg-[#A855F7]/10 blur-2xl" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <Card className="bg-[#0A0E27]/80 border border-[#00D9FF]/20 p-12 backdrop-blur-sm max-w-2xl mx-auto">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-r from-[#00D9FF] to-[#A855F7] flex items-center justify-center mb-6 mx-auto">
+                        <Icon className="w-10 h-10 text-[#0A0E27]" />
                       </div>
-                    </div>
+                      <h3 className="text-3xl font-bold mb-4 text-[#F0F4F8]">{feature.title}</h3>
+                      <p className="text-[#F0F4F8]/70 text-lg leading-relaxed">{feature.description}</p>
+                      <div className="mt-8 text-sm text-[#F0F4F8]/50">
+                        {index + 1} / {features.length}
+                      </div>
+                    </Card>
                   </div>
                 );
               })}
