@@ -204,127 +204,127 @@ const StackedScroll = () => {
                 ? (progress % segmentSize) / segmentSize 
                 : 0;
               
-              // Update all panels based on scroll progress
+              // Staircase effect: each panel stacks on top, creating step-like appearance
+              // Panels that have appeared stay visible behind, creating the staircase
               panels.forEach((panel, i) => {
                 const textSetter = textSetters[i];
                 const imageSetter = imageSetters[i];
                 const panelSetter = panelSetters[i];
                 const panelElement = panel as HTMLElement;
                 
-                if (i < activeIndex) {
-                  // Panels before active: already fully shown, keep dimmed behind
-                  panelElement.style.zIndex = `${totalPanels - i}`;
-                  panelSetter.yPercent(0);
-                  panelSetter.scale(0.92);
-                  panelSetter.opacity(0.6);
+                // Calculate how many steps behind this panel is from the active one
+                const stepsBehind = activeIndex - i;
+                
+                if (i <= activeIndex) {
+                  // This panel has already appeared or is currently appearing
+                  // Calculate its position in the staircase
                   
-                  if (textSetter) {
-                    textSetter.y(0);
-                    textSetter.opacity(0.6);
-                  }
-                  
-                  if (imageSetter) {
-                    imageSetter.y(0);
-                    imageSetter.scale(0.92);
-                    imageSetter.opacity(0.6);
-                  }
-                } else if (i === activeIndex) {
-                  // Active panel: animate based on segment progress
-                  panelElement.style.zIndex = `${totalPanels + 20}`;
-                  
-                  if (i === 0) {
-                    // First panel: always fully visible when active (stays until second panel starts)
-                    panelSetter.yPercent(0);
-                    panelSetter.scale(1);
-                    panelSetter.opacity(1);
+                  if (i === activeIndex) {
+                    // Currently active panel: coming to front
+                    panelElement.style.zIndex = `${totalPanels + 50 + i}`;
                     
-                    if (textSetter) {
-                      textSetter.y(0);
-                      textSetter.opacity(1);
-                    }
-                    
-                    if (imageSetter) {
-                      imageSetter.y(0);
-                      imageSetter.scale(1);
-                      imageSetter.opacity(1);
+                    if (i === 0) {
+                      // First panel: fully visible at center
+                      panelSetter.yPercent(0);
+                      panelSetter.scale(1);
+                      panelSetter.opacity(1);
+                      
+                      if (textSetter) {
+                        textSetter.y(0);
+                        textSetter.opacity(1);
+                      }
+                      
+                      if (imageSetter) {
+                        imageSetter.y(0);
+                        imageSetter.scale(1);
+                        imageSetter.opacity(1);
+                      }
+                    } else {
+                      // Other panels: animate entrance
+                      const panelProgress = Math.min(segmentProgress * 1.3, 1);
+                      
+                      // Panel moves up and scales up as it enters
+                      panelSetter.yPercent(30 * (1 - panelProgress));
+                      panelSetter.scale(0.9 + (0.1 * panelProgress));
+                      panelSetter.opacity(panelProgress);
+                      
+                      // Text and image enter with parallax
+                      if (textSetter) {
+                        const textStart = 0.2;
+                        const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
+                        textSetter.y(80 * (1 - textProgress));
+                        textSetter.opacity(textProgress);
+                      }
+                      
+                      if (imageSetter) {
+                        const imageStart = 0.25;
+                        const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
+                        imageSetter.y(40 * (1 - imageProgress));
+                        imageSetter.scale(0.85 + (0.15 * imageProgress));
+                        imageSetter.opacity(imageProgress);
+                      }
                     }
                   } else {
-                    // Other panels: animate entrance based on segment progress
-                    // Panel enters: yPercent 20 → 0, scale 0.96 → 1, opacity 0 → 1
-                    const panelProgress = Math.min(segmentProgress * 1.2, 1);
-                    panelSetter.yPercent(20 * (1 - panelProgress));
-                    panelSetter.scale(0.96 + (0.04 * panelProgress));
-                    panelSetter.opacity(panelProgress);
+                    // Previous panels: stay visible in staircase formation
+                    // Each step goes down and gets smaller/transparent
+                    const stepOffset = stepsBehind * 40; // Vertical offset for each step (px)
+                    const scaleReduction = stepsBehind * 0.08; // Scale reduction per step
+                    const opacityReduction = stepsBehind * 0.25; // Opacity reduction per step
                     
-                    // Text animation (enters with slight delay for parallax)
+                    // Position in staircase: offset down, scaled down, dimmed
+                    panelElement.style.zIndex = `${totalPanels + 40 - stepsBehind}`;
+                    
+                    // Panel position: offset down to create stair effect
+                    panelSetter.yPercent(stepOffset * 0.5); // Convert px offset to percentage-like
+                    panelSetter.scale(Math.max(0.75, 1 - scaleReduction));
+                    panelSetter.opacity(Math.max(0.4, 1 - opacityReduction));
+                    
+                    // Content also moves down
                     if (textSetter) {
-                      const textStart = 0.15;
-                      const textProgress = Math.max(0, Math.min((segmentProgress - textStart) / (1 - textStart), 1));
-                      textSetter.y(60 * (1 - textProgress));
-                      textSetter.opacity(textProgress);
+                      textSetter.y(stepOffset * 0.3);
+                      textSetter.opacity(Math.max(0.4, 1 - opacityReduction));
                     }
                     
-                    // Image animation (parallax effect - enters slightly after text)
                     if (imageSetter) {
-                      const imageStart = 0.2;
-                      const imageProgress = Math.max(0, Math.min((segmentProgress - imageStart) / (1 - imageStart), 1));
-                      imageSetter.y(30 * (1 - imageProgress));
-                      imageSetter.scale(0.95 + (0.05 * imageProgress));
-                      imageSetter.opacity(imageProgress);
-                    }
-                  }
-                  
-                  // Dim previous panel when this one becomes active (after 40% of segment)
-                  if (i > 0 && segmentProgress > 0.4) {
-                    const prevPanelSetter = panelSetters[i - 1];
-                    const prevTextSetter = textSetters[i - 1];
-                    const prevImageSetter = imageSetters[i - 1];
-                    const dimProgress = Math.min((segmentProgress - 0.4) / 0.6, 1);
-                    
-                    prevPanelSetter.scale(1 - (0.08 * dimProgress));
-                    prevPanelSetter.opacity(1 - (0.4 * dimProgress));
-                    
-                    if (prevTextSetter) {
-                      prevTextSetter.opacity(1 - (0.4 * dimProgress));
+                      imageSetter.y(stepOffset * 0.2);
+                      imageSetter.scale(Math.max(0.75, 1 - scaleReduction));
+                      imageSetter.opacity(Math.max(0.4, 1 - opacityReduction));
                     }
                     
-                    if (prevImageSetter) {
-                      prevImageSetter.scale(1 - (0.08 * dimProgress));
-                      prevImageSetter.opacity(1 - (0.4 * dimProgress));
-                    }
-                  } else if (i > 0 && segmentProgress <= 0.4) {
-                    // Keep previous panel at full visibility until new one is 40% in
-                    const prevPanelSetter = panelSetters[i - 1];
-                    const prevTextSetter = textSetters[i - 1];
-                    const prevImageSetter = imageSetters[i - 1];
-                    
-                    prevPanelSetter.scale(1);
-                    prevPanelSetter.opacity(1);
-                    
-                    if (prevTextSetter) {
-                      prevTextSetter.opacity(1);
-                    }
-                    
-                    if (prevImageSetter) {
-                      prevImageSetter.scale(1);
-                      prevImageSetter.opacity(1);
+                    // If a new panel is entering, dim this one more
+                    if (i === activeIndex - 1 && segmentProgress > 0.3) {
+                      const dimProgress = Math.min((segmentProgress - 0.3) / 0.7, 1);
+                      const extraScaleReduction = 0.05 * dimProgress;
+                      const extraOpacityReduction = 0.15 * dimProgress;
+                      
+                      panelSetter.scale(Math.max(0.7, 1 - scaleReduction - extraScaleReduction));
+                      panelSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                      
+                      if (textSetter) {
+                        textSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                      }
+                      
+                      if (imageSetter) {
+                        imageSetter.scale(Math.max(0.7, 1 - scaleReduction - extraScaleReduction));
+                        imageSetter.opacity(Math.max(0.3, 1 - opacityReduction - extraOpacityReduction));
+                      }
                     }
                   }
                 } else {
-                  // Panels after active: still hidden, waiting
+                  // Panels not yet reached: still hidden below
                   panelElement.style.zIndex = `${totalPanels - i}`;
-                  panelSetter.yPercent(20);
-                  panelSetter.scale(0.96);
+                  panelSetter.yPercent(50);
+                  panelSetter.scale(0.8);
                   panelSetter.opacity(0);
                   
                   if (textSetter) {
-                    textSetter.y(60);
+                    textSetter.y(100);
                     textSetter.opacity(0);
                   }
                   
                   if (imageSetter) {
-                    imageSetter.y(30);
-                    imageSetter.scale(0.95);
+                    imageSetter.y(50);
+                    imageSetter.scale(0.8);
                     imageSetter.opacity(0);
                   }
                 }
