@@ -16,7 +16,7 @@ interface DashboardStats {
   loading: boolean;
 }
 
-export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; refreshKey?: number }) => {
+export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; storeId?: string; refreshKey?: number }) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     totalProducts: 0,
@@ -64,6 +64,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         if (filters?.productId && filters.productId !== 'all') {
           productsQuery = productsQuery.eq('id', filters.productId);
         }
+        if (filters?.storeId && filters.storeId !== 'all') {
+          productsQuery = productsQuery.eq('integration_id', filters.storeId);
+        }
 
         const { data: products } = await productsQuery;
 
@@ -90,6 +93,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           const dateTo = new Date(filters.dateTo);
           dateTo.setHours(23, 59, 59, 999);
           dateToStr = dateTo.toISOString().split('T')[0];
+          // Use lte to include the end date (works correctly even when dateFrom === dateTo)
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
@@ -104,6 +108,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         if (filters?.campaignId && filters.campaignId !== 'all') {
           dailyRoasQuery = dailyRoasQuery.eq('campaign_id', filters.campaignId);
         }
+        
+        // Note: daily_roas doesn't have integration_id, so we filter products separately
+        // and use those product prices/costs in calculations
 
         const { data: dailyRoas } = await dailyRoasQuery;
 
@@ -145,12 +152,23 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           return sum + cog;
         }, 0);
         
-        // Fallback to campaigns if no daily_roas data
-        const totalSpentFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-        const totalRevenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+        // IMPORTANT: Se há filtros de data, só usar daily_roas (não usar campaigns como fallback)
+        // porque campaigns não tem informação de data e representa totais acumulados
+        // Se não há filtros de data, usar campaigns como fallback
+        let finalTotalSpent = 0;
+        let finalTotalRevenue = 0;
         
-        const finalTotalSpent = filteredDailyRoas.length > 0 ? totalSpent : totalSpentFromCampaigns;
-        const finalTotalRevenue = filteredDailyRoas.length > 0 ? totalRevenue : totalRevenueFromCampaigns;
+        if (filteredDailyRoas.length > 0) {
+          // Usar dados de daily_roas (mais preciso e com filtro de data)
+          finalTotalSpent = totalSpent;
+          finalTotalRevenue = totalRevenue;
+        } else if (!dateFromStr && !dateToStr) {
+          // Só usar campaigns como fallback se NÃO houver filtros de data
+          // porque campaigns não tem informação de data para filtrar
+          finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
+          finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+        }
+        // Se há filtros de data mas não há daily_roas, finalTotalSpent e finalTotalRevenue permanecem 0
         
         const totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
         const totalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
@@ -159,8 +177,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
         
         // Calculate supplier cost - use daily_roas if available
-        // IMPORTANT: Se há filtros de data mas não há daily_roas, não podemos calcular supplier cost
-        // porque products não tem informação de data. Nesse caso, retornamos 0 para evitar valores incorretos.
         let finalTotalSupplierCost = 0;
         
         if (filteredDailyRoas.length > 0) {
@@ -174,8 +190,36 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
             const quantitySold = Number(p.quantity_sold) || 0;
             return sum + (costPrice * quantitySold);
           }, 0) || 0;
+        } else if (finalTotalRevenue > 0 && campaigns && campaigns.length > 0) {
+          // Se há filtros de data mas não há daily_roas, tentar estimar supplier cost
+          // baseado na proporção média de supplier cost vs revenue das campanhas
+          // Calcular proporção média de supplier cost das campanhas que têm dados
+          const campaignsWithData = campaigns.filter(c => {
+            const revenue = Number(c.total_revenue) || 0;
+            const spent = Number(c.total_spent) || 0;
+            return revenue > 0;
+          });
+          
+          if (campaignsWithData.length > 0) {
+            // Estimar supplier cost como uma proporção da receita
+            // Assumindo que supplier cost é aproximadamente 30-40% da receita (margem típica)
+            // Mas podemos melhorar isso calculando a partir dos produtos relacionados
+            // Por enquanto, usar uma estimativa conservadora baseada na receita
+            const avgMargin = campaignsWithData.reduce((sum, c) => {
+              const revenue = Number(c.total_revenue) || 0;
+              const spent = Number(c.total_spent) || 0;
+              // Margem = (receita - gasto) / receita
+              const margin = revenue > 0 ? (revenue - spent) / revenue : 0;
+              return sum + margin;
+            }, 0) / campaignsWithData.length;
+            
+            // Supplier cost estimado = receita * (1 - margem média - margem de lucro estimada)
+            // Assumindo que supplier cost é ~30-40% da receita quando há margem positiva
+            const estimatedSupplierCostRatio = avgMargin > 0 ? Math.max(0.3, 1 - avgMargin - 0.1) : 0.35;
+            finalTotalSupplierCost = finalTotalRevenue * estimatedSupplierCostRatio;
+          }
         }
-        // Se há filtros de data mas não há daily_roas, finalTotalSupplierCost permanece 0
+        // Se não há dados suficientes, finalTotalSupplierCost permanece 0
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
@@ -217,6 +261,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
     filters?.campaignId, 
     filters?.platform, 
     filters?.productId,
+    filters?.storeId,
     filters?.refreshKey // Incluir refreshKey para forçar atualização
   ]);
 

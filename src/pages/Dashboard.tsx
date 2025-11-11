@@ -13,6 +13,7 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { CryptoChart } from "@/components/dashboard/CryptoChart";
 import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/TimeframeSelector";
+import { StoreSelector } from "@/components/StoreSelector";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
 import { Target, RefreshCw, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
@@ -32,6 +33,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [syncing, setSyncing] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
+  const [selectedStore, setSelectedStore] = useState<string>("all");
   const [refreshKey, setRefreshKey] = useState(0); // Key para forçar refresh dos stats
 
   useEffect(() => {
@@ -56,8 +58,12 @@ const Dashboard = () => {
   const stats = useDashboardStats(user?.id, timeframe ? {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
+    storeId: selectedStore !== "all" ? selectedStore : undefined,
     refreshKey,
-  } : { refreshKey });
+  } : { 
+    storeId: selectedStore !== "all" ? selectedStore : undefined,
+    refreshKey 
+  });
   const statsLoading = stats.loading;
 
   // Get recent campaigns
@@ -343,8 +349,14 @@ const Dashboard = () => {
       )}
 
       <div className="space-y-4 sm:space-y-5 md:space-y-6">
-        {/* Timeframe Selector */}
-        <div className="flex justify-end">
+        {/* Filters: Timeframe and Store Selector */}
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
+          <div className="w-full sm:w-auto">
+            <StoreSelector
+              value={selectedStore}
+              onChange={setSelectedStore}
+            />
+          </div>
           <div className="w-full sm:w-auto">
             <TimeframeSelector
               value={timeframe}
