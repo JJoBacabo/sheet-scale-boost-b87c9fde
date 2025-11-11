@@ -1366,8 +1366,12 @@ const MetaDashboard = () => {
                   </div>
                 )}
 
-                <Button className="btn-gradient" onClick={() => fetchCampaigns()}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
+                <Button 
+                  className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] hover:opacity-90 text-white font-semibold shadow-lg shadow-[#7BBCFE]/30 transition-all duration-300 hover:scale-105" 
+                  onClick={() => fetchCampaigns()}
+                  disabled={loading}
+                >
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                   {t("metaDashboard.refresh")}
                 </Button>
               </div>
