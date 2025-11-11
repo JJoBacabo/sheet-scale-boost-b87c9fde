@@ -11,58 +11,61 @@ const corsHeaders = {
 async function fetchWithRetry(
   url: string,
   options: { maxRetries?: number; retryDelay?: number } = {}
-): Promise<Response> {
-  const { maxRetries = 3, retryDelay = 1000 } = options;
+): Promise<{ data?: any; error?: any; isRateLimit?: boolean }> {
+  const { maxRetries = 5, retryDelay = 2000 } = options;
   let lastError: any;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      // Add initial delay to avoid hitting rate limits immediately
+      if (attempt > 0) {
+        const delay = retryDelay * Math.pow(2, attempt - 1);
+        console.log(`⏳ Waiting ${delay}ms before retry ${attempt}/${maxRetries}...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+
       const response = await fetch(url);
       const data = await response.json();
 
       // Check for rate limit error (80004)
       if (data.error && data.error.code === 80004) {
         if (attempt < maxRetries) {
-          // Exponential backoff: 2s, 4s, 8s, etc.
+          // Exponential backoff with longer delays: 4s, 8s, 16s, 32s, 64s
           const delay = retryDelay * Math.pow(2, attempt);
           console.log(`⚠️ Rate limit hit (80004). Waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         } else {
-          // Max retries reached
-          return new Response(JSON.stringify({
-            error: 'Facebook API rate limit exceeded',
-            message: data.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
-            errorCode: data.error.code,
-            retryAfter: 300, // Suggest waiting 5 minutes
-          }), {
-            status: 429,
-            headers: { 'Content-Type': 'application/json' },
-          });
+          // Max retries reached - return rate limit error
+          console.error(`❌ Rate limit exceeded after ${maxRetries} retries`);
+          return {
+            error: {
+              code: 80004,
+              message: data.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+              type: 'OAuthException',
+            },
+            isRateLimit: true,
+          };
         }
       }
 
       // Other errors - return as is
       if (data.error) {
-        return new Response(JSON.stringify(data), {
-          status: response.status,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return { error: data.error, data: null };
       }
 
-      // Success - return the data wrapped in a Response-like object
-      return {
-        json: async () => data,
-        status: response.status,
-        ok: response.ok,
-      } as any;
+      // Success - return the data
+      return { data, error: null };
 
     } catch (error) {
       lastError = error;
       if (attempt < maxRetries) {
         const delay = retryDelay * Math.pow(2, attempt);
-        console.log(`⚠️ Request failed. Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.log(`⚠️ Request failed: ${error instanceof Error ? error.message : 'Unknown error'}. Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        // Continue to retry
+      } else {
+        console.error(`❌ Failed after ${maxRetries} retries:`, error);
+        throw lastError || new Error('Failed to fetch after retries');
       }
     }
   }
@@ -139,30 +142,30 @@ serve(async (req) => {
         );
         
         // Check if it's a rate limit response
-        if (meResponse.status === 429) {
-          const rateLimitData = await meResponse.json();
+        if (meResponse.isRateLimit || (meResponse.error && meResponse.error.code === 80004)) {
           return new Response(JSON.stringify({ 
-            error: rateLimitData.error || 'Facebook API rate limit exceeded',
-            message: rateLimitData.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
-            errorCode: rateLimitData.errorCode,
-            retryAfter: rateLimitData.retryAfter,
+            error: 'Facebook API rate limit exceeded',
+            message: meResponse.error?.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+            errorCode: 80004,
+            retryAfter: 300, // 5 minutes
           }), {
             status: 429,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
         
-        const meData = await meResponse.json();
-        if (meData.error) {
+        if (meResponse.error) {
           return new Response(JSON.stringify({ 
-            error: `Facebook API error: ${meData.error.message || meData.error.error_user_msg || 'Unknown error'}`,
-            errorCode: meData.error.code,
+            error: `Facebook API error: ${meResponse.error.message || meResponse.error.error_user_msg || 'Unknown error'}`,
+            errorCode: meResponse.error.code,
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        if (!meData.data || meData.data.length === 0) {
+        
+        const meData = meResponse.data;
+        if (!meData || !meData.data || meData.data.length === 0) {
           return new Response(JSON.stringify({ error: 'No ad account found. Please connect an ad account in your Facebook Ads account.' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -200,13 +203,12 @@ serve(async (req) => {
       const campaignsResponse = await fetchWithRetry(nextUrl);
       
       // Check if it's a rate limit response
-      if (campaignsResponse.status === 429) {
-        const rateLimitData = await campaignsResponse.json();
+      if (campaignsResponse.isRateLimit || (campaignsResponse.error && campaignsResponse.error.code === 80004)) {
         return new Response(JSON.stringify({ 
-          error: rateLimitData.error || 'Facebook API rate limit exceeded',
-          message: rateLimitData.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
-          errorCode: rateLimitData.errorCode,
-          retryAfter: rateLimitData.retryAfter,
+          error: 'Facebook API rate limit exceeded',
+          message: campaignsResponse.error?.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+          errorCode: 80004,
+          retryAfter: 300, // 5 minutes
           campaignsProcessed: allCampaigns.length,
         }), {
           status: 429,
@@ -214,26 +216,22 @@ serve(async (req) => {
         });
       }
       
-      const campaignsData = await campaignsResponse.json();
-
-      if (campaignsData.error) {
-        // Check for rate limit error code
-        if (campaignsData.error.code === 80004) {
-          return new Response(JSON.stringify({ 
-            error: 'Facebook API rate limit exceeded',
-            message: campaignsData.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
-            errorCode: campaignsData.error.code,
-            retryAfter: 300,
-            campaignsProcessed: allCampaigns.length,
-          }), {
-            status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
+      if (campaignsResponse.error) {
         return new Response(JSON.stringify({ 
-          error: campaignsData.error.message || 'Facebook API error',
-          errorCode: campaignsData.error.code,
+          error: `Facebook API error: ${campaignsResponse.error.message || 'Unknown error'}`,
+          errorCode: campaignsResponse.error.code,
+          campaignsProcessed: allCampaigns.length,
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const campaignsData = campaignsResponse.data;
+      if (!campaignsData) {
+        return new Response(JSON.stringify({ 
+          error: 'No data returned from Facebook API',
+          campaignsProcessed: allCampaigns.length,
         }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -246,9 +244,9 @@ serve(async (req) => {
 
       nextUrl = campaignsData.paging?.next || null;
       
-      // Add delay between pages to avoid rate limiting (200ms delay)
+      // Add longer delay between pages to avoid rate limiting (500ms delay)
       if (nextUrl) {
-        await delay(200);
+        await delay(500);
       }
     }
 
