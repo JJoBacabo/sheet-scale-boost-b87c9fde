@@ -27,8 +27,15 @@ async function fetchWithRetry(
       const response = await fetch(url);
       const data = await response.json();
 
-      // Check for rate limit error (80004)
-      if (data.error && data.error.code === 80004) {
+      // Check for rate limit error (80004) - handle different error formats
+      const errorCode = data.error?.code || data.error?.error_code || 
+                       (typeof data.error === 'string' && data.error.includes('80004') ? 80004 : null);
+      const errorMessage = data.error?.message || data.error?.error_user_msg || 
+                          (typeof data.error === 'string' ? data.error : null) ||
+                          JSON.stringify(data.error);
+      
+      // Check if it's a rate limit error (80004)
+      if (errorCode === 80004 || (errorMessage && errorMessage.includes('80004'))) {
         if (attempt < maxRetries) {
           // Exponential backoff with longer delays: 4s, 8s, 16s, 32s, 64s
           const delay = retryDelay * Math.pow(2, attempt);
@@ -41,7 +48,7 @@ async function fetchWithRetry(
           return {
             error: {
               code: 80004,
-              message: data.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+              message: errorMessage || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
               type: 'OAuthException',
             },
             isRateLimit: true,
@@ -155,9 +162,25 @@ serve(async (req) => {
         }
         
         if (meResponse.error) {
+          // Check if it's a rate limit error that wasn't caught earlier
+          const errorCode = meResponse.error.code || meResponse.error.error_code;
+          const errorMessage = meResponse.error.message || meResponse.error.error_user_msg || JSON.stringify(meResponse.error);
+          
+          if (errorCode === 80004 || errorMessage.includes('80004') || errorMessage.includes('too many calls')) {
+            return new Response(JSON.stringify({ 
+              error: 'Facebook API rate limit exceeded',
+              message: errorMessage || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+              errorCode: 80004,
+              retryAfter: 300,
+            }), {
+              status: 429,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+          
           return new Response(JSON.stringify({ 
-            error: `Facebook API error: ${meResponse.error.message || meResponse.error.error_user_msg || 'Unknown error'}`,
-            errorCode: meResponse.error.code,
+            error: `Facebook API error: ${errorMessage}`,
+            errorCode: errorCode,
           }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -217,9 +240,26 @@ serve(async (req) => {
       }
       
       if (campaignsResponse.error) {
+        // Check if it's a rate limit error that wasn't caught earlier
+        const errorCode = campaignsResponse.error.code || campaignsResponse.error.error_code;
+        const errorMessage = campaignsResponse.error.message || campaignsResponse.error.error_user_msg || JSON.stringify(campaignsResponse.error);
+        
+        if (errorCode === 80004 || errorMessage.includes('80004') || errorMessage.includes('too many calls')) {
+          return new Response(JSON.stringify({ 
+            error: 'Facebook API rate limit exceeded',
+            message: errorMessage || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+            errorCode: 80004,
+            retryAfter: 300,
+            campaignsProcessed: allCampaigns.length,
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
         return new Response(JSON.stringify({ 
-          error: `Facebook API error: ${campaignsResponse.error.message || 'Unknown error'}`,
-          errorCode: campaignsResponse.error.code,
+          error: `Facebook API error: ${errorMessage}`,
+          errorCode: errorCode,
           campaignsProcessed: allCampaigns.length,
         }), {
           status: 400,
@@ -453,7 +493,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    
+    // Check if it's a rate limit error
+    if (errorMessage.includes('80004') || errorMessage.includes('rate limit') || errorMessage.includes('too many calls')) {
+      return new Response(JSON.stringify({ 
+        error: 'Facebook API rate limit exceeded',
+        message: 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+        errorCode: 80004,
+        retryAfter: 300,
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
