@@ -495,14 +495,23 @@ const MetaDashboard = () => {
 
       if (error) {
         console.error("Edge Function error:", error);
+        // Check if it's a rate limit error (429)
+        if (error.message?.includes("429") || error.message?.includes("rate limit")) {
+          toast({
+            title: "⏱️ " + t("metaDashboard.rateLimitReached"),
+            description: "Facebook API rate limit reached. Please wait 5 minutes before trying again.",
+            variant: "destructive",
+            duration: 7000,
+          });
+          setCampaigns([]);
+        }
         // Check if it's a 500 error or network error
-        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
+        else if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
           toast({
             title: t("metaDashboard.errorLoadingCampaigns"),
             description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
             variant: "destructive",
           });
-          // Set empty campaigns array to show empty state
           setCampaigns([]);
         } else {
           throw error;
@@ -512,11 +521,31 @@ const MetaDashboard = () => {
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingCampaigns"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Check if it's a rate limit error from the response
+        if (data.code === 'RATE_LIMIT_EXCEEDED') {
+          toast({
+            title: "⏱️ Facebook API Rate Limit",
+            description: "Too many requests. Please wait 5 minutes before trying again.",
+            variant: "destructive",
+            duration: 7000,
+          });
+        } 
+        // Check if it's a connection/permission error
+        else if (data.error.includes('No ad account found') || data.error.includes('permissions')) {
+          toast({
+            title: "🔗 " + t("metaDashboard.connectionError"),
+            description: data.error + (data.suggestion ? "\n" + data.suggestion : ""),
+            variant: "destructive",
+            duration: 7000,
+          });
+        }
+        else {
+          toast({
+            title: t("metaDashboard.errorLoadingCampaigns"),
+            description: data.error,
+            variant: "destructive",
+          });
+        }
         setCampaigns([]);
       } else {
         setCampaigns(data?.campaigns || []);

@@ -122,6 +122,16 @@ serve(async (req) => {
 
     if (meData.error) {
       console.error('Facebook API Error:', meData.error);
+      // Check for rate limiting error
+      if (meData.error.code === 80004 || meData.error.error_subcode === 2446079) {
+        return new Response(JSON.stringify({ 
+          error: 'Facebook API rate limit reached. Please wait a few minutes before trying again.',
+          code: 'RATE_LIMIT_EXCEEDED'
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       return new Response(JSON.stringify({ error: meData.error.message }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -130,7 +140,10 @@ serve(async (req) => {
 
     const adAccountId = meData.data[0]?.id;
     if (!adAccountId) {
-      return new Response(JSON.stringify({ error: 'No ad account found' }), {
+      return new Response(JSON.stringify({ 
+        error: 'No ad account found. Please check your Facebook Ads connection and permissions.',
+        suggestion: 'Try reconnecting your Facebook Ads account in the Integrations page.'
+      }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -180,6 +193,17 @@ serve(async (req) => {
 
         if (campaignsData.error) {
           console.error('Facebook API Error:', campaignsData.error);
+          // Check for rate limiting error
+          if (campaignsData.error.code === 80004 || campaignsData.error.error_subcode === 2446079) {
+            return new Response(JSON.stringify({ 
+              error: 'Facebook API rate limit reached. Please wait a few minutes before trying again.',
+              code: 'RATE_LIMIT_EXCEEDED',
+              retryAfter: 300 // Suggest 5 minutes
+            }), {
+              status: 429,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' },
+            });
+          }
           return new Response(JSON.stringify({ error: campaignsData.error.message }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -200,8 +224,8 @@ serve(async (req) => {
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
       // Fetch images for campaigns in batches to avoid rate limiting
-      // Process in batches of 10 to avoid timeout and rate limits
-      const BATCH_SIZE = 10;
+      // Process in batches of 5 to avoid timeout and rate limits (reduced from 10)
+      const BATCH_SIZE = 5;
       const imageMap = new Map();
       
       for (let i = 0; i < allCampaigns.length; i += BATCH_SIZE) {
@@ -218,6 +242,11 @@ serve(async (req) => {
             
             if (adsData.error) {
               console.warn(`API error for campaign ${campaign.id}:`, adsData.error.message);
+              // If rate limit, skip this campaign's images
+              if (adsData.error.code === 80004 || adsData.error.error_subcode === 2446079) {
+                console.warn(`Rate limit hit for campaign ${campaign.id}, skipping images`);
+                return { campaignId: campaign.id, image_url: null, thumbnail_url: null };
+              }
             }
             
             if (adsData.data && adsData.data.length > 0) {
@@ -299,9 +328,9 @@ serve(async (req) => {
           }
         });
         
-        // Small delay between batches to avoid rate limiting
+        // Longer delay between batches to avoid rate limiting (increased from 200ms to 1000ms)
         if (i + BATCH_SIZE < allCampaigns.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 
