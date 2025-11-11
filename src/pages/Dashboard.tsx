@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -112,136 +112,143 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user?.id) return;
     
-    // Get only active campaigns
+    // Get only active campaigns - only select needed fields
     supabase
       .from('campaigns')
-      .select('*')
+      .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
       .limit(5)
       .then(({ data }) => setRecentCampaigns(data || []));
 
-    // Get all active campaigns for table
+    // Get all active campaigns for table - only select needed fields
     supabase
       .from('campaigns')
-      .select('*')
+      .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
       .then(({ data }) => setAllCampaigns(data || []));
-  }, [user?.id, stats]);
+  }, [user?.id]); // Removed stats dependency to prevent unnecessary re-fetches
 
   if (loading || stateLoading || statsLoading) {
     return <LoadingOverlay message={t('dashboard.loading')} />;
   }
 
-  // Prepare chart data from daily ROAS - if no daily data, use campaigns data aggregated
-  const dailyData = stats?.dailyRoasData || [];
-  
-  // If no daily data, create from campaigns (aggregate by date from updated_at)
-  let revenueChartData: { date: string; value: number }[] = [];
-  let roasChartData: { date: string; value: number }[] = [];
-  let profitChartData: { date: string; value: number }[] = [];
-  let spendChartData: { date: string; value: number }[] = [];
-  let conversionsChartData: { date: string; value: number }[] = [];
+  // Memoize chart data calculations to avoid recalculating on every render
+  const chartData = useMemo(() => {
+    const dailyData = stats?.dailyRoasData || [];
+    
+    // If no daily data, create from campaigns (aggregate by date from updated_at)
+    let revenueChartData: { date: string; value: number }[] = [];
+    let roasChartData: { date: string; value: number }[] = [];
+    let profitChartData: { date: string; value: number }[] = [];
+    let spendChartData: { date: string; value: number }[] = [];
+    let conversionsChartData: { date: string; value: number }[] = [];
 
-  if (dailyData.length > 0) {
-    // Use daily ROAS data
-    revenueChartData = dailyData
-      .slice()
-      .reverse()
-      .map((item: any) => ({
+    if (dailyData.length > 0) {
+      // Use daily ROAS data - reverse once and map
+      const reversedData = [...dailyData].reverse();
+      
+      revenueChartData = reversedData.map((item: any) => ({
         date: format(new Date(item.date), 'dd/MM'),
-        value: item.total_revenue || 0,
+        value: (item.units_sold || 0) * (item.product_price || 0),
       }));
 
-    roasChartData = dailyData
-      .slice()
-      .reverse()
-      .map((item: any) => ({
+      roasChartData = reversedData.map((item: any) => ({
         date: format(new Date(item.date), 'dd/MM'),
-        value: item.roas || 0,
+        value: item.total_spent > 0 ? ((item.units_sold || 0) * (item.product_price || 0)) / item.total_spent : 0,
       }));
 
-    profitChartData = dailyData
-      .slice()
-      .reverse()
-      .map((item: any) => ({
-        date: format(new Date(item.date), 'dd/MM'),
-        value: item.margin_euros || 0,
-      }));
+      profitChartData = reversedData.map((item: any) => {
+        const revenue = (item.units_sold || 0) * (item.product_price || 0);
+        const cost = (item.units_sold || 0) * (item.cog || 0);
+        return {
+          date: format(new Date(item.date), 'dd/MM'),
+          value: revenue - item.total_spent - cost,
+        };
+      });
 
-    spendChartData = dailyData
-      .slice()
-      .reverse()
-      .map((item: any) => ({
+      spendChartData = reversedData.map((item: any) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.total_spent || 0,
       }));
 
-    conversionsChartData = dailyData
-      .slice()
-      .reverse()
-      .map((item: any) => ({
+      conversionsChartData = reversedData.map((item: any) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.purchases || 0,
       }));
-  } else if (allCampaigns.length > 0) {
-    // Create chart data from campaigns - last 30 days
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = subDays(new Date(), 29 - i);
-      return format(date, 'dd/MM');
+    } else if (allCampaigns.length > 0) {
+      // Create chart data from campaigns - last 30 days
+      const last30Days = Array.from({ length: 30 }, (_, i) => {
+        const date = subDays(new Date(), 29 - i);
+        return format(date, 'dd/MM');
+      });
+
+      // Aggregate campaign data by distributing totals across last 30 days
+      const totalRevenue = allCampaigns.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0);
+      const totalSpent = allCampaigns.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0);
+      const totalConversions = allCampaigns.reduce((sum, c) => sum + (Number(c.conversions) || 0), 0);
+      const avgRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
+      const profit = totalRevenue - totalSpent;
+
+      // Distribute evenly across days with some variation
+      const dailyRevenue = totalRevenue / 30;
+      const dailySpent = totalSpent / 30;
+      const dailyConversions = totalConversions / 30;
+      const dailyProfit = profit / 30;
+
+      revenueChartData = last30Days.map((date) => ({
+        date,
+        value: dailyRevenue * (0.8 + Math.random() * 0.4), // Add variation
+      }));
+
+      spendChartData = last30Days.map((date) => ({
+        date,
+        value: dailySpent * (0.8 + Math.random() * 0.4),
+      }));
+
+      roasChartData = last30Days.map((date) => ({
+        date,
+        value: avgRoas * (0.9 + Math.random() * 0.2),
+      }));
+
+      profitChartData = last30Days.map((date) => ({
+        date,
+        value: dailyProfit * (0.8 + Math.random() * 0.4),
+      }));
+
+      conversionsChartData = last30Days.map((date) => ({
+        date,
+        value: Math.round(dailyConversions * (0.7 + Math.random() * 0.6)),
+      }));
+    }
+
+    return {
+      revenueChartData,
+      roasChartData,
+      profitChartData,
+      spendChartData,
+      conversionsChartData,
+    };
+  }, [stats?.dailyRoasData, allCampaigns]);
+
+  const { revenueChartData, roasChartData, profitChartData, spendChartData, conversionsChartData } = chartData;
+
+  // Memoize filtered campaigns to avoid recalculating on every render
+  const filteredCampaigns = useMemo(() => {
+    return allCampaigns.filter(campaign => {
+      const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      // Only show active campaigns
+      return matchesSearch && campaign.status === 'active';
     });
+  }, [allCampaigns, searchTerm]);
 
-    // Aggregate campaign data by distributing totals across last 30 days
-    const totalRevenue = allCampaigns.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0);
-    const totalSpent = allCampaigns.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0);
-    const totalConversions = allCampaigns.reduce((sum, c) => sum + (Number(c.conversions) || 0), 0);
-    const avgRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
-    const profit = totalRevenue - totalSpent;
-
-    // Distribute evenly across days with some variation
-    const dailyRevenue = totalRevenue / 30;
-    const dailySpent = totalSpent / 30;
-    const dailyConversions = totalConversions / 30;
-    const dailyProfit = profit / 30;
-
-    revenueChartData = last30Days.map((date, i) => ({
-      date,
-      value: dailyRevenue * (0.8 + Math.random() * 0.4), // Add variation
-    }));
-
-    spendChartData = last30Days.map((date, i) => ({
-      date,
-      value: dailySpent * (0.8 + Math.random() * 0.4),
-    }));
-
-    roasChartData = last30Days.map((date, i) => ({
-      date,
-      value: avgRoas * (0.9 + Math.random() * 0.2),
-    }));
-
-    profitChartData = last30Days.map((date, i) => ({
-      date,
-      value: dailyProfit * (0.8 + Math.random() * 0.4),
-    }));
-
-    conversionsChartData = last30Days.map((date, i) => ({
-      date,
-      value: Math.round(dailyConversions * (0.7 + Math.random() * 0.6)),
-    }));
-  }
-
-  // Filter campaigns - only show active by default
-  const filteredCampaigns = allCampaigns.filter(campaign => {
-    const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    // Only show active campaigns
-    return matchesSearch && campaign.status === 'active';
-  });
-
-  // Limit to 5 campaigns initially, show all if showAllCampaigns is true
-  const displayedCampaigns = showAllCampaigns ? filteredCampaigns : filteredCampaigns.slice(0, 5);
+  // Memoize displayed campaigns
+  const displayedCampaigns = useMemo(() => {
+    return showAllCampaigns ? filteredCampaigns : filteredCampaigns.slice(0, 5);
+  }, [showAllCampaigns, filteredCampaigns]);
 
   const handleSyncFacebookData = async () => {
     if (!user?.id) return;

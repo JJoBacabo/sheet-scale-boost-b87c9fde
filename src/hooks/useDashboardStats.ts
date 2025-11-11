@@ -40,10 +40,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
     const fetchStats = async () => {
       try {
-        // Build campaigns query with filters
+        // Build campaigns query with filters - only select needed fields
         let campaignsQuery = supabase
           .from('campaigns')
-          .select('*')
+          .select('id, status, total_spent, total_revenue, conversions, clicks')
           .eq('user_id', userId);
 
         if (filters?.campaignId && filters.campaignId !== 'all') {
@@ -55,10 +55,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
         const { data: campaigns } = await campaignsQuery;
 
-        // Build products query with filters
+        // Build products query with filters - only select needed fields
         let productsQuery = supabase
           .from('products')
-          .select('*')
+          .select('id, cost_price, quantity_sold')
           .eq('user_id', userId);
 
         if (filters?.productId && filters.productId !== 'all') {
@@ -67,30 +67,36 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
         const { data: products } = await productsQuery;
 
-        // Build daily ROAS query with filters
+        // Build daily ROAS query with filters - only select needed fields
         let dailyRoasQuery = supabase
           .from('daily_roas')
-          .select('*')
+          .select('date, total_spent, units_sold, product_price, cog')
           .eq('user_id', userId)
-          .order('date', { ascending: false })
-          .limit(365); // Increased limit to support longer timeframes
+          .order('date', { ascending: false });
 
-        if (filters?.campaignId && filters.campaignId !== 'all') {
-          dailyRoasQuery = dailyRoasQuery.eq('campaign_id', filters.campaignId);
-        }
+        // Apply date filters at query level for better performance
         if (filters?.dateFrom) {
           dailyRoasQuery = dailyRoasQuery.gte('date', filters.dateFrom.toISOString().split('T')[0]);
         }
         if (filters?.dateTo) {
           dailyRoasQuery = dailyRoasQuery.lte('date', filters.dateTo.toISOString().split('T')[0]);
+        } else if (!filters?.dateFrom) {
+          // Default to last 90 days if no date filter
+          const ninetyDaysAgo = new Date();
+          ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+          dailyRoasQuery = dailyRoasQuery.gte('date', ninetyDaysAgo.toISOString().split('T')[0]);
+        }
+
+        if (filters?.campaignId && filters.campaignId !== 'all') {
+          dailyRoasQuery = dailyRoasQuery.eq('campaign_id', filters.campaignId);
         }
 
         const { data: dailyRoas } = await dailyRoasQuery;
 
-        // Fetch recent activity
+        // Fetch recent activity - only select needed fields
         const { data: activity } = await supabase
           .from('user_activity')
-          .select('*')
+          .select('id, action_type, created_at')
           .eq('user_id', userId)
           .order('created_at', { ascending: false })
           .limit(10);
@@ -167,17 +173,18 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
     fetchStats();
 
-    // Subscribe to real-time updates
-    const campaignsChannel = supabase
-      .channel('dashboard-campaigns')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns', filter: `user_id=eq.${userId}` }, fetchStats)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: `user_id=eq.${userId}` }, fetchStats)
-      .subscribe();
+    // Disable real-time subscriptions for better performance
+    // Real-time updates can be enabled manually via refresh button if needed
+    // const campaignsChannel = supabase
+    //   .channel('dashboard-campaigns')
+    //   .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns', filter: `user_id=eq.${userId}` }, fetchStats)
+    //   .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: `user_id=eq.${userId}` }, fetchStats)
+    //   .subscribe();
 
-    return () => {
-      supabase.removeChannel(campaignsChannel);
-    };
-  }, [userId, filters]);
+    // return () => {
+    //   supabase.removeChannel(campaignsChannel);
+    // };
+  }, [userId, filters?.dateFrom?.toISOString(), filters?.dateTo?.toISOString(), filters?.campaignId, filters?.platform, filters?.productId]);
 
   return stats;
 };
