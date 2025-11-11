@@ -540,7 +540,11 @@ const MetaDashboard = () => {
     let filtered = campaigns;
 
     if (searchQuery) {
-      filtered = filtered.filter((campaign) => campaign.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter((campaign) => 
+        campaign.name.toLowerCase().includes(query) || 
+        campaign.id.toLowerCase().includes(query)
+      );
     }
 
     if (statusFilter !== "all") {
