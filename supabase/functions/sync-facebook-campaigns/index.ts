@@ -7,6 +7,74 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to make Facebook API calls with retry and exponential backoff
+async function fetchWithRetry(
+  url: string,
+  options: { maxRetries?: number; retryDelay?: number } = {}
+): Promise<Response> {
+  const { maxRetries = 3, retryDelay = 1000 } = options;
+  let lastError: any;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Check for rate limit error (80004)
+      if (data.error && data.error.code === 80004) {
+        if (attempt < maxRetries) {
+          // Exponential backoff: 2s, 4s, 8s, etc.
+          const delay = retryDelay * Math.pow(2, attempt);
+          console.log(`⚠️ Rate limit hit (80004). Waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        } else {
+          // Max retries reached
+          return new Response(JSON.stringify({
+            error: 'Facebook API rate limit exceeded',
+            message: data.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+            errorCode: data.error.code,
+            retryAfter: 300, // Suggest waiting 5 minutes
+          }), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+      }
+
+      // Other errors - return as is
+      if (data.error) {
+        return new Response(JSON.stringify(data), {
+          status: response.status,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Success - return the data wrapped in a Response-like object
+      return {
+        json: async () => data,
+        status: response.status,
+        ok: response.ok,
+      } as any;
+
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries) {
+        const delay = retryDelay * Math.pow(2, attempt);
+        console.log(`⚠️ Request failed. Retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Failed to fetch after retries');
+}
+
+// Helper to add delay between API calls
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -66,12 +134,30 @@ serve(async (req) => {
         targetAdAccountId = integration.metadata.ad_account_id;
       } else {
         // Fallback to fetching from API
-        const meResponse = await fetch(
+        const meResponse = await fetchWithRetry(
           `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
         );
+        
+        // Check if it's a rate limit response
+        if (meResponse.status === 429) {
+          const rateLimitData = await meResponse.json();
+          return new Response(JSON.stringify({ 
+            error: rateLimitData.error || 'Facebook API rate limit exceeded',
+            message: rateLimitData.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+            errorCode: rateLimitData.errorCode,
+            retryAfter: rateLimitData.retryAfter,
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
         const meData = await meResponse.json();
         if (meData.error) {
-          return new Response(JSON.stringify({ error: `Facebook API error: ${meData.error.message || meData.error.error_user_msg || 'Unknown error'}` }), {
+          return new Response(JSON.stringify({ 
+            error: `Facebook API error: ${meData.error.message || meData.error.error_user_msg || 'Unknown error'}`,
+            errorCode: meData.error.code,
+          }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
@@ -105,13 +191,50 @@ serve(async (req) => {
     // Fetch campaigns with insights
     let allCampaigns: any[] = [];
     let nextUrl = `https://graph.facebook.com/v18.0/${targetAdAccountId}/campaigns?limit=500&fields=id,name,status,objective,daily_budget,lifetime_budget,spend_cap,created_time,updated_time,start_time,stop_time,insights${insightsParams}{date_start,date_stop,impressions,clicks,spend,actions,action_values,cpc,cpm,ctr,cpp,frequency,reach,social_spend,video_play_actions,cost_per_action_type,conversion_values,conversions}&access_token=${accessToken}`;
+    let pageCount = 0;
     
     while (nextUrl) {
-      const campaignsResponse = await fetch(nextUrl);
+      pageCount++;
+      console.log(`📥 Fetching campaigns page ${pageCount}...`);
+      
+      const campaignsResponse = await fetchWithRetry(nextUrl);
+      
+      // Check if it's a rate limit response
+      if (campaignsResponse.status === 429) {
+        const rateLimitData = await campaignsResponse.json();
+        return new Response(JSON.stringify({ 
+          error: rateLimitData.error || 'Facebook API rate limit exceeded',
+          message: rateLimitData.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+          errorCode: rateLimitData.errorCode,
+          retryAfter: rateLimitData.retryAfter,
+          campaignsProcessed: allCampaigns.length,
+        }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
       const campaignsData = await campaignsResponse.json();
 
       if (campaignsData.error) {
-        return new Response(JSON.stringify({ error: campaignsData.error.message }), {
+        // Check for rate limit error code
+        if (campaignsData.error.code === 80004) {
+          return new Response(JSON.stringify({ 
+            error: 'Facebook API rate limit exceeded',
+            message: campaignsData.error.message || 'Too many calls to this ad-account. Please wait a few minutes and try again.',
+            errorCode: campaignsData.error.code,
+            retryAfter: 300,
+            campaignsProcessed: allCampaigns.length,
+          }), {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        
+        return new Response(JSON.stringify({ 
+          error: campaignsData.error.message || 'Facebook API error',
+          errorCode: campaignsData.error.code,
+        }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -122,6 +245,11 @@ serve(async (req) => {
       }
 
       nextUrl = campaignsData.paging?.next || null;
+      
+      // Add delay between pages to avoid rate limiting (200ms delay)
+      if (nextUrl) {
+        await delay(200);
+      }
     }
 
     console.log(`📊 Fetched ${allCampaigns.length} campaigns from Facebook`);
@@ -154,20 +282,34 @@ serve(async (req) => {
         }, 0);
         const avgCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
 
-        // Get revenue from products (if linked)
+        // Get revenue and supplier cost from products
         let totalRevenue = 0;
+        let supplierCost = 0;
+        let matchedProduct: any = null;
+        
+        // Try to match campaign name with product name (with or without Shopify integration)
+        const productQuery = supabaseClient
+          .from('products')
+          .select('total_revenue, cost_price, selling_price')
+          .eq('user_id', user.id)
+          .ilike('product_name', `%${fbCampaign.name}%`);
+        
+        // If Shopify integration exists, filter by it, otherwise get all products
         if (shopifyIntegrationId) {
-          // Try to match campaign name with product name
-          const { data: products } = await supabaseClient
-            .from('products')
-            .select('total_revenue')
-            .eq('user_id', user.id)
-            .eq('integration_id', shopifyIntegrationId)
-            .ilike('product_name', `%${fbCampaign.name}%`)
-            .limit(1);
-          
-          if (products && products.length > 0) {
-            totalRevenue = parseFloat(products[0].total_revenue || 0);
+          productQuery.eq('integration_id', shopifyIntegrationId);
+        }
+        
+        const { data: products } = await productQuery.limit(1);
+        
+        if (products && products.length > 0) {
+          matchedProduct = products[0];
+          totalRevenue = parseFloat(matchedProduct.total_revenue || 0);
+          // Calculate supplier cost from total revenue and cost price
+          if (matchedProduct.cost_price && matchedProduct.selling_price) {
+            const unitsSold = matchedProduct.total_revenue > 0 && matchedProduct.selling_price > 0
+              ? matchedProduct.total_revenue / matchedProduct.selling_price
+              : 0;
+            supplierCost = unitsSold * parseFloat(matchedProduct.cost_price || 0);
           }
         }
 
@@ -231,17 +373,28 @@ serve(async (req) => {
           const purchases = insight.actions?.find((a: any) => a.action_type === 'purchase')?.value || 0;
           const addToCart = insight.actions?.find((a: any) => a.action_type === 'add_to_cart')?.value || 0;
 
-          // Get product price and COG if available
+          // Get product price and supplier cost (COG) from products
           let productPrice = 0;
           let cog = 0;
-          if (shopifyIntegrationId) {
-            const { data: products } = await supabaseClient
+          
+          // Use the matched product from campaign level if available, otherwise search again
+          if (matchedProduct) {
+            productPrice = parseFloat(matchedProduct.selling_price || 0);
+            cog = parseFloat(matchedProduct.cost_price || 0);
+          } else {
+            // Try to match campaign name with product name (with or without Shopify integration)
+            const productQuery = supabaseClient
               .from('products')
               .select('selling_price, cost_price')
               .eq('user_id', user.id)
-              .eq('integration_id', shopifyIntegrationId)
-              .ilike('product_name', `%${fbCampaign.name}%`)
-              .limit(1);
+              .ilike('product_name', `%${fbCampaign.name}%`);
+            
+            // If Shopify integration exists, filter by it, otherwise get all products
+            if (shopifyIntegrationId) {
+              productQuery.eq('integration_id', shopifyIntegrationId);
+            }
+            
+            const { data: products } = await productQuery.limit(1);
             
             if (products && products.length > 0) {
               productPrice = parseFloat(products[0].selling_price || 0);
