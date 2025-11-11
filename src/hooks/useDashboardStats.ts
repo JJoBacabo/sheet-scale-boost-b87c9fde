@@ -16,7 +16,7 @@ interface DashboardStats {
   loading: boolean;
 }
 
-export const useDashboardStats = (userId: string | undefined, filters?: any) => {
+export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; refreshKey?: number }) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     totalProducts: 0,
@@ -79,9 +79,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
         // Build daily ROAS query with filters - only select needed fields
         let dailyRoasQuery = supabase
           .from('daily_roas')
-          .select('date, total_spent, units_sold, product_price, cog')
+          .select('date, total_spent, units_sold, product_price, cog, purchases')
           .eq('user_id', userId)
-          .order('date', { ascending: false });
+          .order('date', { ascending: true }); // Ascending para ter dados do mais antigo para o mais recente
 
         // Apply date filters at query level for better performance
         if (filters?.dateFrom) {
@@ -261,7 +261,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
     filters?.dateTo?.getTime(), // Use getTime() for better comparison
     filters?.campaignId, 
     filters?.platform, 
-    filters?.productId
+    filters?.productId,
+    filters?.refreshKey // Incluir refreshKey para forçar atualização
   ]);
 
   return stats;

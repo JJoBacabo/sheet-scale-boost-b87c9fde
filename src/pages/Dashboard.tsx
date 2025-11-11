@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -32,6 +32,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const [syncing, setSyncing] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
+  const [refreshKey, setRefreshKey] = useState(0); // Key para forçar refresh dos stats
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -66,7 +67,8 @@ const Dashboard = () => {
   const stats = useDashboardStats(user?.id, timeframe ? {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
-  } : undefined);
+    refreshKey,
+  } : { refreshKey });
   const statsLoading = stats.loading;
 
   // Get top products
@@ -120,28 +122,34 @@ const Dashboard = () => {
     checkAndSync();
   }, [user?.id, autoSynced]);
 
-  useEffect(() => {
+  const refreshCampaigns = useCallback(async () => {
     if (!user?.id) return;
     
     // Get only active campaigns - only select needed fields
-    supabase
+    const { data: recentData } = await supabase
       .from('campaigns')
       .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('updated_at', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setRecentCampaigns(data || []));
+      .limit(5);
+    
+    setRecentCampaigns(recentData || []);
 
     // Get all active campaigns for table - only select needed fields
-    supabase
+    const { data: allData } = await supabase
       .from('campaigns')
       .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .then(({ data }) => setAllCampaigns(data || []));
-  }, [user?.id]); // Removed stats dependency to prevent unnecessary re-fetches
+      .order('updated_at', { ascending: false });
+    
+    setAllCampaigns(allData || []);
+  }, [user?.id]);
+
+  useEffect(() => {
+    refreshCampaigns();
+  }, [refreshCampaigns]);
 
   // CRITICAL: All hooks must be called BEFORE any conditional returns
   // Memoize chart data calculations to avoid recalculating on every render
@@ -156,34 +164,89 @@ const Dashboard = () => {
     let conversionsChartData: { date: string; value: number }[] = [];
 
     if (dailyData.length > 0) {
-      // Use daily ROAS data - reverse once and map
-      const reversedData = [...dailyData].reverse();
+      // Use daily ROAS data - data já vem ordenada do mais antigo para o mais recente
+      // Agrupar por data para evitar duplicatas e somar valores
+      const dataByDate = new Map<string, {
+        total_spent: number;
+        units_sold: number;
+        product_price: number;
+        cog: number;
+        purchases: number;
+      }>();
       
-      revenueChartData = reversedData.map((item: any) => ({
+      dailyData.forEach((item: any) => {
+        const dateKey = item.date?.split('T')[0] || item.date;
+        if (!dateKey) return;
+        
+        const existing = dataByDate.get(dateKey) || {
+          total_spent: 0,
+          units_sold: 0,
+          product_price: 0,
+          cog: 0,
+          purchases: 0,
+        };
+        
+        const itemSpent = Number(item.total_spent) || 0;
+        const itemUnitsSold = Number(item.units_sold) || 0;
+        const itemProductPrice = Number(item.product_price) || 0;
+        const itemCog = Number(item.cog) || 0;
+        const itemPurchases = Number(item.purchases) || itemUnitsSold || 0;
+        
+        // Calcular média ponderada de product_price e cog baseado em units_sold
+        const totalUnits = existing.units_sold + itemUnitsSold;
+        const avgProductPrice = totalUnits > 0 
+          ? ((existing.product_price * existing.units_sold) + (itemProductPrice * itemUnitsSold)) / totalUnits
+          : (itemProductPrice || existing.product_price);
+        const avgCog = totalUnits > 0
+          ? ((existing.cog * existing.units_sold) + (itemCog * itemUnitsSold)) / totalUnits
+          : (itemCog || existing.cog);
+        
+        dataByDate.set(dateKey, {
+          total_spent: existing.total_spent + itemSpent,
+          units_sold: existing.units_sold + itemUnitsSold,
+          product_price: avgProductPrice,
+          cog: avgCog,
+          purchases: existing.purchases + itemPurchases,
+        });
+      });
+      
+      // Converter Map para array e ordenar por data
+      const sortedData = Array.from(dataByDate.entries())
+        .map(([date, values]) => ({
+          date,
+          total_spent: values.total_spent,
+          units_sold: values.units_sold,
+          product_price: values.product_price,
+          cog: values.cog,
+          purchases: values.purchases,
+        }))
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      revenueChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: (item.units_sold || 0) * (item.product_price || 0),
       }));
 
-      roasChartData = reversedData.map((item: any) => ({
+      roasChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.total_spent > 0 ? ((item.units_sold || 0) * (item.product_price || 0)) / item.total_spent : 0,
       }));
 
-      profitChartData = reversedData.map((item: any) => {
+      profitChartData = sortedData.map((item) => {
         const revenue = (item.units_sold || 0) * (item.product_price || 0);
         const cost = (item.units_sold || 0) * (item.cog || 0);
         return {
           date: format(new Date(item.date), 'dd/MM'),
-          value: revenue - item.total_spent - cost,
+          value: revenue - (item.total_spent || 0) - cost,
         };
       });
 
-      spendChartData = reversedData.map((item: any) => ({
+      spendChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.total_spent || 0,
       }));
 
-      conversionsChartData = reversedData.map((item: any) => ({
+      conversionsChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.purchases || 0,
       }));
@@ -285,10 +348,14 @@ const Dashboard = () => {
       } else {
         toast({
           title: '✅ Sincronização concluída',
-          description: `${data.campaignsSaved} campanhas e ${data.dailyDataSaved} registros diários salvos`,
+          description: `${data.campaignsSaved || 0} campanhas e ${data.dailyDataSaved || 0} registros diários salvos`,
         });
-        // Refresh stats
-        window.location.reload();
+        // Refresh campaigns and wait a bit for database to update
+        setTimeout(() => {
+          refreshCampaigns();
+          // Force refresh of stats by updating refreshKey
+          setRefreshKey(prev => prev + 1);
+        }, 1500);
       }
     } catch (err: any) {
       toast({
