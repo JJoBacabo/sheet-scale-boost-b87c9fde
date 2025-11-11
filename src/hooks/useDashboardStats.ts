@@ -73,7 +73,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         // Build daily ROAS query with filters - only select needed fields
         let dailyRoasQuery = supabase
           .from('daily_roas')
-          .select('date, total_spent, units_sold, product_price, cog, purchases')
+          .select('date, total_spent, units_sold, product_price, cog, purchases, cpc')
           .eq('user_id', userId)
           .order('date', { ascending: true }); // Ascending para ter dados do mais antigo para o mais recente
 
@@ -141,7 +141,13 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           });
         }
 
-        // Calculate from daily_roas for accurate period-based stats
+        // Determinar se há filtros de data explícitos do usuário
+        const hasExplicitDateFilters = !!(filters?.dateFrom || filters?.dateTo);
+
+        // CRITICAL: Quando há filtros de data explícitos, TODOS os cálculos devem usar APENAS daily_roas
+        // Não usar fallback para campaigns ou products, pois não respeitam o timeframe
+        
+        // Calcular todas as métricas a partir de daily_roas
         const totalSpent = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.total_spent) || 0), 0);
         const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
           // Revenue = units_sold * product_price
@@ -154,82 +160,80 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           const cog = Number(d.cog) || 0;
           return sum + cog;
         }, 0);
+        const totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.purchases) || 0), 0);
         
-        // IMPORTANT: Se há filtros de data, só usar daily_roas (não usar campaigns como fallback)
-        // porque campaigns não tem informação de data e representa totais acumulados
-        // Se não há filtros de data, usar campaigns como fallback
+        // Calcular total clicks a partir de daily_roas (usando cpc e total_spent)
+        // clicks = total_spent / cpc (se cpc > 0)
+        const totalClicks = filteredDailyRoas.reduce((sum: number, d: any) => {
+          const spent = Number(d.total_spent) || 0;
+          const cpc = Number(d.cpc) || 0;
+          if (cpc > 0) {
+            return sum + (spent / cpc);
+          }
+          return sum;
+        }, 0);
+        
+        // Se há filtros de data explícitos, usar APENAS dados de daily_roas
+        // Se não há filtros de data explícitos, usar daily_roas se disponível, senão fallback para campaigns
         let finalTotalSpent = 0;
         let finalTotalRevenue = 0;
+        let finalTotalConversions = 0;
+        let finalTotalSupplierCost = 0;
+        let finalTotalClicks = 0;
         
-        if (filteredDailyRoas.length > 0) {
-          // Usar dados de daily_roas (mais preciso e com filtro de data)
+        if (hasExplicitDateFilters) {
+          // Com filtros de data explícitos: usar APENAS daily_roas (mesmo que vazio)
           finalTotalSpent = totalSpent;
           finalTotalRevenue = totalRevenue;
-        } else if (!dateFromStr && !dateToStr) {
-          // Só usar campaigns como fallback se NÃO houver filtros de data
-          // porque campaigns não tem informação de data para filtrar
-          finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-          finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-        }
-        // Se há filtros de data mas não há daily_roas, finalTotalSpent e finalTotalRevenue permanecem 0
-        
-        // Calculate conversions - use daily_roas purchases if available (more accurate with date filters)
-        // Otherwise use campaigns conversions (accumulated totals) as fallback
-        let totalConversions = 0;
-        if (filteredDailyRoas.length > 0) {
-          // Usar purchases de daily_roas (mais preciso e com filtro de data)
-          totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.purchases) || 0), 0);
-        } else {
-          // Usar campaigns como fallback mesmo com filtros de data (melhor que 0)
-          // Nota: campaigns não tem informação de data, então é uma estimativa quando há filtros de data
-          totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
-        }
-        
-        const totalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
-        const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
-        const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;
-        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-        
-        // Calculate supplier cost - use daily_roas if available, otherwise use products
-        let finalTotalSupplierCost = 0;
-        
-        if (filteredDailyRoas.length > 0) {
-          // Usar supplier cost de daily_roas (mais preciso e com filtro de data)
+          finalTotalConversions = totalConversions;
           finalTotalSupplierCost = totalSupplierCost;
-        } else if (products && products.length > 0) {
-          // Usar products como fallback sempre que não houver daily_roas
-          // Se não há filtros explícitos do usuário, usar todos os products
-          // Se há filtros explícitos, ainda usar products como estimativa (melhor que 0)
-          let filteredProducts = products;
-          
-          // Se há filtro de store, aplicar
-          if (filters?.storeId && filters.storeId !== 'all') {
-            filteredProducts = products.filter(p => p.integration_id === filters.storeId);
-          }
-          
-          finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
-            const costPrice = Number(p.cost_price) || 0;
-            const quantitySold = Number(p.quantity_sold) || 0;
-            return sum + (costPrice * quantitySold);
-          }, 0);
-        } else if (campaigns && campaigns.length > 0) {
-          // Se não há products nem daily_roas, estimar baseado na receita das campanhas
-          const campaignsWithData = campaigns.filter(c => {
-            const revenue = Number(c.total_revenue) || 0;
-            return revenue > 0;
-          });
-          
-          if (campaignsWithData.length > 0) {
-            // Calcular receita total das campanhas para estimar
-            const totalRevenueFromCampaigns = campaignsWithData.reduce((sum, c) => {
-              return sum + (Number(c.total_revenue) || 0);
-            }, 0);
+          finalTotalClicks = totalClicks;
+        } else {
+          // Sem filtros de data explícitos: usar daily_roas se disponível, senão fallback
+          if (filteredDailyRoas.length > 0) {
+            // Usar dados de daily_roas (já filtrado por default de 90 dias)
+            finalTotalSpent = totalSpent;
+            finalTotalRevenue = totalRevenue;
+            finalTotalConversions = totalConversions;
+            finalTotalSupplierCost = totalSupplierCost;
+            finalTotalClicks = totalClicks;
+          } else {
+            // Fallback para campaigns quando não há daily_roas e não há filtros de data
+            finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
+            finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+            finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
+            finalTotalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
             
-            // Estimar supplier cost como ~35% da receita (estimativa conservadora)
-            finalTotalSupplierCost = totalRevenueFromCampaigns * 0.35;
+            // Para supplier cost, tentar products primeiro
+            if (products && products.length > 0) {
+              let filteredProducts = products;
+              if (filters?.storeId && filters.storeId !== 'all') {
+                filteredProducts = products.filter(p => p.integration_id === filters.storeId);
+              }
+              finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
+                const costPrice = Number(p.cost_price) || 0;
+                const quantitySold = Number(p.quantity_sold) || 0;
+                return sum + (costPrice * quantitySold);
+              }, 0);
+            } else if (campaigns && campaigns.length > 0) {
+              // Estimar baseado na receita das campanhas
+              const campaignsWithData = campaigns.filter(c => {
+                const revenue = Number(c.total_revenue) || 0;
+                return revenue > 0;
+              });
+              if (campaignsWithData.length > 0) {
+                const totalRevenueFromCampaigns = campaignsWithData.reduce((sum, c) => {
+                  return sum + (Number(c.total_revenue) || 0);
+                }, 0);
+                finalTotalSupplierCost = totalRevenueFromCampaigns * 0.35;
+              }
+            }
           }
         }
-        // Se não há dados suficientes, finalTotalSupplierCost permanece 0
+        
+        const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
+        const averageCpc = finalTotalClicks > 0 ? finalTotalSpent / finalTotalClicks : 0;
+        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
@@ -238,7 +242,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           totalRevenue: finalTotalRevenue,
           averageRoas,
           activeCampaigns,
-          totalConversions,
+          totalConversions: finalTotalConversions,
           averageCpc,
           totalSupplierCost: finalTotalSupplierCost,
           recentActivity: activity || [],
