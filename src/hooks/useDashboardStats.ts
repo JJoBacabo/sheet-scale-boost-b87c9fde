@@ -97,6 +97,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
+        // Track if user explicitly provided date filters (vs default)
+        const hasExplicitDateFilters = !!(filters?.dateFrom || filters?.dateTo);
+        
         // Only apply default filter if no date filters are provided
         if (!filters?.dateFrom && !filters?.dateTo) {
           // Default to last 90 days if no date filter
@@ -171,16 +174,16 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         // Se há filtros de data mas não há daily_roas, finalTotalSpent e finalTotalRevenue permanecem 0
         
         // Calculate conversions - use daily_roas purchases if available (more accurate with date filters)
-        // Otherwise use campaigns conversions (accumulated totals)
+        // Otherwise use campaigns conversions (accumulated totals) as fallback
         let totalConversions = 0;
         if (filteredDailyRoas.length > 0) {
           // Usar purchases de daily_roas (mais preciso e com filtro de data)
           totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.purchases) || 0), 0);
-        } else if (!dateFromStr && !dateToStr) {
-          // Só usar campaigns como fallback se NÃO houver filtros de data
+        } else {
+          // Usar campaigns como fallback mesmo com filtros de data (melhor que 0)
+          // Nota: campaigns não tem informação de data, então é uma estimativa quando há filtros de data
           totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
         }
-        // Se há filtros de data mas não há daily_roas, totalConversions permanece 0
         
         const totalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
         const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
@@ -194,9 +197,17 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           // Usar supplier cost de daily_roas (mais preciso e com filtro de data)
           finalTotalSupplierCost = totalSupplierCost;
         } else if (products && products.length > 0) {
-          // Usar products como fallback (mesmo com filtros de data, é melhor que nada)
-          // Nota: products não tem informação de data, então é uma estimativa quando há filtros de data
-          finalTotalSupplierCost = products.reduce((sum, p) => {
+          // Usar products como fallback sempre que não houver daily_roas
+          // Se não há filtros explícitos do usuário, usar todos os products
+          // Se há filtros explícitos, ainda usar products como estimativa (melhor que 0)
+          let filteredProducts = products;
+          
+          // Se há filtro de store, aplicar
+          if (filters?.storeId && filters.storeId !== 'all') {
+            filteredProducts = products.filter(p => p.integration_id === filters.storeId);
+          }
+          
+          finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
             const costPrice = Number(p.cost_price) || 0;
             const quantitySold = Number(p.quantity_sold) || 0;
             return sum + (costPrice * quantitySold);
