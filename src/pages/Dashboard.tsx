@@ -13,31 +13,60 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { CryptoChart } from "@/components/dashboard/CryptoChart";
 import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/TimeframeSelector";
-import { StoreSelector } from "@/components/StoreSelector";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
-import { Target, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
+import { Target, ArrowUp, ArrowDown, Search, ArrowRight, Store, Facebook, CheckCircle2 } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+
+interface Integration {
+  id: string;
+  integration_type: string;
+  metadata: any;
+}
+
+interface AdAccount {
+  id: string;
+  name: string;
+  account_id: string;
+  account_status: number;
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
+  const { toast } = useToast();
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
   const [selectedStore, setSelectedStore] = useState<string>("all");
+  const [selectedAdAccount, setSelectedAdAccount] = useState<string>("all");
   const [refreshKey, setRefreshKey] = useState(0); // Key para forçar refresh dos stats
+  
+  // Integration states
+  const [shopifyIntegrations, setShopifyIntegrations] = useState<Integration[]>([]);
+  const [adAccounts, setAdAccounts] = useState<AdAccount[]>([]);
+  const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
+      } else {
+        fetchIntegrations(session.user.id);
       }
       setLoading(false);
     });
@@ -46,11 +75,196 @@ const Dashboard = () => {
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
+      } else if (session.user.id) {
+        fetchIntegrations(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const fetchIntegrations = async (userId: string) => {
+    try {
+      const { data: integrations, error } = await supabase
+        .from('integrations')
+        .select('*')
+        .eq('user_id', userId)
+        .in('integration_type', ['shopify', 'facebook_ads']);
+
+      if (error) throw error;
+
+      const shopify = integrations?.filter(i => i.integration_type === 'shopify') || [];
+      const facebook = integrations?.filter(i => i.integration_type === 'facebook_ads') || [];
+
+      setShopifyIntegrations(shopify);
+      setHasFacebookIntegration(facebook.length > 0);
+
+      // If Facebook is connected, fetch ad accounts
+      if (facebook.length > 0) {
+        await fetchAdAccounts();
+      }
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+    }
+  };
+
+  const fetchAdAccounts = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
+        body: { action: 'listAdAccounts' }
+      });
+
+      if (error) {
+        console.error("❌ Error from edge function:", error);
+        return;
+      }
+      
+      if (data?.adAccounts) {
+        setAdAccounts(data.adAccounts);
+      }
+    } catch (error: any) {
+      console.error("❌ Error fetching ad accounts:", error);
+    }
+  };
+
+  // Smart matching algorithm for Shopify stores
+  const findBestShopifyMatch = (searchName: string, candidates: Integration[]): string | null => {
+    if (!searchName || candidates.length === 0) return null;
+
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const searchNormalized = normalize(searchName);
+    const searchChars = searchNormalized.split('');
+
+    let bestMatch: { id: string; score: number; name: string } | null = null;
+
+    for (const candidate of candidates) {
+      const candidateNames = [
+        candidate.metadata?.shop_name,
+        candidate.metadata?.shop_domain,
+        candidate.metadata?.store_name,
+      ].filter(Boolean);
+
+      for (const candidateName of candidateNames) {
+        if (!candidateName) continue;
+        
+        const candidateNormalized = normalize(candidateName);
+        const candidateChars = candidateNormalized.split('');
+
+        let score = 0;
+        
+        let matchedChars = 0;
+        for (const searchChar of searchChars) {
+          if (candidateChars.includes(searchChar)) {
+            matchedChars++;
+          }
+        }
+        score += matchedChars * 2;
+
+        const minLength = Math.min(searchNormalized.length, candidateNormalized.length);
+        for (let i = 0; i < minLength; i++) {
+          if (searchNormalized[i] === candidateNormalized[i]) {
+            score += 3;
+          }
+        }
+
+        if (candidateNormalized.includes(searchNormalized)) {
+          score += 20;
+        }
+        if (searchNormalized.includes(candidateNormalized)) {
+          score += 15;
+        }
+
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = { id: candidate.id, score, name: candidateName };
+        }
+      }
+    }
+
+    const minScore = Math.min(searchChars.length * 2, 6);
+    return bestMatch && bestMatch.score >= minScore ? bestMatch.id : null;
+  };
+
+  // Smart matching algorithm for Ad Accounts
+  const findBestAdAccountMatch = (searchName: string, candidates: AdAccount[]): string | null => {
+    if (!searchName || candidates.length === 0) return null;
+
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const searchNormalized = normalize(searchName);
+    const searchChars = searchNormalized.split('');
+
+    let bestMatch: { id: string; score: number; name: string } | null = null;
+
+    for (const candidate of candidates) {
+      const candidateNormalized = normalize(candidate.name);
+      const candidateChars = candidateNormalized.split('');
+
+      let score = 0;
+      
+      let matchedChars = 0;
+      for (const searchChar of searchChars) {
+        if (candidateChars.includes(searchChar)) {
+          matchedChars++;
+        }
+      }
+      score += matchedChars * 2;
+
+      const minLength = Math.min(searchNormalized.length, candidateNormalized.length);
+      for (let i = 0; i < minLength; i++) {
+        if (searchNormalized[i] === candidateNormalized[i]) {
+          score += 3;
+        }
+      }
+
+      if (candidateNormalized.includes(searchNormalized)) {
+        score += 20;
+      }
+      if (searchNormalized.includes(candidateNormalized)) {
+        score += 15;
+      }
+
+      if (!bestMatch || score > bestMatch.score) {
+        bestMatch = { id: candidate.id, score, name: candidate.name };
+      }
+    }
+
+    const minScore = Math.min(searchChars.length * 2, 6);
+    return bestMatch && bestMatch.score >= minScore ? bestMatch.id : null;
+  };
+
+  const handleShopifyChange = (value: string) => {
+    setSelectedStore(value);
+    
+    // Find matching Ad Account
+    if (value !== "all") {
+      const selectedIntegration = shopifyIntegrations.find(i => i.id === value);
+      if (selectedIntegration) {
+        const shopName = selectedIntegration.metadata?.shop_name || '';
+        const matchId = findBestAdAccountMatch(shopName, adAccounts);
+        if (matchId) {
+          setSelectedAdAccount(matchId);
+        }
+      }
+    } else {
+      setSelectedAdAccount("all");
+    }
+  };
+
+  const handleAdAccountChange = (value: string) => {
+    setSelectedAdAccount(value);
+    
+    // Find matching Shopify store
+    if (value !== "all") {
+      const selectedAccount = adAccounts.find(acc => acc.id === value);
+      if (selectedAccount) {
+        const matchId = findBestShopifyMatch(selectedAccount.name, shopifyIntegrations);
+        if (matchId) {
+          setSelectedStore(matchId);
+        }
+      }
+    } else {
+      setSelectedStore("all");
+    }
+  };
 
   const stats = useDashboardStats(user?.id, timeframe ? {
     dateFrom: timeframe.dateFrom,
@@ -249,13 +463,15 @@ const Dashboard = () => {
   const { revenueChartData, profitChartData, spendChartData } = chartData;
 
   // Memoize filtered campaigns to avoid recalculating on every render
+  // Note: Currently campaigns don't have ad_account_id in the database,
+  // so we can't filter by ad account. When that's added, we can filter here.
   const filteredCampaigns = useMemo(() => {
     return allCampaigns.filter(campaign => {
       const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
       // Only show active campaigns
       return matchesSearch && campaign.status === 'active';
     });
-  }, [allCampaigns, searchTerm]);
+  }, [allCampaigns, searchTerm, selectedAdAccount]);
 
   // Memoize displayed campaigns
   const displayedCampaigns = useMemo(() => {
@@ -291,19 +507,87 @@ const Dashboard = () => {
       )}
 
       <div className="space-y-4 sm:space-y-5 md:space-y-6">
-        {/* Filters: Timeframe and Store Selector */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end">
-          <div className="w-full sm:w-auto">
-            <StoreSelector
-              value={selectedStore}
-              onChange={setSelectedStore}
-            />
-          </div>
-          <div className="w-full sm:w-auto">
-            <TimeframeSelector
-              value={timeframe}
-              onChange={setTimeframe}
-            />
+        {/* Filters: Store, Ad Account, and Timeframe Selectors */}
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {/* Shopify Store Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Store className="w-4 h-4" />
+                {t('profitSheet.shopifyStore') || 'Loja Shopify'}
+              </label>
+              <Select value={selectedStore} onValueChange={handleShopifyChange}>
+                <SelectTrigger className="w-full bg-card border-primary/20">
+                  <SelectValue placeholder={t('profitSheet.selectShopify') || 'Selecionar loja'} />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-card border-border">
+                  <SelectItem value="all">{t('storeSelector.allStores') || 'Todas as lojas'}</SelectItem>
+                  {shopifyIntegrations.map((integration) => (
+                    <SelectItem key={integration.id} value={integration.id}>
+                      {integration.metadata?.shop_name || 
+                       integration.metadata?.shop_domain || 
+                       `Loja ${integration.id.slice(0, 8)}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedStore && selectedStore !== "all" && (
+                <Badge className="bg-green-500/20 text-green-500 border-green-500/30 text-xs">
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  {t('profitSheet.selected') || 'Selecionado'}
+                </Badge>
+              )}
+            </div>
+
+            {/* Facebook Ad Account Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium flex items-center gap-2">
+                <Facebook className="w-4 h-4" />
+                {t('profitSheet.adAccount') || 'Conta de Anúncios'}
+              </label>
+              {!hasFacebookIntegration ? (
+                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  {t('metaDashboard.connectDesc') || 'Conecte o Facebook Ads'}
+                </div>
+              ) : adAccounts.length === 0 ? (
+                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  {t('common.loading') || 'Carregando...'}
+                </div>
+              ) : (
+                <>
+                  <Select value={selectedAdAccount} onValueChange={handleAdAccountChange}>
+                    <SelectTrigger className="w-full bg-card border-primary/20">
+                      <SelectValue placeholder={t('profitSheet.selectAdAccount') || 'Selecionar conta'} />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-card border-border">
+                      <SelectItem value="all">{t('storeSelector.allStores') || 'Todas as contas'}</SelectItem>
+                      {adAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedAdAccount && selectedAdAccount !== "all" && (
+                    <Badge className="bg-blue-500/20 text-blue-500 border-blue-500/30 text-xs">
+                      <CheckCircle2 className="w-3 h-3 mr-1" />
+                      {t('profitSheet.selected') || 'Selecionado'}
+                    </Badge>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Timeframe Selector */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                {t('dashboard.timeframe') || 'Período'}
+              </label>
+              <TimeframeSelector
+                value={timeframe}
+                onChange={setTimeframe}
+              />
+            </div>
           </div>
         </div>
 
