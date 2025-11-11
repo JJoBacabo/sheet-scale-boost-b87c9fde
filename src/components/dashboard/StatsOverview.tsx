@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, ShoppingCart, Activity } from "lucide-react";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StatsOverviewProps {
   stats: {
@@ -18,13 +19,14 @@ interface StatsOverviewProps {
 }
 
 export const StatsOverview = ({ stats }: StatsOverviewProps) => {
+  const { t } = useLanguage();
   const formatCurrency = (value: number) => `€${value.toFixed(2)}`;
-  const profit = stats.totalRevenue - stats.totalSpent;
+  const profit = stats.totalRevenue - stats.totalSpent - stats.totalSupplierCost;
   const profitMargin = stats.totalRevenue > 0 ? (profit / stats.totalRevenue) * 100 : 0;
 
   const statCards = [
     {
-      title: "Receita Total",
+      title: t("dashboard.totalRevenue"),
       value: formatCurrency(stats.totalRevenue),
       icon: DollarSign,
       trend: stats.totalRevenue > 0 ? "up" : "neutral",
@@ -34,7 +36,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-primary/20"
     },
     {
-      title: "Gasto Total em Anúncios",
+      title: t("dashboard.totalAdSpend"),
       value: formatCurrency(stats.totalSpent),
       icon: TrendingDown,
       trend: "neutral",
@@ -44,7 +46,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-blue-500/20"
     },
     {
-      title: "Lucro",
+      title: t("dashboard.profit"),
       value: formatCurrency(profit),
       icon: profit >= 0 ? TrendingUp : TrendingDown,
       trend: profit >= 0 ? "up" : "down",
@@ -54,7 +56,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: profit >= 0 ? "border-primary/20" : "border-destructive/20"
     },
     {
-      title: "ROAS Médio",
+      title: t("dashboard.averageRoas"),
       value: stats.averageRoas.toFixed(2),
       icon: Target,
       trend: stats.averageRoas >= 2 ? "up" : stats.averageRoas >= 1 ? "neutral" : "down",
@@ -64,7 +66,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: stats.averageRoas >= 2 ? "border-primary/20" : "border-warning/20"
     },
     {
-      title: "Gasto Total em Fornecedor",
+      title: t("dashboard.totalSupplierCost"),
       value: formatCurrency(stats.totalSupplierCost),
       icon: ShoppingCart,
       trend: "neutral",
@@ -74,7 +76,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-purple-500/20"
     },
     {
-      title: "Conversões",
+      title: t("dashboard.conversions"),
       value: stats.totalConversions.toString(),
       icon: ShoppingCart,
       trend: stats.totalConversions > 0 ? "up" : "neutral",
@@ -84,7 +86,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-indigo-500/20"
     },
     {
-      title: "CPC Médio",
+      title: t("dashboard.averageCpc"),
       value: formatCurrency(stats.averageCpc),
       icon: DollarSign,
       trend: "neutral",
@@ -94,7 +96,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-cyan-500/20"
     },
     {
-      title: "Margem de Lucro",
+      title: t("dashboard.profitMargin"),
       value: `${profitMargin.toFixed(1)}%`,
       icon: profitMargin >= 0 ? TrendingUp : TrendingDown,
       trend: profitMargin >= 20 ? "up" : "neutral",
