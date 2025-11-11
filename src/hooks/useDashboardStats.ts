@@ -155,8 +155,40 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
           // Revenue = units_sold * product_price OU purchases * product_price
           // Usar units_sold primeiro, depois purchases como fallback
-          const unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
-          const productPrice = Number(d.product_price) || 0;
+          let unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
+          let productPrice = Number(d.product_price) || 0;
+          
+          // Se product_price está vazio mas há purchases/units_sold, tentar buscar dos produtos
+          if (productPrice === 0 && unitsSold > 0 && products && products.length > 0) {
+            const campaignName = d.campaign_name || '';
+            
+            // Estratégia 1: Tentar encontrar produto pelo nome da campanha
+            let matchedProduct = products.find(p => {
+              if (!p.product_name || !p.selling_price) return false;
+              const productName = p.product_name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+              const cleanCampaignName = campaignName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+              
+              if (productName.length > 3 && cleanCampaignName.length > 3) {
+                // Verificar se o nome do produto está no nome da campanha ou vice-versa
+                if (cleanCampaignName.includes(productName) || productName.includes(cleanCampaignName)) {
+                  return true;
+                }
+                
+                // Verificar palavras-chave comuns
+                const productWords = productName.split(/\s+/).filter(w => w.length > 3);
+                const campaignWords = cleanCampaignName.split(/\s+/).filter(w => w.length > 3);
+                const commonWords = productWords.filter(w => campaignWords.includes(w));
+                return commonWords.length > 0;
+              }
+              
+              return false;
+            });
+            
+            if (matchedProduct && matchedProduct.selling_price) {
+              productPrice = Number(matchedProduct.selling_price) || 0;
+            }
+          }
+          
           const revenue = unitsSold * productPrice;
           return sum + revenue;
         }, 0);
@@ -208,25 +240,44 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
               continue;
             }
             
-            if (unitsSold > 0 && productPrice > 0) {
-              // Estratégia 1: Tentar encontrar produto pelo preço (mais confiável)
-              let matchedProduct = productsWithCost.find(p => {
-                const sellingPrice = Number(p.selling_price) || 0;
-                return Math.abs(sellingPrice - productPrice) < 0.01; // Tolerância para diferenças de ponto flutuante
-              });
+            // Tentar encontrar produto mesmo se productPrice estiver vazio
+            if (unitsSold > 0) {
+              let matchedProduct: any = null;
+              
+              // Estratégia 1: Se productPrice está disponível, tentar encontrar pelo preço (mais confiável)
+              if (productPrice > 0) {
+                matchedProduct = productsWithCost.find(p => {
+                  const sellingPrice = Number(p.selling_price) || 0;
+                  return Math.abs(sellingPrice - productPrice) < 0.01; // Tolerância para diferenças de ponto flutuante
+                });
+              }
               
               // Estratégia 2: Se não encontrou por preço, tentar por nome da campanha
               if (!matchedProduct && campaignName) {
-                const cleanCampaignName = campaignName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const cleanCampaignName = campaignName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
                 matchedProduct = productsWithCost.find(p => {
-                  const productName = (p.product_name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-                  // Verificar se o nome do produto está no nome da campanha ou vice-versa
-                  return productName.length > 3 && (
-                    cleanCampaignName.includes(productName) || 
-                    productName.includes(cleanCampaignName) ||
-                    // Verificar palavras-chave comuns
-                    productName.split(/\s+/).some(word => word.length > 3 && cleanCampaignName.includes(word))
-                  );
+                  if (!p.product_name) return false;
+                  const productName = p.product_name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
+                  
+                  // Verificar correspondência exata ou parcial
+                  if (productName.length > 3 && cleanCampaignName.length > 3) {
+                    // Verificar se o nome do produto está no nome da campanha ou vice-versa
+                    if (cleanCampaignName.includes(productName) || productName.includes(cleanCampaignName)) {
+                      return true;
+                    }
+                    
+                    // Verificar palavras-chave comuns (palavras com mais de 3 caracteres)
+                    const productWords = productName.split(/\s+/).filter(w => w.length > 3);
+                    const campaignWords = cleanCampaignName.split(/\s+/).filter(w => w.length > 3);
+                    
+                    // Se há pelo menos uma palavra em comum significativa
+                    const commonWords = productWords.filter(w => campaignWords.includes(w));
+                    if (commonWords.length > 0) {
+                      return true;
+                    }
+                  }
+                  
+                  return false;
                 });
               }
               
@@ -274,11 +325,22 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           finalTotalSupplierCost = totalSupplierCost;
           finalTotalClicks = totalClicks;
           
-          // Se revenue está 0 mas há dados em daily_roas, pode ser que product_price ou units_sold estejam vazios
-          // Nesse caso, tentar calcular revenue de outra forma se possível
-          if (finalTotalRevenue === 0 && filteredDailyRoas.length > 0) {
-            // Verificar se há dados de revenue nas campanhas que podem corresponder
-            console.warn('⚠️ Revenue is 0 but daily_roas has entries. Checking campaigns as fallback...');
+          // Se revenue está 0 mas há dados em daily_roas com spent > 0, pode ser que product_price ou units_sold estejam vazios
+          // Nesse caso, se não há filtros de data explícitos, tentar usar revenue de campaigns como fallback
+          if (finalTotalRevenue === 0 && finalTotalSpent > 0 && !hasExplicitDateFilters) {
+            // Tentar usar revenue de campaigns se disponível (apenas quando não há filtro de data)
+            const revenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+            if (revenueFromCampaigns > 0) {
+              finalTotalRevenue = revenueFromCampaigns;
+            }
+          }
+          
+          // Se conversions está 0 mas há dados, tentar usar de campaigns como fallback (apenas sem filtro de data)
+          if (finalTotalConversions === 0 && finalTotalSpent > 0 && !hasExplicitDateFilters) {
+            const conversionsFromCampaigns = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
+            if (conversionsFromCampaigns > 0) {
+              finalTotalConversions = conversionsFromCampaigns;
+            }
           }
         } else {
           // Fallback: não há dados em daily_roas, usar campaigns/products
@@ -304,11 +366,11 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
               if (filters?.storeId && filters.storeId !== 'all') {
                 filteredProducts = products.filter(p => p.integration_id === filters.storeId);
               }
-              finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
-                const costPrice = Number(p.cost_price) || 0;
-                const quantitySold = Number(p.quantity_sold) || 0;
-                return sum + (costPrice * quantitySold);
-              }, 0);
+          finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
+            const costPrice = Number(p.cost_price) || 0;
+            const quantitySold = Number(p.quantity_sold) || 0;
+            return sum + (costPrice * quantitySold);
+          }, 0);
             } else if (campaigns && campaigns.length > 0 && finalTotalRevenue > 0) {
               // Estimar baseado na receita das campanhas (último recurso)
               finalTotalSupplierCost = finalTotalRevenue * 0.35;
