@@ -75,24 +75,40 @@ const SimpleScroll = () => {
     const gsap = gsapRef.current;
     const ScrollTrigger = ScrollTriggerRef.current;
     let ctx: any;
+    let timeoutId: NodeJS.Timeout;
 
-    const timeoutId = setTimeout(() => {
+    timeoutId = setTimeout(() => {
       ctx = gsap.context(() => {
         const featuresArray = featureRefs.current.filter(Boolean) as HTMLElement[];
         if (featuresArray.length === 0) return;
 
-        // Set initial state
+        // Create quick setters for performance
+        const featureSetters = featuresArray.map((feature) => ({
+          opacity: gsap.quickSetter(feature, "opacity"),
+          scale: gsap.quickSetter(feature, "scale"),
+          y: gsap.quickSetter(feature, "y", "px"),
+        }));
+
+        // Set initial state - first feature visible
         featuresArray.forEach((feature, i) => {
           if (i === 0) {
-            gsap.set(feature, { opacity: 1, scale: 1, y: 0 });
+            featureSetters[i].opacity(1);
+            featureSetters[i].scale(1);
+            featureSetters[i].y(0);
+            (feature as HTMLElement).style.pointerEvents = 'auto';
+            (feature as HTMLElement).style.zIndex = '10';
           } else {
-            gsap.set(feature, { opacity: 0, scale: 0.95, y: 30 });
+            featureSetters[i].opacity(0);
+            featureSetters[i].scale(0.95);
+            featureSetters[i].y(30);
+            (feature as HTMLElement).style.pointerEvents = 'none';
+            (feature as HTMLElement).style.zIndex = `${10 - i}`;
           }
         });
 
         // Create single ScrollTrigger for pinned section
-        // Limited scroll duration - not infinite
-        const scrollDuration = features.length * 100; // 400% for 4 features (controlled)
+        // Limited scroll duration - controlled, not infinite
+        const scrollDuration = features.length * 80; // 320% for 4 features (shorter, more controlled)
         
         scrollTriggerInstance.current = ScrollTrigger.create({
           trigger: containerRef.current,
@@ -108,42 +124,51 @@ const SimpleScroll = () => {
             
             // Calculate which feature should be active
             const segmentSize = 1 / totalFeatures;
-            const newActiveIndex = Math.min(
-              Math.floor(progress / segmentSize),
-              totalFeatures - 1
-            );
+            let newActiveIndex = Math.floor(progress / segmentSize);
             
+            // Ensure we don't go beyond last feature
+            if (progress >= 1) {
+              newActiveIndex = totalFeatures - 1;
+            }
+            newActiveIndex = Math.min(newActiveIndex, totalFeatures - 1);
+            
+            // Update active index state
             if (newActiveIndex !== activeIndex) {
               setActiveIndex(newActiveIndex);
             }
             
             // Calculate progress within current segment
-            const segmentProgress = (progress % segmentSize) / segmentSize;
+            const segmentProgress = segmentSize > 0 
+              ? (progress % segmentSize) / segmentSize 
+              : 0;
             
             // Animate features based on scroll
             featuresArray.forEach((feature, i) => {
+              const setter = featureSetters[i];
+              const featureElement = feature as HTMLElement;
+              
               if (i === newActiveIndex) {
-                // Active feature: fade in and scale up
-                const fadeProgress = Math.min(segmentProgress * 1.5, 1);
-                gsap.set(feature, {
-                  opacity: fadeProgress,
-                  scale: 0.95 + (0.05 * fadeProgress),
-                  y: 30 * (1 - fadeProgress)
-                });
+                // Active feature: fade in and scale up smoothly
+                const fadeProgress = Math.min(segmentProgress * 1.3, 1);
+                setter.opacity(fadeProgress);
+                setter.scale(0.95 + (0.05 * fadeProgress));
+                setter.y(30 * (1 - fadeProgress));
+                featureElement.style.pointerEvents = fadeProgress > 0.5 ? 'auto' : 'none';
+                featureElement.style.zIndex = '20';
               } else if (i < newActiveIndex) {
-                // Previous features: keep visible but dimmed
-                gsap.set(feature, {
-                  opacity: 0.4,
-                  scale: 0.9,
-                  y: 0
-                });
+                // Previous features: fade out completely
+                setter.opacity(0);
+                setter.scale(0.9);
+                setter.y(0);
+                featureElement.style.pointerEvents = 'none';
+                featureElement.style.zIndex = `${10 - i}`;
               } else {
-                // Future features: hidden
-                gsap.set(feature, {
-                  opacity: 0,
-                  scale: 0.95,
-                  y: 30
-                });
+                // Future features: stay hidden
+                setter.opacity(0);
+                setter.scale(0.95);
+                setter.y(30);
+                featureElement.style.pointerEvents = 'none';
+                featureElement.style.zIndex = `${10 - i}`;
               }
             });
           }
@@ -168,7 +193,7 @@ const SimpleScroll = () => {
         scrollTriggerInstance.current.kill();
       }
     };
-  }, [gsapLoaded, activeIndex]);
+  }, [gsapLoaded]);
 
   return (
     <div className="min-h-screen text-white bg-[#0A0C14]">
