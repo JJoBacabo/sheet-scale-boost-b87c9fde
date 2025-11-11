@@ -195,7 +195,7 @@ const Landing = () => {
     return () => ctx.revert();
   }, [gsapLoaded]);
 
-  // Features Pinned Section animation
+  // Features Sticky Stacking Section animation
   useEffect(() => {
     if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
     let timeoutId: NodeJS.Timeout;
@@ -206,84 +206,73 @@ const Landing = () => {
       const gsap = gsapRef.current;
       const ScrollTrigger = ScrollTriggerRef.current;
       if (!gsap || !ScrollTrigger || !featuresRef.current) return;
+      
       ctx = gsap.context(() => {
-        const container = featuresRef.current?.querySelector(".pinned-features-container");
-        const cards = featuresRef.current?.querySelectorAll(".feature-card-4");
+        const container = featuresRef.current?.querySelector(".features-stacking-container");
+        const cards = featuresRef.current?.querySelectorAll(".feature-sticky-card");
         if (!container || !cards || cards.length === 0) return;
 
-        // Set initial state - all cards hidden except first
-        gsap.set(cards, {
-          opacity: 0,
-          y: 50,
-          scale: 0.9
-        });
-        gsap.set(cards[0], {
-          opacity: 1,
-          y: 0,
-          scale: 1
-        });
+        // Animate each card individually when it enters viewport
+        cards.forEach((card, index) => {
+          // Find text and image containers using specific classes
+          const textSection = card.querySelector(".feature-text-content");
+          const imageSection = card.querySelector(".feature-images-container");
 
-        // Pin the container
-        const pinTrigger = ScrollTrigger.create({
-          trigger: container as Element,
-          start: "top top",
-          end: "+=500%",
-          pin: true,
-          pinSpacing: true
-        });
-        scrollTriggersRef.current.push(pinTrigger);
+          if (textSection && imageSection) {
+            // Set initial state - slightly hidden for smooth entrance
+            gsap.set(textSection, {
+              opacity: 0,
+              y: 50,
+            });
+            gsap.set(imageSection, {
+              opacity: 0,
+              y: 50,
+            });
 
-        // Track current visible card to avoid unnecessary animations
-        let currentVisibleIndex = 0;
-
-        // Create scroll trigger that updates cards based on progress
-        const scrollTrigger = ScrollTrigger.create({
-          trigger: container as Element,
-          start: "top top",
-          end: "+=500%",
-          scrub: 1,
-          onUpdate: self => {
-            const progress = self.progress;
-            const totalCards = cards.length;
-
-            // Calculate which card should be visible
-            const newIndex = Math.min(Math.floor(progress * totalCards), totalCards - 1);
-
-            // Only update if index changed
-            if (newIndex !== currentVisibleIndex) {
-              currentVisibleIndex = newIndex;
-
-              // Update all cards based on current index
-              cards.forEach((card, index) => {
-                if (index === currentVisibleIndex) {
-                  // Show current card
-                  gsap.to(card, {
-                    opacity: 1,
-                    y: 0,
-                    scale: 1,
-                    duration: 0.5,
-                    ease: "power2.out"
-                  });
-                } else {
-                  // Hide other cards
-                  gsap.to(card, {
-                    opacity: 0,
-                    y: index < currentVisibleIndex ? -50 : 50,
-                    scale: 0.9,
-                    duration: 0.5,
-                    ease: "power2.out"
-                  });
-                }
-              });
-            }
+            // Create scroll trigger for each card entrance
+            const scrollTrigger = ScrollTrigger.create({
+              trigger: card as Element,
+              start: "top 80%",
+              end: "bottom 20%",
+              toggleActions: "play none none reverse",
+              onEnter: () => {
+                // Animate text first, then images with delay
+                gsap.to(textSection, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.9,
+                  ease: "power3.out",
+                });
+                gsap.to(imageSection, {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.9,
+                  delay: 0.2,
+                  ease: "power3.out",
+                });
+              },
+              onLeave: () => {
+                // Optional: fade out when leaving (can be removed for sticky effect)
+              },
+              onEnterBack: () => {
+                // Animate when scrolling back up
+                gsap.to([textSection, imageSection], {
+                  opacity: 1,
+                  y: 0,
+                  duration: 0.7,
+                  ease: "power2.out",
+                });
+              },
+            });
+            scrollTriggersRef.current.push(scrollTrigger);
           }
         });
-        scrollTriggersRef.current.push(scrollTrigger);
 
         // Refresh ScrollTrigger after setup
         ScrollTrigger.refresh();
       }, featuresRef);
     }, 100);
+
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
       if (ctx) ctx?.revert();
@@ -661,113 +650,169 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section - Pinned Section with GSAP */}
-      <section id="features" ref={featuresRef} className="py-12 sm:py-20 px-4 sm:px-6 bg-transparent relative" aria-label="Features that make the difference">
-        {/* Header - Outside pinned container */}
-        <div className="container mx-auto max-w-7xl mb-8 sm:mb-12">
-          <div className="mb-6 sm:mb-8 text-center">
-            <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/20 border border-primary/30 rounded-full text-xs sm:text-sm text-primary font-medium">
-              Features
-            </span>
-          </div>
+      {/* Features Section - Sticky Stacking Scroll */}
+      <section id="features" ref={featuresRef} className="relative bg-transparent" aria-label="Features that make the difference">
+        {/* Header - Fixed outside scroll container */}
+        <div className="container mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-8 sm:pb-12">
+          <div className="max-w-7xl mx-auto">
+            <div className="mb-6 sm:mb-8 text-center">
+              <span className="inline-block px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/20 border border-primary/30 rounded-full text-xs sm:text-sm text-primary font-medium">
+                Features
+              </span>
+            </div>
 
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white text-center px-4">
-            Features that make the difference
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 text-center px-4">
-            Everything you need to optimize your campaigns in one platform
-          </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-white text-center px-4">
+              {t('landing.features.title')}
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 text-center px-4">
+              {t('landing.features.subtitle')}
+            </p>
+          </div>
         </div>
 
-        <div className="pinned-features-container min-h-[80vh] sm:min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 relative">
-            {/* Pinned content that changes - 2 Column Layout */}
-            <div className="relative min-h-[500px] sm:min-h-[600px] w-full">
+        {/* Sticky Stacking Container - Height allows all cards to scroll */}
+        <div 
+          className="features-stacking-container relative"
+          style={{
+            height: `${featuresData.length * 100}vh`,
+          }}
+        >
+          {/* Each feature card - 100vh sticky */}
           {featuresData.map((feature, index) => {
-              const Icon = feature.icon;
-              const isEven = (index + 1) % 2 === 0; // index 0 = 1 (ímpar), index 1 = 2 (par)
-              const isZoomed = zoomedImage?.featureIndex === index;
+            const Icon = feature.icon;
+            const isEven = index % 2 === 0; // Even index = text left, image right
+            const isZoomed = zoomedImage?.featureIndex === index;
+            const zIndex = 10 + index; // Progressive z-index
 
-              return <div key={index} className="feature-card-4 absolute inset-0 flex items-center justify-center">
-                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-10 lg:gap-12 w-full items-center justify-items-center ${isEven ? '' : 'md:grid-flow-dense'}`}>
-                      {/* Text Content - Top on mobile, Left/Right on desktop */}
-                      <div className={`space-y-3 sm:space-y-4 md:space-y-5 order-1 md:order-none text-center md:text-left w-full ${isEven ? '' : 'md:col-start-2'}`}>
-                        <h3 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">{t(`landing.features.${feature.key}.title`)}</h3>
-                        <p className="text-lg sm:text-xl md:text-xl lg:text-2xl text-gray-300/70 leading-relaxed">{t(`landing.features.${feature.key}.description`)}</p>
+            return (
+              <div
+                key={index}
+                className="feature-sticky-card"
+                data-feature-index={index}
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  height: '100vh',
+                  zIndex: zIndex,
+                  willChange: 'transform',
+                }}
+              >
+                <div className="h-full flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 relative">
+                  <div className="container mx-auto max-w-7xl w-full relative z-10">
+                    <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 items-center h-full min-h-[600px] ${
+                      isEven ? '' : 'md:grid-flow-dense'
+                    }`}>
+                      {/* Text Content */}
+                      <div
+                        className={`feature-text-content space-y-4 sm:space-y-5 md:space-y-6 order-1 md:order-none text-center md:text-left ${
+                          isEven ? '' : 'md:col-start-2'
+                        }`}
+                      >
+                        <div className="inline-flex items-center justify-center md:justify-start gap-3 mb-2">
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center shadow-lg">
+                            <Icon className="w-6 h-6 sm:w-7 sm:h-7 text-[#0A0E27]" />
+                          </div>
+                        </div>
+                        <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                          {t(`landing.features.${feature.key}.title`)}
+                        </h3>
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300/80 leading-relaxed max-w-2xl mx-auto md:mx-0">
+                          {t(`landing.features.${feature.key}.description`)}
+                        </p>
                       </div>
 
                       {/* Images - Side by side */}
-                      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${isEven ? '' : 'md:col-start-1 md:row-start-1'}`}>
-                        <div 
-                          onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 1 ? null : {featureIndex: index, imageIndex: 1})}
-                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105"
+                      <div
+                        className={`feature-images-container grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${
+                          isEven ? '' : 'md:col-start-1 md:row-start-1'
+                        }`}
+                      >
+                        <div
+                          onClick={() =>
+                            setZoomedImage(
+                              isZoomed && zoomedImage.imageIndex === 1
+                                ? null
+                                : { featureIndex: index, imageIndex: 1 }
+                            )
+                          }
+                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
                         >
-                          <img 
-                            src={feature.images[0]} 
+                          <img
+                            src={feature.images[0]}
                             alt={`${t(`landing.features.${feature.key}.title`)} - Image 1`}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             loading="lazy"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                               if (target.parentElement) {
-                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 1</span></div>';
+                                target.parentElement.innerHTML =
+                                  '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 1</span></div>';
                               }
                             }}
                           />
                         </div>
-                        <div 
-                          onClick={() => setZoomedImage(isZoomed && zoomedImage.imageIndex === 2 ? null : {featureIndex: index, imageIndex: 2})}
-                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/40 border border-primary/30 backdrop-blur-md overflow-hidden shadow-lg cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105"
+                        <div
+                          onClick={() =>
+                            setZoomedImage(
+                              isZoomed && zoomedImage.imageIndex === 2
+                                ? null
+                                : { featureIndex: index, imageIndex: 2 }
+                            )
+                          }
+                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
                         >
-                          <img 
-                            src={feature.images[1]} 
+                          <img
+                            src={feature.images[1]}
                             alt={`${t(`landing.features.${feature.key}.title`)} - Image 2`}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             loading="lazy"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = 'none';
                               if (target.parentElement) {
-                                target.parentElement.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 2</span></div>';
+                                target.parentElement.innerHTML =
+                                  '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 2</span></div>';
                               }
                             }}
                           />
                         </div>
                       </div>
                     </div>
-                  </div>;
-            })}
-            {/* Zoomed Image Modal */}
-            {zoomedImage && (() => {
-              const feature = featuresData[zoomedImage.featureIndex];
-              
-              return (
-                <div 
-                  className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
-                  onClick={() => setZoomedImage(null)}
-                >
-                  <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
-                    <img 
-                      src={feature.images[zoomedImage.imageIndex - 1]} 
-                      alt={`${t(`landing.features.${feature.key}.title`)} - Zoomed`}
-                      className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <button
-                      onClick={() => setZoomedImage(null)}
-                      className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white text-xl font-bold transition-colors"
-                      aria-label="Close zoom"
-                    >
-                      ×
-                    </button>
                   </div>
                 </div>
-              );
-            })()}
-                </div>
-          </div>
+              </div>
+            );
+          })}
         </div>
+
+        {/* Zoomed Image Modal */}
+        {zoomedImage && (() => {
+          const feature = featuresData[zoomedImage.featureIndex];
+
+          return (
+            <div
+              className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-4 backdrop-blur-sm"
+              onClick={() => setZoomedImage(null)}
+            >
+              <div className="relative max-w-7xl max-h-full w-full h-full flex items-center justify-center">
+                <img
+                  src={feature.images[zoomedImage.imageIndex - 1]}
+                  alt={`${t(`landing.features.${feature.key}.title`)} - Zoomed`}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={() => setZoomedImage(null)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center text-white text-xl font-bold transition-colors z-10"
+                  aria-label="Close zoom"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          );
+        })()}
       </section>
 
       {/* Pricing Section */}
