@@ -450,15 +450,19 @@ const Products = () => {
 
     try {
       // Update product
-      const { error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from("products")
         .update({ 
           cost_price: costValue,
-          profit_margin: newMargin
+          profit_margin: newMargin,
+          updated_at: new Date().toISOString()
         })
-        .eq("id", productId);
+        .eq("id", productId)
+        .select()
+        .single();
 
       if (error) {
+        console.error('❌ Error updating product cost:', error);
         toast({
           title: t("settings.errorUpdatingQuote"),
           description: error.message,
@@ -466,6 +470,23 @@ const Products = () => {
         });
         return;
       }
+
+      if (!updatedData) {
+        console.error('❌ No data returned from update');
+        toast({
+          title: t("common.error"),
+          description: t("settings.errorUpdatingQuoteDesc"),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local state immediately for better UX using returned data
+      setProducts(prev => prev.map(p => 
+        p.id === productId 
+          ? { ...p, ...updatedData, cost_price: costValue, profit_margin: newMargin }
+          : p
+      ));
 
       // Update Daily ROAS entries
       await updateDailyROASForProduct(product.product_name, costValue, sellingPrice);
@@ -476,6 +497,8 @@ const Products = () => {
       });
       setEditingCost(null);
       setTempCostPrice("");
+      
+      // Refresh from server to ensure consistency
       await fetchProducts(user.id, true);
     } catch (err) {
       toast({
