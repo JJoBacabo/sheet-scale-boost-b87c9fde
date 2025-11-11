@@ -15,7 +15,7 @@ import { CryptoChart } from "@/components/dashboard/CryptoChart";
 import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/TimeframeSelector";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
-import { Package, Target, TrendingUp, Activity, RefreshCw, BarChart3, PieChart, Eye, ShoppingCart, DollarSign, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
+import { Target, RefreshCw, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
 import { useToast } from "@/hooks/use-toast";
@@ -53,17 +53,6 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Debug: log timeframe changes
-  useEffect(() => {
-    if (timeframe) {
-      console.log('📅 Dashboard timeframe changed:', {
-        option: timeframe.option,
-        dateFrom: timeframe.dateFrom.toISOString().split('T')[0],
-        dateTo: timeframe.dateTo.toISOString().split('T')[0],
-      });
-    }
-  }, [timeframe]);
-
   const stats = useDashboardStats(user?.id, timeframe ? {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
@@ -71,23 +60,8 @@ const Dashboard = () => {
   } : { refreshKey });
   const statsLoading = stats.loading;
 
-  // Get top products
-  const [topProducts, setTopProducts] = useState<any[]>([]);
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase
-      .from('products')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('total_revenue', { ascending: false })
-      .limit(5)
-      .then(({ data }) => setTopProducts(data || []));
-  }, [user?.id]);
-
   // Get recent campaigns
-  const [recentCampaigns, setRecentCampaigns] = useState<any[]>([]);
   const [allCampaigns, setAllCampaigns] = useState<any[]>([]);
-  const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
   const [autoSynced, setAutoSynced] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
@@ -106,7 +80,6 @@ const Dashboard = () => {
         .maybeSingle();
 
       if (integration) {
-        setHasFacebookIntegration(true);
         // Auto-sync silently in background
         try {
           await supabase.functions.invoke('sync-facebook-campaigns', {
@@ -114,7 +87,7 @@ const Dashboard = () => {
           });
           setAutoSynced(true);
         } catch (err) {
-          console.error('Auto-sync error:', err);
+          // Silently fail - user can manually sync if needed
         }
       }
     };
@@ -125,17 +98,6 @@ const Dashboard = () => {
   const refreshCampaigns = useCallback(async () => {
     if (!user?.id) return;
     
-    // Get only active campaigns - only select needed fields
-    const { data: recentData } = await supabase
-      .from('campaigns')
-      .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .limit(5);
-    
-    setRecentCampaigns(recentData || []);
-
     // Get all active campaigns for table - only select needed fields
     const { data: allData } = await supabase
       .from('campaigns')
@@ -158,10 +120,8 @@ const Dashboard = () => {
     
     // If no daily data, create from campaigns (aggregate by date from updated_at)
     let revenueChartData: { date: string; value: number }[] = [];
-    let roasChartData: { date: string; value: number }[] = [];
     let profitChartData: { date: string; value: number }[] = [];
     let spendChartData: { date: string; value: number }[] = [];
-    let conversionsChartData: { date: string; value: number }[] = [];
 
     if (dailyData.length > 0) {
       // Use daily ROAS data - data já vem ordenada do mais antigo para o mais recente
@@ -227,11 +187,6 @@ const Dashboard = () => {
         value: (item.units_sold || 0) * (item.product_price || 0),
       }));
 
-      roasChartData = sortedData.map((item) => ({
-        date: format(new Date(item.date), 'dd/MM'),
-        value: item.total_spent > 0 ? ((item.units_sold || 0) * (item.product_price || 0)) / item.total_spent : 0,
-      }));
-
       profitChartData = sortedData.map((item) => {
         const revenue = (item.units_sold || 0) * (item.product_price || 0);
         const cost = (item.units_sold || 0) * (item.cog || 0);
@@ -244,11 +199,6 @@ const Dashboard = () => {
       spendChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.total_spent || 0,
-      }));
-
-      conversionsChartData = sortedData.map((item) => ({
-        date: format(new Date(item.date), 'dd/MM'),
-        value: item.purchases || 0,
       }));
     } else if (allCampaigns.length > 0) {
       // Create chart data from campaigns - last 30 days
@@ -280,32 +230,20 @@ const Dashboard = () => {
         value: dailySpent * (0.8 + Math.random() * 0.4),
       }));
 
-      roasChartData = last30Days.map((date) => ({
-        date,
-        value: avgRoas * (0.9 + Math.random() * 0.2),
-      }));
-
       profitChartData = last30Days.map((date) => ({
         date,
         value: dailyProfit * (0.8 + Math.random() * 0.4),
-      }));
-
-      conversionsChartData = last30Days.map((date) => ({
-        date,
-        value: Math.round(dailyConversions * (0.7 + Math.random() * 0.6)),
       }));
     }
 
     return {
       revenueChartData,
-      roasChartData,
       profitChartData,
       spendChartData,
-      conversionsChartData,
     };
   }, [stats?.dailyRoasData, allCampaigns]);
 
-  const { revenueChartData, roasChartData, profitChartData, spendChartData, conversionsChartData } = chartData;
+  const { revenueChartData, profitChartData, spendChartData } = chartData;
 
   // Memoize filtered campaigns to avoid recalculating on every render
   const filteredCampaigns = useMemo(() => {

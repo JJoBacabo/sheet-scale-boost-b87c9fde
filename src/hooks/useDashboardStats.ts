@@ -40,15 +40,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
 
     const fetchStats = async () => {
       try {
-        // Debug: log filters to see if they're being applied
-        if (filters?.dateFrom || filters?.dateTo) {
-          console.log('📅 useDashboardStats filters:', {
-            dateFrom: filters.dateFrom?.toISOString().split('T')[0],
-            dateTo: filters.dateTo?.toISOString().split('T')[0],
-            dateFromTime: filters.dateFrom?.getTime(),
-            dateToTime: filters.dateTo?.getTime(),
-          });
-        }
         // Build campaigns query with filters - only select needed fields
         let campaignsQuery = supabase
           .from('campaigns')
@@ -85,16 +76,20 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
 
         // Apply date filters at query level for better performance
         // Usar apenas a data (sem hora) para comparação, já que a coluna date é do tipo DATE
+        // Criar strings de data consistentes para usar tanto na query quanto no filtro manual
+        let dateFromStr: string | null = null;
+        let dateToStr: string | null = null;
+        
         if (filters?.dateFrom) {
           const dateFrom = new Date(filters.dateFrom);
           dateFrom.setHours(0, 0, 0, 0);
-          const dateFromStr = dateFrom.toISOString().split('T')[0];
+          dateFromStr = dateFrom.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.gte('date', dateFromStr);
         }
         if (filters?.dateTo) {
           const dateTo = new Date(filters.dateTo);
           dateTo.setHours(23, 59, 59, 999);
-          const dateToStr = dateTo.toISOString().split('T')[0];
+          dateToStr = dateTo.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
@@ -111,23 +106,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         }
 
         const { data: dailyRoas } = await dailyRoasQuery;
-        
-        // Debug: log query results
-        if (filters?.dateFrom || filters?.dateTo) {
-          console.log('📊 Daily ROAS query results:', {
-            totalRecords: dailyRoas?.length || 0,
-            dateRange: dailyRoas?.length > 0 ? {
-              first: dailyRoas[0]?.date,
-              last: dailyRoas[dailyRoas.length - 1]?.date,
-            } : null,
-            sampleRecords: dailyRoas?.slice(0, 3).map((d: any) => ({
-              date: d.date,
-              units_sold: d.units_sold,
-              cog: d.cog,
-              total_spent: d.total_spent,
-            })),
-          });
-        }
 
         // Fetch recent activity - only select needed fields
         const { data: activity } = await supabase
@@ -137,11 +115,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           .order('created_at', { ascending: false })
           .limit(10);
 
-        // Calculate stats from daily_roas (more accurate with date filters)
-        const dateFromStr = filters?.dateFrom ? filters.dateFrom.toISOString().split('T')[0] : null;
-        const dateToStr = filters?.dateTo ? filters.dateTo.toISOString().split('T')[0] : null;
-        
         // Filter daily_roas by date range if provided (already filtered at query level, but double-check)
+        // Usar as strings de data já criadas acima para consistência
         let filteredDailyRoas = dailyRoas || [];
         if (dateFromStr) {
           filteredDailyRoas = filteredDailyRoas.filter((d: any) => {
@@ -183,48 +158,24 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
         
-        // Calculate supplier cost - use daily_roas if available, otherwise use products
-        // For products, we need to filter by date range if filters are provided
-        let totalSupplierCostFromProducts = 0;
-        if (products && products.length > 0) {
-          // If we have date filters, we can't accurately calculate supplier cost from products
-          // because products don't have date information. So we use the daily_roas calculation
-          // or estimate based on the revenue ratio
-          if (filteredDailyRoas.length === 0 && finalTotalRevenue > 0) {
-            // Estimate supplier cost based on average margin from campaigns
-            // This is a fallback when no daily_roas data exists
-            const avgMargin = campaigns?.length > 0 
-              ? campaigns.reduce((sum, c) => {
-                  const revenue = Number(c.total_revenue) || 0;
-                  const spent = Number(c.total_spent) || 0;
-                  return sum + (revenue > 0 ? (revenue - spent) / revenue : 0);
-                }, 0) / campaigns.length
-              : 0;
-            // Estimate supplier cost as a percentage of revenue (rough estimate)
-            totalSupplierCostFromProducts = finalTotalRevenue * 0.3; // Rough estimate: 30% of revenue
-          } else {
-            // Use products data when no daily_roas and no date filters
-            totalSupplierCostFromProducts = products.reduce((sum, p) => {
-              const costPrice = Number(p.cost_price) || 0;
-              const quantitySold = Number(p.quantity_sold) || 0;
-              return sum + (costPrice * quantitySold);
-            }, 0);
-          }
-        }
+        // Calculate supplier cost - use daily_roas if available
+        // IMPORTANT: Se há filtros de data mas não há daily_roas, não podemos calcular supplier cost
+        // porque products não tem informação de data. Nesse caso, retornamos 0 para evitar valores incorretos.
+        let finalTotalSupplierCost = 0;
         
-        // Use daily_roas supplier cost if available, otherwise use products estimate
-        const finalTotalSupplierCost = filteredDailyRoas.length > 0 ? totalSupplierCost : totalSupplierCostFromProducts;
-        
-        // Debug: log supplier cost calculation
-        if (filters?.dateFrom || filters?.dateTo) {
-          console.log('💰 Supplier Cost calculation:', {
-            filteredDailyRoasCount: filteredDailyRoas.length,
-            totalSupplierCostFromDailyRoas: totalSupplierCost,
-            totalSupplierCostFromProducts: totalSupplierCostFromProducts,
-            finalTotalSupplierCost: finalTotalSupplierCost,
-            dailyRoasWithCog: filteredDailyRoas.filter((d: any) => d.cog > 0).length,
-          });
+        if (filteredDailyRoas.length > 0) {
+          // Usar supplier cost de daily_roas (mais preciso)
+          finalTotalSupplierCost = totalSupplierCost;
+        } else if (!dateFromStr && !dateToStr) {
+          // Só usar products como fallback se NÃO houver filtros de data
+          // porque products não tem informação de data para filtrar
+          finalTotalSupplierCost = products?.reduce((sum, p) => {
+            const costPrice = Number(p.cost_price) || 0;
+            const quantitySold = Number(p.quantity_sold) || 0;
+            return sum + (costPrice * quantitySold);
+          }, 0) || 0;
         }
+        // Se há filtros de data mas não há daily_roas, finalTotalSupplierCost permanece 0
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
