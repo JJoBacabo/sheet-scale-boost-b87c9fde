@@ -477,7 +477,8 @@ const Products = () => {
 
   const handleEditCost = (productId: string, currentCost: number | null) => {
     setEditingCost(productId);
-    setTempCostPrice(currentCost?.toString() || "0");
+    // Show current cost or empty string (not "0") to allow user to see and edit the actual value
+    setTempCostPrice(currentCost !== null && currentCost !== 0 ? currentCost.toFixed(2) : "");
   };
 
   const handleCancelEditCost = () => {
@@ -491,15 +492,27 @@ const Products = () => {
       return;
     }
     
-    const costValue = parseFloat(tempCostPrice);
-    console.log('📝 [handleSaveCost] Starting save:', { productId, costValue, tempCostPrice });
+    // Handle empty string or whitespace - treat as 0
+    const trimmedValue = tempCostPrice.trim();
+    if (trimmedValue === '' || trimmedValue === '.') {
+      // User wants to clear the cost
+      toast({
+        title: `ℹ️ ${t("settings.invalidValue")}`,
+        description: "Por favor, introduza um valor válido (ex: 10.50)",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const costValue = parseFloat(trimmedValue);
+    console.log('📝 [handleSaveCost] Starting save:', { productId, costValue, tempCostPrice: trimmedValue });
     
     // Validate input
     if (isNaN(costValue) || costValue < 0) {
       console.warn('⚠️ [handleSaveCost] Invalid cost value:', costValue);
       toast({
         title: `❌ ${t("settings.invalidValue")}`,
-        description: t("settings.enterValidNumber"),
+        description: "Por favor, introduza um valor numérico válido maior ou igual a 0",
         variant: "destructive",
       });
       return;
@@ -1175,56 +1188,77 @@ const Products = () => {
                           <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
                         )}
 
-                        <div className="space-y-2.5 p-3 rounded-lg bg-background/30">
+                        <div className="space-y-2.5 p-3 rounded-lg bg-background/30 border border-border/50">
                           {/* Cotação (Supplier Cost) - Editable */}
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm text-muted-foreground">{t('products.supplierQuote')}</span>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-muted-foreground">{t('products.supplierQuote')}</span>
                             {editingCost === product.id ? (
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  min="0"
-                                  value={tempCostPrice}
-                                  onChange={(e) => setTempCostPrice(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleSaveCost(product.id);
-                                    } else if (e.key === 'Escape') {
-                                      handleCancelEditCost();
-                                    }
-                                  }}
-                                  className="w-24 h-8 text-sm bg-background/80 border-primary/30"
-                                  placeholder="0.00"
-                                  autoFocus
-                                />
+                              <div className="flex items-center gap-1.5">
+                                <div className="relative flex items-center">
+                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">€</span>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={tempCostPrice}
+                                    onChange={(e) => {
+                                      // Allow only numbers and decimal point
+                                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                                      // Allow only one decimal point
+                                      const parts = value.split('.');
+                                      if (parts.length > 2) {
+                                        return;
+                                      }
+                                      // Limit decimal places to 2
+                                      if (parts[1] && parts[1].length > 2) {
+                                        return;
+                                      }
+                                      setTempCostPrice(value);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleSaveCost(product.id);
+                                      } else if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        handleCancelEditCost();
+                                      }
+                                    }}
+                                    className="w-28 h-9 pl-7 pr-2.5 text-sm font-semibold bg-background border-2 border-primary/40 rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                    placeholder="0.00"
+                                    autoFocus
+                                  />
+                                </div>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 w-9 p-0 hover:bg-emerald-500/10 hover:text-emerald-600 rounded-lg transition-colors"
                                   onClick={() => handleSaveCost(product.id)}
                                 >
-                                  <Check className="w-4 h-4 text-green-600" />
+                                  <Check className="w-4 h-4" />
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-8 w-8 p-0"
+                                  className="h-9 w-9 p-0 hover:bg-red-500/10 hover:text-red-600 rounded-lg transition-colors"
                                   onClick={handleCancelEditCost}
                                 >
-                                  <X className="w-4 h-4 text-red-600" />
+                                  <X className="w-4 h-4" />
                                 </Button>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className="font-semibold">
-                                  €{product.cost_price?.toFixed(2) || "0.00"}
+                                <span className="text-base font-semibold text-foreground">
+                                  {product.cost_price !== null && product.cost_price !== 0 
+                                    ? `€${product.cost_price.toFixed(2)}`
+                                    : <span className="text-muted-foreground italic">Não definido</span>
+                                  }
                                 </span>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 hover:bg-primary/10"
+                                  className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
                                   onClick={() => handleEditCost(product.id, product.cost_price)}
+                                  title="Editar custo"
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
