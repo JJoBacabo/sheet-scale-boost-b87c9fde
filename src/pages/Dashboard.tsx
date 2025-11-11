@@ -132,10 +132,7 @@ const Dashboard = () => {
       .then(({ data }) => setAllCampaigns(data || []));
   }, [user?.id]); // Removed stats dependency to prevent unnecessary re-fetches
 
-  if (loading || stateLoading || statsLoading) {
-    return <LoadingOverlay message={t('dashboard.loading')} />;
-  }
-
+  // CRITICAL: All hooks must be called BEFORE any conditional returns
   // Memoize chart data calculations to avoid recalculating on every render
   const chartData = useMemo(() => {
     const dailyData = stats?.dailyRoasData || [];
@@ -249,6 +246,11 @@ const Dashboard = () => {
   const displayedCampaigns = useMemo(() => {
     return showAllCampaigns ? filteredCampaigns : filteredCampaigns.slice(0, 5);
   }, [showAllCampaigns, filteredCampaigns]);
+
+  // NOW we can do conditional returns after all hooks have been called
+  if (loading || stateLoading || statsLoading) {
+    return <LoadingOverlay message={t('dashboard.loading')} />;
+  }
 
   const handleSyncFacebookData = async () => {
     if (!user?.id) return;
