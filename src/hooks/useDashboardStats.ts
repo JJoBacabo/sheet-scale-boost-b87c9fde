@@ -97,9 +97,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
-        // Track if user explicitly provided date filters (vs default)
-        const hasExplicitDateFilters = !!(filters?.dateFrom || filters?.dateTo);
-        
         // Only apply default filter if no date filters are provided
         if (!filters?.dateFrom && !filters?.dateTo) {
           // Default to last 90 days if no date filter
