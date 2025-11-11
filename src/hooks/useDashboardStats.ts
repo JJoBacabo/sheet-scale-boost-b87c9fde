@@ -58,7 +58,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         // Build products query with filters - only select needed fields
         let productsQuery = supabase
           .from('products')
-          .select('id, cost_price, quantity_sold')
+          .select('id, cost_price, quantity_sold, integration_id')
           .eq('user_id', userId);
 
         if (filters?.productId && filters.productId !== 'all') {
