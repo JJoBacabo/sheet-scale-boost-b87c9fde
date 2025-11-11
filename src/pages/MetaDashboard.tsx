@@ -131,7 +131,7 @@ const CampaignCard = memo(({
   t: (key: string) => string;
 }) => {
   return (
-    <Card className="p-5 glass-card hover:border-primary/30 transition-all group relative">
+    <Card className="p-6 glass-card hover:border-[#7BBCFE]/40 transition-all group relative border-2 border-[#7BBCFE]/10 bg-gradient-to-br from-[#0A0C14]/60 to-[#1a1f2e]/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#7BBCFE]/10">
       <div className="flex flex-col lg:flex-row gap-6 relative">
         {/* Eye and Edit icons in top-right */}
         <div className="absolute top-0 right-0 flex gap-1 z-10">
@@ -179,23 +179,23 @@ const CampaignCard = memo(({
             </div>
           </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.spent')}</p>
-              <p className="text-lg font-bold">€{insights.spend.toFixed(2)}</p>
+          {/* Key Metrics - Redesigned */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10 border border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40 transition-all">
+              <p className="text-xs text-[#7BBCFE]/70 mb-2 font-medium">{t('metaDashboard.spent')}</p>
+              <p className="text-xl font-bold text-white">€{insights.spend.toFixed(2)}</p>
             </div>
-            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-              <p className="text-xs text-muted-foreground mb-1">{t('metaDashboard.results')}</p>
-              <p className="text-lg font-bold">{insights.results}</p>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10 border border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40 transition-all">
+              <p className="text-xs text-[#7BBCFE]/70 mb-2 font-medium">{t('metaDashboard.results')}</p>
+              <p className="text-xl font-bold text-white">{insights.results.toLocaleString()}</p>
             </div>
-            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-              <p className="text-xs text-muted-foreground mb-1">CPC</p>
-              <p className="text-lg font-bold">€{insights.cpc.toFixed(2)}</p>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-[#0066FF]/10 to-[#7BBCFE]/10 border border-[#0066FF]/20 hover:border-[#0066FF]/40 transition-all">
+              <p className="text-xs text-[#0066FF]/70 mb-2 font-medium">CPC</p>
+              <p className="text-xl font-bold text-white">€{insights.cpc.toFixed(2)}</p>
             </div>
-            <div className="p-3 rounded-lg bg-background/30 border border-border/20">
-              <p className="text-xs text-muted-foreground mb-1">ROAS</p>
-              <p className="text-lg font-bold">
+            <div className="p-4 rounded-xl bg-gradient-to-br from-[#B8A8FE]/10 to-[#0066FF]/10 border border-[#B8A8FE]/20 hover:border-[#B8A8FE]/40 transition-all">
+              <p className="text-xs text-[#B8A8FE]/70 mb-2 font-medium">ROAS</p>
+              <p className="text-xl font-bold text-white">
                 {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
               </p>
             </div>
@@ -412,9 +412,23 @@ const MetaDashboard = () => {
         body: { action: "listAdAccounts" },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Edge Function error:", error);
+        // Check if it's a 500 error or network error
+        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
+          toast({
+            title: t("metaDashboard.errorLoadingAccounts"),
+            description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+        setLoading(false);
+        return;
+      }
 
-      if (data.error) {
+      if (data?.error) {
         toast({
           title: t("metaDashboard.errorLoadingAccounts"),
           description: data.error,
@@ -424,7 +438,7 @@ const MetaDashboard = () => {
         return;
       }
 
-      if (data.adAccounts && data.adAccounts.length > 0) {
+      if (data?.adAccounts && data.adAccounts.length > 0) {
         setAdAccounts(data.adAccounts);
         const firstAccount = data.adAccounts[0].id;
         setSelectedAdAccount(firstAccount);
@@ -442,7 +456,7 @@ const MetaDashboard = () => {
       console.error("Error fetching ad accounts:", error);
       toast({
         title: t("metaDashboard.errorLoadingAccounts"),
-        description: error.message || t("metaDashboard.unknownErrorLoadingAccounts"),
+        description: error.message || t("metaDashboard.unknownErrorLoadingAccounts") || "Failed to load ad accounts. Please check your connection.",
         variant: "destructive",
       });
       setLoading(false);
@@ -479,25 +493,43 @@ const MetaDashboard = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Edge Function error:", error);
+        // Check if it's a 500 error or network error
+        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
+          toast({
+            title: t("metaDashboard.errorLoadingCampaigns"),
+            description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
+            variant: "destructive",
+          });
+          // Set empty campaigns array to show empty state
+          setCampaigns([]);
+        } else {
+          throw error;
+        }
+        setLoading(false);
+        return;
+      }
 
-      if (data.error) {
+      if (data?.error) {
         toast({
           title: t("metaDashboard.errorLoadingCampaigns"),
           description: data.error,
           variant: "destructive",
         });
+        setCampaigns([]);
       } else {
-        setCampaigns(data.campaigns || []);
-        console.log(`Loaded ${data.campaigns?.length || 0} campaigns`);
+        setCampaigns(data?.campaigns || []);
+        console.log(`Loaded ${data?.campaigns?.length || 0} campaigns`);
       }
     } catch (error: any) {
       console.error("Error fetching campaigns:", error);
       toast({
         title: t("metaDashboard.errorLoadingCampaigns"),
-        description: error.message || t("metaDashboard.unknownErrorLoadingCampaigns"),
+        description: error.message || t("metaDashboard.unknownErrorLoadingCampaigns") || "Failed to load campaigns. Please try again.",
         variant: "destructive",
       });
+      setCampaigns([]);
     } finally {
       setLoading(false);
     }
@@ -1228,8 +1260,9 @@ const MetaDashboard = () => {
         </Badge>
       }
     >
-            {/* Ad Account Selector & Filters */}
-            <Card className="p-5 glass-card">
+      <div className="space-y-6">
+            {/* Ad Account Selector & Filters - Redesigned */}
+            <Card className="p-6 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#0A0C14]/50 to-[#1a1f2e]/30 backdrop-blur-xl">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">{t("metaDashboard.adAccount")}</label>
@@ -1340,8 +1373,8 @@ const MetaDashboard = () => {
               </div>
             </Card>
 
-            {/* Search & Filter */}
-            <Card className="p-5 glass-card">
+            {/* Search & Filter - Redesigned */}
+            <Card className="p-6 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#0A0C14]/50 to-[#1a1f2e]/30 backdrop-blur-xl">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -1409,15 +1442,32 @@ const MetaDashboard = () => {
               </div>
             </Card>
 
-            {/* Campaigns List - Simplified */}
-            <div className="space-y-4">
+            {/* Campaigns List - Redesigned */}
+            <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">{t('metaDashboard.campaignsTitle')} ({filteredCampaigns.length})</h2>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] bg-clip-text text-transparent">
+                    {t('metaDashboard.campaignsTitle')}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {filteredCampaigns.length} {filteredCampaigns.length === 1 ? 'campaign' : 'campaigns'}
+                  </p>
+                </div>
               </div>
 
               {filteredCampaigns.length === 0 ? (
-                <Card className="p-8 text-center glass-card">
-                  <p className="text-muted-foreground">{t("metaDashboard.noCampaigns")}</p>
+                <Card className="p-12 text-center glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#0A0C14]/50 to-[#1a1f2e]/30">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#7BBCFE]/20 to-[#B8A8FE]/20 flex items-center justify-center">
+                      <Target className="w-8 h-8 text-[#7BBCFE]" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-white mb-2">{t("metaDashboard.noCampaigns")}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {loading ? "Loading campaigns..." : "No campaigns found. Try adjusting your filters or date range."}
+                      </p>
+                    </div>
+                  </div>
                 </Card>
               ) : (
                 <div className="grid gap-4">
@@ -1518,6 +1568,7 @@ const MetaDashboard = () => {
                 </div>
                 )}
               </div>
+      </div>
 
       {/* Campaign Details Dialog */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
