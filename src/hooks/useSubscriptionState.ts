@@ -85,12 +85,6 @@ export const useSubscriptionState = () => {
                 allowedPages = ['settings', 'products', 'integrations'];
             }
             
-            console.log('✅ useSubscriptionState - Paid plan in profile (no subscription):', {
-              planCode,
-              planName,
-              allowedPages
-            });
-            
             setStateInfo({
               state: 'active',
               readonly: false,
@@ -101,6 +95,7 @@ export const useSubscriptionState = () => {
               showBanner: false,
               allowedPages,
             });
+            setLoading(false);
             return;
           }
           
@@ -115,6 +110,7 @@ export const useSubscriptionState = () => {
             showBanner: false,
             allowedPages: ['settings', 'products', 'integrations'],
           });
+          setLoading(false);
           return;
         }
 
@@ -130,23 +126,37 @@ export const useSubscriptionState = () => {
             showBanner: false,
             allowedPages: ['dashboard', 'campaign-control', 'meta-dashboard', 'products', 'settings', 'integrations', 'profit-sheet'],
           });
+          setLoading(false);
+          return;
+        }
+
+        if (!subscription) {
+          setLoading(false);
           return;
         }
 
         const now = new Date();
-        const state = subscription.state as SubscriptionState;
+        const state = (subscription.state || 'active') as SubscriptionState;
         let daysUntilSuspension = null;
         let daysUntilArchive = null;
         let allowedPages: string[] = [];
 
-        if (subscription.grace_period_ends_at) {
-          const graceEnd = new Date(subscription.grace_period_ends_at);
-          daysUntilSuspension = Math.ceil((graceEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        }
+        try {
+          if (subscription.grace_period_ends_at) {
+            const graceEnd = new Date(subscription.grace_period_ends_at);
+            if (!isNaN(graceEnd.getTime())) {
+              daysUntilSuspension = Math.ceil((graceEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            }
+          }
 
-        if (subscription.archive_scheduled_at) {
-          const archiveDate = new Date(subscription.archive_scheduled_at);
-          daysUntilArchive = Math.ceil((archiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          if (subscription.archive_scheduled_at) {
+            const archiveDate = new Date(subscription.archive_scheduled_at);
+            if (!isNaN(archiveDate.getTime())) {
+              daysUntilArchive = Math.ceil((archiveDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            }
+          }
+        } catch (dateError) {
+          console.error('Error calculating dates:', dateError);
         }
 
         // Determine allowed pages based on state
