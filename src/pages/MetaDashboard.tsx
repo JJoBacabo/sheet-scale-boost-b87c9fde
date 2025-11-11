@@ -399,23 +399,50 @@ const MetaDashboard = () => {
 
     if (data && !error) {
       setIsConnected(true);
-      fetchAdAccounts();
+      // Use cached ad_accounts from metadata to avoid API calls
+      fetchAdAccounts(data);
     } else {
       setIsConnected(false);
     }
   };
 
-  const fetchAdAccounts = async () => {
+  const fetchAdAccounts = async (integrationData?: any) => {
     setLoading(true);
     try {
+      // First, try to use cached ad_accounts from integration metadata
+      if (integrationData?.metadata?.ad_accounts && Array.isArray(integrationData.metadata.ad_accounts)) {
+        console.log("Using cached ad accounts from integration metadata");
+        const cachedAccounts = integrationData.metadata.ad_accounts;
+        
+        if (cachedAccounts.length > 0) {
+          setAdAccounts(cachedAccounts);
+          const firstAccount = cachedAccounts[0].id;
+          setSelectedAdAccount(firstAccount);
+          // Fetch campaigns for the first account automatically
+          await fetchCampaigns(firstAccount);
+          return;
+        }
+      }
+
+      // If no cached data, fetch from API (this may hit rate limits)
+      console.log("No cached accounts found, fetching from API...");
       const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
         body: { action: "listAdAccounts" },
       });
 
       if (error) {
         console.error("Edge Function error:", error);
+        // Check for rate limiting
+        if (error.message?.includes("429") || error.message?.includes("rate limit")) {
+          toast({
+            title: "⏱️ " + t("metaDashboard.rateLimitReached"),
+            description: "Facebook API rate limit reached. Please wait 5-10 minutes before trying again.",
+            variant: "destructive",
+            duration: 10000,
+          });
+        }
         // Check if it's a 500 error or network error
-        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
+        else if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
           toast({
             title: t("metaDashboard.errorLoadingAccounts"),
             description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
@@ -429,11 +456,21 @@ const MetaDashboard = () => {
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingAccounts"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Check if it's a rate limit error from the response
+        if (data.code === 'RATE_LIMIT_EXCEEDED' || data.error.includes('80004') || data.error.includes('rate limit')) {
+          toast({
+            title: "⏱️ Facebook API Rate Limit",
+            description: "Too many requests to Facebook. Please wait 5-10 minutes and try refreshing the page.",
+            variant: "destructive",
+            duration: 10000,
+          });
+        } else {
+          toast({
+            title: t("metaDashboard.errorLoadingAccounts"),
+            description: data.error,
+            variant: "destructive",
+          });
+        }
         setLoading(false);
         return;
       }
