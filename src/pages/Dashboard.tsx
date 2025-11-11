@@ -52,6 +52,17 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Debug: log timeframe changes
+  useEffect(() => {
+    if (timeframe) {
+      console.log('📅 Dashboard timeframe changed:', {
+        option: timeframe.option,
+        dateFrom: timeframe.dateFrom.toISOString().split('T')[0],
+        dateTo: timeframe.dateTo.toISOString().split('T')[0],
+      });
+    }
+  }, [timeframe]);
+
   const stats = useDashboardStats(user?.id, timeframe ? {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,

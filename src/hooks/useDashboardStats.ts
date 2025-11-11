@@ -40,6 +40,13 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
     const fetchStats = async () => {
       try {
+        // Debug: log filters to see if they're being applied
+        if (filters?.dateFrom || filters?.dateTo) {
+          console.log('📅 useDashboardStats filters:', {
+            dateFrom: filters.dateFrom?.toISOString().split('T')[0],
+            dateTo: filters.dateTo?.toISOString().split('T')[0],
+          });
+        }
         // Build campaigns query with filters - only select needed fields
         let campaignsQuery = supabase
           .from('campaigns')
@@ -76,11 +83,16 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
 
         // Apply date filters at query level for better performance
         if (filters?.dateFrom) {
-          dailyRoasQuery = dailyRoasQuery.gte('date', filters.dateFrom.toISOString().split('T')[0]);
+          const dateFromStr = filters.dateFrom.toISOString().split('T')[0];
+          dailyRoasQuery = dailyRoasQuery.gte('date', dateFromStr);
         }
         if (filters?.dateTo) {
-          dailyRoasQuery = dailyRoasQuery.lte('date', filters.dateTo.toISOString().split('T')[0]);
-        } else if (!filters?.dateFrom) {
+          const dateToStr = filters.dateTo.toISOString().split('T')[0];
+          dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
+        }
+        
+        // Only apply default filter if no date filters are provided
+        if (!filters?.dateFrom && !filters?.dateTo) {
           // Default to last 90 days if no date filter
           const ninetyDaysAgo = new Date();
           ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -105,13 +117,19 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
         const dateFromStr = filters?.dateFrom ? filters.dateFrom.toISOString().split('T')[0] : null;
         const dateToStr = filters?.dateTo ? filters.dateTo.toISOString().split('T')[0] : null;
         
-        // Filter daily_roas by date range if provided
+        // Filter daily_roas by date range if provided (already filtered at query level, but double-check)
         let filteredDailyRoas = dailyRoas || [];
         if (dateFromStr) {
-          filteredDailyRoas = filteredDailyRoas.filter((d: any) => d.date >= dateFromStr);
+          filteredDailyRoas = filteredDailyRoas.filter((d: any) => {
+            const recordDate = d.date?.split('T')[0] || d.date; // Handle both date strings and full ISO strings
+            return recordDate >= dateFromStr;
+          });
         }
         if (dateToStr) {
-          filteredDailyRoas = filteredDailyRoas.filter((d: any) => d.date <= dateToStr);
+          filteredDailyRoas = filteredDailyRoas.filter((d: any) => {
+            const recordDate = d.date?.split('T')[0] || d.date; // Handle both date strings and full ISO strings
+            return recordDate <= dateToStr;
+          });
         }
 
         // Calculate from daily_roas for accurate period-based stats
@@ -184,7 +202,14 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
     // return () => {
     //   supabase.removeChannel(campaignsChannel);
     // };
-  }, [userId, filters?.dateFrom?.toISOString(), filters?.dateTo?.toISOString(), filters?.campaignId, filters?.platform, filters?.productId]);
+  }, [
+    userId, 
+    filters?.dateFrom?.getTime(), // Use getTime() for better comparison
+    filters?.dateTo?.getTime(), // Use getTime() for better comparison
+    filters?.campaignId, 
+    filters?.platform, 
+    filters?.productId
+  ]);
 
   return stats;
 };
