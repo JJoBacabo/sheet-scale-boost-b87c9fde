@@ -65,28 +65,8 @@ serve(async (req) => {
         `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
       );
       const meData = await meResponse.json();
-      if (meData.error) {
-        console.error('Facebook API error fetching ad accounts:', meData.error);
-        // Check for rate limiting
-        if (meData.error.code === 80004 || meData.error.error_subcode === 2446079) {
-          return new Response(JSON.stringify({ 
-            error: 'Facebook API rate limit reached. Please wait a few minutes and try again.',
-            code: 'RATE_LIMIT_EXCEEDED'
-          }), {
-            status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        return new Response(JSON.stringify({ error: meData.error.message }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (!meData.data || meData.data.length === 0) {
-        return new Response(JSON.stringify({ 
-          error: 'No ad account found. Please check your Facebook Ads connection and permissions.',
-          suggestion: 'Try reconnecting your Facebook Ads account in the Integrations page.'
-        }), {
+      if (meData.error || !meData.data || meData.data.length === 0) {
+        return new Response(JSON.stringify({ error: 'No ad account found' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -119,18 +99,6 @@ serve(async (req) => {
       const campaignsData = await campaignsResponse.json();
 
       if (campaignsData.error) {
-        console.error('Facebook API error fetching campaigns:', campaignsData.error);
-        // Check for rate limiting
-        if (campaignsData.error.code === 80004 || campaignsData.error.error_subcode === 2446079) {
-          return new Response(JSON.stringify({ 
-            error: 'Facebook API rate limit reached. Please wait a few minutes and try again.',
-            code: 'RATE_LIMIT_EXCEEDED',
-            retryAfter: 300
-          }), {
-            status: 429,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' },
-          });
-        }
         return new Response(JSON.stringify({ error: campaignsData.error.message }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
