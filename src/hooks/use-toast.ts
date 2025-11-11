@@ -3,7 +3,7 @@ import * as React from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_REMOVE_DELAY = 5000; // 5 segundos
 
 type ToasterToast = ToastProps & {
   id: string;
@@ -155,6 +155,14 @@ function toast({ ...props }: Toast) {
       },
     },
   });
+
+  // Auto-dismiss after delay (unless duration is explicitly set to 0 or Infinity)
+  const duration = (props as any).duration ?? TOAST_REMOVE_DELAY;
+  if (duration > 0 && duration !== Infinity) {
+    setTimeout(() => {
+      dismiss();
+    }, duration);
+  }
 
   return {
     id: id,

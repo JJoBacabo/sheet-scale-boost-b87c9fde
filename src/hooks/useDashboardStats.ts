@@ -176,47 +176,35 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
         
-        // Calculate supplier cost - use daily_roas if available
+        // Calculate supplier cost - use daily_roas if available, otherwise use products
         let finalTotalSupplierCost = 0;
         
         if (filteredDailyRoas.length > 0) {
-          // Usar supplier cost de daily_roas (mais preciso)
+          // Usar supplier cost de daily_roas (mais preciso e com filtro de data)
           finalTotalSupplierCost = totalSupplierCost;
-        } else if (!dateFromStr && !dateToStr) {
-          // Só usar products como fallback se NÃO houver filtros de data
-          // porque products não tem informação de data para filtrar
-          finalTotalSupplierCost = products?.reduce((sum, p) => {
+        } else if (products && products.length > 0) {
+          // Usar products como fallback (mesmo com filtros de data, é melhor que nada)
+          // Nota: products não tem informação de data, então é uma estimativa quando há filtros de data
+          finalTotalSupplierCost = products.reduce((sum, p) => {
             const costPrice = Number(p.cost_price) || 0;
             const quantitySold = Number(p.quantity_sold) || 0;
             return sum + (costPrice * quantitySold);
-          }, 0) || 0;
-        } else if (finalTotalRevenue > 0 && campaigns && campaigns.length > 0) {
-          // Se há filtros de data mas não há daily_roas, tentar estimar supplier cost
-          // baseado na proporção média de supplier cost vs revenue das campanhas
-          // Calcular proporção média de supplier cost das campanhas que têm dados
+          }, 0);
+        } else if (campaigns && campaigns.length > 0) {
+          // Se não há products nem daily_roas, estimar baseado na receita das campanhas
           const campaignsWithData = campaigns.filter(c => {
             const revenue = Number(c.total_revenue) || 0;
-            const spent = Number(c.total_spent) || 0;
             return revenue > 0;
           });
           
           if (campaignsWithData.length > 0) {
-            // Estimar supplier cost como uma proporção da receita
-            // Assumindo que supplier cost é aproximadamente 30-40% da receita (margem típica)
-            // Mas podemos melhorar isso calculando a partir dos produtos relacionados
-            // Por enquanto, usar uma estimativa conservadora baseada na receita
-            const avgMargin = campaignsWithData.reduce((sum, c) => {
-              const revenue = Number(c.total_revenue) || 0;
-              const spent = Number(c.total_spent) || 0;
-              // Margem = (receita - gasto) / receita
-              const margin = revenue > 0 ? (revenue - spent) / revenue : 0;
-              return sum + margin;
-            }, 0) / campaignsWithData.length;
+            // Calcular receita total das campanhas para estimar
+            const totalRevenueFromCampaigns = campaignsWithData.reduce((sum, c) => {
+              return sum + (Number(c.total_revenue) || 0);
+            }, 0);
             
-            // Supplier cost estimado = receita * (1 - margem média - margem de lucro estimada)
-            // Assumindo que supplier cost é ~30-40% da receita quando há margem positiva
-            const estimatedSupplierCostRatio = avgMargin > 0 ? Math.max(0.3, 1 - avgMargin - 0.1) : 0.35;
-            finalTotalSupplierCost = finalTotalRevenue * estimatedSupplierCostRatio;
+            // Estimar supplier cost como ~35% da receita (estimativa conservadora)
+            finalTotalSupplierCost = totalRevenueFromCampaigns * 0.35;
           }
         }
         // Se não há dados suficientes, finalTotalSupplierCost permanece 0

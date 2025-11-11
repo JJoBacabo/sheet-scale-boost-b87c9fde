@@ -494,6 +494,7 @@ const Products = () => {
       toast({
         title: `✅ ${t("settings.quoteUpdated")}`,
         description: t("settings.quoteUpdatedDesc"),
+        duration: 3000, // 3 segundos
       });
       setEditingCost(null);
       setTempCostPrice("");
