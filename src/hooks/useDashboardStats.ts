@@ -184,12 +184,29 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
               return false;
             });
             
+            // Estratégia 2: Se não encontrou por nome, usar o primeiro produto com selling_price (fallback)
+            // Isso é útil quando há apenas um produto ou quando o nome não corresponde
+            if (!matchedProduct && products.length === 1 && products[0].selling_price) {
+              matchedProduct = products[0];
+            }
+            
             if (matchedProduct && matchedProduct.selling_price) {
               productPrice = Number(matchedProduct.selling_price) || 0;
             }
           }
           
           const revenue = unitsSold * productPrice;
+          
+          // Log quando revenue é 0 mas deveria ter valor
+          if (revenue === 0 && unitsSold > 0) {
+            console.log('⚠️ Revenue is 0 for entry:', {
+              unitsSold,
+              productPrice,
+              campaignName: d.campaign_name,
+              hasProducts: products && products.length > 0,
+            });
+          }
+          
           return sum + revenue;
         }, 0);
         
@@ -325,22 +342,41 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           finalTotalSupplierCost = totalSupplierCost;
           finalTotalClicks = totalClicks;
           
-          // Se revenue está 0 mas há dados em daily_roas com spent > 0, pode ser que product_price ou units_sold estejam vazios
-          // Nesse caso, se não há filtros de data explícitos, tentar usar revenue de campaigns como fallback
-          if (finalTotalRevenue === 0 && finalTotalSpent > 0 && !hasExplicitDateFilters) {
-            // Tentar usar revenue de campaigns se disponível (apenas quando não há filtro de data)
+          // Se revenue está 0 mas há dados em daily_roas, tentar buscar de campaigns
+          // Isso pode acontecer se product_price ou units_sold estiverem vazios no daily_roas
+          if (finalTotalRevenue === 0 && finalTotalSpent > 0) {
             const revenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
             if (revenueFromCampaigns > 0) {
+              // Usar revenue de campaigns como fallback quando daily_roas não tem revenue
+              // Nota: Se há filtros de data, isso pode não ser 100% preciso, mas é melhor que mostrar 0
               finalTotalRevenue = revenueFromCampaigns;
+              console.log('💡 Using revenue from campaigns as fallback:', revenueFromCampaigns);
             }
           }
           
-          // Se conversions está 0 mas há dados, tentar usar de campaigns como fallback (apenas sem filtro de data)
-          if (finalTotalConversions === 0 && finalTotalSpent > 0 && !hasExplicitDateFilters) {
+          // Se conversions está 0 mas há dados, tentar usar de campaigns como fallback
+          if (finalTotalConversions === 0 && finalTotalSpent > 0) {
             const conversionsFromCampaigns = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
             if (conversionsFromCampaigns > 0) {
               finalTotalConversions = conversionsFromCampaigns;
             }
+          }
+          
+          // Log para debug quando revenue ainda está 0
+          if (finalTotalRevenue === 0 && finalTotalSpent > 0) {
+            console.warn('⚠️ Revenue is still 0 after fallback:', {
+              totalSpent: finalTotalSpent,
+              totalRevenue: finalTotalRevenue,
+              filteredDailyRoasEntries: filteredDailyRoas.length,
+              revenueFromCampaigns: campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0,
+              campaignsCount: campaigns?.length || 0,
+              sampleEntry: filteredDailyRoas[0] ? {
+                units_sold: filteredDailyRoas[0].units_sold,
+                purchases: filteredDailyRoas[0].purchases,
+                product_price: filteredDailyRoas[0].product_price,
+                campaign_name: filteredDailyRoas[0].campaign_name,
+              } : null,
+            });
           }
         } else {
           // Fallback: não há dados em daily_roas, usar campaigns/products
