@@ -1279,6 +1279,7 @@ const MetaDashboard = () => {
   const avgCPC = totalClicks > 0 ? totalSpent / totalClicks : 0;
   const avgCPM = totalImpressions > 0 ? (totalSpent / totalImpressions) * 1000 : 0;
   const avgCTR = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  const activeCampaignsCount = campaigns.filter(c => c.status === 'ACTIVE').length;
 
   return (
     <PageLayout
@@ -1291,6 +1292,45 @@ const MetaDashboard = () => {
       }
     >
       <div className="space-y-6">
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="p-4 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#7BBCFE]/20">
+                    <DollarSign className="w-5 h-5 text-[#7BBCFE]" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("metaDashboard.totalSpent")}</p>
+                    <p className="text-2xl font-bold">€{totalSpent.toFixed(2)}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-4 glass-card border-2 border-[#B8A8FE]/20 bg-gradient-to-br from-[#B8A8FE]/10 to-[#0066FF]/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#B8A8FE]/20">
+                    <MousePointerClick className="w-5 h-5 text-[#B8A8FE]" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("metaDashboard.avgCPC")}</p>
+                    <p className="text-2xl font-bold">€{avgCPC.toFixed(2)}</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-4 glass-card border-2 border-[#0066FF]/20 bg-gradient-to-br from-[#0066FF]/10 to-[#7BBCFE]/10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#0066FF]/20">
+                    <Zap className="w-5 h-5 text-[#0066FF]" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("metaDashboard.activeCampaigns")}</p>
+                    <p className="text-2xl font-bold">{activeCampaignsCount}</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
             {/* Ad Account Selector & Filters - Redesigned */}
             <Card className="p-6 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#0A0C14]/50 to-[#1a1f2e]/30 backdrop-blur-xl">
               <div className="flex flex-col lg:flex-row gap-4 items-end">
