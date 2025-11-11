@@ -170,7 +170,18 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         }
         // Se há filtros de data mas não há daily_roas, finalTotalSpent e finalTotalRevenue permanecem 0
         
-        const totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
+        // Calculate conversions - use daily_roas purchases if available (more accurate with date filters)
+        // Otherwise use campaigns conversions (accumulated totals)
+        let totalConversions = 0;
+        if (filteredDailyRoas.length > 0) {
+          // Usar purchases de daily_roas (mais preciso e com filtro de data)
+          totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.purchases) || 0), 0);
+        } else if (!dateFromStr && !dateToStr) {
+          // Só usar campaigns como fallback se NÃO houver filtros de data
+          totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
+        }
+        // Se há filtros de data mas não há daily_roas, totalConversions permanece 0
+        
         const totalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
         const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
         const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;

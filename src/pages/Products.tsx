@@ -130,9 +130,29 @@ const Products = () => {
           console.log('🔄 Real-time update:', payload);
           
           if (payload.eventType === 'INSERT') {
-            setProducts((prev) => [payload.new as Product, ...prev]);
+            setProducts((prev) => {
+              // Evitar duplicados
+              const exists = prev.find(p => p.id === payload.new.id);
+              if (exists) return prev;
+              return [payload.new as Product, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setProducts((prev) => {
+              // Verificar se o produto realmente mudou para evitar atualizações desnecessárias
+              const existing = prev.find(p => p.id === payload.new.id);
+              if (existing) {
+                // Comparar apenas campos relevantes para evitar atualizações desnecessárias
+                const newProduct = payload.new as Product;
+                if (
+                  existing.cost_price === newProduct.cost_price &&
+                  existing.profit_margin === newProduct.profit_margin &&
+                  existing.quantity_sold === newProduct.quantity_sold &&
+                  existing.total_revenue === newProduct.total_revenue &&
+                  existing.updated_at === newProduct.updated_at
+                ) {
+                  return prev; // Sem mudanças relevantes, não atualizar
+                }
+              }
               const updated = prev.filter((p) => p.id !== payload.new.id);
               return [payload.new as Product, ...updated]; // Move to top
             });
@@ -499,8 +519,10 @@ const Products = () => {
       setEditingCost(null);
       setTempCostPrice("");
       
-      // Refresh from server to ensure consistency
-      await fetchProducts(user.id, true);
+      // Não precisamos chamar fetchProducts aqui porque:
+      // 1. Já atualizamos o estado local imediatamente
+      // 2. O real-time update vai detectar a mudança automaticamente
+      // 3. Evita loops infinitos de atualização
     } catch (err) {
       toast({
         title: t("common.error"),
