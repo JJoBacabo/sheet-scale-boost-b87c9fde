@@ -84,12 +84,17 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           .order('date', { ascending: true }); // Ascending para ter dados do mais antigo para o mais recente
 
         // Apply date filters at query level for better performance
+        // Usar apenas a data (sem hora) para comparação, já que a coluna date é do tipo DATE
         if (filters?.dateFrom) {
-          const dateFromStr = filters.dateFrom.toISOString().split('T')[0];
+          const dateFrom = new Date(filters.dateFrom);
+          dateFrom.setHours(0, 0, 0, 0);
+          const dateFromStr = dateFrom.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.gte('date', dateFromStr);
         }
         if (filters?.dateTo) {
-          const dateToStr = filters.dateTo.toISOString().split('T')[0];
+          const dateTo = new Date(filters.dateTo);
+          dateTo.setHours(23, 59, 59, 999);
+          const dateToStr = dateTo.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
@@ -160,10 +165,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           return sum + (unitsSold * productPrice);
         }, 0);
         const totalSupplierCost = filteredDailyRoas.reduce((sum: number, d: any) => {
-          // Supplier cost = units_sold * cog
-          const unitsSold = Number(d.units_sold) || 0;
+          // Supplier cost = cog (já é o custo total: cost_price * units_sold)
           const cog = Number(d.cog) || 0;
-          return sum + (unitsSold * cog);
+          return sum + cog;
         }, 0);
         
         // Fallback to campaigns if no daily_roas data

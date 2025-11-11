@@ -40,11 +40,13 @@ export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) =
 
   const getTimeframeDates = (option: TimeframeOption): { dateFrom: Date; dateTo: Date } => {
     const now = new Date();
+    // Criar data de hoje sem hora para evitar problemas de timezone
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    today.setHours(23, 59, 59, 999);
     
     switch (option) {
       case 'today':
+        // Para "today", usar a data de hoje como início e fim
+        // A query do banco compara apenas a data (sem hora), então isso funciona
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());

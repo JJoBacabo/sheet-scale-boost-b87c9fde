@@ -442,6 +442,7 @@ serve(async (req) => {
 
           const unitsSold = parseInt(purchases, 10);
           const dayRevenue = unitsSold * productPrice;
+          // COG deve ser o custo total (cost_price * units_sold), não apenas o cost_price
           const dayCOG = unitsSold * cog;
           const marginEuros = dayRevenue - daySpent - dayCOG;
           const marginPercentage = dayRevenue > 0 ? (marginEuros / dayRevenue) * 100 : 0;
@@ -460,7 +461,7 @@ serve(async (req) => {
               atc: parseInt(addToCart, 10),
               purchases: parseInt(purchases, 10),
               product_price: productPrice,
-              cog: cog,
+              cog: dayCOG, // Salvar o custo total, não apenas o cost_price por unidade
               units_sold: unitsSold,
               roas: dayRoas,
               margin_euros: marginEuros,
