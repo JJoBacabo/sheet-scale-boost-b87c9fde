@@ -1,8 +1,7 @@
-import React, { Component, ErrorInfo, ReactNode, useContext } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { logger } from '@/lib/logger';
-import { LanguageContext } from '@/contexts/LanguageContext';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +14,9 @@ interface State {
 }
 
 // Default translations for error boundary (used when LanguageProvider is not available)
+// Detect browser language once at module load
+const browserLang = typeof navigator !== 'undefined' && navigator.language.startsWith('pt') ? 'pt' : 'en';
+
 const defaultTranslations: Record<string, { pt: string; en: string }> = {
   somethingWentWrong: {
     pt: 'Algo correu mal',
@@ -34,28 +36,16 @@ const defaultTranslations: Record<string, { pt: string; en: string }> = {
   },
 };
 
+// Helper function to get translation (no hooks used)
+const getTranslation = (key: string): string => {
+  const translation = defaultTranslations[key];
+  if (translation) {
+    return translation[browserLang] || translation.en;
+  }
+  return key;
+};
+
 const ErrorFallback = ({ error, onReset }: { error?: Error; onReset: () => void }) => {
-  // Try to get language context, but don't throw if not available
-  const languageContext = useContext(LanguageContext);
-  
-  // Detect browser language as fallback
-  const browserLang = navigator.language.startsWith('pt') ? 'pt' : 'en';
-  
-  // Use translations from context if available, otherwise use defaults
-  const getTranslation = (key: string): string => {
-    if (languageContext) {
-      try {
-        return languageContext.t(`common.${key}`);
-      } catch {
-        // Fallback to default if translation fails
-      }
-    }
-    const translation = defaultTranslations[key];
-    if (translation) {
-      return translation[browserLang] || translation.en;
-    }
-    return key;
-  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
