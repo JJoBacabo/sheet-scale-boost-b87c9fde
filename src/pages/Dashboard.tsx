@@ -31,6 +31,7 @@ const Dashboard = () => {
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
   const { toast } = useToast();
   const [syncing, setSyncing] = useState(false);
+  const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -77,7 +78,6 @@ const Dashboard = () => {
   const [autoSynced, setAutoSynced] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
-  const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
 
   // Check Facebook integration and auto-sync
   useEffect(() => {
