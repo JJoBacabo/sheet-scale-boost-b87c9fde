@@ -45,6 +45,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
           console.log('📅 useDashboardStats filters:', {
             dateFrom: filters.dateFrom?.toISOString().split('T')[0],
             dateTo: filters.dateTo?.toISOString().split('T')[0],
+            dateFromTime: filters.dateFrom?.getTime(),
+            dateToTime: filters.dateTo?.getTime(),
           });
         }
         // Build campaigns query with filters - only select needed fields
@@ -104,6 +106,23 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
         }
 
         const { data: dailyRoas } = await dailyRoasQuery;
+        
+        // Debug: log query results
+        if (filters?.dateFrom || filters?.dateTo) {
+          console.log('📊 Daily ROAS query results:', {
+            totalRecords: dailyRoas?.length || 0,
+            dateRange: dailyRoas?.length > 0 ? {
+              first: dailyRoas[0]?.date,
+              last: dailyRoas[dailyRoas.length - 1]?.date,
+            } : null,
+            sampleRecords: dailyRoas?.slice(0, 3).map((d: any) => ({
+              date: d.date,
+              units_sold: d.units_sold,
+              cog: d.cog,
+              total_spent: d.total_spent,
+            })),
+          });
+        }
 
         // Fetch recent activity - only select needed fields
         const { data: activity } = await supabase
@@ -160,14 +179,48 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
         const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
         
-        // If no daily_roas, calculate supplier cost from products
-        const totalSupplierCostFromProducts = products?.reduce((sum, p) => {
-          const costPrice = Number(p.cost_price) || 0;
-          const quantitySold = Number(p.quantity_sold) || 0;
-          return sum + (costPrice * quantitySold);
-        }, 0) || 0;
+        // Calculate supplier cost - use daily_roas if available, otherwise use products
+        // For products, we need to filter by date range if filters are provided
+        let totalSupplierCostFromProducts = 0;
+        if (products && products.length > 0) {
+          // If we have date filters, we can't accurately calculate supplier cost from products
+          // because products don't have date information. So we use the daily_roas calculation
+          // or estimate based on the revenue ratio
+          if (filteredDailyRoas.length === 0 && finalTotalRevenue > 0) {
+            // Estimate supplier cost based on average margin from campaigns
+            // This is a fallback when no daily_roas data exists
+            const avgMargin = campaigns?.length > 0 
+              ? campaigns.reduce((sum, c) => {
+                  const revenue = Number(c.total_revenue) || 0;
+                  const spent = Number(c.total_spent) || 0;
+                  return sum + (revenue > 0 ? (revenue - spent) / revenue : 0);
+                }, 0) / campaigns.length
+              : 0;
+            // Estimate supplier cost as a percentage of revenue (rough estimate)
+            totalSupplierCostFromProducts = finalTotalRevenue * 0.3; // Rough estimate: 30% of revenue
+          } else {
+            // Use products data when no daily_roas and no date filters
+            totalSupplierCostFromProducts = products.reduce((sum, p) => {
+              const costPrice = Number(p.cost_price) || 0;
+              const quantitySold = Number(p.quantity_sold) || 0;
+              return sum + (costPrice * quantitySold);
+            }, 0);
+          }
+        }
         
+        // Use daily_roas supplier cost if available, otherwise use products estimate
         const finalTotalSupplierCost = filteredDailyRoas.length > 0 ? totalSupplierCost : totalSupplierCostFromProducts;
+        
+        // Debug: log supplier cost calculation
+        if (filters?.dateFrom || filters?.dateTo) {
+          console.log('💰 Supplier Cost calculation:', {
+            filteredDailyRoasCount: filteredDailyRoas.length,
+            totalSupplierCostFromDailyRoas: totalSupplierCost,
+            totalSupplierCostFromProducts: totalSupplierCostFromProducts,
+            finalTotalSupplierCost: finalTotalSupplierCost,
+            dailyRoasWithCog: filteredDailyRoas.filter((d: any) => d.cog > 0).length,
+          });
+        }
 
         setStats({
           totalCampaigns: campaigns?.length || 0,

@@ -39,14 +39,17 @@ export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) =
   const locale = language === 'pt' ? pt : enUS;
 
   const getTimeframeDates = (option: TimeframeOption): { dateFrom: Date; dateTo: Date } => {
-    const today = new Date();
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     today.setHours(23, 59, 59, 999);
     
     switch (option) {
       case 'today':
-        const todayStart = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         todayStart.setHours(0, 0, 0, 0);
-        return { dateFrom: todayStart, dateTo: today };
+        const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        todayEnd.setHours(23, 59, 59, 999);
+        return { dateFrom: todayStart, dateTo: todayEnd };
       
       case 'yesterday':
         const yesterday = subDays(today, 1);
