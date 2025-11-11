@@ -7,6 +7,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Map Facebook API rate limit errors to 429 and include Retry-After
+function fbErrorResponse(err: any): Response {
+  const message = err?.message || 'Facebook API error';
+  const code = err?.code || err?.error_subcode;
+  const isRateLimit = message?.toLowerCase().includes('too many calls') || code === 80004;
+  if (isRateLimit) {
+    const retryAfter = 60; // seconds
+    return new Response(
+      JSON.stringify({ error: message, code: 80004, retryAfter }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': `${retryAfter}` } }
+    );
+  }
+  return new Response(JSON.stringify({ error: message }), {
+    status: 400,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -114,39 +132,59 @@ serve(async (req) => {
     // Decrypt the access token
     const accessToken = await decryptToken(integration.access_token);
 
-    // Fetch user's ad account
-    const meResponse = await fetch(
-      `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
-    );
-    const meData = await meResponse.json();
+    // Resolve ad account: skip /me/adaccounts if client provided one
+    let resolvedAdAccountId: string | null = null;
 
-    if (meData.error) {
-      console.error('Facebook API Error:', meData.error);
-      return new Response(JSON.stringify({ error: meData.error.message }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    const adAccountId = meData.data[0]?.id;
-    if (!adAccountId) {
-      return new Response(JSON.stringify({ error: 'No ad account found' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Handle different actions
     if (action === 'listAdAccounts') {
-      // Return all ad accounts
-      return new Response(JSON.stringify({ adAccounts: meData.data || [] }), {
+      // Only then fetch all ad accounts
+      const meResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
+      );
+      const meData = await meResponse.json();
+
+      if (meData.error) {
+        console.error('Facebook API Error:', meData.error);
+        return fbErrorResponse(meData.error);
+      }
+
+      const adAccounts = meData.data || [];
+      if (!adAccounts.length) {
+        return new Response(JSON.stringify({ error: 'No ad account found' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ adAccounts }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    } else {
+      if (requestedAdAccountId) {
+        resolvedAdAccountId = requestedAdAccountId;
+      } else {
+        // Fallback to first account only if none provided
+        const meResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
+        );
+        const meData = await meResponse.json();
+
+        if (meData.error) {
+          console.error('Facebook API Error:', meData.error);
+          return fbErrorResponse(meData.error);
+        }
+        resolvedAdAccountId = meData.data?.[0]?.id || null;
+        if (!resolvedAdAccountId) {
+          return new Response(JSON.stringify({ error: 'No ad account found' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+      }
     }
 
     if (action === 'list') {
-      // Use requested ad account or default to first one
-      const targetAdAccountId = requestedAdAccountId || adAccountId;
+      // Use requested ad account or resolved fallback
+      const targetAdAccountId = resolvedAdAccountId as string;
       const { datePreset, dateFrom, dateTo } = requestBody;
       
       // Build insights parameters based on date selection
@@ -180,10 +218,7 @@ serve(async (req) => {
 
         if (campaignsData.error) {
           console.error('Facebook API Error:', campaignsData.error);
-          return new Response(JSON.stringify({ error: campaignsData.error.message }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
+          return fbErrorResponse(campaignsData.error);
         }
 
         // Add campaigns from this page to the total
@@ -200,8 +235,8 @@ serve(async (req) => {
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
       // Fetch images for campaigns in batches to avoid rate limiting
-      // Process in batches of 10 to avoid timeout and rate limits
-      const BATCH_SIZE = 10;
+      // Process in batches of 5 to reduce rate limits
+      const BATCH_SIZE = 5;
       const imageMap = new Map();
       
       for (let i = 0; i < allCampaigns.length; i += BATCH_SIZE) {
@@ -301,7 +336,7 @@ serve(async (req) => {
         
         // Small delay between batches to avoid rate limiting
         if (i + BATCH_SIZE < allCampaigns.length) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
 

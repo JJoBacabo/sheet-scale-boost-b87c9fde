@@ -369,6 +369,7 @@ const MetaDashboard = () => {
   const [campaignToPause, setCampaignToPause] = useState<string | null>(null);
   const [campaignToActivate, setCampaignToActivate] = useState<string | null>(null);
   const [loadingCampaignId, setLoadingCampaignId] = useState<string | null>(null);
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(() => {
     const saved = localStorage.getItem("metaDashboard_selectedColumns");
     if (saved) {
@@ -421,6 +422,30 @@ const MetaDashboard = () => {
   const fetchAdAccounts = async () => {
     setLoading(true);
     try {
+      // 1) Try cached ad accounts from integrations.metadata to avoid FB API calls
+      if (user) {
+        const { data: integ } = await supabase
+          .from('integrations')
+          .select('metadata')
+          .eq('user_id', user.id)
+          .eq('integration_type', 'facebook_ads')
+          .maybeSingle();
+
+        const cached = integ?.metadata as any;
+        const cachedAccounts = cached?.ad_accounts as AdAccount[] | undefined;
+        const primaryId = cached?.primary_account_id as string | undefined;
+
+        if (cachedAccounts && cachedAccounts.length > 0) {
+          setAdAccounts(cachedAccounts);
+          const firstAccount = primaryId || cachedAccounts[0].id;
+          setSelectedAdAccount(firstAccount);
+          await fetchCampaigns(firstAccount);
+          setLoading(false);
+          return; // Skip calling edge function
+        }
+      }
+
+      // 2) Fallback: call edge function
       const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
         body: { action: "listAdAccounts" },
       });
@@ -479,6 +504,15 @@ const MetaDashboard = () => {
   const fetchCampaigns = async (adAccountId?: string) => {
     if (!adAccountId && !selectedAdAccount) {
       console.warn("No ad account selected, skipping campaign fetch");
+      return;
+    }
+    if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
+      const secs = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      toast({
+        title: t("metaDashboard.errorLoadingCampaigns"),
+        description: `Rate limit atingido. Aguarde ${secs}s e tente novamente.`,
+        variant: "destructive",
+      });
       return;
     }
 
