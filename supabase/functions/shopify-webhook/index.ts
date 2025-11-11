@@ -119,8 +119,20 @@ Deno.serve(async (req) => {
 
         if (existingProduct) {
           // Update existing product - increment sales
+          // IMPORTANT: Preserve cost_price and profit_margin if they were manually set
           const newQuantitySold = (existingProduct.quantity_sold || 0) + quantity;
           const newTotalRevenue = (existingProduct.total_revenue || 0) + revenue;
+          
+          // Preserve cost_price if it was manually set (not null and not 0)
+          const preservedCostPrice = (existingProduct.cost_price !== null && existingProduct.cost_price !== 0) 
+            ? existingProduct.cost_price 
+            : null;
+          
+          // Recalculate profit_margin if cost_price is preserved
+          let preservedProfitMargin = existingProduct.profit_margin;
+          if (preservedCostPrice && price > 0) {
+            preservedProfitMargin = ((price - preservedCostPrice) / price) * 100;
+          }
 
           await supabase
             .from('products')
@@ -128,11 +140,13 @@ Deno.serve(async (req) => {
               quantity_sold: newQuantitySold,
               total_revenue: newTotalRevenue,
               selling_price: price, // Update with latest price
+              cost_price: preservedCostPrice, // Preserve manually set cost
+              profit_margin: preservedProfitMargin, // Preserve or recalculate margin
               updated_at: new Date().toISOString(),
             })
             .eq('id', existingProduct.id);
 
-          console.log(`📊 Updated product ${item.title}: +${quantity} sales, +€${revenue.toFixed(2)}`);
+          console.log(`📊 Updated product ${item.title}: +${quantity} sales, +€${revenue.toFixed(2)}, cost_price preserved: ${preservedCostPrice !== null}`);
         } else {
         // Create new product entry
         const profitMargin = 30; // Default margin

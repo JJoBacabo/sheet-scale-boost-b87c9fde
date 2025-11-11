@@ -108,7 +108,9 @@ const Products = () => {
   // Refetch products when selected store changes
   useEffect(() => {
     if (user) {
-      fetchProducts(user.id, true);
+      // Don't force refresh when changing store - just fetch with new filter
+      // This prevents clearing products and causing flickering
+      fetchProducts(user.id, false);
     }
   }, [selectedStore]);
 
@@ -131,30 +133,50 @@ const Products = () => {
           
           if (payload.eventType === 'INSERT') {
             setProducts((prev) => {
-              // Evitar duplicados
+              // Check if product already exists
               const exists = prev.find(p => p.id === payload.new.id);
-              if (exists) return prev;
-              return [payload.new as Product, ...prev];
+              if (exists) {
+                // Product already exists, update it instead of adding duplicate
+                return prev.map(p => p.id === payload.new.id ? (payload.new as Product) : p);
+              }
+              
+              // Check if we should show this product based on current filters
+              const newProduct = payload.new as Product;
+              if (selectedStore !== "all" && newProduct.integration_id !== selectedStore) {
+                // Product is from different store, don't add it
+                return prev;
+              }
+              
+              // Add new product to the beginning
+              return [newProduct, ...prev];
             });
           } else if (payload.eventType === 'UPDATE') {
             setProducts((prev) => {
-              // Verificar se o produto realmente mudou para evitar atualizações desnecessárias
-              const existing = prev.find(p => p.id === payload.new.id);
-              if (existing) {
-                // Comparar apenas campos relevantes para evitar atualizações desnecessárias
-                const newProduct = payload.new as Product;
-                if (
-                  existing.cost_price === newProduct.cost_price &&
-                  existing.profit_margin === newProduct.profit_margin &&
-                  existing.quantity_sold === newProduct.quantity_sold &&
-                  existing.total_revenue === newProduct.total_revenue &&
-                  existing.updated_at === newProduct.updated_at
-                ) {
-                  return prev; // Sem mudanças relevantes, não atualizar
+              const newProduct = payload.new as Product;
+              const existingIndex = prev.findIndex(p => p.id === newProduct.id);
+              
+              if (existingIndex >= 0) {
+                // Product exists in list, update it
+                // Check if product should still be visible based on store filter
+                if (selectedStore !== "all" && newProduct.integration_id !== selectedStore) {
+                  // Product moved to different store, remove it
+                  return prev.filter(p => p.id !== newProduct.id);
                 }
+                
+                // Update existing product in place (don't move to top to avoid flickering)
+                const updated = [...prev];
+                updated[existingIndex] = newProduct;
+                return updated;
+              } else {
+                // Product doesn't exist in list, check if we should add it
+                if (selectedStore !== "all" && newProduct.integration_id !== selectedStore) {
+                  // Product is from different store, don't add it
+                  return prev;
+                }
+                
+                // Add product to the beginning
+                return [newProduct, ...prev];
               }
-              const updated = prev.filter((p) => p.id !== payload.new.id);
-              return [payload.new as Product, ...updated]; // Move to top
             });
           } else if (payload.eventType === 'DELETE') {
             setProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
@@ -166,7 +188,7 @@ const Products = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, selectedStore]); // Include selectedStore in dependencies to filter correctly
 
   // Real-time updates for integrations (to detect store changes)
   useEffect(() => {
@@ -260,11 +282,9 @@ const Products = () => {
   };
 
   const fetchProducts = async (userId: string, forceRefresh = false) => {
-    // Clear cache if force refresh
-    if (forceRefresh) {
-      setProducts([]);
-    }
-
+    // Don't clear products when just changing store filter - this causes flickering
+    // Only clear if explicitly forcing a full refresh (like after sync)
+    
     let query = supabase
       .from("products")
       .select("*")
@@ -283,12 +303,25 @@ const Products = () => {
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      // Remove duplicates based on shopify_product_id (keep most recent)
-      const uniqueProducts = (data || []).reduce((acc, product) => {
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      // Only clear if we explicitly want to show empty state
+      if (forceRefresh) {
+        setProducts([]);
+      }
+      return;
+    }
+
+    // Remove duplicates based on shopify_product_id and integration_id
+    // Keep the most recent one, but also consider integration_id to avoid removing products from different stores
+    const uniqueProducts = (data || []).reduce((acc, product) => {
+      // For products with shopify_product_id, check for duplicates
+      if (product.shopify_product_id) {
         const existing = acc.find(p => 
-          p.shopify_product_id && 
-          p.shopify_product_id === product.shopify_product_id
+          p.shopify_product_id === product.shopify_product_id &&
+          p.integration_id === product.integration_id // Same store
         );
         
         if (!existing) {
@@ -302,12 +335,19 @@ const Products = () => {
             acc[index] = product;
           }
         }
-        
-        return acc;
-      }, [] as Product[]);
+      } else {
+        // Products without shopify_product_id - check by id only
+        const existing = acc.find(p => p.id === product.id);
+        if (!existing) {
+          acc.push(product);
+        }
+      }
       
-      setProducts(uniqueProducts);
-    }
+      return acc;
+    }, [] as Product[]);
+    
+    // Only update state if we have products or if force refresh
+    setProducts(uniqueProducts);
   };
 
   const handleSyncShopifyProducts = async () => {
@@ -541,12 +581,24 @@ const Products = () => {
         updated_at: updatedData.updated_at
       });
 
-      // Update local state immediately for better UX using returned data
-      setProducts(prev => prev.map(p => 
-        p.id === productId 
-          ? { ...p, ...updatedData, cost_price: costValue, profit_margin: newMargin }
-          : p
-      ));
+      // Update local state immediately for better UX
+      // Use the data returned from the update to ensure consistency
+      setProducts(prev => {
+        const productIndex = prev.findIndex(p => p.id === productId);
+        if (productIndex >= 0) {
+          // Update existing product with new data
+          const updated = [...prev];
+          updated[productIndex] = {
+            ...updated[productIndex],
+            ...updatedData,
+            cost_price: costValue, // Ensure cost_price is set to the value we saved
+            profit_margin: newMargin, // Ensure profit_margin is set to the calculated value
+          };
+          return updated;
+        }
+        // If product not found in list, add it (shouldn't happen, but safe fallback)
+        return [...prev, { ...product, ...updatedData, cost_price: costValue, profit_margin: newMargin }];
+      });
 
       console.log('🔄 [handleSaveCost] Local state updated, now updating Daily ROAS...');
       // Update Daily ROAS entries
