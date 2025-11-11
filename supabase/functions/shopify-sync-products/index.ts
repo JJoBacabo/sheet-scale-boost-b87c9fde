@@ -292,16 +292,28 @@ async function syncProductsInBackground(
 
       const { data: existingProduct } = await supabase
         .from('products')
-        .select('id')
+        .select('id, cost_price')
         .eq('user_id', userId)
         .eq('integration_id', integrationId)
         .eq('shopify_product_id', String(productId))
         .maybeSingle();
 
       if (existingProduct) {
+        // Preserve existing cost_price if it was manually set by user
+        // Only update cost_price if it's null or 0 (not manually set)
+        const updateData = { ...productData };
+        if (existingProduct.cost_price !== null && existingProduct.cost_price !== 0) {
+          // User has manually set cost_price, preserve it
+          updateData.cost_price = existingProduct.cost_price;
+          // Recalculate profit_margin with preserved cost_price
+          if (updateData.selling_price && updateData.cost_price) {
+            updateData.profit_margin = ((updateData.selling_price - updateData.cost_price) / updateData.selling_price) * 100;
+          }
+        }
+        
         const { error: updateError } = await supabase
           .from('products')
-          .update(productData)
+          .update(updateData)
           .eq('id', existingProduct.id);
 
         if (!updateError) stats.updated++;
