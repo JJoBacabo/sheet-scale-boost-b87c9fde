@@ -223,18 +223,19 @@ export const useFeatureGate = () => {
     
     const hasAccess = allowedFeatures.includes(feature);
     
-    console.log('🔍 checkFeature:', {
-      feature,
-      planCode,
-      allowedFeatures,
-      hasAccess,
-      stateInfo: {
-        planCode: stateInfo.planCode,
-        planName: stateInfo.planName,
-        state: stateInfo.state,
-        readonly: stateInfo.readonly
-      }
-    });
+    // Removed excessive logging - only log in development mode if needed
+    // console.log('🔍 checkFeature:', {
+    //   feature,
+    //   planCode,
+    //   allowedFeatures,
+    //   hasAccess,
+    //   stateInfo: {
+    //     planCode: stateInfo.planCode,
+    //     planName: stateInfo.planName,
+    //     state: stateInfo.state,
+    //     readonly: stateInfo.readonly
+    //   }
+    // });
     
     return hasAccess;
   };

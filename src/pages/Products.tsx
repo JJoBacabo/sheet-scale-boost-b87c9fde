@@ -608,20 +608,42 @@ const Products = () => {
       
       console.log(`📊 [updateDailyROASForProduct] Found ${dailyData?.length || 0} total daily_roas entries`);
       
-      // Find matching entries
+      // Find matching entries using multiple strategies:
+      // 1. Match by product_price (most reliable - same selling price = same product)
+      // 2. Match by product name in campaign name (fallback)
       const cleanProductName = productName.toLowerCase().replace(/[^a-z0-9]/g, '');
-      console.log('🔍 [updateDailyROASForProduct] Searching for matches with clean name:', cleanProductName);
+      console.log('🔍 [updateDailyROASForProduct] Searching for matches:', {
+        productName,
+        cleanProductName,
+        sellingPrice,
+        totalEntries: dailyData?.length || 0
+      });
       
       const affectedEntries = (dailyData || []).filter(entry => {
+        // Strategy 1: Match by product_price (most reliable)
+        const entryProductPrice = Number(entry.product_price) || 0;
+        const priceMatch = Math.abs(entryProductPrice - sellingPrice) < 0.01; // Allow small floating point differences
+        
+        // Strategy 2: Match by name (fallback if price doesn't match)
         const cleanCampaign = entry.campaign_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const matches = cleanCampaign.includes(cleanProductName) || cleanProductName.includes(cleanCampaign);
+        const nameMatch = cleanCampaign.includes(cleanProductName) || cleanProductName.includes(cleanCampaign);
+        
+        // Also try matching by extracting key words from product name
+        const productWords = cleanProductName.split(/\s+/).filter(w => w.length > 3); // Words longer than 3 chars
+        const nameMatchByWords = productWords.length > 0 && productWords.some(word => cleanCampaign.includes(word));
+        
+        const matches = priceMatch || nameMatch || nameMatchByWords;
+        
         if (matches) {
           console.log('✅ [updateDailyROASForProduct] Match found:', {
             entryId: entry.id,
             campaignName: entry.campaign_name,
             date: entry.date,
             currentCOG: entry.cog,
-            unitsSold: entry.purchases || entry.units_sold
+            unitsSold: entry.purchases || entry.units_sold,
+            entryProductPrice,
+            sellingPrice,
+            matchType: priceMatch ? 'price' : (nameMatch ? 'name' : 'name-words')
           });
         }
         return matches;

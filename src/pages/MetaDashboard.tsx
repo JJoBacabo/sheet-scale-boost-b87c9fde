@@ -1974,10 +1974,6 @@ const MetaDashboard = () => {
 
               {/* Ad Sets Tab */}
               <TabsContent value="adsets" className="space-y-4 pt-4">
-                {(() => {
-                  console.log("🔍 Rendering Ad Sets tab - loadingAdSets:", loadingAdSets, "adSets.length:", adSets.length, "adSets:", adSets);
-                  return null;
-                })()}
                 {loadingAdSets ? (
                   <div className="flex items-center justify-center py-8">
                     <LoadingOverlay />
@@ -2098,10 +2094,6 @@ const MetaDashboard = () => {
 
               {/* Ads Tab */}
               <TabsContent value="ads" className="space-y-4 pt-4">
-                {(() => {
-                  console.log("🔍 Rendering Ads tab - loadingAds:", loadingAds, "ads.length:", ads.length, "ads:", ads);
-                  return null;
-                })()}
                 {loadingAds ? (
                   <div className="flex items-center justify-center py-8">
                     <LoadingOverlay />
