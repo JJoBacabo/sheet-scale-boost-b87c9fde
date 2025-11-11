@@ -446,12 +446,17 @@ const Products = () => {
   };
 
   const handleSaveCost = async (productId: string) => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ [handleSaveCost] No user found');
+      return;
+    }
     
     const costValue = parseFloat(tempCostPrice);
+    console.log('📝 [handleSaveCost] Starting save:', { productId, costValue, tempCostPrice });
     
     // Validate input
     if (isNaN(costValue) || costValue < 0) {
+      console.warn('⚠️ [handleSaveCost] Invalid cost value:', costValue);
       toast({
         title: `❌ ${t("settings.invalidValue")}`,
         description: t("settings.enterValidNumber"),
@@ -462,13 +467,31 @@ const Products = () => {
     
     const product = products.find(p => p.id === productId);
     
-    if (!product) return;
+    if (!product) {
+      console.error('❌ [handleSaveCost] Product not found:', productId);
+      return;
+    }
+
+    console.log('📦 [handleSaveCost] Product found:', {
+      id: product.id,
+      name: product.product_name,
+      currentCostPrice: product.cost_price,
+      sellingPrice: product.selling_price,
+      quantitySold: product.quantity_sold
+    });
 
     // Calculate new profit margin
     const sellingPrice = product.selling_price || 0;
     const newMargin = sellingPrice > 0 ? ((sellingPrice - costValue) / sellingPrice) * 100 : 0;
+    
+    console.log('💰 [handleSaveCost] Calculated values:', {
+      costValue,
+      sellingPrice,
+      newMargin: newMargin.toFixed(2) + '%'
+    });
 
     try {
+      console.log('💾 [handleSaveCost] Updating product in database...');
       // Update product
       const { data: updatedData, error } = await supabase
         .from("products")
@@ -482,7 +505,14 @@ const Products = () => {
         .single();
 
       if (error) {
-        console.error('❌ Error updating product cost:', error);
+        console.error('❌ [handleSaveCost] Error updating product cost:', {
+          error,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          productId,
+          costValue
+        });
         toast({
           title: t("settings.errorUpdatingQuote"),
           description: error.message,
@@ -492,7 +522,10 @@ const Products = () => {
       }
 
       if (!updatedData) {
-        console.error('❌ No data returned from update');
+        console.error('❌ [handleSaveCost] No data returned from update:', {
+          productId,
+          costValue
+        });
         toast({
           title: t("common.error"),
           description: t("settings.errorUpdatingQuoteDesc"),
@@ -501,6 +534,13 @@ const Products = () => {
         return;
       }
 
+      console.log('✅ [handleSaveCost] Product updated successfully:', {
+        id: updatedData.id,
+        cost_price: updatedData.cost_price,
+        profit_margin: updatedData.profit_margin,
+        updated_at: updatedData.updated_at
+      });
+
       // Update local state immediately for better UX using returned data
       setProducts(prev => prev.map(p => 
         p.id === productId 
@@ -508,9 +548,11 @@ const Products = () => {
           : p
       ));
 
+      console.log('🔄 [handleSaveCost] Local state updated, now updating Daily ROAS...');
       // Update Daily ROAS entries
       await updateDailyROASForProduct(product.product_name, costValue, sellingPrice);
 
+      console.log('✅ [handleSaveCost] All updates completed successfully');
       toast({
         title: `✅ ${t("settings.quoteUpdated")}`,
         description: t("settings.quoteUpdatedDesc"),
@@ -524,6 +566,12 @@ const Products = () => {
       // 2. O real-time update vai detectar a mudança automaticamente
       // 3. Evita loops infinitos de atualização
     } catch (err) {
+      console.error('❌ [handleSaveCost] Exception caught:', {
+        error: err,
+        productId,
+        costValue,
+        stack: err instanceof Error ? err.stack : undefined
+      });
       toast({
         title: t("common.error"),
         description: t("settings.errorUpdatingQuoteDesc"),
@@ -534,31 +582,65 @@ const Products = () => {
 
   const updateDailyROASForProduct = async (productName: string, newCostPrice: number, sellingPrice: number) => {
     try {
-      console.log('♻️ Updating Daily ROAS for product:', productName);
+      console.log('♻️ [updateDailyROASForProduct] Starting update:', {
+        productName,
+        newCostPrice,
+        sellingPrice,
+        userId: user!.id
+      });
       
       // Fetch all daily_roas entries
+      console.log('📥 [updateDailyROASForProduct] Fetching daily_roas entries...');
       const { data: dailyData, error: fetchError } = await supabase
         .from('daily_roas')
         .select('*')
         .eq('user_id', user!.id);
       
       if (fetchError) {
-        console.error('❌ Error fetching daily data:', fetchError);
+        console.error('❌ [updateDailyROASForProduct] Error fetching daily data:', {
+          error: fetchError,
+          message: fetchError.message,
+          details: fetchError.details,
+          hint: fetchError.hint
+        });
         return;
       }
       
+      console.log(`📊 [updateDailyROASForProduct] Found ${dailyData?.length || 0} total daily_roas entries`);
+      
       // Find matching entries
       const cleanProductName = productName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      console.log('🔍 [updateDailyROASForProduct] Searching for matches with clean name:', cleanProductName);
+      
       const affectedEntries = (dailyData || []).filter(entry => {
         const cleanCampaign = entry.campaign_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return cleanCampaign.includes(cleanProductName) || cleanProductName.includes(cleanCampaign);
+        const matches = cleanCampaign.includes(cleanProductName) || cleanProductName.includes(cleanCampaign);
+        if (matches) {
+          console.log('✅ [updateDailyROASForProduct] Match found:', {
+            entryId: entry.id,
+            campaignName: entry.campaign_name,
+            date: entry.date,
+            currentCOG: entry.cog,
+            unitsSold: entry.purchases || entry.units_sold
+          });
+        }
+        return matches;
       });
       
-      console.log(`🎯 Found ${affectedEntries.length} Daily ROAS entries to update`);
+      console.log(`🎯 [updateDailyROASForProduct] Found ${affectedEntries.length} Daily ROAS entries to update`);
+      
+      if (affectedEntries.length === 0) {
+        console.warn('⚠️ [updateDailyROASForProduct] No matching entries found for product:', productName);
+        return;
+      }
       
       // Update each entry
+      let successCount = 0;
+      let errorCount = 0;
+      
       for (const entry of affectedEntries) {
         const unitsSold = entry.purchases || entry.units_sold || 0;
+        const oldCOG = entry.cog || 0;
         const newCOG = newCostPrice * unitsSold;
         const totalRevenue = sellingPrice * unitsSold;
         const totalSpent = entry.total_spent || 0;
@@ -566,9 +648,20 @@ const Products = () => {
         const newMarginPercentage = totalRevenue > 0 ? (newMarginEuros / totalRevenue) * 100 : 0;
         const newROAS = totalSpent > 0 ? totalRevenue / totalSpent : 0;
         
-        console.log(`♻️ Updating ${entry.campaign_name}: COG ${entry.cog} → ${newCOG}`);
+        console.log(`♻️ [updateDailyROASForProduct] Updating entry ${entry.id}:`, {
+          campaignName: entry.campaign_name,
+          date: entry.date,
+          oldCOG,
+          newCOG,
+          unitsSold,
+          totalRevenue,
+          totalSpent,
+          newMarginEuros,
+          newMarginPercentage: newMarginPercentage.toFixed(2) + '%',
+          newROAS: newROAS.toFixed(2) + 'x'
+        });
         
-        const { error: updateError } = await supabase
+        const { data: updatedEntry, error: updateError } = await supabase
           .from('daily_roas')
           .update({
             cog: newCOG,
@@ -578,16 +671,40 @@ const Products = () => {
             product_price: sellingPrice,
             updated_at: new Date().toISOString()
           })
-          .eq('id', entry.id);
+          .eq('id', entry.id)
+          .select()
+          .single();
         
         if (updateError) {
-          console.error('❌ Error updating daily_roas:', updateError);
+          errorCount++;
+          console.error('❌ [updateDailyROASForProduct] Error updating daily_roas entry:', {
+            entryId: entry.id,
+            error: updateError,
+            message: updateError.message,
+            details: updateError.details,
+            hint: updateError.hint
+          });
+        } else {
+          successCount++;
+          console.log('✅ [updateDailyROASForProduct] Entry updated successfully:', {
+            entryId: entry.id,
+            cog: updatedEntry?.cog,
+            margin_euros: updatedEntry?.margin_euros,
+            margin_percentage: updatedEntry?.margin_percentage,
+            roas: updatedEntry?.roas
+          });
         }
       }
       
-      console.log('✅ Daily ROAS updated successfully');
+      console.log(`✅ [updateDailyROASForProduct] Daily ROAS update completed: ${successCount} successful, ${errorCount} errors`);
     } catch (err) {
-      console.error('❌ Error in updateDailyROASForProduct:', err);
+      console.error('❌ [updateDailyROASForProduct] Exception caught:', {
+        error: err,
+        productName,
+        newCostPrice,
+        sellingPrice,
+        stack: err instanceof Error ? err.stack : undefined
+      });
     }
   };
 
