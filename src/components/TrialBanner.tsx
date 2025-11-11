@@ -6,11 +6,16 @@ import { Clock, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const TrialBanner = () => {
+  // Always call hooks at the top level, before any conditional returns
+  // This ensures hooks are called in the same order on every render
   const { status, loading } = useTrialStatus();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
-  if (loading || !status.isActive) return null;
+  // Early return after all hooks - this is safe as long as hooks are called first
+  if (loading || !status.isActive) {
+    return null;
+  }
 
   const isWarning = status.showWarning;
 

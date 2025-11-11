@@ -95,9 +95,13 @@ export class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
+      // Always render ErrorFallback when there's an error
+      // This ensures consistent hook order
       return <ErrorFallback error={this.state.error} onReset={this.handleReset} />;
     }
 
+    // Always render children when there's no error
+    // This ensures consistent hook order
     return this.props.children;
   }
 }
