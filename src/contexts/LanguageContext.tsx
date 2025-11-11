@@ -82,6 +82,10 @@ const translations = {
       hours: 'horas',
       minutes: 'minutos',
       seconds: 'segundos',
+      somethingWentWrong: 'Algo correu mal',
+      unexpectedError: 'Ocorreu um erro inesperado. Por favor, tenta novamente.',
+      tryAgain: 'Tentar novamente',
+      goToHome: 'Ir para início',
     },
     loadingStates: {
       title: 'Loading States',
@@ -1205,6 +1209,10 @@ const translations = {
       hours: 'hours',
       minutes: 'minutes',
       seconds: 'seconds',
+      somethingWentWrong: 'Something went wrong',
+      unexpectedError: 'An unexpected error occurred. Please try again.',
+      tryAgain: 'Try again',
+      goToHome: 'Go to home',
     },
     loadingStates: {
       title: 'Loading States',
