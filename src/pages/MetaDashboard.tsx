@@ -456,7 +456,7 @@ const MetaDashboard = () => {
         if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
           toast({
             title: t("metaDashboard.errorLoadingAccounts"),
-            description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
+            description: t("metaDashboard.serverError"),
             variant: "destructive",
           });
         } else {
@@ -546,7 +546,7 @@ const MetaDashboard = () => {
         if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
           toast({
             title: t("metaDashboard.errorLoadingCampaigns"),
-            description: t("metaDashboard.serverError") || "Server error. Please try again later or check your Facebook connection.",
+            description: t("metaDashboard.serverError"),
             variant: "destructive",
           });
           // Set empty campaigns array to show empty state

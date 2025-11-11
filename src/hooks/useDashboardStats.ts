@@ -78,8 +78,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           .order('date', { ascending: true }); // Ascending para ter dados do mais antigo para o mais recente
 
         // Apply date filters at query level for better performance
-        // Usar apenas a data (sem hora) para comparação, já que a coluna date é do tipo DATE
-        // Criar strings de data consistentes para usar tanto na query quanto no filtro manual
         let dateFromStr: string | null = null;
         let dateToStr: string | null = null;
         
@@ -93,16 +91,14 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           const dateTo = new Date(filters.dateTo);
           dateTo.setHours(23, 59, 59, 999);
           dateToStr = dateTo.toISOString().split('T')[0];
-          // Use lte to include the end date (works correctly even when dateFrom === dateTo)
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
         // Only apply default filter if no date filters are provided
         if (!filters?.dateFrom && !filters?.dateTo) {
-          // Default to last 90 days if no date filter
-          const ninetyDaysAgo = new Date();
-          ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-          dailyRoasQuery = dailyRoasQuery.gte('date', ninetyDaysAgo.toISOString().split('T')[0]);
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+          dailyRoasQuery = dailyRoasQuery.gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
         }
 
         if (filters?.campaignId && filters.campaignId !== 'all') {
@@ -126,25 +122,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           .order('created_at', { ascending: false })
           .limit(10);
 
-        // Filter daily_roas by date range if provided (already filtered at query level, but double-check)
-        // Usar as strings de data já criadas acima para consistência
-        let filteredDailyRoas = dailyRoas || [];
-        if (dateFromStr) {
-          filteredDailyRoas = filteredDailyRoas.filter((d: any) => {
-            const recordDate = d.date?.split('T')[0] || d.date; // Handle both date strings and full ISO strings
-            return recordDate >= dateFromStr;
-          });
-        }
-        if (dateToStr) {
-          filteredDailyRoas = filteredDailyRoas.filter((d: any) => {
-            const recordDate = d.date?.split('T')[0] || d.date; // Handle both date strings and full ISO strings
-            return recordDate <= dateToStr;
-          });
-        }
-
-
-        // Determinar se há filtros de data explícitos do usuário
-        const hasExplicitDateFilters = !!(filters?.dateFrom || filters?.dateTo);
+        // Daily ROAS is already filtered by query, no need for manual filtering
+        const filteredDailyRoas = dailyRoas || [];
 
         // Calcular todas as métricas a partir de daily_roas (já filtrado por data)
         const totalSpent = filteredDailyRoas.reduce((sum: number, d: any) => {
@@ -324,93 +303,55 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           return sum;
         }, 0);
         
-        // Se há filtros de data explícitos, usar APENAS dados de daily_roas
-        // Se não há filtros de data explícitos, usar daily_roas se disponível, senão fallback para campaigns
+        // Always use daily_roas when available (already filtered by date at query level)
         let finalTotalSpent = 0;
         let finalTotalRevenue = 0;
         let finalTotalConversions = 0;
         let finalTotalSupplierCost = 0;
         let finalTotalClicks = 0;
         
-        // Sempre usar daily_roas quando disponível (já está filtrado por data)
-        // Se não houver dados em daily_roas, usar fallback para campaigns/products
         if (filteredDailyRoas.length > 0) {
-          // Usar dados de daily_roas (já filtrado por data ou default de 90 dias)
           finalTotalSpent = totalSpent;
           finalTotalRevenue = totalRevenue;
           finalTotalConversions = totalConversions;
           finalTotalSupplierCost = totalSupplierCost;
           finalTotalClicks = totalClicks;
-          
-          // Se revenue está 0 mas há dados em daily_roas, tentar buscar de campaigns
-          // Isso pode acontecer se product_price ou units_sold estiverem vazios no daily_roas
+          // If revenue is still 0 but there's spend, try campaigns fallback
           if (finalTotalRevenue === 0 && finalTotalSpent > 0) {
             const revenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
             if (revenueFromCampaigns > 0) {
-              // Usar revenue de campaigns como fallback quando daily_roas não tem revenue
-              // Nota: Se há filtros de data, isso pode não ser 100% preciso, mas é melhor que mostrar 0
               finalTotalRevenue = revenueFromCampaigns;
-              console.log('💡 Using revenue from campaigns as fallback:', revenueFromCampaigns);
             }
           }
           
-          // Se conversions está 0 mas há dados, tentar usar de campaigns como fallback
+          // If conversions is still 0 but there's spend, try campaigns fallback
           if (finalTotalConversions === 0 && finalTotalSpent > 0) {
             const conversionsFromCampaigns = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
             if (conversionsFromCampaigns > 0) {
               finalTotalConversions = conversionsFromCampaigns;
             }
           }
-          
-          // Log para debug quando revenue ainda está 0
-          if (finalTotalRevenue === 0 && finalTotalSpent > 0) {
-            console.warn('⚠️ Revenue is still 0 after fallback:', {
-              totalSpent: finalTotalSpent,
-              totalRevenue: finalTotalRevenue,
-              filteredDailyRoasEntries: filteredDailyRoas.length,
-              revenueFromCampaigns: campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0,
-              campaignsCount: campaigns?.length || 0,
-              sampleEntry: filteredDailyRoas[0] ? {
-                units_sold: filteredDailyRoas[0].units_sold,
-                purchases: filteredDailyRoas[0].purchases,
-                product_price: filteredDailyRoas[0].product_price,
-                campaign_name: filteredDailyRoas[0].campaign_name,
-              } : null,
-            });
-          }
         } else {
-          // Fallback: não há dados em daily_roas, usar campaigns/products
-          // IMPORTANTE: Se há filtros de data explícitos, não devemos usar campaigns como fallback
-          // porque campaigns não tem informação de data
-          if (hasExplicitDateFilters) {
-            // Com filtros de data mas sem daily_roas: mostrar 0 (não usar fallback sem data)
-            finalTotalSpent = 0;
-            finalTotalRevenue = 0;
-            finalTotalConversions = 0;
-            finalTotalSupplierCost = 0;
-            finalTotalClicks = 0;
-          } else {
-            // Sem filtros de data explícitos: usar campaigns como fallback
-            finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-            finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-            finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
-            finalTotalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
-            
-            // Para supplier cost, usar produtos se disponível
-            if (products && products.length > 0) {
-              let filteredProducts = products;
-              if (filters?.storeId && filters.storeId !== 'all') {
-                filteredProducts = products.filter(p => p.integration_id === filters.storeId);
-              }
-          finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
-            const costPrice = Number(p.cost_price) || 0;
-            const quantitySold = Number(p.quantity_sold) || 0;
-            return sum + (costPrice * quantitySold);
-          }, 0);
-            } else if (campaigns && campaigns.length > 0 && finalTotalRevenue > 0) {
-              // Estimar baseado na receita das campanhas (último recurso)
-              finalTotalSupplierCost = finalTotalRevenue * 0.35;
+          // Fallback: no daily_roas data, use campaigns/products as fallback
+          finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
+          finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+          finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
+          finalTotalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
+          
+          // Calculate supplier cost from products if available
+          if (products && products.length > 0) {
+            let filteredProducts = products;
+            if (filters?.storeId && filters.storeId !== 'all') {
+              filteredProducts = products.filter(p => p.integration_id === filters.storeId);
             }
+            finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
+              const costPrice = Number(p.cost_price) || 0;
+              const quantitySold = Number(p.quantity_sold) || 0;
+              return sum + (costPrice * quantitySold);
+            }, 0);
+          } else if (campaigns && campaigns.length > 0 && finalTotalRevenue > 0) {
+            // Estimate based on campaign revenue (last resort)
+            finalTotalSupplierCost = finalTotalRevenue * 0.35;
           }
         }
         
