@@ -61,17 +61,29 @@ serve(async (req) => {
     // Get ad account ID
     let targetAdAccountId = adAccountId;
     if (!targetAdAccountId) {
-      const meResponse = await fetch(
-        `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
-      );
-      const meData = await meResponse.json();
-      if (meData.error || !meData.data || meData.data.length === 0) {
-        return new Response(JSON.stringify({ error: 'No ad account found' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+      // Try to get from integration metadata first
+      if (integration.metadata?.ad_account_id) {
+        targetAdAccountId = integration.metadata.ad_account_id;
+      } else {
+        // Fallback to fetching from API
+        const meResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/adaccounts?fields=id,name,account_id,account_status&access_token=${accessToken}`
+        );
+        const meData = await meResponse.json();
+        if (meData.error) {
+          return new Response(JSON.stringify({ error: `Facebook API error: ${meData.error.message || meData.error.error_user_msg || 'Unknown error'}` }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        if (!meData.data || meData.data.length === 0) {
+          return new Response(JSON.stringify({ error: 'No ad account found. Please connect an ad account in your Facebook Ads account.' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+        targetAdAccountId = meData.data[0].id;
       }
-      targetAdAccountId = meData.data[0].id;
     }
 
     // Build insights parameters

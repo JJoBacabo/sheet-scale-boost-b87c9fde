@@ -73,7 +73,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
           .select('*')
           .eq('user_id', userId)
           .order('date', { ascending: false })
-          .limit(30);
+          .limit(365); // Increased limit to support longer timeframes
 
         if (filters?.campaignId && filters.campaignId !== 'all') {
           dailyRoasQuery = dailyRoasQuery.eq('campaign_id', filters.campaignId);
@@ -95,30 +95,66 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
           .order('created_at', { ascending: false })
           .limit(10);
 
-        // Calculate stats
-        const totalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-        const totalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+        // Calculate stats from daily_roas (more accurate with date filters)
+        const dateFromStr = filters?.dateFrom ? filters.dateFrom.toISOString().split('T')[0] : null;
+        const dateToStr = filters?.dateTo ? filters.dateTo.toISOString().split('T')[0] : null;
+        
+        // Filter daily_roas by date range if provided
+        let filteredDailyRoas = dailyRoas || [];
+        if (dateFromStr) {
+          filteredDailyRoas = filteredDailyRoas.filter((d: any) => d.date >= dateFromStr);
+        }
+        if (dateToStr) {
+          filteredDailyRoas = filteredDailyRoas.filter((d: any) => d.date <= dateToStr);
+        }
+
+        // Calculate from daily_roas for accurate period-based stats
+        const totalSpent = filteredDailyRoas.reduce((sum: number, d: any) => sum + (Number(d.total_spent) || 0), 0);
+        const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
+          // Revenue = units_sold * product_price
+          const unitsSold = Number(d.units_sold) || 0;
+          const productPrice = Number(d.product_price) || 0;
+          return sum + (unitsSold * productPrice);
+        }, 0);
+        const totalSupplierCost = filteredDailyRoas.reduce((sum: number, d: any) => {
+          // Supplier cost = units_sold * cog
+          const unitsSold = Number(d.units_sold) || 0;
+          const cog = Number(d.cog) || 0;
+          return sum + (unitsSold * cog);
+        }, 0);
+        
+        // Fallback to campaigns if no daily_roas data
+        const totalSpentFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
+        const totalRevenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+        
+        const finalTotalSpent = filteredDailyRoas.length > 0 ? totalSpent : totalSpentFromCampaigns;
+        const finalTotalRevenue = filteredDailyRoas.length > 0 ? totalRevenue : totalRevenueFromCampaigns;
+        
         const totalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
         const totalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
-        const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
-        const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
+        const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
+        const averageCpc = totalClicks > 0 ? finalTotalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-        const totalSupplierCost = products?.reduce((sum, p) => {
+        
+        // If no daily_roas, calculate supplier cost from products
+        const totalSupplierCostFromProducts = products?.reduce((sum, p) => {
           const costPrice = Number(p.cost_price) || 0;
           const quantitySold = Number(p.quantity_sold) || 0;
           return sum + (costPrice * quantitySold);
         }, 0) || 0;
+        
+        const finalTotalSupplierCost = filteredDailyRoas.length > 0 ? totalSupplierCost : totalSupplierCostFromProducts;
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
           totalProducts: products?.length || 0,
-          totalSpent,
-          totalRevenue,
+          totalSpent: finalTotalSpent,
+          totalRevenue: finalTotalRevenue,
           averageRoas,
           activeCampaigns,
           totalConversions,
           averageCpc,
-          totalSupplierCost,
+          totalSupplierCost: finalTotalSupplierCost,
           recentActivity: activity || [],
           dailyRoasData: dailyRoas || [],
           loading: false,

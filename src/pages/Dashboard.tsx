@@ -12,6 +12,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { CryptoChart } from "@/components/dashboard/CryptoChart";
+import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/TimeframeSelector";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
 import { Package, Target, TrendingUp, Activity, RefreshCw, BarChart3, PieChart, Eye, ShoppingCart, DollarSign, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
@@ -50,7 +51,10 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const stats = useDashboardStats(user?.id);
+  const stats = useDashboardStats(user?.id, timeframe ? {
+    dateFrom: timeframe.dateFrom,
+    dateTo: timeframe.dateTo,
+  } : undefined);
   const statsLoading = stats.loading;
 
   // Get top products
@@ -73,6 +77,7 @@ const Dashboard = () => {
   const [autoSynced, setAutoSynced] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAllCampaigns, setShowAllCampaigns] = useState(false);
+  const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
 
   // Check Facebook integration and auto-sync
   useEffect(() => {
@@ -313,6 +318,16 @@ const Dashboard = () => {
       )}
 
       <div className="space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Timeframe Selector */}
+        <div className="flex justify-end">
+          <div className="w-full sm:w-auto">
+            <TimeframeSelector
+              value={timeframe}
+              onChange={setTimeframe}
+            />
+          </div>
+        </div>
+
         {/* Stats Overview */}
         {stats && <StatsOverview stats={stats} />}
 
