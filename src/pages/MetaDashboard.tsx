@@ -157,11 +157,11 @@ const CampaignCard = memo(({
 
         {/* Campaign Image */}
         {(campaign.image_url || campaign.thumbnail_url) && (
-          <div className="w-full lg:w-48 h-48 lg:h-auto flex-shrink-0 rounded-lg overflow-hidden bg-background/30 border border-border/20">
+          <div className="w-full lg:w-28 h-28 lg:h-28 flex-shrink-0 rounded-lg overflow-hidden bg-background/20 border border-border/10">
             <img
               src={campaign.image_url || campaign.thumbnail_url}
               alt={campaign.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover opacity-40"
               loading="lazy"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
