@@ -10,6 +10,7 @@ interface DashboardStats {
   activeCampaigns: number;
   totalConversions: number;
   averageCpc: number;
+  totalSupplierCost: number;
   recentActivity: any[];
   dailyRoasData: any[];
   loading: boolean;
@@ -25,6 +26,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
     activeCampaigns: 0,
     totalConversions: 0,
     averageCpc: 0,
+    totalSupplierCost: 0,
     recentActivity: [],
     dailyRoasData: [],
     loading: true,
@@ -101,6 +103,11 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
         const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
         const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+        const totalSupplierCost = products?.reduce((sum, p) => {
+          const costPrice = Number(p.cost_price) || 0;
+          const quantitySold = Number(p.quantity_sold) || 0;
+          return sum + (costPrice * quantitySold);
+        }, 0) || 0;
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
@@ -111,6 +118,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: any) => 
           activeCampaigns,
           totalConversions,
           averageCpc,
+          totalSupplierCost,
           recentActivity: activity || [],
           dailyRoasData: dailyRoas || [],
           loading: false,

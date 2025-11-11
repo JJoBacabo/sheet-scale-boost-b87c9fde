@@ -13,6 +13,7 @@ interface StatsOverviewProps {
     activeCampaigns: number;
     totalConversions: number;
     averageCpc: number;
+    totalSupplierCost: number;
   };
 }
 
@@ -33,7 +34,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: "border-primary/20"
     },
     {
-      title: "Investimento Total",
+      title: "Gasto Total em Anúncios",
       value: formatCurrency(stats.totalSpent),
       icon: TrendingDown,
       trend: "neutral",
@@ -63,9 +64,9 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       border: stats.averageRoas >= 2 ? "border-primary/20" : "border-warning/20"
     },
     {
-      title: "Campanhas Ativas",
-      value: `${stats.activeCampaigns} / ${stats.totalCampaigns}`,
-      icon: Activity,
+      title: "Gasto Total em Fornecedor",
+      value: formatCurrency(stats.totalSupplierCost),
+      icon: ShoppingCart,
       trend: "neutral",
       gradient: "from-purple-500/20 to-pink-500/20",
       iconBg: "bg-purple-500/10",
