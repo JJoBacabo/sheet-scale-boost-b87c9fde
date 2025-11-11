@@ -16,10 +16,9 @@ import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/T
 import { StoreSelector } from "@/components/StoreSelector";
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
-import { Target, RefreshCw, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
+import { Target, ArrowUp, ArrowDown, Search, ArrowRight } from "lucide-react";
 import { format, subDays } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
-import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -30,8 +29,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
-  const { toast } = useToast();
-  const [syncing, setSyncing] = useState(false);
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
   const [selectedStore, setSelectedStore] = useState<string>("all");
   const [refreshKey, setRefreshKey] = useState(0); // Key para forçar refresh dos stats
@@ -270,66 +267,11 @@ const Dashboard = () => {
     return <LoadingOverlay message={t('dashboard.loading')} />;
   }
 
-  const handleSyncFacebookData = async () => {
-    if (!user?.id) return;
-
-    setSyncing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('sync-facebook-campaigns', {
-        body: {
-          datePreset: 'last_30d',
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.error) {
-        toast({
-          title: 'Erro ao sincronizar',
-          description: data.error,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: '✅ Sincronização concluída',
-          description: `${data.campaignsSaved || 0} campanhas e ${data.dailyDataSaved || 0} registros diários salvos`,
-        });
-        // Refresh campaigns and wait a bit for database to update
-        setTimeout(() => {
-          refreshCampaigns();
-          // Force refresh of stats by updating refreshKey
-          setRefreshKey(prev => prev + 1);
-        }, 1500);
-      }
-    } catch (err: any) {
-      toast({
-        title: 'Erro ao sincronizar',
-        description: err.message || 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   return (
     <PageLayout
       title={t('dashboard.title')}
       subtitle={t('dashboard.welcome')}
-      actions={
-        <Button3D
-          variant="gradient"
-          size="sm"
-          onClick={handleSyncFacebookData}
-          disabled={syncing}
-          glow
-          className="text-xs sm:text-sm"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 ${syncing ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar Facebook'}</span>
-          <span className="sm:hidden">{syncing ? 'Sync...' : 'Sync'}</span>
-        </Button3D>
-      }
     >
       {stateInfo.showBanner && (
         <SubscriptionStateBanner
