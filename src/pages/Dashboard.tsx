@@ -581,7 +581,7 @@ const Dashboard = () => {
             {/* Timeframe Selector */}
             <div className="space-y-2">
               <label className="text-sm font-medium">
-                {t('dashboard.timeframe') || 'Período'}
+                {t('dashboard.timeframe')}
               </label>
               <TimeframeSelector
                 value={timeframe}

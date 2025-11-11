@@ -120,6 +120,7 @@ const CampaignCard = memo(({
   onEdit,
   onPause, 
   onActivate,
+  isLoading,
   t 
 }: { 
   campaign: FacebookCampaign; 
@@ -128,11 +129,22 @@ const CampaignCard = memo(({
   onEdit: () => void;
   onPause: () => void;
   onActivate: () => void;
+  isLoading?: boolean;
   t: (key: string) => string;
 }) => {
   return (
-    <Card className="p-6 glass-card hover:border-[#7BBCFE]/40 transition-all group relative border-2 border-[#7BBCFE]/10 bg-gradient-to-br from-[#0A0C14]/60 to-[#1a1f2e]/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#7BBCFE]/10">
+    <Card className={cn(
+      "p-6 glass-card hover:border-[#7BBCFE]/40 transition-all group relative border-2 border-[#7BBCFE]/10 bg-gradient-to-br from-[#0A0C14]/60 to-[#1a1f2e]/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#7BBCFE]/10",
+      isLoading && "opacity-50 pointer-events-none"
+    )}>
       <div className="flex flex-col lg:flex-row gap-6 relative">
+        {/* Loading spinner overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg z-20">
+            <LoadingOverlay />
+          </div>
+        )}
+        
         {/* Eye and Edit icons in top-right */}
         <div className="absolute top-0 right-0 flex gap-1 z-10">
           <Button
@@ -356,6 +368,7 @@ const MetaDashboard = () => {
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
   const [campaignToPause, setCampaignToPause] = useState<string | null>(null);
   const [campaignToActivate, setCampaignToActivate] = useState<string | null>(null);
+  const [loadingCampaignId, setLoadingCampaignId] = useState<string | null>(null);
   const [selectedColumns, setSelectedColumns] = useState<string[]>(() => {
     const saved = localStorage.getItem("metaDashboard_selectedColumns");
     if (saved) {
@@ -572,6 +585,7 @@ const MetaDashboard = () => {
       return;
     }
 
+    setLoadingCampaignId(campaignId);
     try {
       const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
         body: { action: "pause", campaignId },
@@ -584,7 +598,10 @@ const MetaDashboard = () => {
           title: t("metaDashboard.pausedSuccess"),
           description: t("metaDashboard.pausedDesc"),
         });
-        fetchCampaigns();
+        // Update only the specific campaign instead of fetching all
+        setCampaigns(prev => prev.map(c => 
+          c.id === campaignId ? { ...c, status: 'PAUSED' } : c
+        ));
       } else {
         toast({
           title: t("metaDashboard.errorPausing"),
@@ -600,6 +617,7 @@ const MetaDashboard = () => {
         variant: "destructive",
       });
     } finally {
+      setLoadingCampaignId(null);
       setCampaignToPause(null);
     }
   };
@@ -614,6 +632,7 @@ const MetaDashboard = () => {
       return;
     }
 
+    setLoadingCampaignId(campaignId);
     try {
       const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
         body: { action: "activate", campaignId },
@@ -626,7 +645,10 @@ const MetaDashboard = () => {
           title: t("metaDashboard.activatedSuccess"),
           description: t("metaDashboard.activatedDesc"),
         });
-        fetchCampaigns();
+        // Update only the specific campaign instead of fetching all
+        setCampaigns(prev => prev.map(c => 
+          c.id === campaignId ? { ...c, status: 'ACTIVE' } : c
+        ));
       } else {
         toast({
           title: t("metaDashboard.errorActivating"),
@@ -642,6 +664,7 @@ const MetaDashboard = () => {
         variant: "destructive",
       });
     } finally {
+      setLoadingCampaignId(null);
       setCampaignToActivate(null);
     }
   };
@@ -656,6 +679,7 @@ const MetaDashboard = () => {
       return;
     }
 
+    setLoadingCampaignId(campaignId);
     try {
       const { data, error } = await supabase.functions.invoke("facebook-campaigns", {
         body: { action: "delete", campaignId },
@@ -668,7 +692,8 @@ const MetaDashboard = () => {
           title: t("metaDashboard.deletedSuccess"),
           description: t("metaDashboard.deletedDesc"),
         });
-        fetchCampaigns();
+        // Remove the campaign from the list
+        setCampaigns(prev => prev.filter(c => c.id !== campaignId));
       } else {
         toast({
           title: t("metaDashboard.errorDeleting"),
@@ -684,6 +709,7 @@ const MetaDashboard = () => {
         variant: "destructive",
       });
     } finally {
+      setLoadingCampaignId(null);
       setCampaignToDelete(null);
     }
   };
@@ -1285,7 +1311,9 @@ const MetaDashboard = () => {
                 </div>
 
                 <div className="flex-1">
-                  <label className="text-sm font-medium mb-2 block">{t("metaDashboard.period")}</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    {t("metaDashboard.period")}
+                  </label>
                   <Select
                     value={datePreset}
                     onValueChange={(value) => {
@@ -1486,6 +1514,7 @@ const MetaDashboard = () => {
                         key={campaign.id}
                         campaign={campaign}
                         insights={insights}
+                        isLoading={loadingCampaignId === campaign.id}
                         onViewDetails={() => {
                           setSelectedCampaign(campaign);
                           setShowDetailsDialog(true);
