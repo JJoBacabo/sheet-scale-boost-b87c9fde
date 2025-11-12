@@ -42,7 +42,11 @@ import { useToast } from "@/hooks/use-toast";
 interface Integration {
   id: string;
   integration_type: string;
-  metadata: any;
+  metadata?: {
+    shop_name?: string;
+    shop_domain?: string;
+    store_name?: string;
+  };
 }
 
 interface AdAccount {
@@ -54,14 +58,14 @@ interface AdAccount {
 
 interface Campaign {
   id: string;
-  campaign_name: string;
-  platform: string;
+  campaign_name: string | null;
+  platform: string | null;
   status: string;
-  total_spent: number;
-  total_revenue: number;
-  roas: number;
-  cpc: number;
-  conversions: number;
+  total_spent: number | null;
+  total_revenue: number | null;
+  roas: number | null;
+  cpc: number | null;
+  conversions: number | null;
   updated_at: string;
 }
 
@@ -88,32 +92,8 @@ const Dashboard = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [autoSynced, setAutoSynced] = useState(false);
 
-  // Auth & Setup
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      } else {
-        fetchIntegrations(session.user.id);
-      }
-      setLoading(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (!session) {
-        navigate("/auth");
-      } else if (session.user.id) {
-        fetchIntegrations(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
   // Fetch Integrations
-  const fetchIntegrations = async (userId: string) => {
+  const fetchIntegrations = useCallback(async (userId: string) => {
     try {
       const { data: integrations, error } = await supabase
         .from('integrations')
@@ -121,7 +101,10 @@ const Dashboard = () => {
         .eq('user_id', userId)
         .in('integration_type', ['shopify', 'facebook_ads']);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching integrations:', error);
+        return;
+      }
 
       const shopify = integrations?.filter(i => i.integration_type === 'shopify') || [];
       const facebook = integrations?.filter(i => i.integration_type === 'facebook_ads') || [];
@@ -135,10 +118,10 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching integrations:', error);
     }
-  };
+  }, []);
 
   // Fetch Ad Accounts
-  const fetchAdAccounts = async () => {
+  const fetchAdAccounts = useCallback(async () => {
     try {
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
@@ -149,35 +132,73 @@ const Dashboard = () => {
         return;
       }
       
-      if (data?.adAccounts) {
+      if (data?.adAccounts && Array.isArray(data.adAccounts)) {
         setAdAccounts(data.adAccounts);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching ad accounts:", error);
     }
-  };
+  }, []);
+
+  // Auth & Setup
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      } else if (session.user.id) {
+        fetchIntegrations(session.user.id);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      
+      setUser(session?.user ?? null);
+      if (!session) {
+        navigate("/auth");
+      } else if (session?.user?.id) {
+        fetchIntegrations(session.user.id);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate, fetchIntegrations]);
 
   // Auto-sync Facebook campaigns
   useEffect(() => {
     if (!user?.id || autoSynced) return;
 
     const checkAndSync = async () => {
-      const { data: integration } = await supabase
-        .from('integrations')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('integration_type', 'facebook_ads')
-        .maybeSingle();
+      try {
+        const { data: integration } = await supabase
+          .from('integrations')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('integration_type', 'facebook_ads')
+          .maybeSingle();
 
-      if (integration) {
-        try {
-          await supabase.functions.invoke('sync-facebook-campaigns', {
-            body: { datePreset: 'last_30d' },
-          });
-          setAutoSynced(true);
-        } catch (err) {
-          // Silent fail
+        if (integration) {
+          try {
+            await supabase.functions.invoke('sync-facebook-campaigns', {
+              body: { datePreset: 'last_30d' },
+            });
+            setAutoSynced(true);
+          } catch (err) {
+            // Silent fail - user can manually sync if needed
+            console.error('Auto-sync failed:', err);
+          }
         }
+      } catch (error) {
+        console.error('Error checking integration:', error);
       }
     };
 
@@ -188,36 +209,45 @@ const Dashboard = () => {
   const fetchCampaigns = useCallback(async () => {
     if (!user?.id) return;
     
-    let query = supabase
-      .from('campaigns')
-      .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false });
+    try {
+      let query = supabase
+        .from('campaigns')
+        .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false });
 
-    if (timeframe?.dateFrom) {
-      const df = new Date(timeframe.dateFrom);
-      df.setHours(0, 0, 0, 0);
-      query = query.gte('updated_at', df.toISOString());
-    }
-    if (timeframe?.dateTo) {
-      const dt = new Date(timeframe.dateTo);
-      dt.setHours(23, 59, 59, 999);
-      query = query.lte('updated_at', dt.toISOString());
-    }
+      if (timeframe?.dateFrom) {
+        const df = new Date(timeframe.dateFrom);
+        df.setHours(0, 0, 0, 0);
+        query = query.gte('updated_at', df.toISOString());
+      }
+      if (timeframe?.dateTo) {
+        const dt = new Date(timeframe.dateTo);
+        dt.setHours(23, 59, 59, 999);
+        query = query.lte('updated_at', dt.toISOString());
+      }
 
-    const { data, error } = await query;
-    if (error) {
-      console.error('Error fetching campaigns:', error);
-      return;
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching campaigns:', error);
+        setCampaigns([]);
+        return;
+      }
+      
+      setCampaigns((data as Campaign[]) || []);
+    } catch (error) {
+      console.error('Error in fetchCampaigns:', error);
+      setCampaigns([]);
     }
-    
-    setCampaigns(data || []);
   }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime()]);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
+    if (user?.id) {
+      fetchCampaigns();
+    }
+  }, [user?.id, fetchCampaigns]);
 
   // Dashboard Stats
   const stats = useDashboardStats(user?.id, timeframe ? {
@@ -234,7 +264,7 @@ const Dashboard = () => {
   const chartData = useMemo(() => {
     const dailyData = stats?.dailyRoasData || [];
     
-    if (dailyData.length === 0) {
+    if (!dailyData || dailyData.length === 0) {
       return {
         revenueChartData: [],
         profitChartData: [],
@@ -251,7 +281,12 @@ const Dashboard = () => {
     }>();
     
     dailyData.forEach((item: any) => {
-      const dateKey = item.date?.split('T')[0] || item.date;
+      if (!item || !item.date) return;
+      
+      const dateKey = typeof item.date === 'string' 
+        ? item.date.split('T')[0] 
+        : String(item.date);
+      
       if (!dateKey) return;
       
       const existing = dataByDate.get(dateKey) || {
@@ -271,10 +306,10 @@ const Dashboard = () => {
       const totalUnits = existing.units_sold + itemUnitsSold;
       const avgProductPrice = totalUnits > 0 
         ? ((existing.product_price * existing.units_sold) + (itemProductPrice * itemUnitsSold)) / totalUnits
-        : (itemProductPrice || existing.product_price);
+        : (itemProductPrice || existing.product_price || 0);
       const avgCog = totalUnits > 0
         ? ((existing.cog * existing.units_sold) + (itemCog * itemUnitsSold)) / totalUnits
-        : (itemCog || existing.cog);
+        : (itemCog || existing.cog || 0);
       
       dataByDate.set(dateKey, {
         total_spent: existing.total_spent + itemSpent,
@@ -290,60 +325,87 @@ const Dashboard = () => {
         date,
         ...values,
       }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
+      });
     
     return {
-      revenueChartData: sortedData.map((item) => ({
-        date: format(new Date(item.date), 'dd/MM'),
-        value: (item.units_sold || 0) * (item.product_price || 0),
-      })),
+      revenueChartData: sortedData.map((item) => {
+        try {
+          return {
+            date: format(new Date(item.date), 'dd/MM'),
+            value: (item.units_sold || 0) * (item.product_price || 0),
+          };
+        } catch {
+          return { date: item.date, value: 0 };
+        }
+      }).filter(item => item.value !== undefined),
       profitChartData: sortedData.map((item) => {
-        const revenue = (item.units_sold || 0) * (item.product_price || 0);
-        const cost = (item.units_sold || 0) * (item.cog || 0);
-        return {
-          date: format(new Date(item.date), 'dd/MM'),
-          value: revenue - (item.total_spent || 0) - cost,
-        };
-      }),
-      spendChartData: sortedData.map((item) => ({
-        date: format(new Date(item.date), 'dd/MM'),
-        value: item.total_spent || 0,
-      })),
+        try {
+          const revenue = (item.units_sold || 0) * (item.product_price || 0);
+          const cost = (item.units_sold || 0) * (item.cog || 0);
+          return {
+            date: format(new Date(item.date), 'dd/MM'),
+            value: revenue - (item.total_spent || 0) - cost,
+          };
+        } catch {
+          return { date: item.date, value: 0 };
+        }
+      }).filter(item => item.value !== undefined),
+      spendChartData: sortedData.map((item) => {
+        try {
+          return {
+            date: format(new Date(item.date), 'dd/MM'),
+            value: item.total_spent || 0,
+          };
+        } catch {
+          return { date: item.date, value: 0 };
+        }
+      }).filter(item => item.value !== undefined),
     };
   }, [stats?.dailyRoasData]);
 
   // Filtered Campaigns
   const filteredCampaigns = useMemo(() => {
+    if (!campaigns || campaigns.length === 0) return [];
+    
     return campaigns.filter(campaign => {
-      const matchesSearch = campaign.campaign_name?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesSearch && campaign.status === 'active';
+      if (!campaign || campaign.status !== 'active') return false;
+      
+      const campaignName = campaign.campaign_name?.toLowerCase() || '';
+      const searchLower = searchTerm.toLowerCase();
+      
+      return campaignName.includes(searchLower);
     });
   }, [campaigns, searchTerm]);
 
   const displayedCampaigns = useMemo(() => {
+    if (!filteredCampaigns || filteredCampaigns.length === 0) return [];
     return showAllCampaigns ? filteredCampaigns : filteredCampaigns.slice(0, 5);
   }, [showAllCampaigns, filteredCampaigns]);
 
   // Handlers
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1);
     fetchCampaigns();
     toast({
       title: t('dashboard.refreshed') || 'Atualizado',
       description: t('dashboard.dataRefreshed') || 'Dados atualizados com sucesso',
     });
-  };
+  }, [fetchCampaigns, toast, t]);
 
   if (loading || stateLoading || stats.loading) {
-    return <LoadingOverlay message={t('dashboard.loading')} />;
+    return <LoadingOverlay message={t('dashboard.loading') || 'Carregando...'} />;
   }
 
   const { revenueChartData, profitChartData, spendChartData } = chartData;
 
   return (
     <PageLayout
-      title={t('dashboard.title')}
-      subtitle={t('dashboard.welcome')}
+      title={t('dashboard.title') || 'Dashboard'}
+      subtitle={t('dashboard.welcome') || 'Bem-vindo ao seu painel'}
     >
       {stateInfo.showBanner && (
         <SubscriptionStateBanner
@@ -397,6 +459,7 @@ const Dashboard = () => {
                       <SelectItem key={integration.id} value={integration.id}>
                         {integration.metadata?.shop_name || 
                          integration.metadata?.shop_domain || 
+                         integration.metadata?.store_name ||
                          `Loja ${integration.id.slice(0, 8)}`}
                       </SelectItem>
                     ))}
@@ -427,7 +490,7 @@ const Dashboard = () => {
                       <SelectItem value="all">{t('storeSelector.allStores') || 'Todas as contas'}</SelectItem>
                       {adAccounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
-                          {account.name}
+                          {account.name || account.account_id}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -438,7 +501,7 @@ const Dashboard = () => {
               {/* Timeframe */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">
-                  {t('dashboard.timeframe')}
+                  {t('dashboard.timeframe') || 'Período'}
                 </label>
                 <TimeframeSelector
                   value={timeframe}
@@ -533,9 +596,9 @@ const Dashboard = () => {
                     </TableRow>
                   ) : (
                     displayedCampaigns.map((campaign, index) => {
-                      const roas = campaign.total_spent > 0 
-                        ? (campaign.total_revenue || 0) / campaign.total_spent 
-                        : 0;
+                      const totalSpent = Number(campaign.total_spent) || 0;
+                      const totalRevenue = Number(campaign.total_revenue) || 0;
+                      const roas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
                       const isPositive = roas >= 1;
                       
                       return (
@@ -560,10 +623,10 @@ const Dashboard = () => {
                             {campaign.platform || 'facebook'}
                           </TableCell>
                           <TableCell className="text-right font-semibold">
-                            €{(campaign.total_spent || 0).toFixed(2)}
+                            €{totalSpent.toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right font-semibold text-emerald-500">
-                            €{(campaign.total_revenue || 0).toFixed(2)}
+                            €{totalRevenue.toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">
@@ -578,10 +641,10 @@ const Dashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                            €{(campaign.cpc || 0).toFixed(2)}
+                            €{(Number(campaign.cpc) || 0).toFixed(2)}
                           </TableCell>
                           <TableCell className="text-right hidden lg:table-cell">
-                            {campaign.conversions || 0}
+                            {Number(campaign.conversions) || 0}
                           </TableCell>
                           <TableCell className="text-center hidden sm:table-cell">
                             <Badge 
