@@ -187,54 +187,79 @@ async function createJWT(clientEmail: string, privateKey: string): Promise<strin
   
   const signatureInput = `${encodedHeader}.${encodedClaim}`;
   
-  // Import private key
-  const pemKey = privateKey.replace(/\\n/g, '\n');
-  const pemContents = pemKey
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\s/g, '');
-  
-  const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-  
-  const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8',
-    binaryKey,
-    {
-      name: 'RSASSA-PKCS1-v1_5',
-      hash: 'SHA-256',
-    },
-    false,
-    ['sign']
-  );
+  try {
+    // Import private key - handle both escaped newlines and actual newlines
+    let pemKey = privateKey.trim();
+    
+    // Replace escaped newlines with actual newlines
+    if (pemKey.includes('\\n')) {
+      pemKey = pemKey.split('\\n').join('\n');
+    }
+    
+    // Ensure proper PEM format
+    if (!pemKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      throw new Error('Invalid private key format: missing BEGIN header');
+    }
+    
+    // Extract the base64 content between headers
+    const pemContents = pemKey
+      .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+      .replace(/-----END PRIVATE KEY-----/g, '')
+      .replace(/\s+/g, '');
+    
+    if (!pemContents) {
+      throw new Error('Invalid private key: no content found');
+    }
+    
+    // Decode base64 to binary
+    const binaryKey = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+    
+    // Import the key
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      binaryKey,
+      {
+        name: 'RSASSA-PKCS1-v1_5',
+        hash: 'SHA-256',
+      },
+      false,
+      ['sign']
+    );
+    
+    // Sign the JWT
+    const encoder = new TextEncoder();
+    const signature = await crypto.subtle.sign(
+      'RSASSA-PKCS1-v1_5',
+      cryptoKey,
+      encoder.encode(signatureInput)
+    );
 
-  const encoder = new TextEncoder();
-  const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    cryptoKey,
-    encoder.encode(signatureInput)
-  );
+    const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
 
-  const encodedSignature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/=/g, '')
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_');
+    const jwt = `${signatureInput}.${encodedSignature}`;
 
-  const jwt = `${signatureInput}.${encodedSignature}`;
+    // Exchange JWT for access token
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
+    });
 
-  // Exchange JWT for access token
-  const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
-  });
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      console.error('Token exchange failed:', tokenData);
+      throw new Error(`Failed to get access token: ${tokenData.error_description || tokenData.error || 'Unknown error'}`);
+    }
 
-  const tokenData = await tokenResponse.json();
-  
-  if (!tokenData.access_token) {
-    throw new Error('Failed to get access token from Google');
+    return tokenData.access_token;
+  } catch (error: any) {
+    console.error('Failed to create JWT:', error);
+    throw new Error(`JWT creation failed: ${error.message}. Please ensure GOOGLE_SHEETS_PRIVATE_KEY is a valid PEM-formatted RSA private key.`);
   }
-
-  return tokenData.access_token;
 }
 
 async function readGoogleSheet(sheetId: string, sheetName: string, accessToken: string): Promise<string[][]> {
