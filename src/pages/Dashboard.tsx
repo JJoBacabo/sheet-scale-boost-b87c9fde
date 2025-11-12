@@ -205,38 +205,107 @@ const Dashboard = () => {
     checkAndSync();
   }, [user?.id, autoSynced]);
 
-  // Fetch Campaigns
+  // Fetch Campaigns - Aggregate from daily_roas for accurate data
   const fetchCampaigns = useCallback(async () => {
     if (!user?.id) return;
     
     try {
-      let query = supabase
-        .from('campaigns')
-        .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('updated_at', { ascending: false });
+      // Get daily_roas data aggregated by campaign
+      let dailyRoasQuery = supabase
+        .from('daily_roas')
+        .select('campaign_id, campaign_name, total_spent, units_sold, product_price, cog, purchases, cpc, date')
+        .eq('user_id', user.id);
 
       if (timeframe?.dateFrom) {
         const df = new Date(timeframe.dateFrom);
         df.setHours(0, 0, 0, 0);
-        query = query.gte('updated_at', df.toISOString());
+        const dateFromStr = df.toISOString().split('T')[0];
+        dailyRoasQuery = dailyRoasQuery.gte('date', dateFromStr);
       }
       if (timeframe?.dateTo) {
         const dt = new Date(timeframe.dateTo);
         dt.setHours(23, 59, 59, 999);
-        query = query.lte('updated_at', dt.toISOString());
+        const dateToStr = dt.toISOString().split('T')[0];
+        dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
       }
 
-      const { data, error } = await query;
+      const { data: dailyRoasData, error: dailyRoasError } = await dailyRoasQuery;
       
-      if (error) {
-        console.error('Error fetching campaigns:', error);
+      if (dailyRoasError) {
+        console.error('Error fetching daily_roas for campaigns:', dailyRoasError);
         setCampaigns([]);
         return;
       }
-      
-      setCampaigns((data as Campaign[]) || []);
+
+      // Aggregate by campaign_id
+      const campaignMap = new Map<string, {
+        campaign_id: string;
+        campaign_name: string;
+        total_spent: number;
+        total_revenue: number;
+        total_conversions: number;
+        total_cpc: number;
+        cpc_count: number;
+      }>();
+
+      (dailyRoasData || []).forEach((entry: any) => {
+        const campaignId = entry.campaign_id;
+        const existing = campaignMap.get(campaignId) || {
+          campaign_id: campaignId,
+          campaign_name: entry.campaign_name || '',
+          total_spent: 0,
+          total_revenue: 0,
+          total_conversions: 0,
+          total_cpc: 0,
+          cpc_count: 0,
+        };
+
+        const spent = Number(entry.total_spent) || 0;
+        const unitsSold = Number(entry.units_sold) || 0;
+        const productPrice = Number(entry.product_price) || 0;
+        const revenue = unitsSold * productPrice;
+        const conversions = Number(entry.purchases) || 0;
+        const cpc = Number(entry.cpc) || 0;
+
+        existing.total_spent += spent;
+        existing.total_revenue += revenue;
+        existing.total_conversions += conversions;
+        if (cpc > 0) {
+          existing.total_cpc += cpc;
+          existing.cpc_count += 1;
+        }
+
+        campaignMap.set(campaignId, existing);
+      });
+
+      // Get campaign status from campaigns table
+      const { data: campaignsStatus } = await supabase
+        .from('campaigns')
+        .select('id, campaign_name, platform, status')
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+      // Combine aggregated data with status
+      const aggregatedCampaigns: Campaign[] = Array.from(campaignMap.values()).map(agg => {
+        const campaignStatus = campaignsStatus?.find(c => c.campaign_name === agg.campaign_name);
+        const avgCpc = agg.cpc_count > 0 ? agg.total_cpc / agg.cpc_count : 0;
+        const roas = agg.total_spent > 0 ? agg.total_revenue / agg.total_spent : 0;
+
+        return {
+          id: agg.campaign_id,
+          campaign_name: agg.campaign_name,
+          platform: campaignStatus?.platform || 'facebook',
+          status: campaignStatus?.status || 'active',
+          total_spent: agg.total_spent,
+          total_revenue: agg.total_revenue,
+          roas: roas,
+          cpc: avgCpc,
+          conversions: agg.total_conversions,
+          updated_at: new Date().toISOString(),
+        };
+      });
+
+      setCampaigns(aggregatedCampaigns);
     } catch (error) {
       console.error('Error in fetchCampaigns:', error);
       setCampaigns([]);
@@ -345,10 +414,20 @@ const Dashboard = () => {
       profitChartData: sortedData.map((item) => {
         try {
           const revenue = (item.units_sold || 0) * (item.product_price || 0);
-          const cost = (item.units_sold || 0) * (item.cog || 0);
+          const cog = Number(item.cog) || 0;
+          const unitsSold = Number(item.units_sold) || 0;
+          
+          // Handle cog: might be total or per-unit
+          // Heuristic: if cog is very small compared to revenue, it's likely per-unit
+          let totalCog = cog;
+          if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
+            // Likely per-unit, multiply by units_sold
+            totalCog = cog * unitsSold;
+          }
+          
           return {
             date: format(new Date(item.date), 'dd/MM'),
-            value: revenue - (item.total_spent || 0) - cost,
+            value: revenue - (item.total_spent || 0) - totalCog,
           };
         } catch {
           return { date: item.date, value: 0 };
@@ -430,7 +509,7 @@ const Dashboard = () => {
         <Card3D intensity="low" className="p-4 sm:p-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Filtros</h2>
+              <h2 className="text-lg font-semibold">{t('dashboard.filters') || 'Filtros'}</h2>
               <Button3D
                 variant="glass"
                 size="sm"
@@ -438,7 +517,7 @@ const Dashboard = () => {
                 className="gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
-                Atualizar
+                {t('dashboard.refresh') || 'Atualizar'}
               </Button3D>
             </div>
             
@@ -521,7 +600,7 @@ const Dashboard = () => {
             {revenueChartData.length > 0 && (
               <CryptoChart
                 data={revenueChartData}
-                title="Receita Diária"
+                title={t('dashboard.dailyRevenue') || 'Receita Diária'}
                 color="#4AE9BD"
                 showTrend={true}
               />
@@ -529,7 +608,7 @@ const Dashboard = () => {
             {profitChartData.length > 0 && (
               <CryptoChart
                 data={profitChartData}
-                title="Lucro Diário"
+                title={t('dashboard.dailyProfit') || 'Lucro Diário'}
                 color="#10B981"
                 showTrend={true}
               />
@@ -537,7 +616,7 @@ const Dashboard = () => {
             {spendChartData.length > 0 && (
               <CryptoChart
                 data={spendChartData}
-                title="Gasto Diário"
+                title={t('dashboard.dailySpend') || 'Gasto Diário'}
                 color="#F59E0B"
                 showTrend={true}
               />
@@ -550,15 +629,15 @@ const Dashboard = () => {
           <Card3D intensity="medium" glow className="p-4 sm:p-6 overflow-hidden">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-bold gradient-text">Campanhas Ativas</h2>
+                <h2 className="text-xl font-bold gradient-text">{t('dashboard.activeCampaigns') || 'Campanhas Ativas'}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {displayedCampaigns.length} de {filteredCampaigns.length} campanhas
+                  {displayedCampaigns.length} {t('dashboard.of') || 'de'} {filteredCampaigns.length} {t('dashboard.campaigns') || 'campanhas'}
                 </p>
               </div>
               <div className="relative w-full sm:w-auto sm:min-w-[250px]">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar campanhas..."
+                  placeholder={t('dashboard.searchCampaigns') || 'Buscar campanhas...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -570,14 +649,14 @@ const Dashboard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Campanha</TableHead>
-                    <TableHead className="hidden sm:table-cell">Plataforma</TableHead>
-                    <TableHead className="text-right">Gasto</TableHead>
-                    <TableHead className="text-right">Receita</TableHead>
+                    <TableHead>{t('dashboard.campaign') || 'Campanha'}</TableHead>
+                    <TableHead className="hidden sm:table-cell">{t('dashboard.platform') || 'Plataforma'}</TableHead>
+                    <TableHead className="text-right">{t('dashboard.spent') || 'Gasto'}</TableHead>
+                    <TableHead className="text-right">{t('dashboard.revenue') || 'Receita'}</TableHead>
                     <TableHead className="text-right">ROAS</TableHead>
                     <TableHead className="text-right hidden md:table-cell">CPC</TableHead>
-                    <TableHead className="text-right hidden lg:table-cell">Conversões</TableHead>
-                    <TableHead className="text-center hidden sm:table-cell">Status</TableHead>
+                    <TableHead className="text-right hidden lg:table-cell">{t('dashboard.conversions') || 'Conversões'}</TableHead>
+                    <TableHead className="text-center hidden sm:table-cell">{t('dashboard.status') || 'Status'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -588,8 +667,8 @@ const Dashboard = () => {
                           <Target className="w-12 h-12 text-muted-foreground opacity-50" />
                           <p className="text-sm text-muted-foreground">
                             {campaigns.length === 0 
-                              ? "Nenhuma campanha ativa encontrada."
-                              : "Nenhuma campanha corresponde à busca."}
+                              ? (t('dashboard.noActiveCampaigns') || 'Nenhuma campanha ativa encontrada.')
+                              : (t('dashboard.noCampaignsMatch') || 'Nenhuma campanha corresponde à busca.')}
                           </p>
                         </div>
                       </TableCell>
@@ -612,7 +691,7 @@ const Dashboard = () => {
                           <TableCell className="font-medium">
                             <div className="flex flex-col gap-0.5">
                               <span className="truncate max-w-[150px] sm:max-w-none">
-                                {campaign.campaign_name || 'Sem nome'}
+                                {campaign.campaign_name || (t('dashboard.noName') || 'Sem nome')}
                               </span>
                               <span className="text-xs text-muted-foreground sm:hidden">
                                 {campaign.platform || 'facebook'}
@@ -670,7 +749,7 @@ const Dashboard = () => {
                   size="md"
                   onClick={() => setShowAllCampaigns(!showAllCampaigns)}
                 >
-                  {showAllCampaigns ? 'Ver Menos' : 'Ver Mais'}
+                  {showAllCampaigns ? (t('dashboard.showLess') || 'Ver Menos') : (t('dashboard.showMore') || 'Ver Mais')}
                   <ArrowRight className={`w-4 h-4 ml-2 transition-transform ${showAllCampaigns ? 'rotate-180' : ''}`} />
                 </Button3D>
               </div>

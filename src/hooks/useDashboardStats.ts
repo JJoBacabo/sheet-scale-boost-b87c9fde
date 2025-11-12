@@ -42,64 +42,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
       try {
         console.log('🔄 Fetching dashboard stats with filters:', filters);
         
-        // Build campaigns query with filters
-        let campaignsQuery = supabase
-          .from('campaigns')
-          .select('id, status, total_spent, total_revenue, conversions, clicks, cpc, roas, updated_at')
-          .eq('user_id', userId);
-
-        if (filters?.campaignId && filters.campaignId !== 'all') {
-          campaignsQuery = campaignsQuery.eq('id', filters.campaignId);
-        }
-        if (filters?.platform && filters.platform !== 'all') {
-          campaignsQuery = campaignsQuery.eq('platform', filters.platform);
-        }
-        
-        // Apply date filters to campaigns based on updated_at
-        if (filters?.dateFrom) {
-          const dateFrom = new Date(filters.dateFrom);
-          dateFrom.setHours(0, 0, 0, 0);
-          campaignsQuery = campaignsQuery.gte('updated_at', dateFrom.toISOString());
-        }
-        if (filters?.dateTo) {
-          const dateTo = new Date(filters.dateTo);
-          dateTo.setHours(23, 59, 59, 999);
-          campaignsQuery = campaignsQuery.lte('updated_at', dateTo.toISOString());
-        }
-
-        const { data: campaigns, error: campaignsError } = await campaignsQuery;
-        
-        if (campaignsError) {
-          console.error('❌ Error fetching campaigns:', campaignsError);
-        }
-        
-        console.log('📊 Fetched campaigns:', campaigns?.length || 0);
-
-        // Build products query with filters
-        let productsQuery = supabase
-          .from('products')
-          .select('id, cost_price, selling_price, quantity_sold, integration_id')
-          .eq('user_id', userId);
-
-        if (filters?.productId && filters.productId !== 'all') {
-          productsQuery = productsQuery.eq('id', filters.productId);
-        }
-        if (filters?.storeId && filters.storeId !== 'all') {
-          productsQuery = productsQuery.eq('integration_id', filters.storeId);
-        }
-
-        const { data: products, error: productsError } = await productsQuery;
-        
-        if (productsError) {
-          console.error('❌ Error fetching products:', productsError);
-        }
-        
-        console.log('📦 Fetched products:', products?.length || 0);
-
-        // Build daily ROAS query for charts only
+        // Build daily ROAS query - THIS IS THE SOURCE OF TRUTH
         let dailyRoasQuery = supabase
           .from('daily_roas')
-          .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id')
+          .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id, cpc')
           .eq('user_id', userId)
           .order('date', { ascending: true });
 
@@ -136,23 +82,100 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         
         console.log('📈 Fetched daily_roas entries:', dailyRoas?.length || 0);
 
-        // Calculate metrics from CAMPAIGNS (Ads Manager data)
-        const totalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-        const totalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-        const totalConversions = campaigns?.reduce((sum, c) => sum + (Number(c.conversions) || 0), 0) || 0;
-        const totalClicks = campaigns?.reduce((sum, c) => sum + (Number(c.clicks) || 0), 0) || 0;
-        
+        // Get unique campaign IDs from daily_roas to count campaigns
+        const uniqueCampaignIds = new Set((dailyRoas || []).map((d: any) => d.campaign_id));
+        const totalCampaigns = uniqueCampaignIds.size;
+
+        // Calculate ALL metrics from daily_roas (SOURCE OF TRUTH)
+        // IMPORTANT: cog in daily_roas can be either total or per-unit depending on source
+        // We need to handle both cases - if cog seems too small, it might be per-unit
+        const totalSpent = (dailyRoas || []).reduce((sum: number, d: any) => {
+          return sum + (Number(d.total_spent) || 0);
+        }, 0);
+
+        // Total Revenue = sum of (units_sold * product_price) from daily_roas
+        const totalRevenue = (dailyRoas || []).reduce((sum: number, d: any) => {
+          const unitsSold = Number(d.units_sold) || 0;
+          const productPrice = Number(d.product_price) || 0;
+          return sum + (unitsSold * productPrice);
+        }, 0);
+
+        // Total Conversions = sum of purchases from daily_roas
+        const totalConversions = (dailyRoas || []).reduce((sum: number, d: any) => {
+          return sum + (Number(d.purchases) || 0);
+        }, 0);
+
+        // Total Supplier Cost = sum of cog from daily_roas
+        // NOTE: cog might be stored as total (units_sold * cost_price) or per-unit
+        // We check: if cog > 0 and units_sold > 0 and cog < (product_price * units_sold * 0.1), 
+        // it's likely per-unit, so multiply by units_sold
+        const totalSupplierCost = (dailyRoas || []).reduce((sum: number, d: any) => {
+          const cog = Number(d.cog) || 0;
+          const unitsSold = Number(d.units_sold) || 0;
+          const productPrice = Number(d.product_price) || 0;
+          
+          // Heuristic: if cog is very small compared to revenue, it's likely per-unit
+          const revenue = unitsSold * productPrice;
+          if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
+            // Likely per-unit, multiply by units_sold
+            return sum + (cog * unitsSold);
+          }
+          // Otherwise assume it's already total
+          return sum + cog;
+        }, 0);
+
+        // Calculate total clicks from CPC and spent
+        const totalClicks = (dailyRoas || []).reduce((sum: number, d: any) => {
+          const spent = Number(d.total_spent) || 0;
+          const cpc = Number(d.cpc) || 0;
+          if (cpc > 0) {
+            return sum + (spent / cpc);
+          }
+          return sum;
+        }, 0);
+
         // Calculate averages
         const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
         const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
-        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-        
-        // Calculate supplier cost from daily_roas within timeframe
-        const totalSupplierCost = (dailyRoas || []).reduce((sum: number, d: any) => {
-          return sum + (Number(d.cog) || 0);
-        }, 0);
 
-        console.log('💰 Calculated metrics:', {
+        // Get active campaigns count from campaigns table (for status)
+        let campaignsQuery = supabase
+          .from('campaigns')
+          .select('id, status')
+          .eq('user_id', userId);
+
+        if (filters?.campaignId && filters.campaignId !== 'all') {
+          campaignsQuery = campaignsQuery.eq('id', filters.campaignId);
+        }
+        if (filters?.platform && filters.platform !== 'all') {
+          campaignsQuery = campaignsQuery.eq('platform', filters.platform);
+        }
+
+        const { data: campaigns } = await campaignsQuery;
+        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+
+        // Build products query with filters
+        let productsQuery = supabase
+          .from('products')
+          .select('id, cost_price, selling_price, quantity_sold, integration_id')
+          .eq('user_id', userId);
+
+        if (filters?.productId && filters.productId !== 'all') {
+          productsQuery = productsQuery.eq('id', filters.productId);
+        }
+        if (filters?.storeId && filters.storeId !== 'all') {
+          productsQuery = productsQuery.eq('integration_id', filters.storeId);
+        }
+
+        const { data: products, error: productsError } = await productsQuery;
+        
+        if (productsError) {
+          console.error('❌ Error fetching products:', productsError);
+        }
+        
+        console.log('📦 Fetched products:', products?.length || 0);
+
+        console.log('💰 Calculated metrics from daily_roas:', {
           totalSpent,
           totalRevenue,
           totalConversions,
@@ -160,12 +183,12 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           averageRoas,
           averageCpc,
           totalSupplierCost,
-          activeCampaigns
+          activeCampaigns,
+          totalCampaigns: totalCampaigns
         });
 
-
         setStats({
-          totalCampaigns: campaigns?.length || 0,
+          totalCampaigns: totalCampaigns,
           totalProducts: products?.length || 0,
           totalSpent,
           totalRevenue,
@@ -186,26 +209,15 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
 
     fetchStats();
 
-    // Disable real-time subscriptions for better performance
-    // Real-time updates can be enabled manually via refresh button if needed
-    // const campaignsChannel = supabase
-    //   .channel('dashboard-campaigns')
-    //   .on('postgres_changes', { event: '*', schema: 'public', table: 'campaigns', filter: `user_id=eq.${userId}` }, fetchStats)
-    //   .on('postgres_changes', { event: '*', schema: 'public', table: 'products', filter: `user_id=eq.${userId}` }, fetchStats)
-    //   .subscribe();
-
-    // return () => {
-    //   supabase.removeChannel(campaignsChannel);
-    // };
   }, [
     userId, 
-    filters?.dateFrom?.getTime(), // Use getTime() for better comparison
-    filters?.dateTo?.getTime(), // Use getTime() for better comparison
+    filters?.dateFrom?.getTime(),
+    filters?.dateTo?.getTime(),
     filters?.campaignId, 
     filters?.platform, 
     filters?.productId,
     filters?.storeId,
-    filters?.refreshKey // Incluir refreshKey para forçar atualização
+    filters?.refreshKey
   ]);
 
   return stats;
