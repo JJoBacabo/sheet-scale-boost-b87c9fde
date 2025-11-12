@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decrypt } from "../_shared/encryption.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -87,7 +88,6 @@ serve(async (req) => {
       const encryptionKey = Deno.env.get('ENCRYPTION_KEY');
       if (!encryptionKey) throw new Error('Encryption key not configured');
 
-      const { decrypt } = await import('../_shared/encryption.ts');
       const shopifyToken = await decrypt(shopifyIntegration.access_token, encryptionKey);
 
       const shopifyDomain = shopifyIntegration.metadata?.myshopify_domain ||
@@ -196,7 +196,6 @@ serve(async (req) => {
       const encryptionKey = Deno.env.get('ENCRYPTION_KEY');
       if (!encryptionKey) throw new Error('Encryption key not configured');
 
-      const { decrypt } = await import('../_shared/encryption.ts');
       const facebookToken = await decrypt(fbIntegration.access_token, encryptionKey);
 
       console.log('📱 Fetching Facebook Ads data');
