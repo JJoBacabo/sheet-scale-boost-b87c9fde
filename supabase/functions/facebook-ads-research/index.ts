@@ -110,10 +110,10 @@ serve(async (req) => {
     do {
       const params = new URLSearchParams({
         access_token: cleanToken!,
-        ad_active_status: 'ACTIVE',
+        ad_active_status: 'ALL',
         search_terms: searchTerms || '',
-        ad_type: 'POLITICAL_AND_ISSUE_ADS', // Required for non-EU countries
-        fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions',
+        ad_type: 'ALL',
+        fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions,spend',
         limit: '100'
       });
 
@@ -125,7 +125,7 @@ serve(async (req) => {
         params.append('after', nextCursor);
       }
 
-      const url = `https://graph.facebook.com/v19.0/ads_archive?${params.toString()}`;
+      const url = `https://graph.facebook.com/v24.0/ads_archive?${params.toString()}`;
       
       console.log(`Fetching page ${pageCount + 1}...`);
       console.log('Full URL (without token):', url.replace(cleanToken!, 'REDACTED'));
