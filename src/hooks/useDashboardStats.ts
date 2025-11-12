@@ -131,18 +131,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           return sum + spent;
         }, 0);
         
+        // Calcular revenue apenas dos dados reais no daily_roas
         const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
-          let unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
-          let productPrice = Number(d.product_price) || 0;
-          
-          // Se product_price está vazio, buscar selling_price médio dos produtos
-          if (productPrice === 0 && unitsSold > 0 && products && products.length > 0) {
-            const validProducts = products.filter(p => p.selling_price && p.selling_price > 0);
-            if (validProducts.length > 0) {
-              productPrice = validProducts.reduce((sum, p) => sum + Number(p.selling_price), 0) / validProducts.length;
-            }
-          }
-          
+          const unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
+          const productPrice = Number(d.product_price) || 0;
           return sum + (unitsSold * productPrice);
         }, 0);
         
@@ -153,22 +145,9 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         }, 0);
         
         
-        // Calcular supplier cost a partir de daily_roas.cog ou produtos
+        // Calcular supplier cost apenas dos dados reais no daily_roas
         const totalSupplierCost = filteredDailyRoas.reduce((sum: number, d: any) => {
-          let cog = Number(d.cog) || 0;
-          
-          // Se cog está vazio, calcular a partir dos produtos usando cost_price médio
-          if (cog === 0 && products && products.length > 0) {
-            const unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
-            if (unitsSold > 0) {
-              const validProducts = products.filter(p => p.cost_price && p.cost_price > 0);
-              if (validProducts.length > 0) {
-                const avgCostPrice = validProducts.reduce((sum, p) => sum + Number(p.cost_price), 0) / validProducts.length;
-                cog = avgCostPrice * unitsSold;
-              }
-            }
-          }
-          
+          const cog = Number(d.cog) || 0;
           return sum + cog;
         }, 0);
         
@@ -196,20 +175,13 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           finalTotalConversions = totalConversions;
           finalTotalSupplierCost = totalSupplierCost;
           finalTotalClicks = totalClicks;
-          // If revenue is still 0 but there's spend, try campaigns fallback
-          if (finalTotalRevenue === 0 && finalTotalSpent > 0) {
-            const revenueFromCampaigns = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-            if (revenueFromCampaigns > 0) {
-              finalTotalRevenue = revenueFromCampaigns;
-            }
+          // Usar dados de campaigns como fallback APENAS se daily_roas estiver completamente vazio
+          if (finalTotalRevenue === 0) {
+            finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
           }
           
-          // If conversions is still 0 but there's spend, try campaigns fallback
-          if (finalTotalConversions === 0 && finalTotalSpent > 0) {
-            const conversionsFromCampaigns = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
-            if (conversionsFromCampaigns > 0) {
-              finalTotalConversions = conversionsFromCampaigns;
-            }
+          if (finalTotalConversions === 0) {
+            finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
           }
         } else {
           // Fallback: no daily_roas data, use campaigns/products as fallback
@@ -218,21 +190,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
           finalTotalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
           
-          // Calculate supplier cost from products if available
-          if (products && products.length > 0) {
-            let filteredProducts = products;
-            if (filters?.storeId && filters.storeId !== 'all') {
-              filteredProducts = products.filter(p => p.integration_id === filters.storeId);
-            }
-            finalTotalSupplierCost = filteredProducts.reduce((sum, p) => {
-              const costPrice = Number(p.cost_price) || 0;
-              const quantitySold = Number(p.quantity_sold) || 0;
-              return sum + (costPrice * quantitySold);
-            }, 0);
-          } else if (campaigns && campaigns.length > 0 && finalTotalRevenue > 0) {
-            // Estimate based on campaign revenue (last resort)
-            finalTotalSupplierCost = finalTotalRevenue * 0.35;
-          }
+          // Sem fallback para supplier cost - se não há dados, é 0
+          finalTotalSupplierCost = 0;
         }
         
         
