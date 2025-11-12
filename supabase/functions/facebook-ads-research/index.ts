@@ -57,17 +57,27 @@ serve(async (req) => {
     }
 
     // Decrypt the user's Facebook token
-    const cleanToken = await decryptToken(integration.access_token);
-    
-    if (!cleanToken) {
-      throw new Error('Failed to decrypt Facebook token');
+    let cleanToken: string;
+    try {
+      cleanToken = await decryptToken(integration.access_token);
+      if (!cleanToken) {
+        throw new Error('Decryption returned empty token');
+      }
+      console.log('Token decrypted successfully:', { 
+        tokenLength: cleanToken.length,
+        tokenPrefix: cleanToken.substring(0, 10) + '...',
+        isEncrypted: integration.access_token !== cleanToken
+      });
+    } catch (decryptError: any) {
+      console.error('Token decryption error:', decryptError);
+      throw new Error('Failed to decrypt Facebook token: ' + decryptError.message);
     }
 
-    console.log('Token info:', { 
-      hasToken: true, 
-      tokenLength: cleanToken.length,
-      source: 'user Facebook token'
-    });
+    // Validate token format (Facebook tokens are typically long alphanumeric strings)
+    if (cleanToken.length < 50) {
+      console.error('Token seems too short:', { length: cleanToken.length });
+      throw new Error('Invalid Facebook token format');
+    }
     console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, countries });
 
     const startDateThreshold = new Date();
@@ -81,12 +91,16 @@ serve(async (req) => {
 
     do {
       const params = new URLSearchParams({
-        access_token: cleanToken!,
+        access_token: cleanToken,
         ad_active_status: 'ALL',
-        search_terms: searchTerms || '',
         fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions,spend',
         limit: '100'
       });
+
+      // Add search_terms only if provided
+      if (searchTerms && searchTerms.trim()) {
+        params.append('search_terms', searchTerms.trim());
+      }
 
       if (countries.length > 0) {
         params.append('ad_reached_countries', JSON.stringify(countries));
@@ -109,8 +123,19 @@ serve(async (req) => {
         console.error('Request details:', {
           status: response.status,
           statusText: response.statusText,
-          url: url.replace(cleanToken!, 'REDACTED')
+          url: url.replace(cleanToken, 'REDACTED')
         });
+        
+        // Parse error to provide more helpful message
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error?.code === 1 || errorJson.error?.type === 'OAuthException') {
+            throw new Error('Facebook token is invalid or expired. Please reconnect your Facebook account in Integrations.');
+          }
+        } catch (parseError) {
+          // If can't parse, use original error
+        }
+        
         throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
       }
 
