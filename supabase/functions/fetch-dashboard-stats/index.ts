@@ -13,12 +13,16 @@ interface DashboardStats {
   totalConversions: number;
   averageRoas: number;
   averageCpc: number;
+  totalClicks: number;
+  profit: number;
+  profitMargin: number;
   dailyData: Array<{
     date: string;
     revenue: number;
     adSpend: number;
     cog: number;
     conversions: number;
+    clicks: number;
   }>;
 }
 
@@ -58,6 +62,9 @@ serve(async (req) => {
       totalConversions: 0,
       averageRoas: 0,
       averageCpc: 0,
+      totalClicks: 0,
+      profit: 0,
+      profitMargin: 0,
       dailyData: [],
     };
 
@@ -139,6 +146,7 @@ serve(async (req) => {
             adSpend: 0,
             cog: 0,
             conversions: 0,
+            clicks: 0,
           });
         }
 
@@ -193,8 +201,9 @@ serve(async (req) => {
 
       console.log('📱 Fetching Facebook Ads data');
 
+      // Fetch insights with spend, clicks, and purchases
       const insightsUrl = `https://graph.facebook.com/v18.0/${adAccountId}/insights?` +
-        `fields=spend,date_start,actions&` +
+        `fields=spend,clicks,actions,date_start&` +
         `time_range={"since":"${dateFrom}","until":"${dateTo}"}&` +
         `time_increment=1&` +
         `access_token=${facebookToken}`;
@@ -207,10 +216,13 @@ serve(async (req) => {
         throw new Error(`Facebook API error: ${fbData.error.message}`);
       }
 
+      console.log(`📊 Facebook API returned ${fbData.data?.length || 0} days of data`);
+
       // Process Facebook data by day
       for (const insight of fbData.data || []) {
         const date = insight.date_start;
         const spend = parseFloat(insight.spend || 0);
+        const clicks = parseInt(insight.clicks || 0);
 
         if (!dailyMap.has(date)) {
           dailyMap.set(date, {
@@ -219,11 +231,13 @@ serve(async (req) => {
             adSpend: 0,
             cog: 0,
             conversions: 0,
+            clicks: 0,
           });
         }
 
         const dayData = dailyMap.get(date);
         dayData.adSpend += spend;
+        dayData.clicks += clicks;
       }
 
       console.log(`💰 Processed ${fbData.data?.length || 0} days of Facebook Ads data`);
@@ -237,20 +251,25 @@ serve(async (req) => {
       stats.totalAdSpend += day.adSpend;
       stats.totalSupplierCost += day.cog;
       stats.totalConversions += day.conversions;
+      stats.totalClicks += day.clicks;
     }
 
-    // Calculate averages
+    // Calculate metrics
     stats.averageRoas = stats.totalAdSpend > 0 ? stats.totalRevenue / stats.totalAdSpend : 0;
-    
-    // Calculate CPC (simplified - would need clicks data from FB)
-    const totalClicks = stats.totalAdSpend > 0 ? stats.totalAdSpend / 0.5 : 0; // Assuming avg CPC ~0.5
-    stats.averageCpc = totalClicks > 0 ? stats.totalAdSpend / totalClicks : 0;
+    stats.averageCpc = stats.totalClicks > 0 ? stats.totalAdSpend / stats.totalClicks : 0;
+    stats.profit = stats.totalRevenue - stats.totalSupplierCost - stats.totalAdSpend;
+    stats.profitMargin = stats.totalRevenue > 0 ? (stats.profit / stats.totalRevenue) * 100 : 0;
 
     console.log('✅ Dashboard stats calculated:', {
       totalRevenue: stats.totalRevenue,
       totalAdSpend: stats.totalAdSpend,
       totalSupplierCost: stats.totalSupplierCost,
+      totalConversions: stats.totalConversions,
+      totalClicks: stats.totalClicks,
       averageRoas: stats.averageRoas,
+      averageCpc: stats.averageCpc,
+      profit: stats.profit,
+      profitMargin: stats.profitMargin,
     });
 
     return new Response(JSON.stringify(stats), {

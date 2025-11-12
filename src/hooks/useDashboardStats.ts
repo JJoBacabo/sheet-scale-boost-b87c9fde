@@ -70,13 +70,27 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           
           console.log('✅ Real stats from APIs:', realStats);
           
+          // Get campaigns and products count
+          const { data: campaigns } = await supabase
+            .from('campaigns')
+            .select('id, status')
+            .eq('user_id', userId);
+          
+          const { data: products } = await supabase
+            .from('products')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('integration_id', filters.storeId);
+          
+          const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+          
           setStats({
-            totalCampaigns: 0, // TODO: get from campaigns table
-            totalProducts: 0,  // TODO: get from products table
+            totalCampaigns: campaigns?.length || 0,
+            totalProducts: products?.length || 0,
             totalSpent: realStats.totalAdSpend,
             totalRevenue: realStats.totalRevenue,
             averageRoas: realStats.averageRoas,
-            activeCampaigns: 0,
+            activeCampaigns,
             totalConversions: realStats.totalConversions,
             averageCpc: realStats.averageCpc,
             totalSupplierCost: realStats.totalSupplierCost,
@@ -252,6 +266,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
     filters?.platform, 
     filters?.productId,
     filters?.storeId,
+    filters?.adAccountId,
     filters?.refreshKey
   ]);
 
