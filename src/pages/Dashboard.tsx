@@ -438,9 +438,11 @@ const Dashboard = () => {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
     storeId: selectedStore !== "all" ? selectedStore : undefined,
+    adAccountId: selectedAdAccount !== "all" ? selectedAdAccount : undefined,
     refreshKey,
   } : { 
     storeId: selectedStore !== "all" ? selectedStore : undefined,
+    adAccountId: selectedAdAccount !== "all" ? selectedAdAccount : undefined,
     refreshKey 
   });
 

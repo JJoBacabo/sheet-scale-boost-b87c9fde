@@ -16,7 +16,7 @@ interface DashboardStats {
   loading: boolean;
 }
 
-export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; storeId?: string; refreshKey?: number }) => {
+export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; storeId?: string; adAccountId?: string; refreshKey?: number }) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     totalProducts: 0,
@@ -42,7 +42,55 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
       try {
         console.log('🔄 Fetching dashboard stats with filters:', filters);
         
-        // Build daily ROAS query - THIS IS THE SOURCE OF TRUTH
+        // Se temos storeId E adAccountId selecionados, buscar dados reais da Shopify + Facebook
+        if (filters?.storeId && filters.storeId !== 'all' && filters?.adAccountId && filters.adAccountId !== 'all') {
+          console.log('📊 Fetching real data from Shopify + Facebook Ads APIs');
+          
+          const dateFrom = filters.dateFrom 
+            ? new Date(filters.dateFrom).toISOString().split('T')[0]
+            : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const dateTo = filters.dateTo
+            ? new Date(filters.dateTo).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+          
+          const { data: realStats, error } = await supabase.functions.invoke('fetch-dashboard-stats', {
+            body: {
+              shopifyIntegrationId: filters.storeId,
+              adAccountId: filters.adAccountId,
+              dateFrom,
+              dateTo,
+            }
+          });
+          
+          if (error) {
+            console.error('❌ Error fetching real dashboard stats:', error);
+            throw error;
+          }
+          
+          console.log('✅ Real stats from APIs:', realStats);
+          
+          setStats({
+            totalCampaigns: 0, // TODO: get from campaigns table
+            totalProducts: 0,  // TODO: get from products table
+            totalSpent: realStats.totalAdSpend,
+            totalRevenue: realStats.totalRevenue,
+            averageRoas: realStats.averageRoas,
+            activeCampaigns: 0,
+            totalConversions: realStats.totalConversions,
+            averageCpc: realStats.averageCpc,
+            totalSupplierCost: realStats.totalSupplierCost,
+            recentActivity: [],
+            dailyRoasData: realStats.dailyData || [],
+            loading: false,
+          });
+          
+          return;
+        }
+        
+        // Fallback: usar daily_roas (dados históricos/sincronizados)
+        console.log('📊 Using daily_roas data (fallback)');
+        
         let dailyRoasQuery = supabase
           .from('daily_roas')
           .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id, cpc')
