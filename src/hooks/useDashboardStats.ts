@@ -132,61 +132,18 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         }, 0);
         
         const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
-          // Revenue = units_sold * product_price OU purchases * product_price
-          // Usar units_sold primeiro, depois purchases como fallback
           let unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
           let productPrice = Number(d.product_price) || 0;
           
-          // Se product_price está vazio mas há purchases/units_sold, tentar buscar dos produtos
+          // Se product_price está vazio, buscar selling_price médio dos produtos
           if (productPrice === 0 && unitsSold > 0 && products && products.length > 0) {
-            const campaignName = d.campaign_name || '';
-            
-            // Estratégia 1: Tentar encontrar produto pelo nome da campanha
-            let matchedProduct = products.find(p => {
-              if (!p.product_name || !p.selling_price) return false;
-              const productName = p.product_name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
-              const cleanCampaignName = campaignName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
-              
-              if (productName.length > 3 && cleanCampaignName.length > 3) {
-                // Verificar se o nome do produto está no nome da campanha ou vice-versa
-                if (cleanCampaignName.includes(productName) || productName.includes(cleanCampaignName)) {
-                  return true;
-                }
-                
-                // Verificar palavras-chave comuns
-                const productWords = productName.split(/\s+/).filter(w => w.length > 3);
-                const campaignWords = cleanCampaignName.split(/\s+/).filter(w => w.length > 3);
-                const commonWords = productWords.filter(w => campaignWords.includes(w));
-                return commonWords.length > 0;
-              }
-              
-              return false;
-            });
-            
-            // Estratégia 2: Se não encontrou por nome, usar o primeiro produto com selling_price (fallback)
-            // Isso é útil quando há apenas um produto ou quando o nome não corresponde
-            if (!matchedProduct && products.length === 1 && products[0].selling_price) {
-              matchedProduct = products[0];
-            }
-            
-            if (matchedProduct && matchedProduct.selling_price) {
-              productPrice = Number(matchedProduct.selling_price) || 0;
+            const validProducts = products.filter(p => p.selling_price && p.selling_price > 0);
+            if (validProducts.length > 0) {
+              productPrice = validProducts.reduce((sum, p) => sum + Number(p.selling_price), 0) / validProducts.length;
             }
           }
           
-          const revenue = unitsSold * productPrice;
-          
-          // Log quando revenue é 0 mas deveria ter valor
-          if (revenue === 0 && unitsSold > 0) {
-            console.log('⚠️ Revenue is 0 for entry:', {
-              unitsSold,
-              productPrice,
-              campaignName: d.campaign_name,
-              hasProducts: products && products.length > 0,
-            });
-          }
-          
-          return sum + revenue;
+          return sum + (unitsSold * productPrice);
         }, 0);
         
         const totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => {
@@ -195,102 +152,25 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           return sum + purchases;
         }, 0);
         
-        // Debug: Log sample entries to verify data structure
-        if (filteredDailyRoas.length > 0 && filteredDailyRoas.length <= 5) {
-          console.log('📊 Sample daily_roas entries:', filteredDailyRoas.map(d => ({
-            date: d.date,
-            total_spent: d.total_spent,
-            units_sold: d.units_sold,
-            purchases: d.purchases,
-            product_price: d.product_price,
-            cog: d.cog,
-            revenue: (Number(d.units_sold) || Number(d.purchases) || 0) * (Number(d.product_price) || 0),
-          })));
-        }
         
-        // Calcular supplier cost a partir de daily_roas.cog
-        let totalSupplierCostFromDailyRoas = filteredDailyRoas.reduce((sum: number, d: any) => {
-          const cog = Number(d.cog) || 0;
-          return sum + cog;
-        }, 0);
-        
-        // Se o cog no daily_roas estiver vazio ou 0, calcular a partir dos produtos
-        // Buscar produtos que correspondem aos produtos no daily_roas e calcular o cost
-        let totalSupplierCostFromProducts = 0;
-        
-        // Sempre tentar calcular supplier cost dos produtos se cog estiver vazio no daily_roas
-        // Isso garante que mesmo que o cog não esteja no daily_roas, podemos calcular a partir dos produtos
-        if (filteredDailyRoas.length > 0) {
-          // Buscar todos os produtos com cost_price definido
-          const productsWithCost = (products || []).filter(p => p.cost_price !== null && p.cost_price !== 0);
+        // Calcular supplier cost a partir de daily_roas.cog ou produtos
+        const totalSupplierCost = filteredDailyRoas.reduce((sum: number, d: any) => {
+          let cog = Number(d.cog) || 0;
           
-          // Para cada entrada no daily_roas, tentar encontrar o produto correspondente
-          for (const dailyEntry of filteredDailyRoas) {
-            const unitsSold = Number(dailyEntry.units_sold) || Number(dailyEntry.purchases) || 0;
-            const productPrice = Number(dailyEntry.product_price) || 0;
-            const entryCog = Number(dailyEntry.cog) || 0;
-            const campaignName = dailyEntry.campaign_name || '';
-            
-            // Se já tem cog calculado, não precisa buscar dos produtos para esta entrada
-            if (entryCog > 0) {
-              continue;
-            }
-            
-            // Tentar encontrar produto mesmo se productPrice estiver vazio
+          // Se cog está vazio, calcular a partir dos produtos usando cost_price médio
+          if (cog === 0 && products && products.length > 0) {
+            const unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
             if (unitsSold > 0) {
-              let matchedProduct: any = null;
-              
-              // Estratégia 1: Se productPrice está disponível, tentar encontrar pelo preço (mais confiável)
-              if (productPrice > 0) {
-                matchedProduct = productsWithCost.find(p => {
-                  const sellingPrice = Number(p.selling_price) || 0;
-                  return Math.abs(sellingPrice - productPrice) < 0.01; // Tolerância para diferenças de ponto flutuante
-                });
-              }
-              
-              // Estratégia 2: Se não encontrou por preço, tentar por nome da campanha
-              if (!matchedProduct && campaignName) {
-                const cleanCampaignName = campaignName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
-                matchedProduct = productsWithCost.find(p => {
-                  if (!p.product_name) return false;
-                  const productName = p.product_name.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').trim();
-                  
-                  // Verificar correspondência exata ou parcial
-                  if (productName.length > 3 && cleanCampaignName.length > 3) {
-                    // Verificar se o nome do produto está no nome da campanha ou vice-versa
-                    if (cleanCampaignName.includes(productName) || productName.includes(cleanCampaignName)) {
-                      return true;
-                    }
-                    
-                    // Verificar palavras-chave comuns (palavras com mais de 3 caracteres)
-                    const productWords = productName.split(/\s+/).filter(w => w.length > 3);
-                    const campaignWords = cleanCampaignName.split(/\s+/).filter(w => w.length > 3);
-                    
-                    // Se há pelo menos uma palavra em comum significativa
-                    const commonWords = productWords.filter(w => campaignWords.includes(w));
-                    if (commonWords.length > 0) {
-                      return true;
-                    }
-                  }
-                  
-                  return false;
-                });
-              }
-              
-              if (matchedProduct && matchedProduct.cost_price) {
-                const costPrice = Number(matchedProduct.cost_price) || 0;
-                totalSupplierCostFromProducts += costPrice * unitsSold;
+              const validProducts = products.filter(p => p.cost_price && p.cost_price > 0);
+              if (validProducts.length > 0) {
+                const avgCostPrice = validProducts.reduce((sum, p) => sum + Number(p.cost_price), 0) / validProducts.length;
+                cog = avgCostPrice * unitsSold;
               }
             }
           }
-        }
-        
-        // Usar supplier cost de daily_roas se disponível, senão usar dos produtos
-        // Se ambos estiverem disponíveis, somar ambos (daily_roas pode ter alguns, products pode ter outros)
-        // Mas se daily_roas tem cog > 0, preferir usar apenas daily_roas para evitar duplicação
-        const totalSupplierCost = totalSupplierCostFromDailyRoas > 0 
-          ? totalSupplierCostFromDailyRoas 
-          : totalSupplierCostFromProducts;
+          
+          return sum + cog;
+        }, 0);
         
         
         // Calcular total clicks a partir de daily_roas (usando cpc e total_spent)
