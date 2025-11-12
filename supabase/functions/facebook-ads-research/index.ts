@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
-import { decryptToken } from '../_shared/encryption.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +19,7 @@ serve(async (req) => {
       countries = []
     } = await req.json();
 
-    // Initialize Supabase client
+    // Initialize Supabase client for authentication
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const authHeader = req.headers.get('Authorization');
@@ -36,48 +35,13 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    // Get user's Facebook token from integrations
-    const { data: integration, error: integrationError } = await supabase
-      .from('integrations')
-      .select('access_token, expires_at')
-      .eq('user_id', user.id)
-      .eq('integration_type', 'facebook_ads')
-      .maybeSingle();
-
-    if (integrationError || !integration?.access_token) {
-      throw new Error('Facebook account not connected. Please connect your Facebook account first.');
+    // Get Facebook Ads Library token from Supabase Secrets
+    const facebookToken = Deno.env.get('FACEBOOK_ADS_LIBRARY_TOKEN');
+    
+    if (!facebookToken) {
+      throw new Error('Facebook Ads Library token not configured. Please contact support.');
     }
 
-    // Check if token is expired
-    if (integration.expires_at) {
-      const expiresAt = new Date(integration.expires_at);
-      if (expiresAt < new Date()) {
-        throw new Error('Facebook token expired. Please reconnect your Facebook account.');
-      }
-    }
-
-    // Decrypt the user's Facebook token
-    let cleanToken: string;
-    try {
-      cleanToken = await decryptToken(integration.access_token);
-      if (!cleanToken) {
-        throw new Error('Decryption returned empty token');
-      }
-      console.log('Token decrypted successfully:', { 
-        tokenLength: cleanToken.length,
-        tokenPrefix: cleanToken.substring(0, 10) + '...',
-        isEncrypted: integration.access_token !== cleanToken
-      });
-    } catch (decryptError: any) {
-      console.error('Token decryption error:', decryptError);
-      throw new Error('Failed to decrypt Facebook token: ' + decryptError.message);
-    }
-
-    // Validate token format (Facebook tokens are typically long alphanumeric strings)
-    if (cleanToken.length < 50) {
-      console.error('Token seems too short:', { length: cleanToken.length });
-      throw new Error('Invalid Facebook token format');
-    }
     console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, countries });
 
     const startDateThreshold = new Date();
@@ -91,7 +55,7 @@ serve(async (req) => {
 
     do {
       const params = new URLSearchParams({
-        access_token: cleanToken,
+        access_token: facebookToken,
         ad_active_status: 'ALL',
         fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions,spend',
         limit: '100'
@@ -113,7 +77,7 @@ serve(async (req) => {
       const url = `https://graph.facebook.com/v24.0/ads_archive?${params.toString()}`;
       
       console.log(`Fetching page ${pageCount + 1}...`);
-      console.log('Full URL (without token):', url.replace(cleanToken!, 'REDACTED'));
+      console.log('Full URL (without token):', url.replace(facebookToken, 'REDACTED'));
       
       const response = await fetch(url);
       
@@ -123,7 +87,7 @@ serve(async (req) => {
         console.error('Request details:', {
           status: response.status,
           statusText: response.statusText,
-          url: url.replace(cleanToken, 'REDACTED')
+          url: url.replace(facebookToken, 'REDACTED')
         });
         
         // Parse error to provide more helpful message
