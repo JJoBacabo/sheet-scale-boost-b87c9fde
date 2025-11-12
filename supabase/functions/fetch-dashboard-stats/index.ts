@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { decrypt } from "../_shared/encryption.ts";
+import { decryptToken } from "../_shared/encryption.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -85,10 +85,7 @@ serve(async (req) => {
       }
 
       // Decrypt access token
-      const encryptionKey = Deno.env.get('ENCRYPTION_KEY');
-      if (!encryptionKey) throw new Error('Encryption key not configured');
-
-      const shopifyToken = await decrypt(shopifyIntegration.access_token, encryptionKey);
+      const shopifyToken = await decryptToken(shopifyIntegration.access_token);
 
       const shopifyDomain = shopifyIntegration.metadata?.myshopify_domain ||
                            shopifyIntegration.metadata?.shop_domain ||
@@ -193,10 +190,8 @@ serve(async (req) => {
         throw new Error('Facebook integration not found');
       }
 
-      const encryptionKey = Deno.env.get('ENCRYPTION_KEY');
-      if (!encryptionKey) throw new Error('Encryption key not configured');
-
-      const facebookToken = await decrypt(fbIntegration.access_token, encryptionKey);
+      // Decrypt access token
+      const facebookToken = await decryptToken(fbIntegration.access_token);
 
       console.log('📱 Fetching Facebook Ads data');
 
