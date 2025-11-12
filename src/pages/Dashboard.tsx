@@ -190,7 +190,7 @@ const Dashboard = () => {
       const shopify = integrations?.filter(i => i.integration_type === 'shopify') || [];
       const facebook = integrations?.filter(i => i.integration_type === 'facebook_ads') || [];
 
-      setShopifyIntegrations(shopify);
+      setShopifyIntegrations(shopify as any);
       setHasFacebookIntegration(facebook.length > 0);
 
       if (facebook.length > 0) {
@@ -655,12 +655,12 @@ const Dashboard = () => {
                       return (
                         <SelectItem key={integration.id} value={integration.id}>
                           <div className="flex items-center gap-2">
-                            {integration.metadata?.shop_name || 
-                             integration.metadata?.shop_domain || 
+                             {integration.metadata?.shop_name ||
+                             integration.metadata?.shop_domain ||
                              integration.metadata?.store_name ||
                              `Loja ${integration.id.slice(0, 8)}`}
                             {matchedAccount && (
-                              <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedAccount.name}`} />
+                              <LinkIcon className="w-3 h-3 text-primary" />
                             )}
                           </div>
                         </SelectItem>
@@ -700,7 +700,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-2">
                               {account.name || account.account_id}
                               {matchedStore && (
-                                <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedStore.metadata?.shop_name || matchedStore.metadata?.shop_domain}`} />
+                                <LinkIcon className="w-3 h-3 text-primary" />
                               )}
                             </div>
                           </SelectItem>

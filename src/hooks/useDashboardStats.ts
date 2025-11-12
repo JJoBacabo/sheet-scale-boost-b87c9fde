@@ -86,42 +86,29 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const uniqueCampaignIds = new Set((dailyRoas || []).map((d: any) => d.campaign_id));
         const totalCampaigns = uniqueCampaignIds.size;
 
-        // Calculate ALL metrics from daily_roas (SOURCE OF TRUTH)
-        // IMPORTANT: cog in daily_roas can be either total or per-unit depending on source
-        // We need to handle both cases - if cog seems too small, it might be per-unit
+        // ===== SINGLE SOURCE OF TRUTH: daily_roas para o timeframe selecionado =====
+        
+        // Total Ad Spend = soma de daily_roas.total_spent (vem do Ads Manager)
         const totalSpent = (dailyRoas || []).reduce((sum: number, d: any) => {
           return sum + (Number(d.total_spent) || 0);
         }, 0);
 
-        // Total Revenue = sum of (units_sold * product_price) from daily_roas
+        // Total Revenue = soma de (units_sold * product_price) do daily_roas
         const totalRevenue = (dailyRoas || []).reduce((sum: number, d: any) => {
           const unitsSold = Number(d.units_sold) || 0;
           const productPrice = Number(d.product_price) || 0;
           return sum + (unitsSold * productPrice);
         }, 0);
 
-        // Total Conversions = sum of purchases from daily_roas
+        // Total Conversions = soma de purchases do daily_roas
         const totalConversions = (dailyRoas || []).reduce((sum: number, d: any) => {
           return sum + (Number(d.purchases) || 0);
         }, 0);
 
-        // Total Supplier Cost = sum of cog from daily_roas
-        // NOTE: cog might be stored as total (units_sold * cost_price) or per-unit
-        // We check: if cog > 0 and units_sold > 0 and cog < (product_price * units_sold * 0.1), 
-        // it's likely per-unit, so multiply by units_sold
+        // Total Supplier Cost (COG) = soma de daily_roas.cog
+        // COG já está como valor total por dia no daily_roas
         const totalSupplierCost = (dailyRoas || []).reduce((sum: number, d: any) => {
-          const cog = Number(d.cog) || 0;
-          const unitsSold = Number(d.units_sold) || 0;
-          const productPrice = Number(d.product_price) || 0;
-          
-          // Heuristic: if cog is very small compared to revenue, it's likely per-unit
-          const revenue = unitsSold * productPrice;
-          if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
-            // Likely per-unit, multiply by units_sold
-            return sum + (cog * unitsSold);
-          }
-          // Otherwise assume it's already total
-          return sum + cog;
+          return sum + (Number(d.cog) || 0);
         }, 0);
 
         // Calculate total clicks from CPC and spent
