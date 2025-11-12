@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
+import { GoogleSheetSync } from "@/components/GoogleSheetSync";
 import {
   Collapsible,
   CollapsibleContent,
@@ -1011,6 +1012,17 @@ const Products = () => {
             })}
           </div>
         </motion.section>
+
+        {/* Google Sheet Sync */}
+        {user && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <GoogleSheetSync userId={user.id} />
+          </motion.section>
+        )}
 
         {/* Search and Filters - Simplified */}
         <motion.section
