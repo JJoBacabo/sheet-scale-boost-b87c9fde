@@ -32,8 +32,20 @@ serve(async (req) => {
     const clientEmail = Deno.env.get('GOOGLE_SHEETS_CLIENT_EMAIL');
     const privateKey = Deno.env.get('GOOGLE_SHEETS_PRIVATE_KEY');
     
+    console.log('Checking credentials:', {
+      hasClientEmail: !!clientEmail,
+      hasPrivateKey: !!privateKey,
+      privateKeyLength: privateKey?.length || 0,
+      privateKeyStart: privateKey?.substring(0, 50) || 'missing'
+    });
+    
     if (!clientEmail || !privateKey) {
-      throw new Error('Google Sheets credentials not configured');
+      throw new Error('Google Sheets credentials not configured. Please set GOOGLE_SHEETS_CLIENT_EMAIL and GOOGLE_SHEETS_PRIVATE_KEY secrets.');
+    }
+    
+    // Validate private key format
+    if (!privateKey.includes('BEGIN PRIVATE KEY')) {
+      throw new Error('GOOGLE_SHEETS_PRIVATE_KEY must be a valid PEM-formatted private key. It should start with -----BEGIN PRIVATE KEY-----');
     }
 
     // Create JWT for Google Sheets API
