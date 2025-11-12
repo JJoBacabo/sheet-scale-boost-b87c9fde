@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Search, Download, BookmarkPlus, ExternalLink, Loader2, Bookmark } from "lucide-react";
+import { Search, Download, BookmarkPlus, ExternalLink, Loader2, Bookmark, TrendingUp, Calendar, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
@@ -21,15 +21,73 @@ interface FacebookAd {
     lower_bound: string;
     upper_bound: string;
   };
+  spend?: {
+    lower_bound: string;
+    upper_bound: string;
+  };
+  spend_amount?: number;
   ad_delivery_start_time?: string;
+  ad_delivery_stop_time?: string;
   days_active?: number;
 }
+
+const EUROPEAN_COUNTRIES = [
+  { code: "PT", name: "Portugal" },
+  { code: "ES", name: "Spain" },
+  { code: "FR", name: "France" },
+  { code: "DE", name: "Germany" },
+  { code: "IT", name: "Italy" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "NL", name: "Netherlands" },
+  { code: "BE", name: "Belgium" },
+  { code: "AT", name: "Austria" },
+  { code: "CH", name: "Switzerland" },
+  { code: "PL", name: "Poland" },
+  { code: "CZ", name: "Czech Republic" },
+  { code: "RO", name: "Romania" },
+  { code: "GR", name: "Greece" },
+  { code: "SE", name: "Sweden" },
+  { code: "DK", name: "Denmark" },
+  { code: "FI", name: "Finland" },
+  { code: "NO", name: "Norway" },
+  { code: "IE", name: "Ireland" },
+  { code: "HR", name: "Croatia" },
+  { code: "SK", name: "Slovakia" },
+  { code: "SI", name: "Slovenia" },
+  { code: "BG", name: "Bulgaria" },
+  { code: "HU", name: "Hungary" },
+  { code: "LT", name: "Lithuania" },
+  { code: "LV", name: "Latvia" },
+  { code: "EE", name: "Estonia" },
+  { code: "CY", name: "Cyprus" },
+  { code: "MT", name: "Malta" },
+  { code: "LU", name: "Luxembourg" },
+  { code: "IS", name: "Iceland" },
+  { code: "AL", name: "Albania" },
+  { code: "MK", name: "North Macedonia" },
+  { code: "RS", name: "Serbia" },
+  { code: "ME", name: "Montenegro" },
+  { code: "BA", name: "Bosnia and Herzegovina" },
+  { code: "XK", name: "Kosovo" },
+  { code: "MD", name: "Moldova" },
+  { code: "UA", name: "Ukraine" },
+  { code: "BY", name: "Belarus" },
+];
+
+const MIN_IMPRESSIONS_OPTIONS = [
+  { value: "0", label: "No minimum" },
+  { value: "5000", label: "5,000+" },
+  { value: "15000", label: "15,000+" },
+  { value: "50000", label: "50,000+" },
+  { value: "100000", label: "100,000+" },
+];
 
 export default function ProductResearch() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [country, setCountry] = useState("PT");
   const [datePeriod, setDatePeriod] = useState("30");
+  const [minImpressions, setMinImpressions] = useState("0");
   const [sortBy, setSortBy] = useState("recent");
   const [isSearching, setIsSearching] = useState(false);
   const [ads, setAds] = useState<FacebookAd[]>([]);
@@ -71,10 +129,7 @@ export default function ProductResearch() {
           searchTerms: searchTerm,
           datePeriod: parseInt(datePeriod),
           countries: [country],
-          minImpressions: 0,
-          minDays: 0,
-          maxDays: 365,
-          adTypes: []
+          minImpressions: parseInt(minImpressions)
         }
       });
 
@@ -89,12 +144,39 @@ export default function ProductResearch() {
             new Date(b.ad_delivery_start_time || 0).getTime() - 
             new Date(a.ad_delivery_start_time || 0).getTime()
           );
-        } else if (sortBy === 'impressions') {
+        } else if (sortBy === 'oldest') {
+          sortedAds.sort((a, b) => 
+            new Date(a.ad_delivery_start_time || 0).getTime() - 
+            new Date(b.ad_delivery_start_time || 0).getTime()
+          );
+        } else if (sortBy === 'impressions-high') {
           sortedAds.sort((a, b) => {
             const aImpressions = parseInt(a.impressions?.upper_bound || '0');
             const bImpressions = parseInt(b.impressions?.upper_bound || '0');
             return bImpressions - aImpressions;
           });
+        } else if (sortBy === 'impressions-low') {
+          sortedAds.sort((a, b) => {
+            const aImpressions = parseInt(a.impressions?.upper_bound || '0');
+            const bImpressions = parseInt(b.impressions?.upper_bound || '0');
+            return aImpressions - bImpressions;
+          });
+        } else if (sortBy === 'spend-high') {
+          sortedAds.sort((a, b) => {
+            const aSpend = a.spend_amount || 0;
+            const bSpend = b.spend_amount || 0;
+            return bSpend - aSpend;
+          });
+        } else if (sortBy === 'spend-low') {
+          sortedAds.sort((a, b) => {
+            const aSpend = a.spend_amount || 0;
+            const bSpend = b.spend_amount || 0;
+            return aSpend - bSpend;
+          });
+        } else if (sortBy === 'days-long') {
+          sortedAds.sort((a, b) => (b.days_active || 0) - (a.days_active || 0));
+        } else if (sortBy === 'days-short') {
+          sortedAds.sort((a, b) => (a.days_active || 0) - (b.days_active || 0));
         }
 
         setAds(sortedAds);
@@ -230,7 +312,7 @@ export default function ProductResearch() {
             <CardDescription>{t('productResearch.searchDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
               <div className="space-y-2">
                 <Label>{t('productResearch.keyword')}</Label>
                 <Input
@@ -247,12 +329,12 @@ export default function ProductResearch() {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PT">Portugal</SelectItem>
-                    <SelectItem value="ES">Spain</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="GB">United Kingdom</SelectItem>
-                    <SelectItem value="BR">Brazil</SelectItem>
+                  <SelectContent className="max-h-[300px]">
+                    {EUROPEAN_COUNTRIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -273,6 +355,22 @@ export default function ProductResearch() {
               </div>
 
               <div className="space-y-2">
+                <Label>{t('productResearch.minImpressions')}</Label>
+                <Select value={minImpressions} onValueChange={setMinImpressions}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MIN_IMPRESSIONS_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label>{t('productResearch.sortBy')}</Label>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger>
@@ -280,7 +378,13 @@ export default function ProductResearch() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="recent">{t('productResearch.mostRecent')}</SelectItem>
-                    <SelectItem value="impressions">{t('productResearch.mostImpressions')}</SelectItem>
+                    <SelectItem value="oldest">{t('productResearch.oldestFirst')}</SelectItem>
+                    <SelectItem value="impressions-high">{t('productResearch.mostImpressions')}</SelectItem>
+                    <SelectItem value="impressions-low">{t('productResearch.leastImpressions')}</SelectItem>
+                    <SelectItem value="spend-high">{t('productResearch.highestSpend')}</SelectItem>
+                    <SelectItem value="spend-low">{t('productResearch.lowestSpend')}</SelectItem>
+                    <SelectItem value="days-long">{t('productResearch.longestRunning')}</SelectItem>
+                    <SelectItem value="days-short">{t('productResearch.shortestRunning')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -347,12 +451,20 @@ export default function ProductResearch() {
                     <div className="flex gap-2 flex-wrap">
                       {ad.impressions && (
                         <Badge variant="secondary" className="text-xs">
-                          {parseInt(ad.impressions.upper_bound).toLocaleString()} impressions
+                          <Eye className="w-3 h-3 mr-1" />
+                          {parseInt(ad.impressions.upper_bound).toLocaleString()}
+                        </Badge>
+                      )}
+                      {ad.spend_amount && (
+                        <Badge variant="outline" className="text-xs">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          ${ad.spend_amount.toLocaleString()}
                         </Badge>
                       )}
                       {ad.days_active && (
                         <Badge variant="outline" className="text-xs">
-                          {ad.days_active} days
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {ad.days_active}d
                         </Badge>
                       )}
                     </div>

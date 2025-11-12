@@ -18,10 +18,7 @@ serve(async (req) => {
       accessToken,
       datePeriod = 30,
       minImpressions = 0, 
-      minDays = 0, 
-      maxDays = 365,
-      countries = [],
-      adTypes = []
+      countries = []
     } = await req.json();
 
     // Initialize Supabase client
@@ -96,7 +93,7 @@ serve(async (req) => {
       tokenEnd: cleanToken.substring(cleanToken.length - 10),
       source: tokenSource
     });
-    console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, minDays, maxDays, countries, adTypes });
+    console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, countries });
 
     const startDateThreshold = new Date();
     startDateThreshold.setDate(startDateThreshold.getDate() - datePeriod);
@@ -112,13 +109,12 @@ serve(async (req) => {
         access_token: cleanToken!,
         ad_active_status: 'ALL',
         search_terms: searchTerms || '',
-        ad_type: 'ALL',
         fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions,spend',
         limit: '100'
       });
 
       if (countries.length > 0) {
-        params.append('ad_reached_countries', countries.join(','));
+        params.append('ad_reached_countries', JSON.stringify(countries));
       }
 
       if (nextCursor) {
@@ -174,33 +170,13 @@ serve(async (req) => {
           const startDate = new Date(ad.ad_delivery_start_time);
           const endDate = ad.ad_delivery_stop_time ? new Date(ad.ad_delivery_stop_time) : new Date();
           const daysActive = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysActive < minDays || daysActive > maxDays) {
-            return false;
-          }
-
           ad.days_active = daysActive;
         }
 
-        // Filter by ad type if specified
-        if (adTypes.length > 0) {
-          let adType = 'text';
-          
-          if (ad.ad_creative_bodies && ad.ad_creative_bodies.some((body: string) => 
-            body.includes('youtube.com') || body.includes('video') || body.includes('.mp4')
-          )) {
-            adType = 'video';
-          } else if (ad.ad_creative_link_captions && ad.ad_creative_link_captions.length > 1) {
-            adType = 'carousel';
-          } else if (ad.ad_snapshot_url) {
-            adType = 'image';
-          }
-
-          ad.ad_type = adType;
-
-          if (!adTypes.includes(adType)) {
-            return false;
-          }
+        // Calculate spend amount
+        if (ad.spend) {
+          const spendValue = parseInt(ad.spend.lower_bound || ad.spend.upper_bound || '0');
+          ad.spend_amount = spendValue;
         }
 
         return true;
