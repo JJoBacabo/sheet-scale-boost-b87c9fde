@@ -71,3 +71,6 @@ verify_jwt = true
 
 [functions.get-admins]
 verify_jwt = true
+
+[functions.facebook-ads-research]
+verify_jwt = true

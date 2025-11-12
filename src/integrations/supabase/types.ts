@@ -447,6 +447,87 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_ads: {
+        Row: {
+          ad_library_id: string
+          ad_text: string | null
+          created_at: string
+          id: string
+          impressions: string | null
+          page_name: string
+          saved_at: string
+          snapshot_url: string
+          spend: string | null
+          user_id: string
+        }
+        Insert: {
+          ad_library_id: string
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          impressions?: string | null
+          page_name: string
+          saved_at?: string
+          snapshot_url: string
+          spend?: string | null
+          user_id: string
+        }
+        Update: {
+          ad_library_id?: string
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          impressions?: string | null
+          page_name?: string
+          saved_at?: string
+          snapshot_url?: string
+          spend?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sheets_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_sync_at: string
+          products_created: number | null
+          products_updated: number | null
+          sheet_id: string
+          sheet_name: string | null
+          sync_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string
+          products_created?: number | null
+          products_updated?: number | null
+          sheet_id: string
+          sheet_name?: string | null
+          sync_status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string
+          products_created?: number | null
+          products_updated?: number | null
+          sheet_id?: string
+          sheet_name?: string | null
+          sync_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscription_history: {
         Row: {
           amount: number | null
