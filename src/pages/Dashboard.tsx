@@ -8,6 +8,8 @@ import { useSubscriptionState } from "@/hooks/useSubscriptionState";
 import { SubscriptionStateBanner } from "@/components/SubscriptionStateBanner";
 import { ReadOnlyOverlay } from "@/components/ReadOnlyOverlay";
 import { PageLayout } from "@/components/PageLayout";
+import { CurrencySelector } from "@/components/CurrencySelector";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { SetupProgress } from "@/components/dashboard/SetupProgress";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -626,15 +628,18 @@ const Dashboard = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">{t('dashboard.filters') || 'Filtros'}</h2>
-              <Button3D
-                variant="glass"
-                size="sm"
-                onClick={handleRefresh}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                {t('dashboard.refresh') || 'Atualizar'}
-              </Button3D>
+              <div className="flex items-center gap-2">
+                <CurrencySelector />
+                <Button3D
+                  variant="glass"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="gap-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  {t('dashboard.refresh') || 'Atualizar'}
+                </Button3D>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
