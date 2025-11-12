@@ -16,7 +16,7 @@ import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/T
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
 import { Target, ArrowUp, ArrowDown, Search, ArrowRight, Store, Facebook, CheckCircle2 } from "lucide-react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -316,15 +316,27 @@ const Dashboard = () => {
     if (!user?.id) return;
     
     // Get all active campaigns for table - only select needed fields
-    const { data: allData } = await supabase
+    let query = supabase
       .from('campaigns')
       .select('id, campaign_name, platform, status, total_spent, total_revenue, roas, cpc, conversions, updated_at')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .order('updated_at', { ascending: false });
-    
+
+    if (timeframe?.dateFrom) {
+      const df = new Date(timeframe.dateFrom);
+      df.setHours(0, 0, 0, 0);
+      query = query.gte('updated_at', df.toISOString());
+    }
+    if (timeframe?.dateTo) {
+      const dt = new Date(timeframe.dateTo);
+      dt.setHours(23, 59, 59, 999);
+      query = query.lte('updated_at', dt.toISOString());
+    }
+
+    const { data: allData } = await query;
     setAllCampaigns(allData || []);
-  }, [user?.id]);
+  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime()]);
 
   useEffect(() => {
     refreshCampaigns();
@@ -416,40 +428,6 @@ const Dashboard = () => {
       spendChartData = sortedData.map((item) => ({
         date: format(new Date(item.date), 'dd/MM'),
         value: item.total_spent || 0,
-      }));
-    } else if (allCampaigns.length > 0) {
-      // Create chart data from campaigns - last 30 days
-      const last30Days = Array.from({ length: 30 }, (_, i) => {
-        const date = subDays(new Date(), 29 - i);
-        return format(date, 'dd/MM');
-      });
-
-      // Aggregate campaign data by distributing totals across last 30 days
-      const totalRevenue = allCampaigns.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0);
-      const totalSpent = allCampaigns.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0);
-      const totalConversions = allCampaigns.reduce((sum, c) => sum + (Number(c.conversions) || 0), 0);
-      const avgRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
-      const profit = totalRevenue - totalSpent;
-
-      // Distribute evenly across days with some variation
-      const dailyRevenue = totalRevenue / 30;
-      const dailySpent = totalSpent / 30;
-      const dailyConversions = totalConversions / 30;
-      const dailyProfit = profit / 30;
-
-      revenueChartData = last30Days.map((date) => ({
-        date,
-        value: dailyRevenue * (0.8 + Math.random() * 0.4), // Add variation
-      }));
-
-      spendChartData = last30Days.map((date) => ({
-        date,
-        value: dailySpent * (0.8 + Math.random() * 0.4),
-      }));
-
-      profitChartData = last30Days.map((date) => ({
-        date,
-        value: dailyProfit * (0.8 + Math.random() * 0.4),
       }));
     }
 
