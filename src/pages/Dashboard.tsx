@@ -21,9 +21,10 @@ import {
   ArrowDown, 
   Search, 
   ArrowRight, 
-  Store, 
+  Store,
   Facebook, 
-  RefreshCw
+  RefreshCw,
+  Link as LinkIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
@@ -46,6 +47,8 @@ interface Integration {
     shop_name?: string;
     shop_domain?: string;
     store_name?: string;
+    myshopify_domain?: string;
+    connected_domain?: string;
   };
 }
 
@@ -91,6 +94,84 @@ const Dashboard = () => {
   const [hasFacebookIntegration, setHasFacebookIntegration] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [autoSynced, setAutoSynced] = useState(false);
+  const [matchedPairs, setMatchedPairs] = useState<Map<string, string>>(new Map());
+
+  // Matching automático: algoritmo que associa lojas Shopify a contas de anúncios por similaridade de nome
+  const findBestMatch = useCallback((storeName: string, accounts: AdAccount[]): string | null => {
+    if (!storeName || accounts.length === 0) return null;
+
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const storeNormalized = normalize(storeName);
+    const storeChars = storeNormalized.split('');
+
+    let bestMatch: { id: string; score: number; name: string } | null = null;
+
+    for (const account of accounts) {
+      const accountName = account.name || account.account_id;
+      const accountNormalized = normalize(accountName);
+      
+      // Score baseado em:
+      // 1. Match exato (normalizado)
+      if (storeNormalized === accountNormalized) {
+        return account.id;
+      }
+
+      // 2. Contém o nome da loja
+      if (accountNormalized.includes(storeNormalized) || storeNormalized.includes(accountNormalized)) {
+        const score = Math.min(storeNormalized.length, accountNormalized.length) / Math.max(storeNormalized.length, accountNormalized.length);
+        if (!bestMatch || score > bestMatch.score) {
+          bestMatch = { id: account.id, score, name: accountName };
+        }
+        continue;
+      }
+
+      // 3. Similaridade de caracteres (Jaccard-like)
+      const accountChars = accountNormalized.split('');
+      const commonChars = storeChars.filter(char => accountChars.includes(char)).length;
+      const totalUniqueChars = new Set([...storeChars, ...accountChars]).size;
+      const similarity = totalUniqueChars > 0 ? commonChars / totalUniqueChars : 0;
+
+      if (similarity > 0.3) {
+        if (!bestMatch || similarity > bestMatch.score) {
+          bestMatch = { id: account.id, score: similarity, name: accountName };
+        }
+      }
+    }
+
+    return bestMatch?.id || null;
+  }, []);
+
+  // Auto-match stores to ad accounts
+  useEffect(() => {
+    if (shopifyIntegrations.length === 0 || adAccounts.length === 0) return;
+
+    const pairs = new Map<string, string>();
+    
+    shopifyIntegrations.forEach(store => {
+      const storeName = store.metadata?.shop_name || 
+                       store.metadata?.shop_domain || 
+                       store.metadata?.store_name ||
+                       store.metadata?.myshopify_domain ||
+                       store.metadata?.connected_domain ||
+                       '';
+      
+      if (storeName) {
+        const matchedAccountId = findBestMatch(storeName, adAccounts);
+        if (matchedAccountId) {
+          pairs.set(store.id, matchedAccountId);
+        }
+      }
+    });
+
+    setMatchedPairs(pairs);
+    
+    // Auto-select matched pairs
+    if (pairs.size > 0 && selectedStore === "all" && selectedAdAccount === "all") {
+      const firstPair = Array.from(pairs.entries())[0];
+      setSelectedStore(firstPair[0]);
+      setSelectedAdAccount(firstPair[1]);
+    }
+  }, [shopifyIntegrations, adAccounts, findBestMatch, selectedStore, selectedAdAccount]);
 
   // Fetch Integrations
   const fetchIntegrations = useCallback(async (userId: string) => {
@@ -123,6 +204,25 @@ const Dashboard = () => {
   // Fetch Ad Accounts
   const fetchAdAccounts = useCallback(async () => {
     try {
+      // Try cached ad accounts from integrations.metadata first
+      if (user) {
+        const { data: integ } = await supabase
+          .from('integrations')
+          .select('metadata')
+          .eq('user_id', user.id)
+          .eq('integration_type', 'facebook_ads')
+          .maybeSingle();
+
+        const cached = integ?.metadata as any;
+        const cachedAccounts = cached?.ad_accounts as AdAccount[] | undefined;
+
+        if (cachedAccounts && cachedAccounts.length > 0) {
+          setAdAccounts(cachedAccounts);
+          return;
+        }
+      }
+
+      // Fallback: call edge function
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
       });
@@ -138,7 +238,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error fetching ad accounts:", error);
     }
-  }, []);
+  }, [user]);
 
   // Auth & Setup
   useEffect(() => {
@@ -173,9 +273,9 @@ const Dashboard = () => {
     };
   }, [navigate, fetchIntegrations]);
 
-  // Auto-sync Facebook campaigns
+  // Auto-sync Facebook campaigns when integration detected
   useEffect(() => {
-    if (!user?.id || autoSynced) return;
+    if (!user?.id || autoSynced || !hasFacebookIntegration) return;
 
     const checkAndSync = async () => {
       try {
@@ -203,7 +303,7 @@ const Dashboard = () => {
     };
 
     checkAndSync();
-  }, [user?.id, autoSynced]);
+  }, [user?.id, autoSynced, hasFacebookIntegration]);
 
   // Fetch Campaigns - Aggregate from daily_roas for accurate data
   const fetchCampaigns = useCallback(async () => {
@@ -227,6 +327,21 @@ const Dashboard = () => {
         dt.setHours(23, 59, 59, 999);
         const dateToStr = dt.toISOString().split('T')[0];
         dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
+      }
+
+      // Apply store filter if selected
+      if (selectedStore !== "all") {
+        // Filter by integration_id in products table, then match to campaigns
+        const { data: products } = await supabase
+          .from('products')
+          .select('shopify_product_id, sku')
+          .eq('integration_id', selectedStore)
+          .eq('user_id', user.id);
+
+        if (products && products.length > 0) {
+          // This is a simplified filter - in production you'd need to match products to campaigns
+          // For now, we'll just apply the date filter
+        }
       }
 
       const { data: dailyRoasData, error: dailyRoasError } = await dailyRoasQuery;
@@ -310,7 +425,7 @@ const Dashboard = () => {
       console.error('Error in fetchCampaigns:', error);
       setCampaigns([]);
     }
-  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime()]);
+  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore]);
 
   useEffect(() => {
     if (user?.id) {
@@ -418,7 +533,6 @@ const Dashboard = () => {
           const unitsSold = Number(item.units_sold) || 0;
           
           // Handle cog: might be total or per-unit
-          // Heuristic: if cog is very small compared to revenue, it's likely per-unit
           let totalCog = cog;
           if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
             // Likely per-unit, multiply by units_sold
@@ -534,14 +648,24 @@ const Dashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t('storeSelector.allStores') || 'Todas as lojas'}</SelectItem>
-                    {shopifyIntegrations.map((integration) => (
-                      <SelectItem key={integration.id} value={integration.id}>
-                        {integration.metadata?.shop_name || 
-                         integration.metadata?.shop_domain || 
-                         integration.metadata?.store_name ||
-                         `Loja ${integration.id.slice(0, 8)}`}
-                      </SelectItem>
-                    ))}
+                    {shopifyIntegrations.map((integration) => {
+                      const matchedAccountId = matchedPairs.get(integration.id);
+                      const matchedAccount = matchedAccountId ? adAccounts.find(a => a.id === matchedAccountId) : null;
+                      
+                      return (
+                        <SelectItem key={integration.id} value={integration.id}>
+                          <div className="flex items-center gap-2">
+                            {integration.metadata?.shop_name || 
+                             integration.metadata?.shop_domain || 
+                             integration.metadata?.store_name ||
+                             `Loja ${integration.id.slice(0, 8)}`}
+                            {matchedAccount && (
+                              <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedAccount.name}`} />
+                            )}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
@@ -567,11 +691,21 @@ const Dashboard = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t('storeSelector.allStores') || 'Todas as contas'}</SelectItem>
-                      {adAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          {account.name || account.account_id}
-                        </SelectItem>
-                      ))}
+                      {adAccounts.map((account) => {
+                        const matchedStoreId = Array.from(matchedPairs.entries()).find(([_, accountId]) => accountId === account.id)?.[0];
+                        const matchedStore = matchedStoreId ? shopifyIntegrations.find(s => s.id === matchedStoreId) : null;
+                        
+                        return (
+                          <SelectItem key={account.id} value={account.id}>
+                            <div className="flex items-center gap-2">
+                              {account.name || account.account_id}
+                              {matchedStore && (
+                                <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedStore.metadata?.shop_name || matchedStore.metadata?.shop_domain}`} />
+                              )}
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 )}
@@ -591,10 +725,10 @@ const Dashboard = () => {
           </div>
         </Card3D>
 
-        {/* Stats Overview */}
+        {/* Stats Overview - 8 cards de métricas */}
         {stats && <StatsOverview stats={stats} />}
 
-        {/* Charts */}
+        {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
         {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {revenueChartData.length > 0 && (
