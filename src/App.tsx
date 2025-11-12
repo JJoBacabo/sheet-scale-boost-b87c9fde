@@ -26,6 +26,7 @@ import MetaDashboard from "./pages/MetaDashboard";
 import AdminSupport from "./pages/AdminSupport";
 import ProfitSheet from "./pages/ProfitSheet";
 import ProductResearch from "./pages/ProductResearch";
+import UpdateFacebookToken from "./pages/UpdateFacebookToken";
 import Billing from "./pages/Billing";
 import TestBrevo from "./pages/TestBrevo";
 import TestPage from "./pages/TestPage";
@@ -55,6 +56,7 @@ const AppContent = () => {
         <Route path="/products" element={<><TrialBanner /><Products /></>} />
         <Route path="/profit-sheet" element={<><TrialBanner /><ProfitSheet /></>} />
         <Route path="/product-research" element={<><TrialBanner /><ProductResearch /></>} />
+        <Route path="/update-facebook-token" element={<UpdateFacebookToken />} />
         <Route path="/settings" element={<><TrialBanner /><Settings /></>} />
         <Route path="/integrations" element={<><TrialBanner /><Integrations /></>} />
         <Route path="/terms" element={<Terms />} />
