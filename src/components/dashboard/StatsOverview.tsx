@@ -60,10 +60,10 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       value: stats.averageRoas.toFixed(2),
       icon: Target,
       trend: stats.averageRoas >= 2 ? "up" : stats.averageRoas >= 1 ? "neutral" : "down",
-      gradient: stats.averageRoas >= 2 ? "from-primary/20 to-emerald-500/20" : "from-warning/20 to-yellow-500/20",
-      iconBg: stats.averageRoas >= 2 ? "bg-primary/10" : "bg-warning/10",
-      iconColor: stats.averageRoas >= 2 ? "text-primary" : "text-warning",
-      border: stats.averageRoas >= 2 ? "border-primary/20" : "border-warning/20"
+      gradient: "from-emerald-500/20 to-teal-500/20",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+      border: "border-emerald-500/20"
     },
     {
       title: t("dashboard.totalSupplierCost"),
@@ -100,10 +100,10 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
       value: `${profitMargin.toFixed(1)}%`,
       icon: profitMargin >= 0 ? TrendingUp : TrendingDown,
       trend: profitMargin >= 20 ? "up" : "neutral",
-      gradient: profitMargin >= 20 ? "from-primary/20 to-emerald-500/20" : "from-warning/20 to-orange-500/20",
-      iconBg: profitMargin >= 20 ? "bg-primary/10" : "bg-warning/10",
-      iconColor: profitMargin >= 20 ? "text-primary" : "text-warning",
-      border: profitMargin >= 20 ? "border-primary/20" : "border-warning/20"
+      gradient: "from-emerald-500/20 to-teal-500/20",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-500",
+      border: "border-emerald-500/20"
     }
   ];
 
