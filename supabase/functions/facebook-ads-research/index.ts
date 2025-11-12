@@ -41,7 +41,7 @@ serve(async (req) => {
       .from('integrations')
       .select('access_token, expires_at')
       .eq('user_id', user.id)
-      .eq('integration_type', 'facebook')
+      .eq('integration_type', 'facebook_ads')
       .maybeSingle();
 
     if (integrationError || !integration?.access_token) {

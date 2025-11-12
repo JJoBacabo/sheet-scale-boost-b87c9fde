@@ -32,7 +32,7 @@ export const FacebookConnect = ({ onConnectionChange }: FacebookConnectProps) =>
         .from('integrations')
         .select('access_token, expires_at, metadata')
         .eq('user_id', user.id)
-        .eq('integration_type', 'facebook')
+        .eq('integration_type', 'facebook_ads')
         .maybeSingle();
 
       if (integration?.access_token) {
@@ -71,7 +71,7 @@ export const FacebookConnect = ({ onConnectionChange }: FacebookConnectProps) =>
         .from('integrations')
         .delete()
         .eq('user_id', user.id)
-        .eq('integration_type', 'facebook');
+        .eq('integration_type', 'facebook_ads');
 
       if (error) throw error;
 
