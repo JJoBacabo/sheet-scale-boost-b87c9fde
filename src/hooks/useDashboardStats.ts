@@ -40,10 +40,12 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
 
     const fetchStats = async () => {
       try {
-        // Build campaigns query with filters - only select needed fields
+        console.log('🔄 Fetching dashboard stats with filters:', filters);
+        
+        // Build campaigns query with filters
         let campaignsQuery = supabase
           .from('campaigns')
-          .select('id, status, total_spent, total_revenue, conversions, clicks')
+          .select('id, status, total_spent, total_revenue, conversions, clicks, cpc, roas, updated_at')
           .eq('user_id', userId);
 
         if (filters?.campaignId && filters.campaignId !== 'all') {
@@ -52,13 +54,31 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         if (filters?.platform && filters.platform !== 'all') {
           campaignsQuery = campaignsQuery.eq('platform', filters.platform);
         }
+        
+        // Apply date filters to campaigns based on updated_at
+        if (filters?.dateFrom) {
+          const dateFrom = new Date(filters.dateFrom);
+          dateFrom.setHours(0, 0, 0, 0);
+          campaignsQuery = campaignsQuery.gte('updated_at', dateFrom.toISOString());
+        }
+        if (filters?.dateTo) {
+          const dateTo = new Date(filters.dateTo);
+          dateTo.setHours(23, 59, 59, 999);
+          campaignsQuery = campaignsQuery.lte('updated_at', dateTo.toISOString());
+        }
 
-        const { data: campaigns } = await campaignsQuery;
+        const { data: campaigns, error: campaignsError } = await campaignsQuery;
+        
+        if (campaignsError) {
+          console.error('❌ Error fetching campaigns:', campaignsError);
+        }
+        
+        console.log('📊 Fetched campaigns:', campaigns?.length || 0);
 
-        // Build products query with filters - select cost_price, selling_price, quantity_sold, and product_name for matching
+        // Build products query with filters
         let productsQuery = supabase
           .from('products')
-          .select('id, cost_price, selling_price, quantity_sold, integration_id, product_name')
+          .select('id, cost_price, selling_price, quantity_sold, integration_id')
           .eq('user_id', userId);
 
         if (filters?.productId && filters.productId !== 'all') {
@@ -68,33 +88,36 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           productsQuery = productsQuery.eq('integration_id', filters.storeId);
         }
 
-        const { data: products } = await productsQuery;
+        const { data: products, error: productsError } = await productsQuery;
+        
+        if (productsError) {
+          console.error('❌ Error fetching products:', productsError);
+        }
+        
+        console.log('📦 Fetched products:', products?.length || 0);
 
-        // Build daily ROAS query with filters - select all fields needed for calculations
+        // Build daily ROAS query for charts only
         let dailyRoasQuery = supabase
           .from('daily_roas')
-          .select('date, total_spent, units_sold, product_price, cog, purchases, cpc, campaign_name, campaign_id')
+          .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id')
           .eq('user_id', userId)
-          .order('date', { ascending: true }); // Ascending para ter dados do mais antigo para o mais recente
+          .order('date', { ascending: true });
 
-        // Apply date filters at query level for better performance
-        let dateFromStr: string | null = null;
-        let dateToStr: string | null = null;
-        
+        // Apply date filters for daily_roas
         if (filters?.dateFrom) {
           const dateFrom = new Date(filters.dateFrom);
           dateFrom.setHours(0, 0, 0, 0);
-          dateFromStr = dateFrom.toISOString().split('T')[0];
+          const dateFromStr = dateFrom.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.gte('date', dateFromStr);
         }
         if (filters?.dateTo) {
           const dateTo = new Date(filters.dateTo);
           dateTo.setHours(23, 59, 59, 999);
-          dateToStr = dateTo.toISOString().split('T')[0];
+          const dateToStr = dateTo.toISOString().split('T')[0];
           dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
         }
         
-        // Only apply default filter if no date filters are provided
+        // Default to last 30 days if no filters
         if (!filters?.dateFrom && !filters?.dateTo) {
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -104,113 +127,56 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         if (filters?.campaignId && filters.campaignId !== 'all') {
           dailyRoasQuery = dailyRoasQuery.eq('campaign_id', filters.campaignId);
         }
-        
-        // Note: daily_roas doesn't have integration_id, so we filter products separately
-        // and use those product prices/costs in calculations
 
         const { data: dailyRoas, error: dailyRoasError } = await dailyRoasQuery;
         
         if (dailyRoasError) {
           console.error('❌ Error fetching daily_roas:', dailyRoasError);
         }
+        
+        console.log('📈 Fetched daily_roas entries:', dailyRoas?.length || 0);
 
-        // Fetch recent activity - only select needed fields
-        const { data: activity } = await supabase
-          .from('user_activity')
-          .select('id, action_type, created_at')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        // Daily ROAS is already filtered by query, no need for manual filtering
-        const filteredDailyRoas = dailyRoas || [];
-
-        // Calcular todas as métricas a partir de daily_roas (já filtrado por data)
-        const totalSpent = filteredDailyRoas.reduce((sum: number, d: any) => {
-          const spent = Number(d.total_spent) || 0;
-          return sum + spent;
-        }, 0);
+        // Calculate metrics from CAMPAIGNS (Ads Manager data)
+        const totalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
+        const totalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
+        const totalConversions = campaigns?.reduce((sum, c) => sum + (Number(c.conversions) || 0), 0) || 0;
+        const totalClicks = campaigns?.reduce((sum, c) => sum + (Number(c.clicks) || 0), 0) || 0;
         
-        // Calcular revenue apenas dos dados reais no daily_roas
-        const totalRevenue = filteredDailyRoas.reduce((sum: number, d: any) => {
-          const unitsSold = Number(d.units_sold) || Number(d.purchases) || 0;
-          const productPrice = Number(d.product_price) || 0;
-          return sum + (unitsSold * productPrice);
-        }, 0);
-        
-        const totalConversions = filteredDailyRoas.reduce((sum: number, d: any) => {
-          // Conversions = purchases (mais preciso) ou units_sold como fallback
-          const purchases = Number(d.purchases) || Number(d.units_sold) || 0;
-          return sum + purchases;
-        }, 0);
-        
-        
-        // Calcular supplier cost apenas dos dados reais no daily_roas
-        const totalSupplierCost = filteredDailyRoas.reduce((sum: number, d: any) => {
-          const cog = Number(d.cog) || 0;
-          return sum + cog;
-        }, 0);
-        
-        
-        // Calcular total clicks a partir de daily_roas (usando cpc e total_spent)
-        const totalClicks = filteredDailyRoas.reduce((sum: number, d: any) => {
-          const spent = Number(d.total_spent) || 0;
-          const cpc = Number(d.cpc) || 0;
-          if (cpc > 0) {
-            return sum + (spent / cpc);
-          }
-          return sum;
-        }, 0);
-        
-        // Always use daily_roas when available (already filtered by date at query level)
-        let finalTotalSpent = 0;
-        let finalTotalRevenue = 0;
-        let finalTotalConversions = 0;
-        let finalTotalSupplierCost = 0;
-        let finalTotalClicks = 0;
-        
-        if (filteredDailyRoas.length > 0) {
-          finalTotalSpent = totalSpent;
-          finalTotalRevenue = totalRevenue;
-          finalTotalConversions = totalConversions;
-          finalTotalSupplierCost = totalSupplierCost;
-          finalTotalClicks = totalClicks;
-          // Usar dados de campaigns como fallback APENAS se daily_roas estiver completamente vazio
-          if (finalTotalRevenue === 0) {
-            finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-          }
-          
-          if (finalTotalConversions === 0) {
-            finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
-          }
-        } else {
-          // Fallback: no daily_roas data, use campaigns/products as fallback
-          finalTotalSpent = campaigns?.reduce((sum, c) => sum + (Number(c.total_spent) || 0), 0) || 0;
-          finalTotalRevenue = campaigns?.reduce((sum, c) => sum + (Number(c.total_revenue) || 0), 0) || 0;
-          finalTotalConversions = campaigns?.reduce((sum, c) => sum + (c.conversions || 0), 0) || 0;
-          finalTotalClicks = campaigns?.reduce((sum, c) => sum + (c.clicks || 0), 0) || 0;
-          
-          // Sem fallback para supplier cost - se não há dados, é 0
-          finalTotalSupplierCost = 0;
-        }
-        
-        
-        // Calcular ROAS e CPC
-        const averageRoas = finalTotalSpent > 0 ? finalTotalRevenue / finalTotalSpent : 0;
-        const averageCpc = finalTotalClicks > 0 ? finalTotalSpent / finalTotalClicks : 0;
+        // Calculate averages
+        const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
+        const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+        
+        // Calculate supplier cost from products
+        const totalSupplierCost = products?.reduce((sum, p) => {
+          const costPrice = Number(p.cost_price) || 0;
+          const quantitySold = Number(p.quantity_sold) || 0;
+          return sum + (costPrice * quantitySold);
+        }, 0) || 0;
+
+        console.log('💰 Calculated metrics:', {
+          totalSpent,
+          totalRevenue,
+          totalConversions,
+          totalClicks,
+          averageRoas,
+          averageCpc,
+          totalSupplierCost,
+          activeCampaigns
+        });
+
 
         setStats({
           totalCampaigns: campaigns?.length || 0,
           totalProducts: products?.length || 0,
-          totalSpent: finalTotalSpent,
-          totalRevenue: finalTotalRevenue,
+          totalSpent,
+          totalRevenue,
           averageRoas,
           activeCampaigns,
-          totalConversions: finalTotalConversions,
+          totalConversions,
           averageCpc,
-          totalSupplierCost: finalTotalSupplierCost,
-          recentActivity: activity || [],
+          totalSupplierCost,
+          recentActivity: [],
           dailyRoasData: dailyRoas || [],
           loading: false,
         });
