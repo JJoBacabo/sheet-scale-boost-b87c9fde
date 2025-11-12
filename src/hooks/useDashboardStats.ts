@@ -147,12 +147,10 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
         const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
         
-        // Calculate supplier cost from products
-        const totalSupplierCost = products?.reduce((sum, p) => {
-          const costPrice = Number(p.cost_price) || 0;
-          const quantitySold = Number(p.quantity_sold) || 0;
-          return sum + (costPrice * quantitySold);
-        }, 0) || 0;
+        // Calculate supplier cost from daily_roas within timeframe
+        const totalSupplierCost = (dailyRoas || []).reduce((sum: number, d: any) => {
+          return sum + (Number(d.cog) || 0);
+        }, 0);
 
         console.log('💰 Calculated metrics:', {
           totalSpent,
