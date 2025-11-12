@@ -35,6 +35,7 @@ import ScrollDemo from "./pages/ScrollDemo";
 import StackedScroll from "./pages/StackedScroll";
 import UltimateScroll from "./pages/UltimateScroll";
 import SimpleScroll from "./pages/SimpleScroll";
+import DashboardNew from "./pages/DashboardNew";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const AppContent = () => {
         <Route path="/" element={<Landing />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<><TrialBanner /><Dashboard /></>} />
+        <Route path="/dashboard-new" element={<><TrialBanner /><DashboardNew /></>} />
         <Route path="/campaign-control" element={<><TrialBanner /><CampaignControl /></>} />
         <Route path="/meta-dashboard" element={<><TrialBanner /><MetaDashboard /></>} />
         <Route path="/products" element={<><TrialBanner /><Products /></>} />
