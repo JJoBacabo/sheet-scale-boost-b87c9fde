@@ -373,6 +373,10 @@ export type Database = {
         Row: {
           company_name: string | null
           created_at: string
+          facebook_access_token: string | null
+          facebook_token_expires_at: string | null
+          facebook_user_id: string | null
+          facebook_user_name: string | null
           full_name: string | null
           id: string
           last_login: string | null
@@ -386,6 +390,10 @@ export type Database = {
         Insert: {
           company_name?: string | null
           created_at?: string
+          facebook_access_token?: string | null
+          facebook_token_expires_at?: string | null
+          facebook_user_id?: string | null
+          facebook_user_name?: string | null
           full_name?: string | null
           id?: string
           last_login?: string | null
@@ -399,6 +407,10 @@ export type Database = {
         Update: {
           company_name?: string | null
           created_at?: string
+          facebook_access_token?: string | null
+          facebook_token_expires_at?: string | null
+          facebook_user_id?: string | null
+          facebook_user_name?: string | null
           full_name?: string | null
           id?: string
           last_login?: string | null

@@ -15,7 +15,6 @@ serve(async (req) => {
   try {
     const { 
       searchTerms,
-      accessToken,
       datePeriod = 30,
       minImpressions = 0, 
       countries = []
@@ -30,68 +29,43 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader || '' } }
     });
 
-    // Priority: Custom token > Generated App Token > Fallback secret
-    let cleanToken: string | null = null;
-    let tokenSource = '';
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
 
-    // 1. Try custom token from request
-    if (accessToken) {
-      cleanToken = accessToken.trim();
-      tokenSource = 'custom token from request';
-      console.log('Using custom token from request');
-    } 
-    // 2. Generate App Access Token via Facebook Graph API
-    else {
-      const appId = Deno.env.get('FACEBOOK_APP_ID');
-      const appSecret = Deno.env.get('FACEBOOK_APP_SECRET');
-      
-      if (!appId || !appSecret) {
-        throw new Error('Facebook App ID and Secret must be configured');
-      }
-      
-      console.log('Generating App Access Token...');
-      
-      try {
-        // Get a proper app access token from Facebook
-        const tokenResponse = await fetch(
-          `https://graph.facebook.com/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&grant_type=client_credentials`
-        );
-        
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
-          console.error('Failed to get app token:', errorText);
-          throw new Error(`Failed to get app access token: ${errorText}`);
-        }
-        
-        const tokenData = await tokenResponse.json();
-        cleanToken = tokenData.access_token;
-        tokenSource = 'Generated App Access Token from Facebook';
-        console.log('Successfully generated App Access Token');
-      } catch (error) {
-        console.error('Error generating app token:', error);
-        
-        // Fallback to secret token if app token generation fails
-        const secretToken = Deno.env.get('FACEBOOK_ADS_LIBRARY_TOKEN');
-        if (secretToken) {
-          cleanToken = secretToken.trim();
-          tokenSource = 'Supabase secret (fallback)';
-          console.log('Using fallback token from Supabase secrets');
-        } else {
-          throw new Error('Could not generate app token and no fallback token available');
-        }
+    // Get user's Facebook token from profiles
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('facebook_access_token, facebook_token_expires_at')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || !profile?.facebook_access_token) {
+      throw new Error('Facebook account not connected. Please connect your Facebook account first.');
+    }
+
+    // Check if token is expired
+    if (profile.facebook_token_expires_at) {
+      const expiresAt = new Date(profile.facebook_token_expires_at);
+      if (expiresAt < new Date()) {
+        throw new Error('Facebook token expired. Please reconnect your Facebook account.');
       }
     }
+
+    // Decrypt the user's Facebook token
+    const cleanToken = await decryptToken(profile.facebook_access_token);
     
     if (!cleanToken) {
-      throw new Error('No valid token available');
+      throw new Error('Failed to decrypt Facebook token');
     }
 
     console.log('Token info:', { 
       hasToken: true, 
       tokenLength: cleanToken.length,
-      tokenStart: cleanToken.substring(0, 10),
-      tokenEnd: cleanToken.substring(cleanToken.length - 10),
-      source: tokenSource
+      source: 'user Facebook token'
     });
     console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, countries });
 

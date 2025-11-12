@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Search, Download, BookmarkPlus, ExternalLink, Loader2, Bookmark, TrendingUp, Calendar, Eye } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { FacebookConnect } from "@/components/FacebookConnect";
 
 interface FacebookAd {
   id: string;
@@ -93,6 +94,7 @@ export default function ProductResearch() {
   const [ads, setAds] = useState<FacebookAd[]>([]);
   const [savedAdIds, setSavedAdIds] = useState<Set<string>>(new Set());
   const [selectedAds, setSelectedAds] = useState<Set<string>>(new Set());
+  const [isFacebookConnected, setIsFacebookConnected] = useState(false);
 
   useEffect(() => {
     loadSavedAds();
@@ -305,6 +307,9 @@ export default function ProductResearch() {
       subtitle={t('productResearch.subtitle')}
     >
       <div className="space-y-6">
+        {/* Facebook Connection */}
+        <FacebookConnect onConnectionChange={setIsFacebookConnected} />
+        
         {/* Search Filters */}
         <Card>
           <CardHeader>
@@ -391,7 +396,11 @@ export default function ProductResearch() {
             </div>
 
             <div className="mt-4 flex gap-2">
-              <Button onClick={handleSearch} disabled={isSearching} className="flex-1">
+              <Button 
+                onClick={handleSearch} 
+                disabled={isSearching || !isFacebookConnected} 
+                className="flex-1"
+              >
                 {isSearching ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

@@ -60,6 +60,7 @@ const AppContent = () => {
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/facebook-callback" element={<FacebookCallback />} />
+        <Route path="/facebook/callback" element={<FacebookCallback />} />
         <Route path="/admin/support" element={<AdminSupport />} />
         <Route path="/billing" element={<><TrialBanner /><Billing /></>} />
         <Route path="/contact-business" element={<ContactBusiness />} />

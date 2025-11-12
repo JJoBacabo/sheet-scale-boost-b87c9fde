@@ -124,8 +124,22 @@ Deno.serve(async (req) => {
       console.warn('⚠️ Could not fetch ad accounts:', err);
     }
 
+    // Get user's name from Facebook
+    let userName = 'Facebook User';
+    try {
+      const userResponse = await fetch(
+        `https://graph.facebook.com/v18.0/me?fields=id,name&access_token=${accessToken}`
+      );
+      const userData = await userResponse.json();
+      if (userData.name) {
+        userName = userData.name;
+      }
+      console.log('✅ Fetched user name:', userName);
+    } catch (err) {
+      console.warn('⚠️ Could not fetch user name:', err);
+    }
+
     // Save to integrations table
-    // Insert new integration (allows multiple Facebook accounts per user)
     const { error: insertError } = await supabaseAdmin
       .from('integrations')
       .insert({
@@ -140,6 +154,22 @@ Deno.serve(async (req) => {
     if (insertError) {
       console.error('❌ Database error:', insertError);
       throw new Error(`Database error: ${insertError.message}`);
+    }
+
+    // Also save to profiles table for Product Research
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .update({
+        facebook_access_token: encryptedToken,
+        facebook_token_expires_at: expiresAt,
+        facebook_user_id: userId,
+        facebook_user_name: userName,
+      })
+      .eq('user_id', userId);
+
+    if (profileError) {
+      console.error('❌ Profile update error:', profileError);
+      // Don't throw, integration is already saved
     }
 
     console.log('✅ Token saved successfully to database for user:', userId);
