@@ -34,19 +34,19 @@ interface TimeframeSelectorProps {
 }
 
 export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) => {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const locale = language === 'pt' ? pt : enUS;
 
   const getTimeframeDates = (option: TimeframeOption): { dateFrom: Date; dateTo: Date } => {
     const now = new Date();
-    // Criar data de hoje sem hora para evitar problemas de timezone
+    // Create today's date without time to avoid timezone issues
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
     switch (option) {
       case 'today':
-        // Para "today", usar a data de hoje como início e fim
-        // A query do banco compara apenas a data (sem hora), então isso funciona
+        // For "today", use today's date as start and end
+        // Database query compares only date (without time), so this works
         const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -174,7 +174,7 @@ export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) =
       <PopoverContent className="w-80 p-0 glass-card border-border/50" align="start">
         <div className="p-4">
           <h4 className="text-sm font-medium mb-3 text-muted-foreground">
-            {language === 'pt' ? 'Utilizados recentemente' : 'Recently used'}
+            {t('dashboard.recentlyUsed') || (language === 'pt' ? 'Utilizados recentemente' : 'Recently used')}
           </h4>
           <RadioGroup value={currentValue.option} onValueChange={handleOptionChange}>
             <div className="space-y-2 mb-4">
