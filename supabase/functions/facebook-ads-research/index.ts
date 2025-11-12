@@ -36,27 +36,28 @@ serve(async (req) => {
       throw new Error('User not authenticated');
     }
 
-    // Get user's Facebook token from profiles
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('facebook_access_token, facebook_token_expires_at')
+    // Get user's Facebook token from integrations
+    const { data: integration, error: integrationError } = await supabase
+      .from('integrations')
+      .select('access_token, expires_at')
       .eq('user_id', user.id)
-      .single();
+      .eq('integration_type', 'facebook')
+      .maybeSingle();
 
-    if (profileError || !profile?.facebook_access_token) {
+    if (integrationError || !integration?.access_token) {
       throw new Error('Facebook account not connected. Please connect your Facebook account first.');
     }
 
     // Check if token is expired
-    if (profile.facebook_token_expires_at) {
-      const expiresAt = new Date(profile.facebook_token_expires_at);
+    if (integration.expires_at) {
+      const expiresAt = new Date(integration.expires_at);
       if (expiresAt < new Date()) {
         throw new Error('Facebook token expired. Please reconnect your Facebook account.');
       }
     }
 
     // Decrypt the user's Facebook token
-    const cleanToken = await decryptToken(profile.facebook_access_token);
+    const cleanToken = await decryptToken(integration.access_token);
     
     if (!cleanToken) {
       throw new Error('Failed to decrypt Facebook token');

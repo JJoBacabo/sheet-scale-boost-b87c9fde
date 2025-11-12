@@ -28,16 +28,18 @@ export const FacebookConnect = ({ onConnectionChange }: FacebookConnectProps) =>
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('facebook_user_name, facebook_token_expires_at')
+      const { data: integration } = await supabase
+        .from('integrations')
+        .select('access_token, expires_at, metadata')
         .eq('user_id', user.id)
-        .single();
+        .eq('integration_type', 'facebook')
+        .maybeSingle();
 
-      if (profile?.facebook_user_name) {
+      if (integration?.access_token) {
         setIsConnected(true);
-        setUserName(profile.facebook_user_name);
-        setExpiresAt(profile.facebook_token_expires_at ? new Date(profile.facebook_token_expires_at) : null);
+        const metadata = integration.metadata as { user_name?: string } | null;
+        setUserName(metadata?.user_name || 'Facebook User');
+        setExpiresAt(integration.expires_at ? new Date(integration.expires_at) : null);
         onConnectionChange?.(true);
       } else {
         setIsConnected(false);
@@ -66,14 +68,10 @@ export const FacebookConnect = ({ onConnectionChange }: FacebookConnectProps) =>
       if (!user) return;
 
       const { error } = await supabase
-        .from('profiles')
-        .update({
-          facebook_access_token: null,
-          facebook_token_expires_at: null,
-          facebook_user_id: null,
-          facebook_user_name: null
-        })
-        .eq('user_id', user.id);
+        .from('integrations')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('integration_type', 'facebook');
 
       if (error) throw error;
 
