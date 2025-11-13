@@ -17,9 +17,10 @@ interface StatsOverviewProps {
     averageCpc: number;
     totalSupplierCost: number;
   };
+  storeCurrency?: string;
 }
 
-export const StatsOverview = ({ stats }: StatsOverviewProps) => {
+export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewProps) => {
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
   const profit = stats.totalRevenue - stats.totalSpent - stats.totalSupplierCost;
@@ -28,7 +29,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
   const statCards = [
     {
       title: t("dashboard.totalRevenue"),
-      value: formatAmount(stats.totalRevenue),
+      value: formatAmount(stats.totalRevenue, storeCurrency),
       icon: DollarSign,
       trend: stats.totalRevenue > 0 ? "up" : "neutral",
       gradient: "from-emerald-500/20 to-teal-500/20",
@@ -38,7 +39,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.totalAdSpend"),
-      value: formatAmount(stats.totalSpent),
+      value: formatAmount(stats.totalSpent, storeCurrency),
       icon: TrendingDown,
       trend: "neutral",
       gradient: "from-blue-500/20 to-cyan-500/20",
@@ -48,7 +49,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.profit"),
-      value: formatAmount(profit),
+      value: formatAmount(profit, storeCurrency),
       icon: profit >= 0 ? TrendingUp : TrendingDown,
       trend: profit >= 0 ? "up" : "down",
       gradient: profit >= 0 ? "from-primary/20 to-primary-glow/20" : "from-destructive/20 to-red-500/20",
@@ -68,7 +69,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.totalSupplierCost"),
-      value: formatAmount(stats.totalSupplierCost),
+      value: formatAmount(stats.totalSupplierCost, storeCurrency),
       icon: ShoppingCart,
       trend: "neutral",
       gradient: "from-purple-500/20 to-pink-500/20",
@@ -88,7 +89,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.averageCpc"),
-      value: formatAmount(stats.averageCpc),
+      value: formatAmount(stats.averageCpc, storeCurrency),
       icon: DollarSign,
       trend: "neutral",
       gradient: "from-cyan-500/20 to-blue-500/20",
