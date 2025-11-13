@@ -7,58 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Fetch live exchange rates from API
-const fetchExchangeRates = async (): Promise<Record<string, number>> => {
-  try {
-    const response = await fetch('https://open.er-api.com/v6/latest/EUR');
-    if (!response.ok) {
-      console.warn('Failed to fetch exchange rates, using fallback');
-      return getFallbackRates();
-    }
-    const data = await response.json();
-    
-    if (data.result === 'success' && data.rates) {
-      // Convert to EUR base (API gives rates from EUR, so we need to invert)
-      const rates: Record<string, number> = { 'EUR': 1 };
-      for (const [currency, rate] of Object.entries(data.rates)) {
-        rates[currency] = 1 / (rate as number);
-      }
-      
-      console.log('✅ Fetched live exchange rates');
-      return rates;
-    }
-    
-    throw new Error('Invalid currency API response');
-  } catch (error) {
-    console.error('Error fetching exchange rates:', error);
-    return getFallbackRates();
-  }
-};
-
-// Fallback rates in case API is unavailable
-const getFallbackRates = (): Record<string, number> => {
-  return {
-    'EUR': 1,
-    'USD': 0.92,
-    'GBP': 1.17,
-    'CHF': 1.05,
-    'BGN': 0.51,
-    'RON': 0.20,
-    'PLN': 0.23,
-    'CZK': 0.04,
-    'HUF': 0.0025,
-    'SEK': 0.088,
-    'DKK': 0.134,
-    'NOK': 0.086,
-  };
-};
-
-// Helper function to convert any currency to EUR
-const convertToEUR = (amount: number, currency: string, rates: Record<string, number>): number => {
-  const rate = rates[currency.toUpperCase()] || 1;
-  return amount * rate;
-};
-
 interface DashboardStats {
   totalRevenue: number;
   totalAdSpend: number;
@@ -77,6 +25,35 @@ interface DashboardStats {
     conversions: number;
     clicks: number;
   }>;
+}
+
+// Simplified exchange rates
+const FALLBACK_RATES: Record<string, number> = {
+  'EUR': 1, 'USD': 0.92, 'GBP': 1.17, 'CHF': 1.05, 'BGN': 0.51,
+  'RON': 0.20, 'PLN': 0.23, 'CZK': 0.04, 'HUF': 0.0025,
+  'SEK': 0.088, 'DKK': 0.134, 'NOK': 0.086,
+};
+
+async function getExchangeRates(): Promise<Record<string, number>> {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+    if (!res.ok) return FALLBACK_RATES;
+    
+    const data = await res.json();
+    if (data.result !== 'success' || !data.rates) return FALLBACK_RATES;
+    
+    const rates: Record<string, number> = { 'EUR': 1 };
+    for (const [currency, rate] of Object.entries(data.rates)) {
+      rates[currency] = 1 / (rate as number);
+    }
+    return rates;
+  } catch {
+    return FALLBACK_RATES;
+  }
+}
+
+function convertToEUR(amount: number, currency: string, rates: Record<string, number>): number {
+  return amount * (rates[currency.toUpperCase()] || 1);
 }
 
 serve(async (req) => {
@@ -108,7 +85,7 @@ serve(async (req) => {
     console.log('📊 Fetching dashboard stats:', { shopifyIntegrationId, adAccountId, dateFrom, dateTo });
 
     // Fetch live exchange rates
-    const exchangeRates = await fetchExchangeRates();
+    const exchangeRates = await getExchangeRates();
 
     // Initialize result
     const stats: DashboardStats = {
