@@ -142,12 +142,14 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const formatAmount = (amount: number): string => {
+    // First convert from EUR to selected currency
+    const convertedAmount = convertFromEUR(amount);
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: selectedCurrency.code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(convertedAmount);
   };
 
   return (
