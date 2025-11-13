@@ -54,21 +54,21 @@ export const SupplierQuoteList = ({ userId, refreshTrigger }: SupplierQuoteListP
   const loadSessions = async () => {
     try {
       const { data: sessionsData, error: sessionsError } = await supabase
-        .from("supplier_quote_sessions")
+        .from("supplier_quote_sessions" as any)
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       if (sessionsError) throw sessionsError;
 
-      setSessions(sessionsData || []);
+      setSessions((sessionsData as any) || []);
 
       // Load quotes for each session
       if (sessionsData && sessionsData.length > 0) {
-        const sessionIds = sessionsData.map((s) => s.id);
+        const sessionIds = sessionsData.map((s: any) => s.id);
         
         const { data: quotesData, error: quotesError } = await supabase
-          .from("supplier_quotes")
+          .from("supplier_quotes" as any)
           .select(`
             session_id,
             product_id,
@@ -123,7 +123,7 @@ export const SupplierQuoteList = ({ userId, refreshTrigger }: SupplierQuoteListP
 
     try {
       const { error } = await supabase
-        .from("supplier_quote_sessions")
+        .from("supplier_quote_sessions" as any)
         .delete()
         .eq("id", sessionToDelete);
 
