@@ -450,6 +450,14 @@ const Dashboard = () => {
     refreshKey 
   });
 
+  // Update store currency when stats change
+  useEffect(() => {
+    if (stats?.storeCurrency) {
+      setStoreCurrency(stats.storeCurrency);
+      console.log('💱 Store currency updated:', stats.storeCurrency);
+    }
+  }, [stats?.storeCurrency]);
+
   // Chart Data
   const chartData = useMemo(() => {
     const dailyData = stats?.dailyRoasData || [];
