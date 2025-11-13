@@ -76,6 +76,16 @@ async function syncProductsInBackground(
   const supabase = createClient(supabaseUrl, supabaseKey);
   const stats = { total: 0, created: 0, updated: 0, skipped: 0, errors: [] as string[] };
   
+  // Fetch store currency from integration metadata
+  const { data: integrationData } = await supabase
+    .from('integrations')
+    .select('metadata')
+    .eq('id', integrationId)
+    .single();
+  
+  const storeCurrency = (integrationData?.metadata as any)?.store_currency || 'EUR';
+  console.log('💱 Store currency from integration:', storeCurrency);
+  
   // Step 1: Fetch all orders (with sales data)
   const allOrders: ShopifyOrder[] = [];
   let pageInfo: string | null = null;
