@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { StoreCurrencySelector } from "@/components/StoreCurrencySelector";
 
 interface Integration {
   id: string;
@@ -638,6 +639,13 @@ export default function Integrations() {
                               <div className="flex justify-between py-2 border-b border-border/50">
                                 <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
                                 <span>{new Date(shop.connected_at).toLocaleDateString('pt-PT')}</span>
+                              </div>
+                              <div className="flex justify-between py-2 border-b border-border/50">
+                                <StoreCurrencySelector 
+                                  integrationId={shop.id}
+                                  currentCurrency={shop.metadata?.store_currency || 'EUR'}
+                                  onUpdate={fetchIntegrations}
+                                />
                               </div>
                             </div>
 

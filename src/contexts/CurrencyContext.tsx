@@ -54,7 +54,8 @@ interface CurrencyContextType {
   selectedCurrency: Currency;
   setSelectedCurrency: (currency: Currency) => void;
   convertFromEUR: (amountInEUR: number) => number;
-  formatAmount: (amount: number) => string;
+  convertBetween: (amount: number, fromCurrency: string, toCurrency?: string) => number;
+  formatAmount: (amount: number, sourceCurrency?: string) => string;
   exchangeRates: Record<string, number>;
 }
 
@@ -141,9 +142,30 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return amountInEUR * rate;
   };
 
-  const formatAmount = (amount: number): string => {
-    // First convert from EUR to selected currency
-    const convertedAmount = convertFromEUR(amount);
+  const convertBetween = (amount: number, fromCurrency: string, toCurrency?: string): number => {
+    const targetCurrency = toCurrency || selectedCurrency.code;
+    
+    // If currencies are the same, no conversion needed
+    if (fromCurrency === targetCurrency) {
+      return amount;
+    }
+
+    // Convert from source currency to EUR first
+    const rateFrom = exchangeRates[fromCurrency] || 1;
+    const amountInEUR = amount / rateFrom;
+
+    // Then convert from EUR to target currency
+    const rateTo = exchangeRates[targetCurrency] || 1;
+    return amountInEUR * rateTo;
+  };
+
+  const formatAmount = (amount: number, sourceCurrency?: string): string => {
+    // If source currency is provided, convert from that currency
+    // Otherwise assume it's in EUR and convert from EUR
+    const convertedAmount = sourceCurrency 
+      ? convertBetween(amount, sourceCurrency, selectedCurrency.code)
+      : convertFromEUR(amount);
+      
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: selectedCurrency.code,
@@ -158,6 +180,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         selectedCurrency,
         setSelectedCurrency,
         convertFromEUR,
+        convertBetween,
         formatAmount,
         exchangeRates,
       }}

@@ -76,6 +76,30 @@ serve(async (req) => {
 
     const { shopifyIntegrationId, adAccountId, dateFrom, dateTo } = await req.json();
 
+    // Fetch store currency from integration
+    let storeCurrency = 'EUR';
+    if (shopifyIntegrationId) {
+      const { data: integration } = await supabaseClient
+        .from('integrations')
+        .select('metadata')
+        .eq('id', shopifyIntegrationId)
+        .single();
+      
+      storeCurrency = integration?.metadata?.store_currency || 'EUR';
+    }
+
+  // Fetch store currency from integration
+  let storeCurrency = 'EUR';
+  if (shopifyIntegrationId) {
+    const { data: integration } = await supabaseClient
+      .from('integrations')
+      .select('metadata')
+      .eq('id', shopifyIntegrationId)
+      .single();
+    
+    storeCurrency = integration?.metadata?.store_currency || 'EUR';
+  }
+
     console.log('📊 Fetching dashboard stats:', { shopifyIntegrationId, adAccountId, dateFrom, dateTo });
 
     // Fetch live exchange rates
