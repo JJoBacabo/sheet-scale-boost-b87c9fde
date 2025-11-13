@@ -34,22 +34,31 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const t = (key: string, params?: Record<string, string | number>): string => {
     const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      value = value?.[k];
+
+    const resolvePath = (lang: Language): any => {
+      let val: any = translations[lang];
+      for (const k of keys) {
+        val = val?.[k];
+      }
+      return val;
+    };
+
+    let value: any = resolvePath(language);
+    if (value === undefined) {
+      // Fallback to English if missing in current language
+      value = resolvePath('en');
     }
-    
-    let result = value || key;
-    
+
+    let result = value ?? key;
+
     // Simple interpolation
     if (params && typeof result === 'string') {
       Object.keys(params).forEach(param => {
         result = result.replace(new RegExp(`{{${param}}}`, 'g'), String(params[param]));
       });
     }
-    
-    return result;
+
+    return result as string;
   };
 
   return (
