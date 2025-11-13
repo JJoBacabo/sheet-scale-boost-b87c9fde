@@ -88,19 +88,7 @@ serve(async (req) => {
       storeCurrency = integration?.metadata?.store_currency || 'EUR';
     }
 
-  // Fetch store currency from integration
-  let storeCurrency = 'EUR';
-  if (shopifyIntegrationId) {
-    const { data: integration } = await supabaseClient
-      .from('integrations')
-      .select('metadata')
-      .eq('id', shopifyIntegrationId)
-      .single();
-    
-    storeCurrency = integration?.metadata?.store_currency || 'EUR';
-  }
-
-    console.log('📊 Fetching dashboard stats:', { shopifyIntegrationId, adAccountId, dateFrom, dateTo });
+    console.log('📊 Fetching dashboard stats:', { shopifyIntegrationId, adAccountId, dateFrom, dateTo, storeCurrency });
 
     // Fetch live exchange rates
     const exchangeRates = await getExchangeRates();
@@ -337,9 +325,10 @@ serve(async (req) => {
       profitMargin: stats.profitMargin,
     });
 
-    return new Response(JSON.stringify(stats), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ ...stats, storeCurrency }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     console.error('❌ Error fetching dashboard stats:', error);

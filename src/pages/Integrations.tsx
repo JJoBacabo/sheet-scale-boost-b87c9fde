@@ -636,11 +636,11 @@ export default function Integrations() {
                             </div>
 
                             <div className="space-y-3 text-xs sm:text-sm mb-4">
-                              <div className="flex justify-between py-2 border-b border-border/50">
+                              <div className="flex justify-between items-center py-2 border-b border-border/50">
                                 <span className="text-muted-foreground">{t('settings.integrationsPage.connectedOn')}</span>
                                 <span>{new Date(shop.connected_at).toLocaleDateString('pt-PT')}</span>
                               </div>
-                              <div className="flex justify-between py-2 border-b border-border/50">
+                              <div className="py-2 border-b border-border/50">
                                 <StoreCurrencySelector 
                                   integrationId={shop.id}
                                   currentCurrency={shop.metadata?.store_currency || 'EUR'}

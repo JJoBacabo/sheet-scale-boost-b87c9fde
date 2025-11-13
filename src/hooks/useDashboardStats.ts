@@ -13,6 +13,7 @@ interface DashboardStats {
   totalSupplierCost: number;
   recentActivity: any[];
   dailyRoasData: any[];
+  storeCurrency?: string;
   loading: boolean;
 }
 
@@ -96,6 +97,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
             totalSupplierCost: realStats.totalSupplierCost,
             recentActivity: [],
             dailyRoasData: realStats.dailyData || [],
+            storeCurrency: realStats.storeCurrency || 'EUR',
             loading: false,
           });
           
