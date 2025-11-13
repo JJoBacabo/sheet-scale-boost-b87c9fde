@@ -310,6 +310,12 @@ const translations = {
           perYear: '/ano',
           annualSavings: 'Poupe 149,97 € (3 meses grátis)',
         },
+        business: {
+          name: 'Business',
+          price: 'Personalizado',
+          description: 'Solução personalizada para grandes empresas com suporte dedicado',
+          contactUs: 'Contacte-nos',
+        },
         featureComparison: {
           title: 'Comparação de Funcionalidades',
           feature: 'Funcionalidade',
@@ -1520,6 +1526,12 @@ const translations = {
           annualPrice: '€449.91',
           perYear: '/year',
           annualSavings: 'Save €149.97 (3 months free)',
+        },
+        business: {
+          name: 'Business',
+          price: 'Custom',
+          description: 'Custom solution for large enterprises with dedicated support',
+          contactUs: 'Contact Us',
         },
         featureComparison: {
           title: 'Feature Comparison',
