@@ -15,8 +15,10 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
+import { StoreCurrencySelector } from "@/components/StoreCurrencySelector";
 import { SupplierQuoteModal } from "@/components/SupplierQuoteModal";
 import { SupplierQuoteList } from "@/components/SupplierQuoteList";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Collapsible,
   CollapsibleContent,
@@ -70,6 +72,8 @@ const Products = () => {
   const [selectedStore, setSelectedStore] = useState("all");
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
+  const [storeCurrency, setStoreCurrency] = useState<string>("EUR");
+  const { selectedCurrency, convertBetween, formatAmount } = useCurrency();
 
   const toggleProduct = (productId: string) => {
     setExpandedProducts(prev => {
@@ -238,6 +242,38 @@ const Products = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+  
+  // Update store currency when selected store changes
+  useEffect(() => {
+    const updateStoreCurrency = async () => {
+      if (selectedStore === "all") {
+        setStoreCurrency("EUR"); // Default to EUR for "all stores"
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('integrations')
+          .select('metadata')
+          .eq('id', selectedStore)
+          .single();
+
+        if (error) throw error;
+
+        const metadata = data?.metadata as any;
+        if (metadata?.store_currency) {
+          setStoreCurrency(metadata.store_currency);
+        } else {
+          setStoreCurrency("EUR"); // Default to EUR if not set
+        }
+      } catch (error) {
+        console.error('Error fetching store currency:', error);
+        setStoreCurrency("EUR");
+      }
+    };
+
+    updateStoreCurrency();
+  }, [selectedStore]);
 
   const checkShopifyIntegration = async (userId: string) => {
     const { data } = await supabase
@@ -477,11 +513,16 @@ const Products = () => {
     const cost = (product.cost_price || 0) * (product.quantity_sold || 0);
     return revenue - cost;
   };
+  
+  // Convert value from store currency to selected currency
+  const convertValue = (value: number) => {
+    return convertBetween(value, storeCurrency, selectedCurrency.code);
+  };
 
   const totalStats = {
     totalProducts: filteredProducts.length,
-    totalRevenue: filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0),
-    totalProfit: filteredProducts.reduce((sum, p) => sum + calculateProfit(p), 0),
+    totalRevenue: convertValue(filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0)),
+    totalProfit: convertValue(filteredProducts.reduce((sum, p) => sum + calculateProfit(p), 0)),
     avgMargin: filteredProducts.length > 0
       ? filteredProducts.reduce((sum, p) => sum + (p.profit_margin || 0), 0) / filteredProducts.length
       : 0,
@@ -934,14 +975,14 @@ const Products = () => {
     },
     {
       label: t('products.totalRevenue') || "Total Revenue",
-      value: `€${totalStats.totalRevenue.toFixed(2)}`,
+      value: formatAmount(totalStats.totalRevenue, storeCurrency),
       change: 12.5,
       icon: DollarSign,
       color: "text-emerald-500"
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: `€${totalStats.totalProfit.toFixed(2)}`,
+      value: formatAmount(totalStats.totalProfit, storeCurrency),
       change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
       icon: TrendingUp,
       color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
@@ -1083,6 +1124,17 @@ const Products = () => {
               <div className="min-w-[160px]">
                 <StoreSelector value={selectedStore} onChange={setSelectedStore} />
               </div>
+              
+              {/* Store Currency Selector - only show when a specific store is selected */}
+              {selectedStore !== "all" && (
+                <StoreCurrencySelector 
+                  integrationId={selectedStore}
+                  currentCurrency={storeCurrency}
+                  onUpdate={() => {
+                    if (user) fetchProducts(user.id, true);
+                  }}
+                />
+              )}
 
               {/* Date Preset */}
               <Select value={datePreset} onValueChange={handleDatePresetChange}>
@@ -1250,7 +1302,9 @@ const Products = () => {
                             {editingCost === product.id ? (
                               <div className="flex items-center gap-1.5">
                                 <div className="relative flex items-center">
-                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">€</span>
+                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">
+                                    {selectedCurrency.symbol}
+                                  </span>
                                   <input
                                     type="text"
                                     inputMode="decimal"
@@ -1304,7 +1358,7 @@ const Products = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-base font-semibold text-foreground">
                                   {product.cost_price !== null && product.cost_price !== 0 
-                                    ? `€${product.cost_price.toFixed(2)}`
+                                    ? formatAmount(convertValue(product.cost_price), storeCurrency)
                                     : <span className="text-muted-foreground italic">Não definido</span>
                                   }
                                 </span>
@@ -1324,13 +1378,13 @@ const Products = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.totalRevenue')}</span>
                             <span className="text-lg font-bold text-green-600">
-                              €{product.total_revenue?.toFixed(2) || "0.00"}
+                              {formatAmount(convertValue(product.total_revenue || 0), storeCurrency)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
                             <span className="font-semibold">
-                              €{product.selling_price?.toFixed(2) || "0.00"}
+                              {formatAmount(convertValue(product.selling_price || 0), storeCurrency)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1348,7 +1402,7 @@ const Products = () => {
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
                             <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              €{calculateProfit(product).toFixed(2)}
+                              {formatAmount(convertValue(calculateProfit(product)), storeCurrency)}
                             </span>
                           </div>
                         </div>
