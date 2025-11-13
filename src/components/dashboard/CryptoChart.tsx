@@ -9,9 +9,10 @@ interface CryptoChartProps {
   title: string;
   color?: string;
   showTrend?: boolean;
+  storeCurrency?: string;
 }
 
-export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true }: CryptoChartProps) => {
+export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, storeCurrency = 'EUR' }: CryptoChartProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const progressRef = useRef(0);
@@ -169,13 +170,13 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true }
         <div className="min-w-0 flex-1">
           <p className="text-[10px] sm:text-xs text-muted-foreground">Valor Atual</p>
           <p className="text-lg sm:text-xl md:text-2xl font-bold truncate" style={{ color }}>
-            {formatAmount(currentValue)}
+            {formatAmount(currentValue, storeCurrency)}
           </p>
         </div>
         <div className="text-right flex-shrink-0">
           <p className="text-[10px] sm:text-xs text-muted-foreground">Variação</p>
           <p className={`text-sm sm:text-base md:text-lg font-semibold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
-            {isPositive ? '+' : ''}{formatAmount(change)}
+            {isPositive ? '+' : ''}{formatAmount(change, storeCurrency)}
           </p>
         </div>
       </div>

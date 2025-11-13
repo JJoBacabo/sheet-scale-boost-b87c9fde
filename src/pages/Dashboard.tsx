@@ -744,7 +744,7 @@ const Dashboard = () => {
         </Card3D>
 
         {/* Stats Overview - 8 cards de métricas */}
-        {stats && <StatsOverview stats={stats} />}
+        {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
 
         {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
         {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
@@ -755,6 +755,7 @@ const Dashboard = () => {
                 title={t('dashboard.dailyRevenue') || 'Receita Diária'}
                 color="#4AE9BD"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
             {profitChartData.length > 0 && (
@@ -763,6 +764,7 @@ const Dashboard = () => {
                 title={t('dashboard.dailyProfit') || 'Lucro Diário'}
                 color="#10B981"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
             {spendChartData.length > 0 && (
@@ -771,6 +773,7 @@ const Dashboard = () => {
                 title={t('dashboard.dailySpend') || 'Gasto Diário'}
                 color="#F59E0B"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
           </div>

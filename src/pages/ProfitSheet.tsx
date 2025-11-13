@@ -70,9 +70,10 @@ const ProfitSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { selectedCurrency, convertFromEUR, formatAmount } = useCurrency();
+  const { selectedCurrency, convertFromEUR, formatAmount, convertBetween } = useCurrency();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storeCurrency, setStoreCurrency] = useState<string>('EUR');
   
   // Selection state
   const [shopifyIntegrations, setShopifyIntegrations] = useState<Integration[]>([]);
@@ -418,6 +419,12 @@ const ProfitSheet = () => {
 
       console.log('✅ Raw data received:', data);
 
+      // Set store currency
+      if (data.storeCurrency) {
+        setStoreCurrency(data.storeCurrency);
+        console.log('💱 Store currency set to:', data.storeCurrency);
+      }
+
       // Process and calculate all values
       const processedData: ProfitRow[] = data.data.map((day: any) => {
         const revenue = parseFloat(day.revenue || 0);
@@ -726,7 +733,7 @@ const ProfitSheet = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalRevenue')}</p>
-                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.revenue))}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(totals.revenue, storeCurrency)}</h3>
                     </div>
                   </Card>
 
@@ -740,7 +747,7 @@ const ProfitSheet = () => {
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalProfit')}</p>
                       <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatAmount(convertFromEUR(totals.profit))}
+                        {formatAmount(totals.profit, storeCurrency)}
                       </h3>
                     </div>
                   </Card>
@@ -754,7 +761,7 @@ const ProfitSheet = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalAdSpend')}</p>
-                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.adSpend))}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(totals.adSpend, storeCurrency)}</h3>
                     </div>
                   </Card>
 
@@ -820,9 +827,9 @@ const ProfitSheet = () => {
                                 <td className="p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap sticky left-0 bg-card z-10">
                                   {format(new Date(row.date), 'dd/MM/yy')}
                                 </td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.revenue))}</td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.cog))}</td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.adSpend))}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.revenue, storeCurrency)}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.cog, storeCurrency)}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.adSpend, storeCurrency)}</td>
                                 <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">
                                   {editingRow === row.date ? (
                                     <Input
@@ -833,7 +840,7 @@ const ProfitSheet = () => {
                                       className="w-20 h-7 text-right text-xs"
                                     />
                                   ) : (
-                                    formatAmount(convertFromEUR(row.otherExpenses))
+                                    formatAmount(row.otherExpenses, storeCurrency)
                                   )}
                                 </td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm">
@@ -849,23 +856,23 @@ const ProfitSheet = () => {
                                     <div className="whitespace-nowrap">
                                       {row.shopifyRefunds > 0 && (
                                         <div className="text-[10px] sm:text-xs text-muted-foreground">
-                                          Shop: {formatAmount(convertFromEUR(row.shopifyRefunds))}
+                                          Shop: {formatAmount(row.shopifyRefunds, storeCurrency)}
                                         </div>
                                       )}
                                       {row.manualRefunds > 0 && (
                                         <div className="text-[10px] sm:text-xs text-blue-600">
-                                          Man: {formatAmount(convertFromEUR(row.manualRefunds))}
+                                          Man: {formatAmount(row.manualRefunds, storeCurrency)}
                                         </div>
                                       )}
-                                      <div className="font-medium">{formatAmount(convertFromEUR(row.totalRefunds))}</div>
+                                      <div className="font-medium">{formatAmount(row.totalRefunds, storeCurrency)}</div>
                                     </div>
                                   )}
                                </td>
                                 <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap text-muted-foreground">
-                                  {formatAmount(convertFromEUR(row.transactionFee))}
+                                  {formatAmount(row.transactionFee, storeCurrency)}
                                 </td>
                                 <td className={`text-right p-2 sm:p-4 text-xs sm:text-sm font-semibold whitespace-nowrap ${row.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatAmount(convertFromEUR(row.profit))}
+                                  {formatAmount(row.profit, storeCurrency)}
                                 </td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{row.roas.toFixed(2)}x</td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">{row.profitMargin.toFixed(1)}%</td>

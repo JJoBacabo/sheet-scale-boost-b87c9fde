@@ -143,6 +143,10 @@ serve(async (req) => {
       throw new Error('Shopify integration not found');
     }
 
+    // Get store currency from integration metadata
+    const storeCurrency = shopifyIntegration.metadata?.store_currency || 'EUR';
+    console.log('💱 Store currency:', storeCurrency);
+
     // Get Facebook integration
     const { data: facebookIntegration, error: facebookError } = await supabaseClient
       .from('integrations')
@@ -354,7 +358,7 @@ serve(async (req) => {
     console.log(`✅ Returning ${profitData.length} days of data`);
 
     return new Response(
-      JSON.stringify({ data: profitData }),
+      JSON.stringify({ data: profitData, storeCurrency }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
