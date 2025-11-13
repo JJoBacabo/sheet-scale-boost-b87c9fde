@@ -109,7 +109,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
@@ -123,18 +123,18 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
               intensity="medium" 
               glow={stat.trend === "up"}
             >
-              <div className="relative p-6">
-                <div className="flex items-start justify-between mb-3">
+              <div className="relative p-3 sm:p-4 md:p-6">
+                <div className="flex items-start justify-between mb-2 sm:mb-3">
                   <motion.div
-                    className={`p-3 rounded-xl ${stat.iconBg}`}
+                    className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl ${stat.iconBg}`}
                     whileHover={{ rotate: 5 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
-                    <Icon className={`h-5 w-5 ${stat.iconColor}`} />
+                    <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
                   </motion.div>
                   {stat.trend !== "neutral" && (
                     <div
-                      className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                      className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-medium ${
                         stat.trend === "up" 
                           ? "bg-primary/10 text-primary" 
                           : "bg-destructive/10 text-destructive"
@@ -145,9 +145,9 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">{stat.title}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-0.5 sm:mb-1">{stat.title}</p>
                   <motion.p
-                    className={`text-2xl font-bold ${stat.iconColor}`}
+                    className={`text-lg sm:text-xl md:text-2xl font-bold ${stat.iconColor}`}
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2 + index * 0.1, type: "spring" }}

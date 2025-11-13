@@ -166,22 +166,22 @@ export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) =
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full justify-start text-left glass-card border-border/50">
-          <Calendar className="mr-2 h-4 w-4" />
-          {displayText}
+        <Button variant="outline" className="w-full justify-start text-left glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm">
+          <Calendar className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="truncate">{displayText}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0 glass-card border-border/50" align="start">
-        <div className="p-4">
-          <h4 className="text-sm font-medium mb-3 text-muted-foreground">
+      <PopoverContent className="w-[280px] sm:w-80 p-0 glass-card border-border/50" align="start">
+        <div className="p-3 sm:p-4">
+          <h4 className="text-xs sm:text-sm font-medium mb-2 sm:mb-3 text-muted-foreground">
             {t('dashboard.recentlyUsed') || (language === 'pt' ? 'Utilizados recentemente' : 'Recently used')}
           </h4>
           <RadioGroup value={currentValue.option} onValueChange={handleOptionChange}>
-            <div className="space-y-2 mb-4">
+            <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
               {recentlyUsed.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={option} />
-                  <Label htmlFor={option} className="cursor-pointer flex-1">
+                  <RadioGroupItem value={option} id={option} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Label htmlFor={option} className="cursor-pointer flex-1 text-xs sm:text-sm">
                     {getLabel(option)}
                   </Label>
                 </div>
@@ -189,14 +189,14 @@ export const TimeframeSelector = ({ value, onChange }: TimeframeSelectorProps) =
             </div>
           </RadioGroup>
 
-          <div className="border-t border-border/50 my-4" />
+          <div className="border-t border-border/50 my-3 sm:my-4" />
 
           <RadioGroup value={currentValue.option} onValueChange={handleOptionChange}>
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               {allOptions.map((option) => (
                 <div key={option} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option} id={option} />
-                  <Label htmlFor={option} className="cursor-pointer flex-1">
+                  <RadioGroupItem value={option} id={option} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Label htmlFor={option} className="cursor-pointer flex-1 text-xs sm:text-sm">
                     {getLabel(option)}
                   </Label>
                 </div>
