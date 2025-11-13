@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface PerformanceChartProps {
   data: any[];
@@ -8,6 +9,7 @@ interface PerformanceChartProps {
 }
 
 export const PerformanceChart = ({ data, loading }: PerformanceChartProps) => {
+  const { selectedCurrency } = useCurrency();
   if (loading) {
     return (
       <Card className="p-6 glass-card rounded-2xl border border-border/50">
@@ -59,7 +61,7 @@ export const PerformanceChart = ({ data, loading }: PerformanceChartProps) => {
       <div className="space-y-6">
         {/* Revenue vs Spend Chart */}
         <div>
-          <h4 className="text-sm font-medium text-muted-foreground mb-3">Receita vs Investimento (€)</h4>
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">Receita vs Investimento ({selectedCurrency.code})</h4>
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={chartData}>
               <defs>

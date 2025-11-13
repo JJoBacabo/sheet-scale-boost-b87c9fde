@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, DollarSign, Target, ShoppingCart, Activity } 
 import { Card3D } from "@/components/ui/Card3D";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface StatsOverviewProps {
   stats: {
@@ -20,14 +21,14 @@ interface StatsOverviewProps {
 
 export const StatsOverview = ({ stats }: StatsOverviewProps) => {
   const { t } = useLanguage();
-  const formatCurrency = (value: number) => `€${value.toFixed(2)}`;
+  const { formatAmount } = useCurrency();
   const profit = stats.totalRevenue - stats.totalSpent - stats.totalSupplierCost;
   const profitMargin = stats.totalRevenue > 0 ? (profit / stats.totalRevenue) * 100 : 0;
 
   const statCards = [
     {
       title: t("dashboard.totalRevenue"),
-      value: formatCurrency(stats.totalRevenue),
+      value: formatAmount(stats.totalRevenue),
       icon: DollarSign,
       trend: stats.totalRevenue > 0 ? "up" : "neutral",
       gradient: "from-emerald-500/20 to-teal-500/20",
@@ -37,7 +38,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.totalAdSpend"),
-      value: formatCurrency(stats.totalSpent),
+      value: formatAmount(stats.totalSpent),
       icon: TrendingDown,
       trend: "neutral",
       gradient: "from-blue-500/20 to-cyan-500/20",
@@ -47,7 +48,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.profit"),
-      value: formatCurrency(profit),
+      value: formatAmount(profit),
       icon: profit >= 0 ? TrendingUp : TrendingDown,
       trend: profit >= 0 ? "up" : "down",
       gradient: profit >= 0 ? "from-primary/20 to-primary-glow/20" : "from-destructive/20 to-red-500/20",
@@ -67,7 +68,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.totalSupplierCost"),
-      value: formatCurrency(stats.totalSupplierCost),
+      value: formatAmount(stats.totalSupplierCost),
       icon: ShoppingCart,
       trend: "neutral",
       gradient: "from-purple-500/20 to-pink-500/20",
@@ -87,7 +88,7 @@ export const StatsOverview = ({ stats }: StatsOverviewProps) => {
     },
     {
       title: t("dashboard.averageCpc"),
-      value: formatCurrency(stats.averageCpc),
+      value: formatAmount(stats.averageCpc),
       icon: DollarSign,
       trend: "neutral",
       gradient: "from-cyan-500/20 to-blue-500/20",
