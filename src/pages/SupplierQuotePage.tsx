@@ -51,7 +51,7 @@ const SupplierQuotePage = () => {
     try {
       // Get session
       const { data: sessionData, error: sessionError } = await supabase
-        .from("supplier_quote_sessions")
+        .from("supplier_quote_sessions" as any)
         .select("*")
         .eq("token", token)
         .eq("is_active", true)
@@ -67,13 +67,13 @@ const SupplierQuotePage = () => {
         return;
       }
 
-      setSession(sessionData);
+      setSession(sessionData as any);
 
       // Get existing quotes
       const { data: quotesData } = await supabase
-        .from("supplier_quotes")
+        .from("supplier_quotes" as any)
         .select("*")
-        .eq("session_id", sessionData.id);
+        .eq("session_id", (sessionData as any).id);
 
       // Get products for this session
       const existingProductIds = quotesData?.map((q: any) => q.product_id) || [];
@@ -127,13 +127,13 @@ const SupplierQuotePage = () => {
 
     try {
       const { error } = await supabase
-        .from("supplier_quotes")
+        .from("supplier_quotes" as any)
         .upsert({
           session_id: session.id,
           product_id: productId,
           quoted_price: quote.quoted_price,
           notes: quote.notes || null,
-        });
+        } as any);
 
       if (error) throw error;
 

@@ -117,7 +117,7 @@ export const SupplierQuoteModal = ({
 
       // Create session
       const { data: sessionData, error: sessionError } = await supabase
-        .from("supplier_quote_sessions")
+        .from("supplier_quote_sessions" as any)
         .insert({
           user_id: userId,
           token,
@@ -131,14 +131,14 @@ export const SupplierQuoteModal = ({
 
       // Create quote entries for selected products
       const quoteEntries = Array.from(selectedProducts).map((productId) => ({
-        session_id: sessionData.id,
+        session_id: (sessionData as any).id,
         product_id: productId,
         quoted_price: null,
       }));
 
       const { error: quotesError } = await supabase
-        .from("supplier_quotes")
-        .insert(quoteEntries);
+        .from("supplier_quotes" as any)
+        .insert(quoteEntries as any);
 
       if (quotesError) throw quotesError;
 
