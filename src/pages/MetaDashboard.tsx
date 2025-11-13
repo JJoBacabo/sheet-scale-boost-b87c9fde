@@ -288,41 +288,11 @@ const getInsightData = (campaign: FacebookCampaign) => {
     insights.actions?.find((a) => a.action_type === "outbound_click")?.value ||
     "0";
   const landingPageViews = insights.actions?.find((a) => a.action_type === "landing_page_view")?.value || "0";
-  
-  // Try multiple sources for revenue calculation
-  let revenue = 0;
-  
-  // 1. Try purchase value from action_values
-  const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value;
-  if (purchaseValue) {
-    revenue = parseFloat(purchaseValue);
-  }
-  
-  // 2. Try omni_purchase value (for e-commerce)
-  if (revenue === 0) {
-    const omniPurchase = insights.action_values?.find((a) => a.action_type === "omni_purchase")?.value;
-    if (omniPurchase) revenue = parseFloat(omniPurchase);
-  }
-  
-  // 3. Try conversion_values if available
-  if (revenue === 0 && insights.conversion_values?.length > 0) {
-    const conversionValue = insights.conversion_values.find((c: any) => 
-      c.action_type === "offsite_conversion.fb_pixel_purchase" || 
-      c.action_type === "purchase"
-    )?.value;
-    if (conversionValue) revenue = parseFloat(conversionValue);
-  }
-  
-  // 4. Try website_purchase value
-  if (revenue === 0) {
-    const websitePurchase = insights.action_values?.find((a) => 
-      a.action_type === "offsite_conversion.fb_pixel_purchase"
-    )?.value;
-    if (websitePurchase) revenue = parseFloat(websitePurchase);
-  }
+  const purchaseValue = insights.action_values?.find((a) => a.action_type === "purchase")?.value || "0";
 
   const spend = parseFloat(insights.spend || "0");
-  const roas = spend > 0 && revenue > 0 ? revenue / spend : 0;
+  const revenue = parseFloat(purchaseValue);
+  const roas = spend > 0 ? revenue / spend : 0;
 
   const allResults =
     insights.actions?.reduce((sum, action) => {
