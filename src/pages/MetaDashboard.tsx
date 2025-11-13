@@ -428,6 +428,41 @@ const MetaDashboard = () => {
   });
   const [showColumnSettings, setShowColumnSettings] = useState(false);
 
+  // Cache management
+  const CACHE_KEY = 'metaDashboard_campaigns_cache';
+  const CACHE_ACCOUNT_KEY = 'metaDashboard_selected_account';
+
+  const getCachedData = useCallback(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      const cachedAccount = localStorage.getItem(CACHE_ACCOUNT_KEY);
+      if (cached && cachedAccount) {
+        const parsed = JSON.parse(cached);
+        return { campaigns: parsed.campaigns, account: cachedAccount, timestamp: parsed.timestamp };
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error);
+    }
+    return null;
+  }, []);
+
+  const setCachedData = useCallback((campaigns: FacebookCampaign[], account: string) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        campaigns,
+        timestamp: Date.now()
+      }));
+      localStorage.setItem(CACHE_ACCOUNT_KEY, account);
+    } catch (error) {
+      console.error('Error saving cache:', error);
+    }
+  }, []);
+
+  const clearCache = useCallback(() => {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_ACCOUNT_KEY);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -461,13 +496,32 @@ const MetaDashboard = () => {
 
     if (data && !error) {
       setIsConnected(true);
-      fetchAdAccounts();
+      
+      // Try to load from cache first
+      const cached = getCachedData();
+      if (cached && cached.campaigns && cached.campaigns.length > 0) {
+        console.log('✅ Loading campaigns from cache (', cached.campaigns.length, 'campaigns)');
+        setCampaigns(cached.campaigns);
+        setSelectedAdAccount(cached.account);
+        setLoading(false);
+        
+        // Still fetch ad accounts list in background (without fetching campaigns)
+        fetchAdAccounts(false);
+        
+        toast({
+          title: "Dados carregados do cache",
+          description: `${cached.campaigns.length} campanhas. Clique em Atualizar para buscar dados novos.`,
+        });
+      } else {
+        console.log('⚠️ No cache found, fetching fresh data');
+        fetchAdAccounts(true);
+      }
     } else {
       setIsConnected(false);
     }
   };
 
-  const fetchAdAccounts = async () => {
+  const fetchAdAccounts = async (shouldFetchCampaigns: boolean = true) => {
     setLoading(true);
     try {
       // 1) Try cached ad accounts from integrations.metadata to avoid FB API calls
@@ -486,9 +540,18 @@ const MetaDashboard = () => {
         if (cachedAccounts && cachedAccounts.length > 0) {
           setAdAccounts(cachedAccounts);
           const firstAccount = primaryId || cachedAccounts[0].id;
-          setSelectedAdAccount(firstAccount);
-          await fetchCampaigns(firstAccount);
-          setLoading(false);
+          
+          // Only set if not already set (to preserve cached account selection)
+          if (!selectedAdAccount) {
+            setSelectedAdAccount(firstAccount);
+          }
+          
+          // Only fetch campaigns if explicitly requested
+          if (shouldFetchCampaigns) {
+            await fetchCampaigns(firstAccount);
+          } else {
+            setLoading(false);
+          }
           return; // Skip calling edge function
         }
       }
@@ -527,9 +590,18 @@ const MetaDashboard = () => {
       if (data?.adAccounts && data.adAccounts.length > 0) {
         setAdAccounts(data.adAccounts);
         const firstAccount = data.adAccounts[0].id;
-        setSelectedAdAccount(firstAccount);
-        // Fetch campaigns for the first account automatically
-        await fetchCampaigns(firstAccount);
+        
+        // Only set if not already set (to preserve cached account selection)
+        if (!selectedAdAccount) {
+          setSelectedAdAccount(firstAccount);
+        }
+        
+        // Only fetch campaigns if explicitly requested
+        if (shouldFetchCampaigns) {
+          await fetchCampaigns(firstAccount);
+        } else {
+          setLoading(false);
+        }
       } else {
         toast({
           title: t("metaDashboard.noAccountsFound"),
@@ -627,6 +699,12 @@ const MetaDashboard = () => {
       } else {
         setCampaigns(data?.campaigns || []);
         console.log(`Loaded ${data?.campaigns?.length || 0} campaigns`);
+        
+        // Cache the campaigns data
+        if (data?.campaigns && data.campaigns.length > 0 && accountToUse) {
+          setCachedData(data.campaigns, accountToUse);
+          console.log('✅ Campaigns cached successfully');
+        }
       }
     } catch (error: any) {
       console.error("Error fetching campaigns:", error);
@@ -639,6 +717,21 @@ const MetaDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle explicit refresh - clears cache and fetches fresh data
+  const handleRefresh = async () => {
+    if (!selectedAdAccount) {
+      toast({
+        title: "Nenhuma conta selecionada",
+        description: "Selecione uma conta de anúncios primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
+    console.log('🔄 Manual refresh triggered - clearing cache');
+    clearCache();
+    await fetchCampaigns(selectedAdAccount);
   };
 
   // Optimized filtering with useMemo
@@ -1568,7 +1661,7 @@ const MetaDashboard = () => {
 
                 <Button 
                   className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] hover:opacity-90 text-white font-semibold shadow-lg shadow-[#7BBCFE]/30 transition-all duration-300 hover:scale-105" 
-                  onClick={() => fetchCampaigns()}
+                  onClick={handleRefresh}
                   disabled={loading}
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
