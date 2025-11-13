@@ -43,8 +43,10 @@ export const SupplierQuoteModal = ({
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [supplierName, setSupplierName] = useState("");
   const [supplierEmail, setSupplierEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [generatedLink, setGeneratedLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -54,6 +56,7 @@ export const SupplierQuoteModal = ({
       setSelectedProducts(new Set());
       setSupplierName("");
       setSupplierEmail("");
+      setPassword("");
       setGeneratedLink("");
       setCopied(false);
     }
@@ -140,6 +143,7 @@ export const SupplierQuoteModal = ({
           token,
           supplier_name: supplierName.trim(),
           supplier_email: supplierEmail.trim() || null,
+          password: password.trim() || null,
         })
         .select()
         .single();
@@ -162,10 +166,46 @@ export const SupplierQuoteModal = ({
       const link = `${window.location.origin}/supplier-quote/${token}`;
       setGeneratedLink(link);
 
-      toast({
-        title: t("common.success"),
-        description: "Quotation session created successfully",
-      });
+      // Send email if email is provided
+      if (supplierEmail.trim()) {
+        try {
+          setSendingEmail(true);
+          const { error: emailError } = await supabase.functions.invoke(
+            "send-supplier-quote-email",
+            {
+              body: {
+                supplierEmail: supplierEmail.trim(),
+                supplierName: supplierName.trim(),
+                quoteLink: link,
+                hasPassword: !!password.trim(),
+              },
+            }
+          );
+
+          if (emailError) {
+            console.error("Email error:", emailError);
+            toast({
+              title: "Warning",
+              description: "Session created but email failed to send",
+              variant: "default",
+            });
+          } else {
+            toast({
+              title: t("common.success"),
+              description: "Quotation session created and email sent!",
+            });
+          }
+        } catch (emailErr) {
+          console.error("Email sending error:", emailErr);
+        } finally {
+          setSendingEmail(false);
+        }
+      } else {
+        toast({
+          title: t("common.success"),
+          description: "Quotation session created successfully",
+        });
+      }
 
       onSuccess();
     } catch (error: any) {
@@ -222,6 +262,23 @@ export const SupplierQuoteModal = ({
                   value={supplierEmail}
                   onChange={(e) => setSupplierEmail(e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  If provided, an email will be sent with the quote link
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password Protection (Optional)</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Leave empty for no password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  If set, supplier will need this password to access the quote
+                </p>
               </div>
             </div>
 
@@ -286,16 +343,16 @@ export const SupplierQuoteModal = ({
 
             <Button
               onClick={handleCreateSession}
-              disabled={loading}
+              disabled={loading || sendingEmail}
               className="w-full"
             >
-              {loading ? (
+              {(loading || sendingEmail) ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  {t("common.loading")}
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {sendingEmail ? "Sending email..." : t("supplierQuotes.createSession")}
                 </>
               ) : (
-                t("supplierQuotes.generateLink")
+                t("supplierQuotes.createSession")
               )}
             </Button>
           </div>

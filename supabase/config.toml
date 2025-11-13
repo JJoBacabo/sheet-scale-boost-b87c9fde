@@ -74,3 +74,6 @@ verify_jwt = true
 
 [functions.facebook-ads-research]
 verify_jwt = true
+
+[functions.send-supplier-quote-email]
+verify_jwt = true
