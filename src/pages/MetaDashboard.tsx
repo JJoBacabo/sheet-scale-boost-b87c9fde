@@ -192,7 +192,7 @@ const CampaignCard = memo(({
           </div>
 
           {/* Key Metrics - Redesigned */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             <div className="p-4 rounded-xl bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10 border border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40 transition-all">
               <p className="text-xs text-[#7BBCFE]/70 mb-2 font-medium">{t('metaDashboard.spent')}</p>
               <p className="text-xl font-bold text-white">€{insights.spend.toFixed(2)}</p>
@@ -209,6 +209,18 @@ const CampaignCard = memo(({
               <p className="text-xs text-[#B8A8FE]/70 mb-2 font-medium">ROAS</p>
               <p className="text-xl font-bold text-white">
                 {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
+              </p>
+            </div>
+            <div className="p-4 rounded-xl bg-gradient-to-br from-success/10 to-[#7BBCFE]/10 border border-success/20 hover:border-success/40 transition-all">
+              <p className="text-xs text-success/70 mb-2 font-medium">{t('metaDashboard.activeDays')}</p>
+              <p className="text-xl font-bold text-white">
+                {(() => {
+                  const createdDate = new Date(campaign.created_time);
+                  const now = new Date();
+                  const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays;
+                })()}
               </p>
             </div>
             <div className="p-3 flex flex-col items-center justify-center gap-2">
