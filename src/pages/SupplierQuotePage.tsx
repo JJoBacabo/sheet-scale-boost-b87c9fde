@@ -155,14 +155,18 @@ const SupplierQuotePage = () => {
     }
   };
 
-  const handleSaveQuote = async (productId: string) => {
+  const handleSaveAllQuotes = async () => {
     if (!session) return;
 
-    const quote = quotes[productId];
-    if (!quote?.quoted_price || quote.quoted_price <= 0) {
+    // Validate all quotes
+    const quotesToSave = Object.entries(quotes).filter(([_, quote]) => 
+      quote.quoted_price && quote.quoted_price > 0
+    );
+
+    if (quotesToSave.length === 0) {
       toast({
-        title: "Invalid Price",
-        description: "Please enter a valid price.",
+        title: "No Quotes",
+        description: "Please enter at least one valid price.",
         variant: "destructive",
       });
       return;
@@ -171,40 +175,51 @@ const SupplierQuotePage = () => {
     setSaving(true);
 
     try {
-      const { error } = await supabase
-        .from("supplier_quotes" as any)
-        .upsert(
-          {
-            session_id: session.id,
-            product_id: productId,
-            quoted_price: quote.quoted_price,
-          },
-          {
-            onConflict: 'session_id,product_id'
-          }
-        );
+      // Save all quotes at once
+      const upsertPromises = quotesToSave.map(([productId, quote]) =>
+        supabase
+          .from("supplier_quotes" as any)
+          .upsert(
+            {
+              session_id: session.id,
+              product_id: productId,
+              quoted_price: quote.quoted_price,
+            },
+            {
+              onConflict: 'session_id,product_id'
+            }
+          )
+      );
 
-      if (error) throw error;
+      const results = await Promise.all(upsertPromises);
+      
+      // Check for errors
+      const errors = results.filter(r => r.error);
+      if (errors.length > 0) {
+        throw new Error("Failed to save some quotes");
+      }
 
-      setSavedStatus({ ...savedStatus, [productId]: true });
+      // Mark all as saved
+      const newSavedStatus: Record<string, boolean> = {};
+      quotesToSave.forEach(([productId]) => {
+        newSavedStatus[productId] = true;
+      });
+      setSavedStatus(newSavedStatus);
+
       toast({
-        title: "Saved",
-        description: "Your quote has been saved successfully.",
+        title: "Success",
+        description: `${quotesToSave.length} quote(s) saved successfully.`,
       });
 
-      // Remove saved status after 2 seconds
+      // Remove saved status after 3 seconds
       setTimeout(() => {
-        setSavedStatus((prev) => {
-          const newStatus = { ...prev };
-          delete newStatus[productId];
-          return newStatus;
-        });
-      }, 2000);
+        setSavedStatus({});
+      }, 3000);
     } catch (error: any) {
-      console.error("Error saving quote:", error);
+      console.error("Error saving quotes:", error);
       toast({
         title: "Error",
-        description: "Failed to save quote. Please try again.",
+        description: "Failed to save quotes. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -317,68 +332,83 @@ const SupplierQuotePage = () => {
             <p className="text-muted-foreground">No products to quote yet.</p>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {products.map((product) => {
-              const quote = quotes[product.id] || { product_id: product.id, quoted_price: null };
-              const isSaved = savedStatus[product.id];
+          <>
+            <div className="space-y-4">
+              {products.map((product) => {
+                const quote = quotes[product.id] || { product_id: product.id, quoted_price: null };
+                const isSaved = savedStatus[product.id];
 
-              return (
-                <Card key={product.id} className="p-6">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {product.image_url && (
-                      <div className="w-full md:w-32 h-32 flex-shrink-0">
-                        <img
-                          src={product.image_url}
-                          alt={product.product_name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                return (
+                  <Card key={product.id} className="p-6 relative">
+                    {isSaved && (
+                      <div className="absolute top-4 right-4">
+                        <Check className="h-5 w-5 text-green-600" />
                       </div>
                     )}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {product.product_name}
-                        </h3>
-                        {product.sku && (
-                          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
-                        )}
-                      </div>
+                    <div className="flex flex-col md:flex-row gap-6">
+                      {product.image_url && (
+                        <div className="w-full md:w-32 h-32 flex-shrink-0">
+                          <img
+                            src={product.image_url}
+                            alt={product.product_name}
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {product.product_name}
+                          </h3>
+                          {product.sku && (
+                            <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                          )}
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor={`price-${product.id}`}>
-                          Your Quote Price (€) *
-                        </Label>
-                        <Input
-                          id={`price-${product.id}`}
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          placeholder="0.00"
-                          value={quote.quoted_price || ""}
-                          onChange={(e) =>
-                            updateQuote(product.id, "quoted_price", parseFloat(e.target.value) || null)
-                          }
-                        />
+                        <div className="space-y-2">
+                          <Label htmlFor={`price-${product.id}`}>
+                            Your Quote Price (€) *
+                          </Label>
+                          <Input
+                            id={`price-${product.id}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            value={quote.quoted_price || ""}
+                            onChange={(e) =>
+                              updateQuote(product.id, "quoted_price", parseFloat(e.target.value) || null)
+                            }
+                          />
+                        </div>
                       </div>
-
-                      <Button
-                        onClick={() => handleSaveQuote(product.id)}
-                        disabled={saving || !quote.quoted_price}
-                        className="w-full md:w-auto"
-                      >
-                        {saving ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : isSaved ? (
-                          <Check className="h-4 w-4 mr-2" />
-                        ) : null}
-                        {isSaved ? "Saved" : "Save Quote"}
-                      </Button>
                     </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
+                  </Card>
+                );
+              })}
+            </div>
+            
+            <div className="mt-8 flex justify-center">
+              <Button
+                size="lg"
+                onClick={handleSaveAllQuotes}
+                disabled={saving}
+                className="min-w-[200px]"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-5 w-5 mr-2" />
+                    Save All Quotes
+                  </>
+                )}
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>
