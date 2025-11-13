@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
-import { createHmac } from 'https://deno.land/std@0.177.0/node/crypto.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,11 +26,18 @@ interface ShopifyOrderWebhook {
   };
 }
 
-// Verify Shopify webhook signature
-function verifyWebhook(body: string, hmacHeader: string, secret: string): boolean {
-  const hash = createHmac('sha256', secret)
-    .update(body, 'utf8')
-    .digest('base64');
+// Verify Shopify webhook signature using Web Crypto API
+async function verifyWebhook(body: string, hmacHeader: string, secret: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(body));
+  const hash = btoa(String.fromCharCode(...new Uint8Array(signature)));
   return hash === hmacHeader;
 }
 
@@ -59,7 +65,7 @@ Deno.serve(async (req) => {
     
     // TODO: In production, verify webhook signature with app secret
     // For now, we'll skip verification in development
-    // const isValid = verifyWebhook(bodyText, hmac, Deno.env.get('SHOPIFY_WEBHOOK_SECRET') || '');
+    // const isValid = await verifyWebhook(bodyText, hmac, Deno.env.get('SHOPIFY_WEBHOOK_SECRET') || '');
     // if (!isValid) {
     //   console.error('❌ Invalid webhook signature');
     //   return new Response('Invalid signature', { status: 401, headers: corsHeaders });
