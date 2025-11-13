@@ -947,18 +947,22 @@ const Landing = () => {
             {
               key: "basic",
               popular: false,
+              isContactPlan: false,
             },
             {
               key: "standard",
               popular: true,
+              isContactPlan: false,
             },
             {
               key: "expert",
               popular: false,
+              isContactPlan: false,
             },
             {
               key: "business",
               popular: false,
+              isContactPlan: true,
             },
           ].map((plan, index) => (
             <motion.div
@@ -1007,7 +1011,7 @@ const Landing = () => {
                   {t(`landing.pricing.${plan.key}.name`)}
                 </h3>
 
-                {plan.key === "business" ? (
+                {plan.isContactPlan ? (
                   <>
                     <div className="mb-4">
                       <span className="text-3xl font-bold">{t(`landing.pricing.${plan.key}.price`)}</span>
@@ -1060,7 +1064,7 @@ const Landing = () => {
                   )}
                 </ul>
 
-                {plan.key === "business" ? (
+                {plan.isContactPlan ? (
                   <Button3D
                     variant="glass"
                     size="md"
