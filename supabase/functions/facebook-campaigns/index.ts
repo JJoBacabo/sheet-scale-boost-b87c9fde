@@ -280,6 +280,18 @@ serve(async (req) => {
       }
 
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
+      
+      // Debug: Log insights data for first campaign to see what Facebook is returning
+      if (allCampaigns.length > 0 && allCampaigns[0].insights?.data?.[0]) {
+        const sampleInsight = allCampaigns[0].insights.data[0];
+        console.log('Sample campaign insights:', {
+          campaign_name: allCampaigns[0].name,
+          spend: sampleInsight.spend,
+          actions: sampleInsight.actions?.map((a: any) => `${a.action_type}: ${a.value}`),
+          action_values: sampleInsight.action_values?.map((a: any) => `${a.action_type}: ${a.value}`),
+          conversion_values: sampleInsight.conversion_values,
+        });
+      }
 
       // Fetch images for campaigns in batches to avoid rate limiting
       // Process in batches of 5 to reduce rate limits
