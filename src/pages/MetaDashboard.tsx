@@ -187,7 +187,7 @@ const CampaignCard = memo(({
           <div className="flex items-start justify-between gap-4 pr-10">
             <div className="flex-1">
               <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
-              <p className="text-xs text-muted-foreground">{campaign.objective}</p>
+              <p className="text-xs text-muted-foreground">{formatObjective(campaign.objective)}</p>
             </div>
           </div>
 
@@ -274,6 +274,34 @@ const CampaignCard = memo(({
   );
 });
 CampaignCard.displayName = 'CampaignCard';
+
+// Helper function to format campaign objective names
+const formatObjective = (objective: string) => {
+  const objectiveMap: Record<string, string> = {
+    'OUTCOME_SALES': 'Vendas',
+    'OUTCOME_LEADS': 'Leads',
+    'OUTCOME_ENGAGEMENT': 'Engajamento',
+    'OUTCOME_TRAFFIC': 'Tráfego',
+    'OUTCOME_AWARENESS': 'Reconhecimento',
+    'OUTCOME_APP_PROMOTION': 'Promoção de App',
+    'LINK_CLICKS': 'Cliques no Link',
+    'POST_ENGAGEMENT': 'Engajamento na Publicação',
+    'PAGE_LIKES': 'Curtidas na Página',
+    'CONVERSIONS': 'Conversões',
+    'VIDEO_VIEWS': 'Visualizações de Vídeo',
+    'REACH': 'Alcance',
+    'BRAND_AWARENESS': 'Reconhecimento da Marca',
+    'APP_INSTALLS': 'Instalações do App',
+    'LEAD_GENERATION': 'Geração de Leads',
+    'MESSAGES': 'Mensagens',
+    'STORE_VISITS': 'Visitas à Loja',
+  };
+  
+  return objectiveMap[objective] || objective.replace(/_/g, ' ').toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 // Helper function for insight data (moved outside component)
 const getInsightData = (campaign: FacebookCampaign) => {
@@ -1115,7 +1143,7 @@ const MetaDashboard = () => {
         <div>
           <div className="font-semibold">{campaign.name}</div>
           <div className="text-xs text-muted-foreground">
-            ID: {campaign.id} • {campaign.objective}
+            ID: {campaign.id} • {formatObjective(campaign.objective)}
           </div>
         </div>
       ),
@@ -1758,7 +1786,7 @@ const MetaDashboard = () => {
                       {selectedCampaign.status}
                     </Badge>
                     <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">{selectedCampaign.objective}</span>
+                    <span className="text-muted-foreground">{formatObjective(selectedCampaign.objective)}</span>
                   </div>
                 </div>
 
