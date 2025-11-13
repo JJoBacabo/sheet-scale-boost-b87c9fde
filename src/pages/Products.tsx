@@ -285,6 +285,38 @@ const Products = () => {
     }
   };
 
+  // Sync existing supplier quotes to product cost_price on page load
+  useEffect(() => {
+    if (!user) return;
+
+    const syncQuotesToProducts = async () => {
+      try {
+        // Get all supplier quotes
+        const { data: quotes } = await supabase
+          .from('supplier_quotes')
+          .select('product_id, quoted_price')
+          .not('quoted_price', 'is', null);
+
+        if (!quotes || quotes.length === 0) return;
+
+        // Update each product with its quote value
+        for (const quote of quotes) {
+          await supabase
+            .from('products')
+            .update({ cost_price: quote.quoted_price })
+            .eq('id', quote.product_id);
+        }
+
+        // Refresh products to show updated values
+        fetchProducts(user.id, true);
+      } catch (error) {
+        console.error('Error syncing quotes:', error);
+      }
+    };
+
+    syncQuotesToProducts();
+  }, [user]);
+
   const fetchProducts = async (userId: string, forceRefresh = false) => {
     // Don't clear products when just changing store filter - this causes flickering
     // Only clear if explicitly forcing a full refresh (like after sync)
