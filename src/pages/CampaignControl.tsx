@@ -1864,15 +1864,25 @@ const CampaignControl = () => {
                             ? { ber: storedBER, cleanName: data.campaign_name }
                             : extractBER(data.campaign_name);
                           
+                          // Calculate days active for this campaign
+                          const campaignDates = dailyData
+                            .filter(d => d.campaign_id === data.campaign_id || d.campaign_name === data.campaign_name)
+                            .map(d => new Date(d.date))
+                            .sort((a, b) => a.getTime() - b.getTime());
+                          
+                          const daysActive = campaignDates.length > 0
+                            ? Math.ceil((new Date().getTime() - campaignDates[0].getTime()) / (1000 * 60 * 60 * 24))
+                            : 0;
+                          
                           return (
                             <TableRow key={data.id}>
                               <TableCell className="font-medium text-xs md:text-sm">
-                                {cleanName}
-                                {(data as any).aggregated && (data as any).total_days && (
-                                  <span className="ml-2 text-xs text-muted-foreground">
-                                    ({t('dailyRoas.total')}: {(data as any).total_days} {isPortuguese ? 'dias' : 'days'})
+                                <div className="flex flex-col">
+                                  <span>{cleanName}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {daysActive} {isPortuguese ? 'dias ativos' : 'active days'}
                                   </span>
-                                )}
+                                </div>
                               </TableCell>
                               <TableCell className="font-semibold text-xs md:text-sm">
                                 {ber !== null && ber !== undefined ? (
