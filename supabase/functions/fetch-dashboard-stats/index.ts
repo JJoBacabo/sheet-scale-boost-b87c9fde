@@ -7,6 +7,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Exchange rates to convert to EUR (base currency)
+const currencyRates: Record<string, number> = {
+  'EUR': 1,
+  'USD': 0.92,
+  'GBP': 1.17,
+  'CHF': 1.05,
+  'BGN': 0.51, // 1 BGN = 0.51 EUR
+  'RON': 0.20,
+  'PLN': 0.23,
+  'CZK': 0.04,
+  'HUF': 0.0025,
+  'SEK': 0.088,
+  'DKK': 0.134,
+  'NOK': 0.086,
+};
+
+// Helper function to convert any currency to EUR
+const convertToEUR = (amount: number, currency: string): number => {
+  const rate = currencyRates[currency.toUpperCase()] || 1;
+  return amount * rate;
+};
+
 interface DashboardStats {
   totalRevenue: number;
   totalAdSpend: number;
@@ -97,6 +119,23 @@ serve(async (req) => {
 
       console.log('🏪 Fetching orders from Shopify:', shopifyDomain);
 
+      // Fetch shop info to get currency
+      const shopUrl = `https://${shopifyDomain}/admin/api/2024-01/shop.json`;
+      const shopResponse = await fetch(shopUrl, {
+        headers: {
+          'X-Shopify-Access-Token': shopifyToken,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!shopResponse.ok) {
+        throw new Error(`Shopify API error: ${shopResponse.statusText}`);
+      }
+
+      const shopData = await shopResponse.json();
+      const shopCurrency = shopData.shop?.currency || 'EUR';
+      console.log('💱 Shop currency:', shopCurrency);
+
       // Fetch orders
       const ordersUrl = `https://${shopifyDomain}/admin/api/2024-01/orders.json?status=any&created_at_min=${dateFrom}T00:00:00Z&created_at_max=${dateTo}T23:59:59Z&limit=250&financial_status=paid`;
       const ordersResponse = await fetch(ordersUrl, {
@@ -149,8 +188,10 @@ serve(async (req) => {
 
         const dayData = dailyMap.get(orderDate);
         
-        // Add revenue (total_price_usd or total_price)
-        const revenue = parseFloat(order.total_price_usd || order.total_price || 0);
+        // Add revenue - convert to EUR if needed
+        const revenueInShopCurrency = parseFloat(order.total_price || 0);
+        const revenue = convertToEUR(revenueInShopCurrency, shopCurrency);
+        console.log(`💰 Order revenue: ${revenueInShopCurrency} ${shopCurrency} = ${revenue.toFixed(2)} EUR`);
         dayData.revenue += revenue;
         dayData.conversions += 1;
 
