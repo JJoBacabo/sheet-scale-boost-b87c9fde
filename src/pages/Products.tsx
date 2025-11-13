@@ -15,7 +15,8 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
-import { GoogleSheetSync } from "@/components/GoogleSheetSync";
+import { SupplierQuoteModal } from "@/components/SupplierQuoteModal";
+import { SupplierQuoteList } from "@/components/SupplierQuoteList";
 import {
   Collapsible,
   CollapsibleContent,
@@ -64,6 +65,8 @@ const Products = () => {
   const [datePreset, setDatePreset] = useState("all");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedStore, setSelectedStore] = useState("all");
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
 
   const toggleProduct = (productId: string) => {
     setExpandedProducts(prev => {
@@ -1013,14 +1016,37 @@ const Products = () => {
           </div>
         </motion.section>
 
-        {/* Google Sheet Sync */}
+        {/* Supplier Quotation Section */}
         {user && (
           <motion.section
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
+            className="space-y-4"
           >
-            <GoogleSheetSync userId={user.id} />
+            <Card3D className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {t("supplierQuotes.title")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t("supplierQuotes.description")}
+                  </p>
+                </div>
+                <Button onClick={() => setQuoteModalOpen(true)}>
+                  {t("supplierQuotes.requestQuote")}
+                </Button>
+              </div>
+              <SupplierQuoteList userId={user.id} refreshTrigger={quoteRefreshTrigger} />
+            </Card3D>
+
+            <SupplierQuoteModal
+              open={quoteModalOpen}
+              onOpenChange={setQuoteModalOpen}
+              userId={user.id}
+              onSuccess={() => setQuoteRefreshTrigger((prev) => prev + 1)}
+            />
           </motion.section>
         )}
 
