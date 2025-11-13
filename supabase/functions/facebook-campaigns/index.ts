@@ -130,7 +130,32 @@ serve(async (req) => {
     }
 
     // Decrypt the access token
-    const accessToken = await decryptToken(integration.access_token);
+    let accessToken: string;
+    try {
+      accessToken = await decryptToken(integration.access_token);
+      console.log('✅ Token decrypted, length:', accessToken.length);
+      
+      // Validate token format (Facebook tokens start with EAA or similar)
+      if (!accessToken || accessToken.length < 100) {
+        console.error('❌ Invalid token format after decryption');
+        return new Response(
+          JSON.stringify({ 
+            error: 'Invalid Facebook token. Please reconnect your Facebook account.',
+            code: 'INVALID_TOKEN'
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    } catch (decryptError) {
+      console.error('❌ Token decryption failed:', decryptError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to decrypt Facebook token. Please reconnect your Facebook account.',
+          code: 'DECRYPTION_FAILED'
+        }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Resolve ad account: skip /me/adaccounts if client provided one
     let resolvedAdAccountId: string | null = null;
@@ -144,6 +169,17 @@ serve(async (req) => {
 
       if (meData.error) {
         console.error('Facebook API Error:', meData.error);
+        // If token is invalid, suggest reconnection
+        if (meData.error.code === 190) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'Facebook token expired or invalid. Please reconnect your Facebook account.',
+              code: 'TOKEN_EXPIRED',
+              details: meData.error
+            }),
+            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
         return fbErrorResponse(meData.error);
       }
 
@@ -170,6 +206,17 @@ serve(async (req) => {
 
         if (meData.error) {
           console.error('Facebook API Error:', meData.error);
+          // If token is invalid, suggest reconnection
+          if (meData.error.code === 190) {
+            return new Response(
+              JSON.stringify({ 
+                error: 'Facebook token expired or invalid. Please reconnect your Facebook account.',
+                code: 'TOKEN_EXPIRED',
+                details: meData.error
+              }),
+              { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
           return fbErrorResponse(meData.error);
         }
         resolvedAdAccountId = meData.data?.[0]?.id || null;
