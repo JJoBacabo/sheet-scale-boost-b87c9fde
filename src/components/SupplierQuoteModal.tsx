@@ -25,6 +25,7 @@ interface SupplierQuoteModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userId: string;
+  selectedStore: string;
   onSuccess: () => void;
 }
 
@@ -32,6 +33,7 @@ export const SupplierQuoteModal = ({
   open,
   onOpenChange,
   userId,
+  selectedStore,
   onSuccess,
 }: SupplierQuoteModalProps) => {
   const { toast } = useToast();
@@ -55,15 +57,21 @@ export const SupplierQuoteModal = ({
       setGeneratedLink("");
       setCopied(false);
     }
-  }, [open]);
+  }, [open, selectedStore]);
 
   const loadProducts = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("products")
-        .select("id, product_name, image_url")
-        .eq("user_id", userId)
-        .order("product_name");
+        .select("id, product_name, image_url, integration_id")
+        .eq("user_id", userId);
+
+      // Filter by selected store if not "all"
+      if (selectedStore !== "all") {
+        query = query.eq("integration_id", selectedStore);
+      }
+
+      const { data, error } = await query.order("product_name");
 
       if (error) throw error;
       setProducts(data || []);
@@ -85,6 +93,15 @@ export const SupplierQuoteModal = ({
       newSet.add(productId);
     }
     setSelectedProducts(newSet);
+  };
+
+  const selectAllProducts = () => {
+    const allProductIds = new Set(products.map(p => p.id));
+    setSelectedProducts(allProductIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedProducts(new Set());
   };
 
   const generateToken = () => {
@@ -209,30 +226,58 @@ export const SupplierQuoteModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label>{t("supplierQuotes.selectProducts")} *</Label>
+              <div className="flex items-center justify-between">
+                <Label>{t("supplierQuotes.selectProducts")} *</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={selectAllProducts}
+                    disabled={products.length === 0}
+                  >
+                    {t("supplierQuotes.selectAll")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSelection}
+                    disabled={selectedProducts.size === 0}
+                  >
+                    {t("supplierQuotes.clearSelection")}
+                  </Button>
+                </div>
+              </div>
               <div className="border rounded-lg p-4 max-h-64 overflow-y-auto space-y-2">
-                {products.map((product) => (
-                  <div key={product.id} className="flex items-center space-x-3">
-                    <Checkbox
-                      id={`product-${product.id}`}
-                      checked={selectedProducts.has(product.id)}
-                      onCheckedChange={() => toggleProduct(product.id)}
-                    />
-                    <label
-                      htmlFor={`product-${product.id}`}
-                      className="flex items-center gap-3 flex-1 cursor-pointer"
-                    >
-                      {product.image_url && (
-                        <img
-                          src={product.image_url}
-                          alt={product.product_name}
-                          className="w-10 h-10 object-cover rounded"
-                        />
-                      )}
-                      <span className="text-sm">{product.product_name}</span>
-                    </label>
-                  </div>
-                ))}
+                {products.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    {t("supplierQuotes.noProducts")}
+                  </p>
+                ) : (
+                  products.map((product) => (
+                    <div key={product.id} className="flex items-center space-x-3">
+                      <Checkbox
+                        id={`product-${product.id}`}
+                        checked={selectedProducts.has(product.id)}
+                        onCheckedChange={() => toggleProduct(product.id)}
+                      />
+                      <label
+                        htmlFor={`product-${product.id}`}
+                        className="flex items-center gap-3 flex-1 cursor-pointer"
+                      >
+                        {product.image_url && (
+                          <img
+                            src={product.image_url}
+                            alt={product.product_name}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                        )}
+                        <span className="text-sm">{product.product_name}</span>
+                      </label>
+                    </div>
+                  ))
+                )}
               </div>
               <p className="text-xs text-muted-foreground">
                 {selectedProducts.size} {selectedProducts.size === 1 ? "product" : "products"} selected
