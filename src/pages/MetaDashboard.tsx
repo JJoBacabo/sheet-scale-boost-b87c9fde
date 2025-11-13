@@ -559,11 +559,22 @@ const MetaDashboard = () => {
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingCampaigns"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Check if it's a rate limit error (429)
+        if (data?.code === 80004 || data?.error?.includes("too many calls")) {
+          const retryAfter = data?.retryAfter || 60;
+          setRateLimitedUntil(Date.now() + (retryAfter * 1000));
+          toast({
+            title: "Facebook Rate Limit",
+            description: `Muitas requisições ao Facebook. Aguarde ${retryAfter} segundos antes de atualizar novamente.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: t("metaDashboard.errorLoadingCampaigns"),
+            description: data.error,
+            variant: "destructive",
+          });
+        }
         setCampaigns([]);
       } else {
         setCampaigns(data?.campaigns || []);
@@ -608,6 +619,26 @@ const MetaDashboard = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datePreset, selectedAdAccount]);
+
+  // Auto-clear rate limit when time expires
+  useEffect(() => {
+    if (rateLimitedUntil && Date.now() >= rateLimitedUntil) {
+      setRateLimitedUntil(null);
+      return;
+    }
+    
+    if (rateLimitedUntil) {
+      const timeout = setTimeout(() => {
+        setRateLimitedUntil(null);
+        toast({
+          title: "Rate Limit Expirado",
+          description: "Você pode atualizar as campanhas novamente.",
+        });
+      }, rateLimitedUntil - Date.now());
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [rateLimitedUntil, toast]);
 
   const handlePauseCampaign = async (campaignId: string) => {
     if (!campaignId) {
@@ -1326,6 +1357,21 @@ const MetaDashboard = () => {
       }
     >
       <div className="space-y-6">
+        {/* Rate Limit Warning Banner */}
+        {rateLimitedUntil && Date.now() < rateLimitedUntil && (
+          <Card className="p-4 bg-warning/10 border-warning/40">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-warning">Facebook Rate Limit Ativo</h3>
+                <p className="text-sm text-muted-foreground">
+                  Muitas requisições foram feitas ao Facebook. Aguarde {Math.ceil((rateLimitedUntil - Date.now()) / 1000)} segundos antes de atualizar novamente.
+                </p>
+              </div>
+              <Clock className="w-5 h-5 text-warning animate-pulse" />
+            </div>
+          </Card>
+        )}
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="p-4 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10">
