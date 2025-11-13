@@ -82,6 +82,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
   const { formatAmount } = useCurrency();
+  const [storeCurrency, setStoreCurrency] = useState<string>('EUR');
   
   // Filters
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);

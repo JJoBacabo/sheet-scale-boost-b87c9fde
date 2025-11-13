@@ -12,6 +12,7 @@ interface DashboardData {
   totalClicks: number;
   profit: number;
   profitMargin: number;
+  storeCurrency?: string;
   dailyData: Array<{
     date: string;
     revenue: number;
@@ -74,6 +75,10 @@ export function useDashboardData({
 
         console.log('✅ Dashboard data received:', result);
         setData(result);
+        if (result.storeCurrency) {
+          // Store currency is available for conversion
+          console.log('💱 Store currency:', result.storeCurrency);
+        }
       } catch (error: any) {
         console.error('❌ Error fetching dashboard data:', error);
         toast({
