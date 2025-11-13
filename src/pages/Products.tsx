@@ -52,6 +52,7 @@ const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { formatAmount, convertBetween } = useCurrency();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -70,6 +71,8 @@ const Products = () => {
   const [selectedStore, setSelectedStore] = useState("all");
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
+  const [storeCurrency, setStoreCurrency] = useState<string>('EUR');
+  const [integrations, setIntegrations] = useState<any[]>([]);
 
   const toggleProduct = (productId: string) => {
     setExpandedProducts(prev => {
