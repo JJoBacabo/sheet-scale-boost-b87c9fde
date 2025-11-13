@@ -173,11 +173,16 @@ const SupplierQuotePage = () => {
     try {
       const { error } = await supabase
         .from("supplier_quotes" as any)
-        .upsert({
-          session_id: session.id,
-          product_id: productId,
-          quoted_price: quote.quoted_price,
-        } as any);
+        .upsert(
+          {
+            session_id: session.id,
+            product_id: productId,
+            quoted_price: quote.quoted_price,
+          },
+          {
+            onConflict: 'session_id,product_id'
+          }
+        );
 
       if (error) throw error;
 
