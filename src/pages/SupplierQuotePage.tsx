@@ -59,7 +59,7 @@ const SupplierQuotePage = () => {
         .select("*")
         .eq("token", token)
         .eq("is_active", true)
-        .single();
+        .maybeSingle();
 
       if (sessionError || !sessionData) {
         toast({
