@@ -514,21 +514,10 @@ const Products = () => {
     return revenue - cost;
   };
   
-  // Convert value from store currency to selected currency
-  const convertValue = (value: number) => {
-    if (!storeCurrency || storeCurrency === selectedCurrency.code) {
-      console.log(`💱 No conversion needed: ${value} ${storeCurrency || selectedCurrency.code}`);
-      return value;
-    }
-    const converted = convertBetween(value, storeCurrency, selectedCurrency.code);
-    console.log(`💱 Converting ${value} ${storeCurrency} → ${converted} ${selectedCurrency.code}`);
-    return converted;
-  };
-
   const totalStats = {
     totalProducts: filteredProducts.length,
-    totalRevenue: convertValue(filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0)),
-    totalProfit: convertValue(filteredProducts.reduce((sum, p) => sum + calculateProfit(p), 0)),
+    totalRevenue: filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0),
+    totalProfit: filteredProducts.reduce((sum, p) => sum + calculateProfit(p), 0),
     avgMargin: filteredProducts.length > 0
       ? filteredProducts.reduce((sum, p) => sum + (p.profit_margin || 0), 0) / filteredProducts.length
       : 0,
@@ -981,14 +970,14 @@ const Products = () => {
     },
     {
       label: t('products.totalRevenue') || "Total Revenue",
-      value: formatAmount(totalStats.totalRevenue, selectedCurrency.code),
+      value: formatAmount(totalStats.totalRevenue, storeCurrency),
       change: 12.5,
       icon: DollarSign,
       color: "text-emerald-500"
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: formatAmount(totalStats.totalProfit, selectedCurrency.code),
+      value: formatAmount(totalStats.totalProfit, storeCurrency),
       change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
       icon: TrendingUp,
       color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
@@ -1364,7 +1353,7 @@ const Products = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-base font-semibold text-foreground">
                                   {product.cost_price !== null && product.cost_price !== 0 
-                                    ? formatAmount(convertValue(product.cost_price), selectedCurrency.code)
+                                    ? formatAmount(product.cost_price, storeCurrency)
                                     : <span className="text-muted-foreground italic">Não definido</span>
                                   }
                                 </span>
@@ -1384,13 +1373,13 @@ const Products = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.totalRevenue')}</span>
                             <span className="text-lg font-bold text-green-600">
-                              {formatAmount(convertValue(product.total_revenue || 0), selectedCurrency.code)}
+                              {formatAmount(product.total_revenue || 0, storeCurrency)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
                             <span className="font-semibold">
-                              {formatAmount(convertValue(product.selling_price || 0), selectedCurrency.code)}
+                              {formatAmount(product.selling_price || 0, storeCurrency)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
@@ -1408,7 +1397,7 @@ const Products = () => {
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
                             <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {formatAmount(convertValue(calculateProfit(product)), selectedCurrency.code)}
+                              {formatAmount(calculateProfit(product), storeCurrency)}
                             </span>
                           </div>
                         </div>
