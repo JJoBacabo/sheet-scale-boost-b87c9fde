@@ -7,25 +7,55 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Exchange rates to convert to EUR (base currency)
-const currencyRates: Record<string, number> = {
-  'EUR': 1,
-  'USD': 0.92,
-  'GBP': 1.17,
-  'CHF': 1.05,
-  'BGN': 0.51, // 1 BGN = 0.51 EUR
-  'RON': 0.20,
-  'PLN': 0.23,
-  'CZK': 0.04,
-  'HUF': 0.0025,
-  'SEK': 0.088,
-  'DKK': 0.134,
-  'NOK': 0.086,
+// Fetch live exchange rates from API
+const fetchExchangeRates = async (): Promise<Record<string, number>> => {
+  try {
+    const response = await fetch('https://open.er-api.com/v6/latest/EUR');
+    if (!response.ok) {
+      console.warn('Failed to fetch exchange rates, using fallback');
+      return getFallbackRates();
+    }
+    const data = await response.json();
+    
+    if (data.result === 'success' && data.rates) {
+      // Convert to EUR base (API gives rates from EUR, so we need to invert)
+      const rates: Record<string, number> = { 'EUR': 1 };
+      for (const [currency, rate] of Object.entries(data.rates)) {
+        rates[currency] = 1 / (rate as number);
+      }
+      
+      console.log('✅ Fetched live exchange rates');
+      return rates;
+    }
+    
+    throw new Error('Invalid currency API response');
+  } catch (error) {
+    console.error('Error fetching exchange rates:', error);
+    return getFallbackRates();
+  }
+};
+
+// Fallback rates in case API is unavailable
+const getFallbackRates = (): Record<string, number> => {
+  return {
+    'EUR': 1,
+    'USD': 0.92,
+    'GBP': 1.17,
+    'CHF': 1.05,
+    'BGN': 0.51,
+    'RON': 0.20,
+    'PLN': 0.23,
+    'CZK': 0.04,
+    'HUF': 0.0025,
+    'SEK': 0.088,
+    'DKK': 0.134,
+    'NOK': 0.086,
+  };
 };
 
 // Helper function to convert any currency to EUR
-const convertToEUR = (amount: number, currency: string): number => {
-  const rate = currencyRates[currency.toUpperCase()] || 1;
+const convertToEUR = (amount: number, currency: string, rates: Record<string, number>): number => {
+  const rate = rates[currency.toUpperCase()] || 1;
   return amount * rate;
 };
 
@@ -76,6 +106,9 @@ serve(async (req) => {
     const { shopifyIntegrationId, adAccountId, dateFrom, dateTo } = await req.json();
 
     console.log('📊 Fetching dashboard stats:', { shopifyIntegrationId, adAccountId, dateFrom, dateTo });
+
+    // Fetch live exchange rates
+    const exchangeRates = await fetchExchangeRates();
 
     // Initialize result
     const stats: DashboardStats = {
@@ -190,7 +223,7 @@ serve(async (req) => {
         
         // Add revenue - convert to EUR if needed
         const revenueInShopCurrency = parseFloat(order.total_price || 0);
-        const revenue = convertToEUR(revenueInShopCurrency, shopCurrency);
+        const revenue = convertToEUR(revenueInShopCurrency, shopCurrency, exchangeRates);
         console.log(`💰 Order revenue: ${revenueInShopCurrency} ${shopCurrency} = ${revenue.toFixed(2)} EUR`);
         dayData.revenue += revenue;
         dayData.conversions += 1;
