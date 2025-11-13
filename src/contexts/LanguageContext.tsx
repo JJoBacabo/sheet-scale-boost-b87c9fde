@@ -1547,8 +1547,10 @@ const translations = {
         },
         featureComparison: {
           title: 'Feature Comparison',
+          note: 'Some features vary by plan. Choose the one that best suits your business.',
           feature: 'Feature',
-          roasSheet: 'Daily ROAS Profit Sheet',
+          dailyRoas: 'Daily ROAS',
+          profitSheet: 'Profit Sheet',
           quotation: 'Quotation',
           campaigns: 'Campaigns',
           productResearch: 'Product Research',
