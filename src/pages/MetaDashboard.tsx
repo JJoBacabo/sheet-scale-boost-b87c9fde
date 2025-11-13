@@ -213,59 +213,66 @@ const CampaignCard = memo(({
             </div>
           </div>
 
-          {/* Status and Actions */}
-          <div className="flex items-center justify-center gap-3">
-            <Badge
-              className={
-                campaign.status === "ACTIVE"
-                  ? "bg-success/20 text-success border-success/30"
-                  : campaign.status === "PAUSED"
-                    ? "bg-warning/20 text-warning border-warning/30"
-                    : "bg-muted/50 text-muted-foreground border-muted"
-              }
-            >
-              {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
-            </Badge>
-            {campaign.status === "ACTIVE" ? (
-              <Button
-                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold"
-                onClick={onPause}
-              >
-                <Pause className="w-4 h-4 mr-1.5" />
-                <span className="text-sm">{t("metaDashboard.pause")}</span>
-              </Button>
-            ) : (
-              <Button
-                className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold"
-                onClick={onActivate}
-              >
-                <Play className="w-4 h-4 mr-1.5" />
-                <span className="text-sm">{t("metaDashboard.activate")}</span>
-              </Button>
-            )}
-          </div>
+          {/* Budget Info and Status */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Budget and Days */}
+            <div className="text-xs text-muted-foreground">
+              <span>{t("metaDashboard.budget")}: </span>
+              <span className="font-medium">
+                {campaign.daily_budget
+                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
+                  : campaign.lifetime_budget
+                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
+                    : "—"}
+              </span>
+              <span className="mx-2">•</span>
+              <span>{t("metaDashboard.activeDays")}: </span>
+              <span className="font-medium">
+                {(() => {
+                  const createdDate = new Date(campaign.created_time);
+                  const now = new Date();
+                  const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays;
+                })()}
+              </span>
+            </div>
 
-          {/* Budget Info */}
-          <div className="text-xs text-muted-foreground">
-            <span>{t("metaDashboard.budget")}: </span>
-            <span className="font-medium">
-              {campaign.daily_budget
-                ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
-                : campaign.lifetime_budget
-                  ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
-                  : "—"}
-            </span>
-            <span className="mx-2">•</span>
-            <span>{t("metaDashboard.activeDays")}: </span>
-            <span className="font-medium">
-              {(() => {
-                const createdDate = new Date(campaign.created_time);
-                const now = new Date();
-                const diffTime = Math.abs(now.getTime() - createdDate.getTime());
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays;
-              })()}
-            </span>
+            {/* Status Badge and Actions */}
+            <div className="flex items-center gap-3">
+              <Badge
+                className={
+                  campaign.status === "ACTIVE"
+                    ? "bg-success/20 text-success border-success/30"
+                    : campaign.status === "PAUSED"
+                      ? "bg-warning/20 text-warning border-warning/30"
+                      : "bg-muted text-muted-foreground border-muted-foreground/30"
+                }
+              >
+                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status}
+              </Badge>
+              {campaign.status === "ACTIVE" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-warning/30 bg-warning/10 hover:bg-warning/20 hover:border-warning text-warning"
+                  onClick={onPause}
+                >
+                  <Pause className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.pause")}</span>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-success/30 bg-success/10 hover:bg-success/20 hover:border-success text-success"
+                  onClick={onActivate}
+                >
+                  <Play className="w-4 h-4 mr-1.5" />
+                  <span className="text-sm">{t("metaDashboard.activate")}</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
