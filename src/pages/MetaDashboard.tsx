@@ -192,7 +192,7 @@ const CampaignCard = memo(({
           </div>
 
           {/* Key Metrics - Redesigned */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <div className="p-4 rounded-xl bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10 border border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40 transition-all">
               <p className="text-xs text-[#7BBCFE]/70 mb-2 font-medium">{t('metaDashboard.spent')}</p>
               <p className="text-xl font-bold text-white">€{insights.spend.toFixed(2)}</p>
@@ -223,36 +223,38 @@ const CampaignCard = memo(({
                 })()}
               </p>
             </div>
-            <div className="p-3 flex flex-col items-center justify-center gap-2">
-              <Badge
-                className={
-                  campaign.status === "ACTIVE"
-                    ? "bg-success/20 text-success border-success/30"
-                    : campaign.status === "PAUSED"
-                      ? "bg-warning/20 text-warning border-warning/30"
-                      : "bg-muted/50 text-muted-foreground border-muted"
-                }
+          </div>
+
+          {/* Status and Actions */}
+          <div className="flex items-center justify-center gap-3">
+            <Badge
+              className={
+                campaign.status === "ACTIVE"
+                  ? "bg-success/20 text-success border-success/30"
+                  : campaign.status === "PAUSED"
+                    ? "bg-warning/20 text-warning border-warning/30"
+                    : "bg-muted/50 text-muted-foreground border-muted"
+              }
+            >
+              {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
+            </Badge>
+            {campaign.status === "ACTIVE" ? (
+              <Button
+                className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold"
+                onClick={onPause}
               >
-                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
-              </Badge>
-              {campaign.status === "ACTIVE" ? (
-                <Button
-                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
-                  onClick={onPause}
-                >
-                  <Pause className="w-4 h-4 mr-1.5" />
-                  <span className="text-sm">{t("metaDashboard.pause")}</span>
-                </Button>
-              ) : (
-                <Button
-                  className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
-                  onClick={onActivate}
-                >
-                  <Play className="w-4 h-4 mr-1.5" />
-                  <span className="text-sm">{t("metaDashboard.activate")}</span>
-                </Button>
-              )}
-            </div>
+                <Pause className="w-4 h-4 mr-1.5" />
+                <span className="text-sm">{t("metaDashboard.pause")}</span>
+              </Button>
+            ) : (
+              <Button
+                className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold"
+                onClick={onActivate}
+              >
+                <Play className="w-4 h-4 mr-1.5" />
+                <span className="text-sm">{t("metaDashboard.activate")}</span>
+              </Button>
+            )}
           </div>
 
           {/* Budget Info */}

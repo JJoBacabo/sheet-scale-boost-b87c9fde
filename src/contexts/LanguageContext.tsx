@@ -641,6 +641,7 @@ const translations = {
       placeholderBudget: '0.00',
       billingEvent: 'Evento de Faturamento',
       billingEventPlaceholder: 'Ex: IMPRESSIONS, LINK_CLICKS',
+      activeDays: 'Dias Ativos',
     },
       storeSelector: {
         selectStore: 'Selecionar loja',
@@ -1839,6 +1840,7 @@ const translations = {
       placeholderBudget: '0.00',
       billingEvent: 'Billing Event',
       billingEventPlaceholder: 'Ex: IMPRESSIONS, LINK_CLICKS',
+      activeDays: 'Active Days',
     },
       storeSelector: {
         selectStore: 'Select store',
