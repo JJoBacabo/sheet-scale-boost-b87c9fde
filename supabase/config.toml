@@ -77,3 +77,24 @@ verify_jwt = true
 
 [functions.send-supplier-quote-email]
 verify_jwt = true
+
+[functions.fetch-dashboard-stats]
+verify_jwt = true
+
+[functions.sync-facebook-campaigns]
+verify_jwt = true
+
+[functions.update-facebook-token]
+verify_jwt = true
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.setup-cron-jobs]
+verify_jwt = false
+
+[functions.sync-existing-quotes]
+verify_jwt = false
+
+[functions.sync-google-sheet-products]
+verify_jwt = true

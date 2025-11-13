@@ -27,7 +27,6 @@ interface DashboardStats {
   }>;
 }
 
-// Simplified exchange rates
 const FALLBACK_RATES: Record<string, number> = {
   'EUR': 1, 'USD': 0.92, 'GBP': 1.17, 'CHF': 1.05, 'BGN': 0.51,
   'RON': 0.20, 'PLN': 0.23, 'CZK': 0.04, 'HUF': 0.0025,
@@ -36,25 +35,20 @@ const FALLBACK_RATES: Record<string, number> = {
 
 async function getExchangeRates(): Promise<Record<string, number>> {
   try {
-    const res = await fetch('https://open.er-api.com/v6/latest/EUR');
+    const res = await fetch('https://open.er-api.com/v6/latest/EUR', { signal: AbortSignal.timeout(3000) });
     if (!res.ok) return FALLBACK_RATES;
-    
     const data = await res.json();
     if (data.result !== 'success' || !data.rates) return FALLBACK_RATES;
-    
     const rates: Record<string, number> = { 'EUR': 1 };
-    for (const [currency, rate] of Object.entries(data.rates)) {
-      rates[currency] = 1 / (rate as number);
-    }
+    for (const [k, v] of Object.entries(data.rates)) rates[k] = 1 / (v as number);
     return rates;
   } catch {
     return FALLBACK_RATES;
   }
 }
 
-function convertToEUR(amount: number, currency: string, rates: Record<string, number>): number {
-  return amount * (rates[currency.toUpperCase()] || 1);
-}
+const convertToEUR = (amount: number, currency: string, rates: Record<string, number>) => 
+  amount * (rates[currency.toUpperCase()] || 1);
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
