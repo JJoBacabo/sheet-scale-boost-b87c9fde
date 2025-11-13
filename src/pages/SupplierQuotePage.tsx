@@ -19,7 +19,6 @@ interface Product {
 interface SupplierQuote {
   product_id: string;
   quoted_price: number | null;
-  notes: string | null;
 }
 
 interface Session {
@@ -120,7 +119,6 @@ const SupplierQuotePage = () => {
           quotesMap[quote.product_id] = {
             product_id: quote.product_id,
             quoted_price: quote.quoted_price,
-            notes: quote.notes,
           };
         });
         setQuotes(quotesMap);
@@ -179,7 +177,6 @@ const SupplierQuotePage = () => {
           session_id: session.id,
           product_id: productId,
           quoted_price: quote.quoted_price,
-          notes: quote.notes || null,
         } as any);
 
       if (error) throw error;
@@ -317,7 +314,7 @@ const SupplierQuotePage = () => {
         ) : (
           <div className="space-y-4">
             {products.map((product) => {
-              const quote = quotes[product.id] || { product_id: product.id, quoted_price: null, notes: null };
+              const quote = quotes[product.id] || { product_id: product.id, quoted_price: null };
               const isSaved = savedStatus[product.id];
 
               return (
@@ -342,38 +339,21 @@ const SupplierQuotePage = () => {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor={`price-${product.id}`}>
-                            Your Quote Price (€) *
-                          </Label>
-                          <Input
-                            id={`price-${product.id}`}
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            placeholder="0.00"
-                            value={quote.quoted_price || ""}
-                            onChange={(e) =>
-                              updateQuote(product.id, "quoted_price", parseFloat(e.target.value) || null)
-                            }
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor={`notes-${product.id}`}>
-                            Notes (Optional)
-                          </Label>
-                          <Textarea
-                            id={`notes-${product.id}`}
-                            placeholder="Add any notes..."
-                            value={quote.notes || ""}
-                            onChange={(e) =>
-                              updateQuote(product.id, "notes", e.target.value)
-                            }
-                            rows={1}
-                          />
-                        </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`price-${product.id}`}>
+                          Your Quote Price (€) *
+                        </Label>
+                        <Input
+                          id={`price-${product.id}`}
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          placeholder="0.00"
+                          value={quote.quoted_price || ""}
+                          onChange={(e) =>
+                            updateQuote(product.id, "quoted_price", parseFloat(e.target.value) || null)
+                          }
+                        />
                       </div>
 
                       <Button
