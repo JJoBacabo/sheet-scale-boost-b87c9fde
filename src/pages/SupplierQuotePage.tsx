@@ -26,6 +26,7 @@ interface Session {
   id: string;
   supplier_name: string;
   token: string;
+  password: string | null;
 }
 
 const SupplierQuotePage = () => {
@@ -38,6 +39,9 @@ const SupplierQuotePage = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [quotes, setQuotes] = useState<Record<string, SupplierQuote>>({});
   const [savedStatus, setSavedStatus] = useState<Record<string, boolean>>({});
+  const [passwordInput, setPasswordInput] = useState("");
+  const [isPasswordVerified, setIsPasswordVerified] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -69,6 +73,29 @@ const SupplierQuotePage = () => {
 
       setSession(sessionData as any);
 
+      // Check if password protection is enabled
+      if ((sessionData as any).password) {
+        // Password is required, stop here until verified
+        setLoading(false);
+        return;
+      }
+
+      // No password, proceed to load quotes
+      await loadQuotes(sessionData as any);
+    } catch (error: any) {
+      console.error("Error loading session:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load quotation data.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadQuotes = async (sessionData: any) => {
+    try {
       // Get existing quotes
       const { data: quotesData } = await supabase
         .from("supplier_quotes" as any)
@@ -99,14 +126,34 @@ const SupplierQuotePage = () => {
         setQuotes(quotesMap);
       }
     } catch (error: any) {
-      console.error("Error loading session:", error);
+      console.error("Error loading quotes:", error);
       toast({
         title: "Error",
         description: "Failed to load quotation data.",
         variant: "destructive",
       });
-    } finally {
+    }
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (!session || !passwordInput.trim()) {
+      setPasswordError(true);
+      return;
+    }
+
+    if (passwordInput.trim() === session.password) {
+      setIsPasswordVerified(true);
+      setPasswordError(false);
+      setLoading(true);
+      await loadQuotes(session);
       setLoading(false);
+    } else {
+      setPasswordError(true);
+      toast({
+        title: "Invalid Password",
+        description: "The password you entered is incorrect.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -173,6 +220,67 @@ const SupplierQuotePage = () => {
       },
     });
   };
+
+  if (loading && !session) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show password prompt if password is required and not yet verified
+  if (session?.password && !isPasswordVerified) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <div className="p-6 space-y-6">
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold">Password Required</h1>
+              <p className="text-muted-foreground">
+                This quotation is password protected. Please enter the password to continue.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter password"
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    setPasswordError(false);
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handlePasswordSubmit();
+                    }
+                  }}
+                  className={passwordError ? "border-destructive" : ""}
+                />
+                {passwordError && (
+                  <p className="text-sm text-destructive">
+                    Incorrect password. Please try again.
+                  </p>
+                )}
+              </div>
+
+              <Button 
+                onClick={handlePasswordSubmit} 
+                className="w-full"
+                disabled={!passwordInput.trim()}
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
