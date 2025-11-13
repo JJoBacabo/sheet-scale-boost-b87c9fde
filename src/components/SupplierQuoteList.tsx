@@ -51,6 +51,30 @@ export const SupplierQuoteList = ({ userId, refreshTrigger }: SupplierQuoteListP
     loadSessions();
   }, [userId, refreshTrigger]);
 
+  // Real-time subscription for quote updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('supplier-quotes-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'supplier_quotes'
+        },
+        (payload) => {
+          console.log('Quote updated:', payload);
+          // Reload sessions to get fresh data
+          loadSessions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
   const loadSessions = async () => {
     try {
       const { data: sessionsData, error: sessionsError } = await supabase
