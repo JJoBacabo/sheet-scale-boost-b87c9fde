@@ -52,14 +52,43 @@ export const FacebookConnect = ({ onConnectionChange }: FacebookConnectProps) =>
     }
   };
 
-  const handleConnect = () => {
-    const appId = '1525902928789947';
-    const redirectUri = `${window.location.origin}/facebook/callback`;
-    const scope = 'ads_read,pages_read_engagement';
-    
-    const authUrl = `https://www.facebook.com/v24.0/dialog/oauth?client_id=${appId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=${window.location.pathname}`;
-    
-    window.location.href = authUrl;
+  const handleConnect = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: t('auth.required'),
+          description: t('auth.pleaseLogin'),
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Encode userId in state for OAuth callback
+      const state = btoa(JSON.stringify({ userId: user.id }));
+      
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const redirectUri = `${supabaseUrl}/functions/v1/facebook-oauth-callback`;
+      const appId = '1525902928789947';
+      const scope = 'ads_management,ads_read,business_management,pages_read_engagement';
+      
+      const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?` +
+        `client_id=${appId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `response_type=code&` +
+        `state=${state}`;
+      
+      console.log('🔗 Redirecting to Facebook OAuth:', authUrl);
+      window.location.href = authUrl;
+    } catch (error) {
+      console.error('Error initiating Facebook connect:', error);
+      toast({
+        title: t('facebook.error'),
+        description: t('facebook.connectError'),
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDisconnect = async () => {
