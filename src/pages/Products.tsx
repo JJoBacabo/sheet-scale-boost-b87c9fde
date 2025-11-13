@@ -1045,6 +1045,7 @@ const Products = () => {
               open={quoteModalOpen}
               onOpenChange={setQuoteModalOpen}
               userId={user.id}
+              selectedStore={selectedStore}
               onSuccess={() => setQuoteRefreshTrigger((prev) => prev + 1)}
             />
           </motion.section>
