@@ -43,6 +43,9 @@ interface Product {
   created_at: string;
   updated_at: string;
   last_sold_at: string | null;
+  integrations?: {
+    metadata: any;
+  } | null;
 }
 
 const Products = () => {
@@ -291,7 +294,12 @@ const Products = () => {
     
     let query = supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        integrations (
+          metadata
+        )
+      `)
       .eq("user_id", userId);
 
     // Filter by selected store if not "all"
@@ -1223,8 +1231,16 @@ const Products = () => {
                       </CollapsibleTrigger>
 
                       <CollapsibleContent className="space-y-3">
-                        {product.sku && (
-                          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                        {product.shopify_product_id && product.integrations?.metadata?.myshopify_domain && (
+                          <a 
+                            href={`https://${product.integrations.metadata.myshopify_domain}/admin/products/${product.shopify_product_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            {t('products.viewInShopify')}
+                            <Eye className="w-3 h-3" />
+                          </a>
                         )}
 
                         <div className="space-y-2.5 p-3 rounded-lg bg-background/30 border border-border/50">
