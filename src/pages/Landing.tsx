@@ -475,14 +475,15 @@ const Landing = () => {
             {/* Left: Hero Content */}
             <div>
               <h1 className="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight text-white">
-                Your All-in-One Platform to Power Efficient eCommerce Operations
+                {t('landing.hero.title1')} <br />{t('landing.hero.title2')}
               </h1>
               <p className="hero-subtitle text-xl text-gray-300 mb-4 leading-relaxed">
-                Automate processes, centralize data and gain full control over your business performance.
+                {t('landing.hero.subtitle')}
               </p>
               <p className="hero-description text-lg text-gray-400 mb-10 leading-relaxed">
-                Sheet Tools helps modern brands streamline operations, monitor results and scale efficiently — all from
-                one intelligent dashboard.
+                ✓ {t('landing.hero.benefit1')}<br />
+                ✓ {t('landing.hero.benefit2')}<br />
+                ✓ {t('landing.hero.benefit3')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -603,9 +604,9 @@ const Landing = () => {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
                   <Zap className="w-6 h-6 text-[#0A0E27]" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">Workflow Automation</h3>
+                <h3 className="text-xl font-bold text-white mb-3">{t('landing.features.automation.title')}</h3>
                 <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
-                  Save time by automating daily management tasks.
+                  {t('landing.features.automation.description')}
                 </p>
               </Card>
             </motion.div>
@@ -621,9 +622,9 @@ const Landing = () => {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
                   <BarChart3 className="w-6 h-6 text-[#0A0E27]" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">Data Intelligence</h3>
+                <h3 className="text-xl font-bold text-white mb-3">{t('landing.features.metrics.title')}</h3>
                 <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
-                  Access real-time insights and performance analytics.
+                  {t('landing.features.metrics.description')}
                 </p>
               </Card>
             </motion.div>
@@ -639,9 +640,9 @@ const Landing = () => {
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] flex items-center justify-center mb-4 flex-shrink-0">
                   <Shield className="w-6 h-6 text-[#0A0E27]" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">Secure Infrastructure</h3>
+                <h3 className="text-xl font-bold text-white mb-3">{t('landing.features.secure.title')}</h3>
                 <p className="text-gray-300/70 text-sm leading-relaxed flex-grow">
-                  Your data stays protected and always synchronized.
+                  {t('landing.features.secure.description')}
                 </p>
               </Card>
             </motion.div>
