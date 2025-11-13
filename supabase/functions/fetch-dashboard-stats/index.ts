@@ -198,11 +198,13 @@ serve(async (req) => {
 
         const dayData = dailyMap.get(orderDate);
         
-        // Add revenue - convert to EUR if needed
-        const revenueInShopCurrency = parseFloat(order.total_price || 0);
-        const revenue = convertToEUR(revenueInShopCurrency, shopCurrency, exchangeRates);
-        console.log(`💰 Order revenue: ${revenueInShopCurrency} ${shopCurrency} = ${revenue.toFixed(2)} EUR`);
-        dayData.revenue += revenue;
+        // Add revenue - detect per-order currency and convert to EUR
+        const shopMoney: any = order.total_price_set?.shop_money || order.current_total_price_set?.shop_money;
+        const orderCurrency: string = shopMoney?.currency_code || order.currency || shopCurrency || 'EUR';
+        const amountInOrderCurrency: number = parseFloat((shopMoney?.amount ?? order.total_price ?? '0').toString());
+        const revenueEUR = convertToEUR(amountInOrderCurrency, orderCurrency, exchangeRates);
+        console.log(`💰 Order revenue: ${amountInOrderCurrency} ${orderCurrency} => ${revenueEUR.toFixed(2)} EUR (shop ${shopCurrency})`);
+        dayData.revenue += revenueEUR;
         dayData.conversions += 1;
 
         // Calculate COG for this order
