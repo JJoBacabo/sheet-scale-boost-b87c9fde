@@ -516,7 +516,13 @@ const Products = () => {
   
   // Convert value from store currency to selected currency
   const convertValue = (value: number) => {
-    return convertBetween(value, storeCurrency, selectedCurrency.code);
+    if (!storeCurrency || storeCurrency === selectedCurrency.code) {
+      console.log(`💱 No conversion needed: ${value} ${storeCurrency || selectedCurrency.code}`);
+      return value;
+    }
+    const converted = convertBetween(value, storeCurrency, selectedCurrency.code);
+    console.log(`💱 Converting ${value} ${storeCurrency} → ${converted} ${selectedCurrency.code}`);
+    return converted;
   };
 
   const totalStats = {

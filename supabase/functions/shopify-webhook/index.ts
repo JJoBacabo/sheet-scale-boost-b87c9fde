@@ -105,13 +105,17 @@ Deno.serve(async (req) => {
       return new Response('Shop not found', { status: 404, headers: corsHeaders });
     }
 
+    const storeCurrency = (integration.metadata as any)?.store_currency || 'EUR';
     console.log('✅ Found user:', integration.user_id);
+    console.log('💱 Store currency:', storeCurrency);
 
     // Process each line item
     for (const item of webhookData.line_items) {
       try {
         const productId = String(item.product_id);
         const price = parseFloat(item.price);
+        
+        console.log(`💰 Processing item: ${item.title}, Price: ${price} ${storeCurrency}`);
         const quantity = item.quantity;
         const revenue = price * quantity;
 
