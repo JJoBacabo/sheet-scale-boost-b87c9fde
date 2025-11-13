@@ -69,31 +69,31 @@ export const DashboardFilters = ({ userId, onFilterChange }: DashboardFiltersPro
   };
 
   return (
-    <Card className="p-6 glass-card rounded-2xl border border-border/50">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-primary/10">
-            <Filter className="h-4 w-4 text-primary" />
+    <Card className="p-3 sm:p-4 md:p-6 glass-card rounded-xl sm:rounded-2xl border border-border/50">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-primary/10">
+            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           </div>
-          <h3 className="text-lg font-semibold">Filtros</h3>
+          <h3 className="text-sm sm:text-base md:text-lg font-semibold">Filtros</h3>
         </div>
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={handleReset}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground h-8 text-xs sm:text-sm"
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Limpar
+          <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+          <span className="hidden xs:inline">Limpar</span>
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {/* Platform Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Plataforma</label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">Plataforma</label>
           <Select value={filters.platform} onValueChange={(v) => handleFilterChange('platform', v)}>
-            <SelectTrigger className="glass-card border-border/50">
+            <SelectTrigger className="glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -105,11 +105,11 @@ export const DashboardFilters = ({ userId, onFilterChange }: DashboardFiltersPro
         </div>
 
         {/* Campaign Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Campanha</label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">Campanha</label>
           <Select value={filters.campaignId} onValueChange={(v) => handleFilterChange('campaignId', v)}>
-            <SelectTrigger className="glass-card border-border/50">
-              <SelectValue />
+            <SelectTrigger className="glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm">
+              <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas as campanhas</SelectItem>
@@ -123,11 +123,11 @@ export const DashboardFilters = ({ userId, onFilterChange }: DashboardFiltersPro
         </div>
 
         {/* Product Filter */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Produto</label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">Produto</label>
           <Select value={filters.productId} onValueChange={(v) => handleFilterChange('productId', v)}>
-            <SelectTrigger className="glass-card border-border/50">
-              <SelectValue />
+            <SelectTrigger className="glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm">
+              <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os produtos</SelectItem>
@@ -141,18 +141,18 @@ export const DashboardFilters = ({ userId, onFilterChange }: DashboardFiltersPro
         </div>
 
         {/* Date From */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Data início</label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">Data início</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
                 className={cn(
-                  "w-full justify-start text-left glass-card border-border/50",
+                  "w-full justify-start text-left glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm",
                   !filters.dateFrom && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {filters.dateFrom ? format(filters.dateFrom, "PPP", { locale: pt }) : "Selecionar"}
               </Button>
             </PopoverTrigger>
@@ -168,18 +168,18 @@ export const DashboardFilters = ({ userId, onFilterChange }: DashboardFiltersPro
         </div>
 
         {/* Date To */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-muted-foreground">Data fim</label>
+        <div className="space-y-1.5 sm:space-y-2">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">Data fim</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button 
                 variant="outline" 
                 className={cn(
-                  "w-full justify-start text-left glass-card border-border/50",
+                  "w-full justify-start text-left glass-card border-border/50 h-9 sm:h-10 text-xs sm:text-sm",
                   !filters.dateTo && "text-muted-foreground"
                 )}
               >
-                <CalendarIcon className="mr-2 h-4 w-4" />
+                <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {filters.dateTo ? format(filters.dateTo, "PPP", { locale: pt }) : "Selecionar"}
               </Button>
             </PopoverTrigger>
