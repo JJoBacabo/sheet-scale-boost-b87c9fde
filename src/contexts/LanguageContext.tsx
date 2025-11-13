@@ -318,8 +318,10 @@ const translations = {
         },
         featureComparison: {
           title: 'Comparação de Funcionalidades',
+          note: 'Algumas funcionalidades variam por plano. Escolha o que melhor se adapta ao seu negócio.',
           feature: 'Funcionalidade',
-          roasSheet: 'Daily ROAS Profit Sheet',
+          dailyRoas: 'Daily ROAS',
+          profitSheet: 'Profit Sheet',
           quotation: 'Cotação',
           campaigns: 'Campanhas',
           productResearch: 'Product Research',

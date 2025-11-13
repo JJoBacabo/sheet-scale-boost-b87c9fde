@@ -1101,10 +1101,10 @@ const Landing = () => {
                     <th className="text-left p-4 text-gray-400 font-semibold">
                       {t("landing.pricing.featureComparison.feature")}
                     </th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">Basic</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">Standard</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">Expert</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">Business</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.basic.name')}</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.standard.name')}</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.expert.name')}</th>
+                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.business.name')}</th>
                   </tr>
                 </thead>
                 <tbody>
