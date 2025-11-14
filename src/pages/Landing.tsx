@@ -33,6 +33,7 @@ import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Logo3D } from "@/components/Logo3D";
 
 // Features data for the Pinned Section
 const featuresData = [
@@ -471,6 +472,13 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl relative z-10">
+          {/* 3D Logo */}
+          <div className="flex justify-center mb-12">
+            <div className="w-full max-w-md h-64 md:h-80">
+              <Logo3D />
+            </div>
+          </div>
+          
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Hero Content */}
             <div>
