@@ -69,7 +69,7 @@ export function StoreSelector({ value, onChange }: StoreSelectorProps) {
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[250px] bg-card border-primary/20">
+      <SelectTrigger className="w-[250px] h-10 bg-card border-primary/20">
         <Store className="w-4 h-4 mr-2" />
         <SelectValue placeholder={t('storeSelector.selectStore')} />
       </SelectTrigger>

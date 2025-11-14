@@ -1223,7 +1223,7 @@ const Products = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Store Selector */}
               <div className="min-w-[160px]">
                 <StoreSelector value={selectedStore} onChange={setSelectedStore} />
