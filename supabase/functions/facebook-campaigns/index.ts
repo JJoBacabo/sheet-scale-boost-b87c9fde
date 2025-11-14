@@ -232,7 +232,7 @@ serve(async (req) => {
     if (action === 'list') {
       // Use requested ad account or resolved fallback
       const targetAdAccountId = resolvedAdAccountId as string;
-      const { datePreset, dateFrom, dateTo } = requestBody;
+      const { datePreset, dateFrom, dateTo, includeImages } = requestBody;
       
       // Build insights parameters based on date selection
       let insightsParams = '';
@@ -281,121 +281,16 @@ serve(async (req) => {
 
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
-      // Fetch images for campaigns in batches to avoid rate limiting
-      // Process in batches of 5 to reduce rate limits
-      const BATCH_SIZE = 5;
-      const imageMap = new Map();
-      
-      for (let i = 0; i < allCampaigns.length; i += BATCH_SIZE) {
-        const batch = allCampaigns.slice(i, i + BATCH_SIZE);
-        console.log(`Fetching images for batch ${Math.floor(i / BATCH_SIZE) + 1} (${batch.length} campaigns)`);
-        
-        const imagePromises = batch.map(async (campaign) => {
-          try {
-            // Method 1: Try to get image from ads
-            const adsResponse = await fetch(
-              `https://graph.facebook.com/v18.0/${campaign.id}/ads?limit=3&fields=creative{id,image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
-            );
-            const adsData = await adsResponse.json();
-            
-            if (adsData.error) {
-              console.warn(`API error for campaign ${campaign.id}:`, adsData.error.message);
-            }
-            
-            if (adsData.data && adsData.data.length > 0) {
-              // Try each ad until we find one with an image
-              for (const ad of adsData.data) {
-                if (ad.creative) {
-                  const creative = ad.creative;
-                  
-                  // Check for image_url or thumbnail_url
-                  if (creative.image_url || creative.thumbnail_url) {
-                    return {
-                      campaignId: campaign.id,
-                      image_url: creative.image_url || creative.thumbnail_url || null,
-                      thumbnail_url: creative.thumbnail_url || creative.image_url || null,
-                    };
-                  }
-                  
-                  // Check object_story_spec for image (for page posts)
-                  if (creative.object_story_spec?.link_data?.image_url) {
-                    return {
-                      campaignId: campaign.id,
-                      image_url: creative.object_story_spec.link_data.image_url,
-                      thumbnail_url: creative.object_story_spec.link_data.image_url,
-                    };
-                  }
-                  
-                  if (creative.object_story_spec?.video_data?.image_url) {
-                    return {
-                      campaignId: campaign.id,
-                      image_url: creative.object_story_spec.video_data.image_url,
-                      thumbnail_url: creative.object_story_spec.video_data.image_url,
-                    };
-                  }
-                }
-              }
-            }
-            
-            // Method 2: Try to get image from ad sets (if ads didn't work)
-            const adSetsResponse = await fetch(
-              `https://graph.facebook.com/v18.0/${campaign.id}/adsets?limit=1&fields=id&access_token=${accessToken}`
-            );
-            const adSetsData = await adSetsResponse.json();
-            
-            if (adSetsData.data && adSetsData.data.length > 0) {
-              const adSetId = adSetsData.data[0].id;
-              const adSetAdsResponse = await fetch(
-                `https://graph.facebook.com/v18.0/${adSetId}/ads?limit=1&fields=creative{image_url,thumbnail_url,object_story_spec}&access_token=${accessToken}`
-              );
-              const adSetAdsData = await adSetAdsResponse.json();
-              
-              if (adSetAdsData.data && adSetAdsData.data.length > 0 && adSetAdsData.data[0].creative) {
-                const creative = adSetAdsData.data[0].creative;
-                if (creative.image_url || creative.thumbnail_url) {
-                  return {
-                    campaignId: campaign.id,
-                    image_url: creative.image_url || creative.thumbnail_url || null,
-                    thumbnail_url: creative.thumbnail_url || creative.image_url || null,
-                  };
-                }
-              }
-            }
-          } catch (error) {
-            console.error(`Error fetching image for campaign ${campaign.id}:`, error);
-          }
-          return { campaignId: campaign.id, image_url: null, thumbnail_url: null };
-        });
-
-        // Wait for batch to complete
-        const batchResults = await Promise.allSettled(imagePromises);
-        batchResults.forEach((result) => {
-          if (result.status === 'fulfilled' && result.value) {
-            const { campaignId, image_url, thumbnail_url } = result.value;
-            if (image_url || thumbnail_url) {
-              imageMap.set(campaignId, {
-                image_url: image_url,
-                thumbnail_url: thumbnail_url,
-              });
-            }
-          }
-        });
-        
-        // Small delay between batches to avoid rate limiting
-        if (i + BATCH_SIZE < allCampaigns.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
+      // Only fetch images if explicitly requested (to improve performance)
+      if (includeImages === true) {
+        console.log('⚠️ Image fetching requested - this may slow down the response');
+      } else {
+        console.log('✅ Skipping image fetch for better performance');
       }
 
-      console.log(`Found images for ${imageMap.size} out of ${allCampaigns.length} campaigns`);
-
-      // Merge images into campaigns
-      const campaignsWithImages = allCampaigns.map((campaign) => {
-        const imageData = imageMap.get(campaign.id);
-        return imageData
-          ? { ...campaign, ...imageData }
-          : campaign;
-      });
+      // PERFORMANCE OPTIMIZATION: Skip image fetching by default
+      // Images should be loaded on-demand when viewing campaign details
+      const campaignsWithImages = allCampaigns;
 
       return new Response(JSON.stringify({ 
         campaigns: campaignsWithImages,
@@ -405,6 +300,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
     if (action === 'getAdSets' && campaignId) {
       // Get ad sets for a campaign

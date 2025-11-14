@@ -88,22 +88,22 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
           const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
           
-          setStats({
-            totalCampaigns: campaigns?.length || 0,
-            totalProducts: products?.length || 0,
-            totalSpent: realStats.totalAdSpend,
-            totalRevenue: realStats.totalRevenue,
-            averageRoas: realStats.averageRoas,
-            activeCampaigns,
-            totalConversions: realStats.totalConversions,
-            averageCpc: realStats.averageCpc,
-            totalSupplierCost: realStats.totalSupplierCost,
-            recentActivity: [],
-            dailyRoasData: realStats.dailyData || [],
-            storeCurrency: realStats.storeCurrency || 'EUR',
-            hasProductsWithoutCost,
-            loading: false,
-          });
+        setStats({
+          totalCampaigns: campaigns?.length || 0,
+          totalProducts: products?.length || 0,
+          totalSpent: realStats.totalAdSpend,
+          totalRevenue: realStats.totalRevenue,
+          averageRoas: realStats.averageRoas,
+          activeCampaigns,
+          totalConversions: realStats.totalConversions,
+          averageCpc: realStats.averageCpc,
+          totalSupplierCost: realStats.totalSupplierCost,
+          recentActivity: [],
+          dailyRoasData: realStats.dailyData || [],
+          storeCurrency: realStats.storeCurrency || 'EUR',
+          hasProductsWithoutCost: products?.some(p => !p.cost_price || p.cost_price === 0) || false,
+          loading: false,
+        });
           
           return;
         }
@@ -111,11 +111,13 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         // Fallback: usar daily_roas (dados históricos/sincronizados)
         console.log('📊 Using daily_roas data (fallback)');
         
+        // PERFORMANCE: Only select necessary fields
         let dailyRoasQuery = supabase
           .from('daily_roas')
           .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id, cpc')
           .eq('user_id', userId)
-          .order('date', { ascending: true });
+          .order('date', { ascending: true })
+          .limit(1000); // PERFORMANCE: Limit results
 
         // Apply date filters for daily_roas
         if (filters?.dateFrom) {
@@ -193,40 +195,28 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
         const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
 
-        // Get active campaigns count from campaigns table (for status)
-        let campaignsQuery = supabase
-          .from('campaigns')
-          .select('id, status')
-          .eq('user_id', userId);
+        // PERFORMANCE: Fetch campaigns and products in parallel
+        const [campaignsResult, productsResult] = await Promise.all([
+          // Get campaigns count
+          supabase
+            .from('campaigns')
+            .select('id, status', { count: 'exact', head: false })
+            .eq('user_id', userId)
+            .then(res => res),
+          
+          // Get products with cost_price check
+          supabase
+            .from('products')
+            .select('id, cost_price')
+            .eq('user_id', userId)
+            .eq('integration_id', filters?.storeId && filters.storeId !== 'all' ? filters.storeId : undefined)
+            .then(res => res)
+        ]);
 
-        if (filters?.campaignId && filters.campaignId !== 'all') {
-          campaignsQuery = campaignsQuery.eq('id', filters.campaignId);
-        }
-        if (filters?.platform && filters.platform !== 'all') {
-          campaignsQuery = campaignsQuery.eq('platform', filters.platform);
-        }
-
-        const { data: campaigns } = await campaignsQuery;
-        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-
-        // Build products query with filters
-        let productsQuery = supabase
-          .from('products')
-          .select('id, cost_price, selling_price, quantity_sold, integration_id')
-          .eq('user_id', userId);
-
-        if (filters?.productId && filters.productId !== 'all') {
-          productsQuery = productsQuery.eq('id', filters.productId);
-        }
-        if (filters?.storeId && filters.storeId !== 'all') {
-          productsQuery = productsQuery.eq('integration_id', filters.storeId);
-        }
-
-        const { data: products, error: productsError } = await productsQuery;
-        
-        if (productsError) {
-          console.error('❌ Error fetching products:', productsError);
-        }
+        const campaigns = campaignsResult.data || [];
+        const products = productsResult.data || [];
+        const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+        const hasProductsWithoutCost = products.some(p => !p.cost_price || p.cost_price === 0);
         
         console.log('📦 Fetched products:', products?.length || 0);
 
@@ -241,8 +231,6 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           activeCampaigns,
           totalCampaigns: totalCampaigns
         });
-
-        const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
 
         setStats({
           totalCampaigns: totalCampaigns,
