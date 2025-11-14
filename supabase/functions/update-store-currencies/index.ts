@@ -38,12 +38,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch all Shopify integrations without store_currency
-    const { data: integrations, error: fetchError } = await supabase
+    // Parse request body to check for specific integration_id
+    const body = await req.json().catch(() => ({}));
+    const specificIntegrationId = body.integration_id;
+
+    // Fetch Shopify integrations - either a specific one or all user's integrations
+    let query = supabase
       .from('integrations')
       .select('*')
       .eq('integration_type', 'shopify')
       .eq('user_id', user.id);
+    
+    if (specificIntegrationId) {
+      query = query.eq('id', specificIntegrationId);
+    }
+
+    const { data: integrations, error: fetchError } = await query;
 
     if (fetchError) {
       console.error('Error fetching integrations:', fetchError);
@@ -129,12 +139,21 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Return the updated currency if only one integration was processed
+    const response: any = {
+      success: true,
+      results,
+      message: `Processadas ${results.total} integrações: ${results.updated} atualizadas, ${results.skipped} ignoradas, ${results.errors.length} erros`,
+    };
+
+    // If specific integration was requested and updated, include the currency
+    if (specificIntegrationId && results.updated === 1 && integrations && integrations.length > 0) {
+      const metadata = integrations[0].metadata as any;
+      response.store_currency = metadata?.store_currency;
+    }
+
     return new Response(
-      JSON.stringify({
-        success: true,
-        results,
-        message: `Processadas ${results.total} integrações: ${results.updated} atualizadas, ${results.skipped} ignoradas, ${results.errors.length} erros`,
-      }),
+      JSON.stringify(response),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

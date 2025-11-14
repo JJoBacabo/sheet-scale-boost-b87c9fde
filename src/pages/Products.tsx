@@ -77,6 +77,7 @@ const Products = () => {
   const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
   const [storeCurrency, setStoreCurrency] = useState<string>("EUR");
   const [showOnlyWithoutCost, setShowOnlyWithoutCost] = useState(false);
+  const [updatingCurrency, setUpdatingCurrency] = useState(false);
   const { selectedCurrency, convertBetween, formatAmount } = useCurrency();
 
   const toggleProduct = (productId: string) => {
@@ -247,6 +248,45 @@ const Products = () => {
     };
   }, [user]);
   
+  // Function to update currency for a store
+  const updateCurrencyForStore = async (integrationId: string, showToast = true) => {
+    if (!user) return null;
+
+    setUpdatingCurrency(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('update-store-currencies', {
+        body: { integration_id: integrationId }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.store_currency) {
+        if (showToast) {
+          toast({
+            title: "Moeda atualizada",
+            description: `Moeda da loja atualizada para ${data.store_currency}`,
+          });
+        }
+        return data.store_currency;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error updating currency:', error);
+      if (showToast) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar a moeda da loja",
+          variant: "destructive",
+        });
+      }
+      return null;
+    } finally {
+      setUpdatingCurrency(false);
+    }
+  };
+
   // Update store currency when selected store changes
   useEffect(() => {
     const updateStoreCurrency = async () => {
@@ -268,7 +308,19 @@ const Products = () => {
         if (metadata?.store_currency) {
           setStoreCurrency(metadata.store_currency);
         } else {
-          setStoreCurrency("EUR"); // Default to EUR if not set
+          // Currency not set - try to update it automatically
+          console.log('🔄 Store currency not found, updating automatically...');
+          const updatedCurrency = await updateCurrencyForStore(selectedStore, false);
+          
+          if (updatedCurrency) {
+            setStoreCurrency(updatedCurrency);
+            toast({
+              title: "Moeda configurada",
+              description: `Moeda da loja atualizada automaticamente para ${updatedCurrency}`,
+            });
+          } else {
+            setStoreCurrency("EUR"); // Fallback to EUR
+          }
         }
       } catch (error) {
         console.error('Error fetching store currency:', error);
@@ -277,7 +329,7 @@ const Products = () => {
     };
 
     updateStoreCurrency();
-  }, [selectedStore]);
+  }, [selectedStore, user]);
 
   const checkShopifyIntegration = async (userId: string) => {
     const { data } = await supabase
@@ -1231,13 +1283,35 @@ const Products = () => {
               
               {/* Store Currency Selector - only show when a specific store is selected */}
               {selectedStore !== "all" && (
-                <StoreCurrencySelector 
-                  integrationId={selectedStore}
-                  currentCurrency={storeCurrency}
-                  onUpdate={() => {
-                    if (user) fetchProducts(user.id, true);
-                  }}
-                />
+                <div className="flex items-center gap-2">
+                  <StoreCurrencySelector 
+                    integrationId={selectedStore}
+                    currentCurrency={storeCurrency}
+                    onUpdate={() => {
+                      if (user) fetchProducts(user.id, true);
+                    }}
+                  />
+                  
+                  {/* Manual Currency Update Button */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-10 px-3"
+                          onClick={() => updateCurrencyForStore(selectedStore, true)}
+                          disabled={updatingCurrency}
+                        >
+                          <RefreshCw className={cn("h-4 w-4", updatingCurrency && "animate-spin")} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Verificar e atualizar moeda da loja</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
               )}
 
               {/* Date Preset */}
@@ -1524,9 +1598,25 @@ const Products = () => {
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
-                            <span className="font-semibold">
-                              {formatAmount(product.selling_price || 0, storeCurrency)}
-                            </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="font-semibold">
+                                {formatAmount(product.selling_price || 0, storeCurrency)}
+                              </span>
+                              {storeCurrency !== selectedCurrency.code && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-xs font-normal">
+                                        {(product.selling_price || 0).toFixed(2)} {storeCurrency} → {formatAmount(product.selling_price || 0, storeCurrency)}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Preço convertido de {storeCurrency} para {selectedCurrency.code}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.margin')}</span>
