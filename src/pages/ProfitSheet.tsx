@@ -765,15 +765,30 @@ const ProfitSheet = () => {
                   <Card className="relative p-4 sm:p-6 glass-card rounded-2xl sm:rounded-3xl border-2 border-border/50 overflow-hidden group hover:shadow-glow transition-all duration-300">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-primary/10 flex items-center justify-center group-hover:bg-gradient-primary transition-all">
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
+                        hasProductsWithoutCost 
+                          ? 'bg-warning/10 group-hover:bg-warning' 
+                          : 'bg-gradient-primary/10 group-hover:bg-gradient-primary'
+                      }`}>
+                        {hasProductsWithoutCost ? (
+                          <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-warning group-hover:text-primary-foreground transition-colors" />
+                        ) : (
+                          <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                        )}
                       </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalProfit')}</p>
-                      <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatAmount(totals.profit, storeCurrency)}
-                      </h3>
+                      {hasProductsWithoutCost ? (
+                        <div className="flex flex-col gap-1">
+                          <h3 className="text-xl sm:text-2xl font-bold text-warning">--</h3>
+                          <p className="text-xs text-muted-foreground">{t('products.incompleteCosts')}</p>
+                        </div>
+                      ) : (
+                        <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatAmount(totals.profit, storeCurrency)}
+                        </h3>
+                      )}
                     </div>
                   </Card>
 
