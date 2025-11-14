@@ -509,9 +509,10 @@ const Products = () => {
       return matchesSearch && matchesDate && matchesCostFilter;
     })
     .sort((a, b) => {
-      // Sort by updated_at descending (most recent first)
-      const dateA = new Date(a.updated_at || a.created_at).getTime();
-      const dateB = new Date(b.updated_at || b.created_at).getTime();
+      // Sort by last_sold_at descending (most recent sales first)
+      // This keeps order stable during edits since last_sold_at only changes with new sales
+      const dateA = a.last_sold_at ? new Date(a.last_sold_at).getTime() : new Date(a.created_at).getTime();
+      const dateB = b.last_sold_at ? new Date(b.last_sold_at).getTime() : new Date(b.created_at).getTime();
       return dateB - dateA;
     });
 
