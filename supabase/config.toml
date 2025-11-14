@@ -98,3 +98,6 @@ verify_jwt = false
 
 [functions.sync-google-sheet-products]
 verify_jwt = true
+
+[functions.update-store-currencies]
+verify_jwt = true
