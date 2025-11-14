@@ -25,6 +25,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, subDays, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -986,11 +987,12 @@ const Products = () => {
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: hasProductsWithoutCost ? t('products.incompleteCosts') : formatAmount(totalStats.totalProfit, storeCurrency),
+      value: formatAmount(hasProductsWithoutCost ? 0 : totalStats.totalProfit, storeCurrency),
       change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
-      icon: hasProductsWithoutCost ? AlertTriangle : TrendingUp,
-      color: hasProductsWithoutCost ? "text-warning" : (totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"),
-      warning: hasProductsWithoutCost
+      icon: TrendingUp,
+      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500",
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts')
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
@@ -1044,6 +1046,8 @@ const Products = () => {
               const Icon = stat.icon;
               const isPositive = stat.change > 0;
               const isWarning = stat.warning;
+              const isProfitStat = stat.label === (t('products.totalProfit') || "Total Profit");
+              
               return (
                 <motion.div
                   key={stat.label}
@@ -1064,8 +1068,23 @@ const Products = () => {
                           {Math.abs(stat.change)}%
                         </div>
                       )}
+                      {isWarning && isProfitStat && (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <div className="w-4 h-4 rounded bg-destructive/90 flex items-center justify-center cursor-help">
+                                <AlertTriangle className="w-3 h-3 text-destructive-foreground" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-destructive text-destructive-foreground border-destructive max-w-xs">
+                              <p className="font-medium">{stat.warningMessage}</p>
+                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
-                    <h3 className={`text-lg font-bold mb-0.5 ${isWarning ? 'text-warning' : 'gradient-text'}`}>{stat.value}</h3>
+                    <h3 className={`text-lg font-bold mb-0.5 ${isWarning && isProfitStat ? 'text-muted-foreground' : 'gradient-text'}`}>{stat.value}</h3>
                     <p className="text-xs text-muted-foreground">{stat.label}</p>
                   </Card3D>
                 </motion.div>
