@@ -1417,9 +1417,16 @@ const Products = () => {
                           </div>
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
-                            <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              {formatAmount(calculateProfit(product), storeCurrency)}
-                            </span>
+                            {!product.cost_price || product.cost_price === 0 ? (
+                              <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-warning" />
+                                <span className="text-sm text-warning italic">{t('products.needsQuote')}</span>
+                              </div>
+                            ) : (
+                              <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatAmount(calculateProfit(product), storeCurrency)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </CollapsibleContent>
