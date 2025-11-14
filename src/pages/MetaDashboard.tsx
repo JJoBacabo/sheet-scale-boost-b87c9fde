@@ -562,27 +562,17 @@ const MetaDashboard = () => {
       });
 
       if (error) {
-        console.error("Edge Function error:", error);
-        // Check if it's a 500 error or network error
-        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
-          toast({
-            title: t("metaDashboard.errorLoadingAccounts"),
-            description: t("metaDashboard.serverError"),
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
+        // Silently fail for expected errors (token expired, not connected)
+        console.log("⚠️ Could not fetch ad accounts (likely not connected or token expired)");
+        setAdAccounts([]);
         setLoading(false);
         return;
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingAccounts"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Silently fail for API errors
+        console.log("⚠️ Facebook API error:", data.error);
+        setAdAccounts([]);
         setLoading(false);
         return;
       }

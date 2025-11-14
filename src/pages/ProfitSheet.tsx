@@ -196,32 +196,28 @@ const ProfitSheet = () => {
 
   const fetchAdAccounts = async () => {
     try {
-      console.log("📋 Fetching ad accounts...");
-      
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
       });
 
       if (error) {
-        console.error("❌ Error from edge function:", error);
-        throw error;
+        // Silently fail - don't show error toast for expected failures
+        console.log("⚠️ Could not fetch ad accounts (likely not connected or token expired)");
+        setAdAccounts([]);
+        return;
       }
-      
-      console.log("📊 Ad accounts response:", data);
       
       if (data?.adAccounts) {
         console.log("✅ Found", data.adAccounts.length, "ad accounts");
         setAdAccounts(data.adAccounts);
       } else {
         console.log("⚠️ No ad accounts in response");
+        setAdAccounts([]);
       }
     } catch (error: any) {
-      console.error("❌ Error fetching ad accounts:", error);
-      toast({
-        title: t('metaDashboard.errorLoadingAccounts'),
-        description: error.message || t('metaDashboard.noAccountsFound'),
-        variant: "destructive"
-      });
+      // Silently handle errors - don't show toast for expected failures
+      console.log("⚠️ Could not fetch ad accounts:", error.message);
+      setAdAccounts([]);
     }
   };
 
