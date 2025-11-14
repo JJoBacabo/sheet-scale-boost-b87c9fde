@@ -26,13 +26,16 @@ import {
   Store,
   Facebook, 
   RefreshCw,
-  Link as LinkIcon
+  Link as LinkIcon,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select, 
   SelectContent, 
@@ -740,6 +743,18 @@ const Dashboard = () => {
 
         {/* Stats Overview - 8 cards de métricas */}
         {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
+
+        {/* Missing Cost Warning */}
+        {stats?.hasProductsWithoutCost && (
+          <Link to="/products">
+            <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-warning font-medium">
+                {t('products.incompleteCosts')} - {t('dashboard.clickToAddQuotes')}
+              </AlertDescription>
+            </Alert>
+          </Link>
+        )}
 
         {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
         {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
