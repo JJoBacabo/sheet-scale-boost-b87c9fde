@@ -1056,7 +1056,24 @@ const Products = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card3D intensity="low" className={`p-4 hover:border-primary/30 transition-colors ${isWarning ? 'border-warning/40' : ''}`}>
+                  <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-colors relative overflow-hidden">
+                    {isWarning && isProfitStat && (
+                      <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center">
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <div className="cursor-help">
+                                <AlertTriangle className="w-20 h-20 text-destructive/80 hover:text-destructive transition-colors" strokeWidth={1.5} />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="bg-destructive text-destructive-foreground border-destructive max-w-xs">
+                              <p className="font-medium">{stat.warningMessage}</p>
+                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mb-2">
                       <div className={`w-8 h-8 rounded-lg bg-gradient-primary/10 flex items-center justify-center ${stat.color}`}>
                         <Icon className="w-4 h-4" />
@@ -1068,21 +1085,6 @@ const Products = () => {
                           {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
                           {Math.abs(stat.change)}%
                         </div>
-                      )}
-                      {isWarning && isProfitStat && (
-                        <TooltipProvider>
-                          <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                              <div className="w-4 h-4 rounded bg-destructive/90 flex items-center justify-center cursor-help">
-                                <AlertTriangle className="w-3 h-3 text-destructive-foreground" />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="bg-destructive text-destructive-foreground border-destructive max-w-xs">
-                              <p className="font-medium">{stat.warningMessage}</p>
-                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
                       )}
                     </div>
                     <h3 className={`text-lg font-bold mb-0.5 ${isWarning && isProfitStat ? 'text-muted-foreground' : 'gradient-text'}`}>{stat.value}</h3>
