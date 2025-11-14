@@ -781,8 +781,8 @@ const ProfitSheet = () => {
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalProfit')}</p>
                       {hasProductsWithoutCost ? (
                         <div className="flex flex-col gap-1">
-                          <h3 className="text-xl sm:text-2xl font-bold text-warning">--</h3>
-                          <p className="text-xs text-muted-foreground">{t('products.incompleteCosts')}</p>
+                          <h3 className="text-xl sm:text-2xl font-bold text-warning">0.00</h3>
+                          <p className="text-xs text-warning">{t('products.incompleteCosts')}</p>
                         </div>
                       ) : (
                         <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>

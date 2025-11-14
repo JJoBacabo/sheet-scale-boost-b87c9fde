@@ -977,23 +977,29 @@ const Products = () => {
       value: totalStats.totalProducts,
       change: 5.2,
       icon: Package,
-      color: "text-primary"
+      color: "text-primary",
+      isProfit: false,
+      isAvgMargin: false
     },
     {
       label: t('products.totalRevenue') || "Total Revenue",
       value: formatAmount(totalStats.totalRevenue, storeCurrency),
       change: 12.5,
       icon: DollarSign,
-      color: "text-emerald-500"
+      color: "text-emerald-500",
+      isProfit: false,
+      isAvgMargin: false
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: formatAmount(hasProductsWithoutCost ? 0 : totalStats.totalProfit, storeCurrency),
-      change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
-      icon: TrendingUp,
-      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500",
+      value: hasProductsWithoutCost ? '0.00' : formatAmount(totalStats.totalProfit, storeCurrency),
+      change: 3.9,
+      icon: hasProductsWithoutCost ? AlertTriangle : DollarSign,
+      color: hasProductsWithoutCost ? "text-warning" : "text-green-500",
       warning: hasProductsWithoutCost,
-      warningMessage: t('products.incompleteCosts')
+      warningMessage: t('products.incompleteCosts'),
+      isProfit: true,
+      isAvgMargin: false
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
@@ -1003,6 +1009,7 @@ const Products = () => {
       color: hasProductsWithoutCost ? "text-warning" : "text-blue-500",
       warning: hasProductsWithoutCost,
       warningMessage: t('products.incompleteCosts'),
+      isProfit: false,
       isAvgMargin: true
     }
   ];
@@ -1049,7 +1056,7 @@ const Products = () => {
               const Icon = stat.icon;
               const isPositive = stat.change > 0;
               const isWarning = stat.warning;
-              const isProfitStat = stat.label === (t('products.totalProfit') || "Total Profit");
+              const isProfitStat = stat.isProfit;
               const isAvgMarginStat = stat.isAvgMargin;
               
               // Define gradient backgrounds for each stat
@@ -1084,30 +1091,10 @@ const Products = () => {
                     {/* Background Glow Effect */}
                     <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
                     
-                    {/* Warning Triangle ONLY for Total Profit (right side, large) */}
-                    {isWarning && isProfitStat && !isAvgMarginStat && (
-                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                        <TooltipProvider>
-                          <Tooltip delayDuration={0}>
-                            <TooltipTrigger asChild>
-                              <div className="cursor-help relative">
-                                <div className="absolute inset-0 bg-destructive/20 rounded-full blur-xl animate-pulse" />
-                                <AlertTriangle className="w-16 h-16 text-destructive relative z-10 drop-shadow-lg" strokeWidth={2} />
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent side="left" className="bg-destructive text-destructive-foreground border-destructive max-w-xs">
-                              <p className="font-semibold">{stat.warningMessage}</p>
-                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </div>
-                    )}
-                    
                     {/* Icon and Change Badge */}
                     <div className="flex items-start justify-between mb-4 relative z-10">
-                      {/* Icon with tooltip for Avg Margin warning */}
-                      {isWarning && isAvgMarginStat ? (
+                      {/* Icon with tooltip for warnings */}
+                      {isWarning && (isProfitStat || isAvgMarginStat) ? (
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
                             <TooltipTrigger asChild>
