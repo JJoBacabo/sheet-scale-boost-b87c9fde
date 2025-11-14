@@ -988,10 +988,11 @@ const Products = () => {
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
-      value: `${totalStats.avgMargin.toFixed(1)}%`,
+      value: hasProductsWithoutCost ? t('products.incompleteCosts') : `${totalStats.avgMargin.toFixed(1)}%`,
       change: 3.7,
-      icon: Activity,
-      color: "text-blue-500"
+      icon: hasProductsWithoutCost ? AlertTriangle : Activity,
+      color: hasProductsWithoutCost ? "text-warning" : "text-blue-500",
+      warning: hasProductsWithoutCost
     }
   ];
 
