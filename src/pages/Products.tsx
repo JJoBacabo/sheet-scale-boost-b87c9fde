@@ -514,6 +514,9 @@ const Products = () => {
     return revenue - cost;
   };
   
+  // Check if there are products without cost price
+  const hasProductsWithoutCost = filteredProducts.some(p => !p.cost_price || p.cost_price === 0);
+  
   const totalStats = {
     totalProducts: filteredProducts.length,
     totalRevenue: filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0),
@@ -977,10 +980,11 @@ const Products = () => {
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: formatAmount(totalStats.totalProfit, storeCurrency),
+      value: hasProductsWithoutCost ? t('products.incompleteCosts') : formatAmount(totalStats.totalProfit, storeCurrency),
       change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
-      icon: TrendingUp,
-      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
+      icon: hasProductsWithoutCost ? AlertTriangle : TrendingUp,
+      color: hasProductsWithoutCost ? "text-warning" : (totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"),
+      warning: hasProductsWithoutCost
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
@@ -1032,6 +1036,7 @@ const Products = () => {
             {statsData.map((stat, index) => {
               const Icon = stat.icon;
               const isPositive = stat.change > 0;
+              const isWarning = stat.warning;
               return (
                 <motion.div
                   key={stat.label}
@@ -1039,19 +1044,21 @@ const Products = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-colors">
+                  <Card3D intensity="low" className={`p-4 hover:border-primary/30 transition-colors ${isWarning ? 'border-warning/40' : ''}`}>
                     <div className="flex items-center justify-between mb-2">
                       <div className={`w-8 h-8 rounded-lg bg-gradient-primary/10 flex items-center justify-center ${stat.color}`}>
                         <Icon className="w-4 h-4" />
                       </div>
-                      <div className={`flex items-center gap-1 text-xs font-medium ${
-                        isPositive ? "text-emerald-500" : "text-red-500"
-                      }`}>
-                        {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                        {Math.abs(stat.change)}%
-                      </div>
+                      {!isWarning && (
+                        <div className={`flex items-center gap-1 text-xs font-medium ${
+                          isPositive ? "text-emerald-500" : "text-red-500"
+                        }`}>
+                          {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                          {Math.abs(stat.change)}%
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-lg font-bold mb-0.5 gradient-text">{stat.value}</h3>
+                    <h3 className={`text-lg font-bold mb-0.5 ${isWarning ? 'text-warning' : 'gradient-text'}`}>{stat.value}</h3>
                     <p className="text-xs text-muted-foreground">{stat.label}</p>
                   </Card3D>
                 </motion.div>
