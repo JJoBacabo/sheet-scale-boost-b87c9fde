@@ -277,7 +277,8 @@ const Dashboard = () => {
     };
   }, [navigate, fetchIntegrations]);
 
-  // Auto-sync Facebook campaigns when integration detected
+  // Auto-sync Facebook campaigns when integration detected - DISABLED FOR PERFORMANCE
+  // Users can manually sync if needed
   useEffect(() => {
     if (!user?.id || autoSynced || !hasFacebookIntegration) return;
 
@@ -291,15 +292,9 @@ const Dashboard = () => {
           .maybeSingle();
 
         if (integration) {
-          try {
-            await supabase.functions.invoke('sync-facebook-campaigns', {
-              body: { datePreset: 'last_30d' },
-            });
-            setAutoSynced(true);
-          } catch (err) {
-            // Silent fail - user can manually sync if needed
-            console.error('Auto-sync failed:', err);
-          }
+          // PERFORMANCE: Don't auto-sync, just mark as checked
+          console.log('✅ Facebook integration detected - skipping auto-sync for performance');
+          setAutoSynced(true);
         }
       } catch (error) {
         console.error('Error checking integration:', error);
