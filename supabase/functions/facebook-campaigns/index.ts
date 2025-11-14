@@ -286,12 +286,22 @@ serve(async (req) => {
       const campaignsWithImages = allCampaigns.map(campaign => {
         const firstAd = campaign.ads?.data?.[0];
         const creative = firstAd?.creative;
+        
+        // Log to debug image extraction
+        if (creative?.image_url || creative?.thumbnail_url) {
+          console.log(`Campaign ${campaign.id} has image: ${creative.image_url || creative.thumbnail_url}`);
+        }
+        
         return {
           ...campaign,
           image_url: creative?.image_url,
           thumbnail_url: creative?.thumbnail_url,
         };
       });
+      
+      // Log summary
+      const campaignsWithImagesCount = campaignsWithImages.filter(c => c.image_url || c.thumbnail_url).length;
+      console.log(`${campaignsWithImagesCount} of ${campaignsWithImages.length} campaigns have images`);
 
       return new Response(JSON.stringify({ 
         campaigns: campaignsWithImages,
