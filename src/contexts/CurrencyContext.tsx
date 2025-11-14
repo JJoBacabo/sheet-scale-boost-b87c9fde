@@ -82,7 +82,11 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const response = await fetch('https://open.er-api.com/v6/latest/EUR');
       const data = await response.json();
       if (data.result === 'success' && data.rates) {
-        setExchangeRates(data.rates);
+        // Always set BGN to fixed rate (pegged to EUR)
+        setExchangeRates({
+          ...data.rates,
+          'BGN': 1.9558, // Bulgarian Lev - fixed exchange rate to EUR
+        });
       }
     } catch (error) {
       console.error('Failed to fetch exchange rates:', error);
@@ -102,7 +106,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'CZK': 25.0,
         'HUF': 400,
         'RON': 5.0,
-        'BGN': 1.96,
+        'BGN': 1.9558, // Bulgarian Lev - fixed exchange rate to EUR
         'HRK': 7.5,
         'RUB': 100,
         'TRY': 34.5,
