@@ -79,14 +79,23 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
             .select('id, status')
             .eq('user_id', userId);
           
-          const { data: products } = await supabase
+          // Get products with conditional integration_id filter
+          let productsQuery = supabase
             .from('products')
             .select('id, cost_price')
-            .eq('user_id', userId)
-            .eq('integration_id', filters.storeId);
+            .eq('user_id', userId);
+          
+          // Only filter by integration_id if a specific store is selected
+          if (filters.storeId && filters.storeId !== 'all') {
+            productsQuery = productsQuery.eq('integration_id', filters.storeId);
+          }
+          
+          const { data: products } = await productsQuery;
           
           const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
           const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
+          
+          console.log(`📦 Products check: ${products?.length || 0} total, ${products?.filter(p => !p.cost_price || p.cost_price === 0).length || 0} without cost`);
           
         setStats({
           totalCampaigns: campaigns?.length || 0,
@@ -204,19 +213,28 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
             .eq('user_id', userId)
             .then(res => res),
           
-          // Get products with cost_price check
-          supabase
-            .from('products')
-            .select('id, cost_price')
-            .eq('user_id', userId)
-            .eq('integration_id', filters?.storeId && filters.storeId !== 'all' ? filters.storeId : undefined)
-            .then(res => res)
+          // Get products with cost_price check (conditional integration_id filter)
+          (async () => {
+            let productsQuery = supabase
+              .from('products')
+              .select('id, cost_price')
+              .eq('user_id', userId);
+            
+            // Only filter by integration_id if a specific store is selected
+            if (filters?.storeId && filters.storeId !== 'all') {
+              productsQuery = productsQuery.eq('integration_id', filters.storeId);
+            }
+            
+            return productsQuery;
+          })()
         ]);
 
         const campaigns = campaignsResult.data || [];
         const products = productsResult.data || [];
         const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
         const hasProductsWithoutCost = products.some(p => !p.cost_price || p.cost_price === 0);
+        
+        console.log(`📦 Products fallback check: ${products.length} total, ${products.filter(p => !p.cost_price || p.cost_price === 0).length} without cost`);
         
         console.log('📦 Fetched products:', products?.length || 0);
 
