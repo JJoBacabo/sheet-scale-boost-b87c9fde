@@ -8,7 +8,7 @@ function Model() {
   return (
     <primitive 
       object={scene} 
-      scale={1} 
+      scale={1.5} 
       position={[0, 0, 0]}
     />
   );
@@ -34,6 +34,7 @@ export const Logo3D = ({ className }: Logo3DProps) => {
       <Canvas
         camera={{ position: [0, 0, 5], fov: 50 }}
         gl={{ antialias: true, alpha: true }}
+        className="w-full h-full"
       >
         <Suspense fallback={<LoadingFallback />}>
           <ambientLight intensity={0.5} />
@@ -42,10 +43,15 @@ export const Logo3D = ({ className }: Logo3DProps) => {
           <directionalLight position={[0, 5, 5]} intensity={0.5} />
           <Model />
           <OrbitControls 
-            enableZoom={false} 
-            enablePan={false}
-            autoRotate
-            autoRotateSpeed={1}
+            enableZoom={true}
+            enablePan={true}
+            autoRotate={false}
+            minDistance={2}
+            maxDistance={10}
+            minPolarAngle={0}
+            maxPolarAngle={Math.PI}
+            enableDamping={true}
+            dampingFactor={0.05}
           />
           <Environment preset="city" />
         </Suspense>

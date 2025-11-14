@@ -472,13 +472,6 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-4 sm:px-6">
         <div className="container mx-auto max-w-7xl relative z-10">
-          {/* 3D Logo */}
-          <div className="flex justify-center mb-12">
-            <div className="w-full max-w-md h-64 md:h-80">
-              <Logo3D />
-            </div>
-          </div>
-          
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Hero Content */}
             <div>
@@ -1205,6 +1198,42 @@ const Landing = () => {
             </div>
           </Card>
         </div>
+      </section>
+
+      {/* 3D Logo Interactive Section */}
+      <section className="container mx-auto px-4 sm:px-6 py-20 relative">
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 50,
+          }}
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+          viewport={{
+            once: true,
+          }}
+          transition={{
+            duration: 0.8,
+          }}
+          className="max-w-4xl mx-auto"
+        >
+          <div className="text-center mb-12">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-white">
+              {t("landing.interactiveLogo.title", "Interaja com o nosso logo 3D")}
+            </h2>
+            <p className="text-xl text-gray-400">
+              {t("landing.interactiveLogo.subtitle", "Arraste para rotacionar • Scroll para zoom • Clique e arraste para mover")}
+            </p>
+          </div>
+          
+          <Card3D intensity="high" glow className="p-8">
+            <div className="w-full h-[500px] md:h-[600px] lg:h-[700px] rounded-xl overflow-hidden bg-gradient-to-br from-[#0A0E27] to-[#050F2A]">
+              <Logo3D />
+            </div>
+          </Card3D>
+        </motion.div>
       </section>
 
       {/* FAQ Section */}
