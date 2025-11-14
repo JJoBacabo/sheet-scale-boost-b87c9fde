@@ -310,13 +310,28 @@ const Dashboard = () => {
   // Fetch Campaigns - Aggregate from daily_roas for accurate data
   const fetchCampaigns = useCallback(async () => {
     if (!user?.id) return;
+
+    // OTIMIZAÇÃO: Só carrega campanhas se há filtros específicos selecionados
+    // Evita carregar todas as campanhas de uma vez
+    const hasSpecificFilters = 
+      (selectedStore && selectedStore !== "all") || 
+      (selectedAdAccount && selectedAdAccount !== "all");
+
+    if (!hasSpecificFilters) {
+      console.log('⚠️ Selecione uma loja ou conta de anúncios para ver campanhas');
+      setCampaigns([]);
+      return;
+    }
     
     try {
+      console.log('🔄 Carregando campanhas com filtros específicos...');
+      
       // Get daily_roas data aggregated by campaign
       let dailyRoasQuery = supabase
         .from('daily_roas')
         .select('campaign_id, campaign_name, total_spent, units_sold, product_price, cog, purchases, cpc, date')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .limit(500); // OTIMIZAÇÃO: Limitar a 500 registros mais recentes
 
       if (timeframe?.dateFrom) {
         const df = new Date(timeframe.dateFrom);
@@ -427,7 +442,7 @@ const Dashboard = () => {
       console.error('Error in fetchCampaigns:', error);
       setCampaigns([]);
     }
-  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore]);
+  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore, selectedAdAccount]);
 
   useEffect(() => {
     if (user?.id) {
@@ -790,7 +805,23 @@ const Dashboard = () => {
         )}
 
         {/* Campaigns Table */}
-        {campaigns.length > 0 && (
+        {selectedStore === "all" && selectedAdAccount === "all" ? (
+          <Card3D intensity="medium" glow className="p-6 md:p-8 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Target className="w-8 h-8 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-2">
+                  {t('dashboard.selectFilters') || 'Selecione uma Loja ou Conta de Anúncios'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('dashboard.selectFiltersDescription') || 'Para visualizar as campanhas, selecione uma loja Shopify ou conta de anúncios nos filtros acima.'}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        ) : campaigns.length > 0 ? (
           <Card3D intensity="medium" glow className="p-3 sm:p-4 md:p-6 overflow-hidden">
             <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:gap-4">
               <div className="flex flex-col gap-1.5 sm:gap-2">
@@ -920,7 +951,7 @@ const Dashboard = () => {
               </div>
             )}
           </Card3D>
-        )}
+        ) : null}
       </div>
     </PageLayout>
   );
