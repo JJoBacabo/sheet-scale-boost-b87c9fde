@@ -479,6 +479,7 @@ const translations = {
       timeframe: 'Período',
       refreshed: 'Atualizado',
       dataRefreshed: 'Dados atualizados com sucesso',
+      clickToAddQuotes: 'Clique para adicionar cotações',
     },
     campaigns: {
       title: 'Campanhas',
@@ -675,6 +676,7 @@ const translations = {
         noCostPrice: 'Sem Custo',
         needsQuote: 'Adicionar cotação para calcular',
         incompleteCosts: 'Custos incompletos',
+        clickToAddQuotes: 'Clique para adicionar cotações',
         search: 'Pesquisar produtos por nome ou SKU...',
         allStores: 'Todas as Lojas',
         allPeriods: 'Todos os períodos',
@@ -1710,6 +1712,7 @@ const translations = {
       timeframe: 'Timeframe',
       refreshed: 'Refreshed',
       dataRefreshed: 'Data refreshed successfully',
+      clickToAddQuotes: 'Click to add quotes',
     },
     campaigns: {
       title: 'Campaigns',
@@ -1906,6 +1909,7 @@ const translations = {
         noCostPrice: 'No Cost',
         needsQuote: 'Add quote to calculate',
         incompleteCosts: 'Incomplete costs',
+        clickToAddQuotes: 'Click to add quotes',
         search: 'Search products by name or SKU...',
         allStores: 'All Stores',
         allPeriods: 'All Periods',

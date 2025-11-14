@@ -14,6 +14,7 @@ interface DashboardStats {
   recentActivity: any[];
   dailyRoasData: any[];
   storeCurrency?: string;
+  hasProductsWithoutCost?: boolean;
   loading: boolean;
 }
 
@@ -30,6 +31,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
     totalSupplierCost: 0,
     recentActivity: [],
     dailyRoasData: [],
+    hasProductsWithoutCost: false,
     loading: true,
   });
 
@@ -79,11 +81,12 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           
           const { data: products } = await supabase
             .from('products')
-            .select('id')
+            .select('id, cost_price')
             .eq('user_id', userId)
             .eq('integration_id', filters.storeId);
           
           const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+          const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
           
           setStats({
             totalCampaigns: campaigns?.length || 0,
@@ -98,6 +101,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
             recentActivity: [],
             dailyRoasData: realStats.dailyData || [],
             storeCurrency: realStats.storeCurrency || 'EUR',
+            hasProductsWithoutCost,
             loading: false,
           });
           
@@ -238,6 +242,8 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           totalCampaigns: totalCampaigns
         });
 
+        const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
+
         setStats({
           totalCampaigns: totalCampaigns,
           totalProducts: products?.length || 0,
@@ -250,6 +256,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           totalSupplierCost,
           recentActivity: [],
           dailyRoasData: dailyRoas || [],
+          hasProductsWithoutCost,
           loading: false,
         });
       } catch (error) {
