@@ -373,6 +373,10 @@ export type Database = {
         Row: {
           company_name: string | null
           created_at: string
+          facebook_access_token: string | null
+          facebook_token_expires_at: string | null
+          facebook_user_id: string | null
+          facebook_user_name: string | null
           full_name: string | null
           id: string
           last_login: string | null
@@ -386,6 +390,10 @@ export type Database = {
         Insert: {
           company_name?: string | null
           created_at?: string
+          facebook_access_token?: string | null
+          facebook_token_expires_at?: string | null
+          facebook_user_id?: string | null
+          facebook_user_name?: string | null
           full_name?: string | null
           id?: string
           last_login?: string | null
@@ -399,6 +407,10 @@ export type Database = {
         Update: {
           company_name?: string | null
           created_at?: string
+          facebook_access_token?: string | null
+          facebook_token_expires_at?: string | null
+          facebook_user_id?: string | null
+          facebook_user_name?: string | null
           full_name?: string | null
           id?: string
           last_login?: string | null
@@ -442,6 +454,87 @@ export type Database = {
           manual_refunds?: number | null
           other_expenses?: number | null
           shopify_integration_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_ads: {
+        Row: {
+          ad_library_id: string
+          ad_text: string | null
+          created_at: string
+          id: string
+          impressions: string | null
+          page_name: string
+          saved_at: string
+          snapshot_url: string
+          spend: string | null
+          user_id: string
+        }
+        Insert: {
+          ad_library_id: string
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          impressions?: string | null
+          page_name: string
+          saved_at?: string
+          snapshot_url: string
+          spend?: string | null
+          user_id: string
+        }
+        Update: {
+          ad_library_id?: string
+          ad_text?: string | null
+          created_at?: string
+          id?: string
+          impressions?: string | null
+          page_name?: string
+          saved_at?: string
+          snapshot_url?: string
+          spend?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sheets_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_sync_at: string
+          products_created: number | null
+          products_updated: number | null
+          sheet_id: string
+          sheet_name: string | null
+          sync_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string
+          products_created?: number | null
+          products_updated?: number | null
+          sheet_id: string
+          sheet_name?: string | null
+          sync_status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_sync_at?: string
+          products_created?: number | null
+          products_updated?: number | null
+          sheet_id?: string
+          sheet_name?: string | null
+          sync_status?: string
           updated_at?: string
           user_id?: string
         }

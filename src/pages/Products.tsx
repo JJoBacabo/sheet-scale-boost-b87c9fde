@@ -8,22 +8,29 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye } from "lucide-react";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send, Filter } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { StoreSelector } from "@/components/StoreSelector";
+import { StoreCurrencySelector } from "@/components/StoreCurrencySelector";
+import { SupplierQuoteModal } from "@/components/SupplierQuoteModal";
+import { SupplierQuoteList } from "@/components/SupplierQuoteList";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, subDays, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -41,6 +48,9 @@ interface Product {
   created_at: string;
   updated_at: string;
   last_sold_at: string | null;
+  integrations?: {
+    metadata: any;
+  } | null;
 }
 
 const Products = () => {
@@ -63,6 +73,12 @@ const Products = () => {
   const [datePreset, setDatePreset] = useState("all");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedStore, setSelectedStore] = useState("all");
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
+  const [storeCurrency, setStoreCurrency] = useState<string>("EUR");
+  const [showOnlyWithoutCost, setShowOnlyWithoutCost] = useState(false);
+  const [updatingCurrency, setUpdatingCurrency] = useState(false);
+  const { selectedCurrency, convertBetween, formatAmount } = useCurrency();
 
   const toggleProduct = (productId: string) => {
     setExpandedProducts(prev => {
@@ -231,6 +247,89 @@ const Products = () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
+  
+  // Function to update currency for a store
+  const updateCurrencyForStore = async (integrationId: string, showToast = true) => {
+    if (!user) return null;
+
+    setUpdatingCurrency(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('update-store-currencies', {
+        body: { integration_id: integrationId }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.store_currency) {
+        if (showToast) {
+          toast({
+            title: "Moeda atualizada",
+            description: `Moeda da loja atualizada para ${data.store_currency}`,
+          });
+        }
+        return data.store_currency;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error updating currency:', error);
+      if (showToast) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível atualizar a moeda da loja",
+          variant: "destructive",
+        });
+      }
+      return null;
+    } finally {
+      setUpdatingCurrency(false);
+    }
+  };
+
+  // Update store currency when selected store changes
+  useEffect(() => {
+    const updateStoreCurrency = async () => {
+      if (selectedStore === "all") {
+        setStoreCurrency("EUR"); // Default to EUR for "all stores"
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('integrations')
+          .select('metadata')
+          .eq('id', selectedStore)
+          .single();
+
+        if (error) throw error;
+
+        const metadata = data?.metadata as any;
+        if (metadata?.store_currency) {
+          setStoreCurrency(metadata.store_currency);
+        } else {
+          // Currency not set - try to update it automatically
+          console.log('🔄 Store currency not found, updating automatically...');
+          const updatedCurrency = await updateCurrencyForStore(selectedStore, false);
+          
+          if (updatedCurrency) {
+            setStoreCurrency(updatedCurrency);
+            toast({
+              title: "Moeda configurada",
+              description: `Moeda da loja atualizada automaticamente para ${updatedCurrency}`,
+            });
+          } else {
+            setStoreCurrency("EUR"); // Fallback to EUR
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching store currency:', error);
+        setStoreCurrency("EUR");
+      }
+    };
+
+    updateStoreCurrency();
+  }, [selectedStore, user]);
 
   const checkShopifyIntegration = async (userId: string) => {
     const { data } = await supabase
@@ -287,7 +386,12 @@ const Products = () => {
     
     let query = supabase
       .from("products")
-      .select("*")
+      .select(`
+        *,
+        integrations (
+          metadata
+        )
+      `)
       .eq("user_id", userId);
 
     // Filter by selected store if not "all"
@@ -451,12 +555,16 @@ const Products = () => {
       const matchesDate = !dateRange.from || !dateRange.to || 
         isWithinInterval(new Date(soldDate), { start: dateRange.from, end: dateRange.to });
       
-      return matchesSearch && matchesDate;
+      // Cost filter - show only products without cost if filter is enabled
+      const matchesCostFilter = !showOnlyWithoutCost || !p.cost_price || p.cost_price === 0;
+      
+      return matchesSearch && matchesDate && matchesCostFilter;
     })
     .sort((a, b) => {
-      // Sort by updated_at descending (most recent first)
-      const dateA = new Date(a.updated_at || a.created_at).getTime();
-      const dateB = new Date(b.updated_at || b.created_at).getTime();
+      // Sort by last_sold_at descending (most recent sales first)
+      // This keeps order stable during edits since last_sold_at only changes with new sales
+      const dateA = a.last_sold_at ? new Date(a.last_sold_at).getTime() : new Date(a.created_at).getTime();
+      const dateB = b.last_sold_at ? new Date(b.last_sold_at).getTime() : new Date(b.created_at).getTime();
       return dateB - dateA;
     });
 
@@ -465,7 +573,10 @@ const Products = () => {
     const cost = (product.cost_price || 0) * (product.quantity_sold || 0);
     return revenue - cost;
   };
-
+  
+  // Check if there are products without cost price
+  const hasProductsWithoutCost = filteredProducts.some(p => !p.cost_price || p.cost_price === 0);
+  
   const totalStats = {
     totalProducts: filteredProducts.length,
     totalRevenue: filteredProducts.reduce((sum, p) => sum + (p.total_revenue || 0), 0),
@@ -918,28 +1029,40 @@ const Products = () => {
       value: totalStats.totalProducts,
       change: 5.2,
       icon: Package,
-      color: "text-primary"
+      color: "text-primary",
+      isProfit: false,
+      isAvgMargin: false
     },
     {
       label: t('products.totalRevenue') || "Total Revenue",
-      value: `€${totalStats.totalRevenue.toFixed(2)}`,
+      value: formatAmount(convertBetween(totalStats.totalRevenue, storeCurrency, selectedCurrency.code), selectedCurrency.code),
       change: 12.5,
       icon: DollarSign,
-      color: "text-emerald-500"
+      color: "text-emerald-500",
+      isProfit: false,
+      isAvgMargin: false
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: `€${totalStats.totalProfit.toFixed(2)}`,
-      change: totalStats.totalProfit > 0 ? 8.3 : -2.1,
-      icon: TrendingUp,
-      color: totalStats.totalProfit > 0 ? "text-emerald-500" : "text-red-500"
+      value: hasProductsWithoutCost ? '0.00' : formatAmount(convertBetween(totalStats.totalProfit, storeCurrency, selectedCurrency.code), selectedCurrency.code),
+      change: 3.9,
+      icon: hasProductsWithoutCost ? AlertTriangle : DollarSign,
+      color: hasProductsWithoutCost ? "text-warning" : "text-green-500",
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts'),
+      isProfit: true,
+      isAvgMargin: false
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
-      value: `${totalStats.avgMargin.toFixed(1)}%`,
+      value: hasProductsWithoutCost ? '0.0%' : `${totalStats.avgMargin.toFixed(1)}%`,
       change: 3.7,
-      icon: Activity,
-      color: "text-blue-500"
+      icon: hasProductsWithoutCost ? AlertTriangle : Activity,
+      color: hasProductsWithoutCost ? "text-warning" : "text-blue-500",
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts'),
+      isProfit: false,
+      isAvgMargin: true
     }
   ];
 
@@ -974,43 +1097,164 @@ const Products = () => {
       }
     >
       <div className="space-y-6">
-        {/* Stats Cards - Compact */}
+        {/* Stats Cards - Modern Design */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {statsData.map((stat, index) => {
               const Icon = stat.icon;
               const isPositive = stat.change > 0;
+              const isWarning = stat.warning;
+              const isProfitStat = stat.isProfit;
+              const isAvgMarginStat = stat.isAvgMargin;
+              
+              // Define gradient backgrounds for each stat
+              const gradients = [
+                'bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-transparent',
+                'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-transparent',
+                'bg-gradient-to-br from-purple-500/10 via-purple-400/5 to-transparent',
+                'bg-gradient-to-br from-orange-500/10 via-orange-400/5 to-transparent',
+              ];
+              
               return (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
-                  <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-primary/10 flex items-center justify-center ${stat.color}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className={`flex items-center gap-1 text-xs font-medium ${
-                        isPositive ? "text-emerald-500" : "text-red-500"
-                      }`}>
-                        {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                        {Math.abs(stat.change)}%
-                      </div>
+                  <Card className={`
+                    relative overflow-hidden p-6 
+                    border border-border/50 
+                    backdrop-blur-sm
+                    ${gradients[index]}
+                    hover:border-primary/40 hover:shadow-lg
+                    transition-all duration-300
+                    group
+                  `}>
+                    {/* Background Glow Effect */}
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
+                    
+                    {/* Icon and Change Badge */}
+                    <div className="flex items-start justify-between mb-4 relative z-10">
+                      {/* Icon with tooltip for warnings */}
+                      {isWarning && (isProfitStat || isAvgMarginStat) ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <div className={`
+                                w-12 h-12 rounded-2xl 
+                                flex items-center justify-center
+                                ${stat.color}
+                                bg-gradient-to-br from-white/10 to-white/5
+                                shadow-lg
+                                group-hover:scale-110 group-hover:rotate-3
+                                transition-all duration-300
+                                cursor-help
+                              `}>
+                                <Icon className="w-6 h-6" strokeWidth={2.5} />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="bg-warning text-warning-foreground border-warning max-w-xs">
+                              <p className="font-semibold">{stat.warningMessage}</p>
+                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <div className={`
+                          w-12 h-12 rounded-2xl 
+                          flex items-center justify-center
+                          ${stat.color}
+                          bg-gradient-to-br from-white/10 to-white/5
+                          shadow-lg
+                          group-hover:scale-110 group-hover:rotate-3
+                          transition-all duration-300
+                        `}>
+                          <Icon className="w-6 h-6" strokeWidth={2.5} />
+                        </div>
+                      )}
+                      
+                      {!isWarning && (
+                        <div className={`
+                          flex items-center gap-1.5 
+                          px-2.5 py-1 rounded-full
+                          text-xs font-semibold
+                          ${isPositive 
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                            : "bg-red-500/10 text-red-600 dark:text-red-400"
+                          }
+                        `}>
+                          {isPositive ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
+                          {Math.abs(stat.change)}%
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-lg font-bold mb-0.5 gradient-text">{stat.value}</h3>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </Card3D>
+                    
+                    {/* Value and Label */}
+                    <div className="space-y-1 relative z-10">
+                      <h3 className={`
+                        text-2xl md:text-3xl font-bold 
+                        ${isWarning && (isProfitStat || isAvgMarginStat)
+                          ? 'text-muted-foreground/60' 
+                          : 'bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent'
+                        }
+                      `}>
+                        {stat.value}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-medium">
+                        {stat.label}
+                      </p>
+                    </div>
+                  </Card>
                 </motion.div>
               );
             })}
           </div>
         </motion.section>
+
+        {/* Supplier Quotation Section */}
+        {user && (
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="space-y-4"
+          >
+            <Card3D className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">
+                    {t("supplierQuotes.title")}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t("supplierQuotes.description")}
+                  </p>
+                </div>
+                <Button onClick={() => setQuoteModalOpen(true)}>
+                  {t("supplierQuotes.requestQuote")}
+                </Button>
+              </div>
+              <SupplierQuoteList userId={user.id} refreshTrigger={quoteRefreshTrigger} />
+            </Card3D>
+
+            <SupplierQuoteModal
+              open={quoteModalOpen}
+              onOpenChange={setQuoteModalOpen}
+              userId={user.id}
+              selectedStore={selectedStore}
+              onSuccess={() => setQuoteRefreshTrigger((prev) => prev + 1)}
+            />
+          </motion.section>
+        )}
 
         {/* Search and Filters - Simplified */}
         <motion.section
@@ -1031,11 +1275,44 @@ const Products = () => {
             </div>
 
             {/* Filters */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* Store Selector */}
               <div className="min-w-[160px]">
                 <StoreSelector value={selectedStore} onChange={setSelectedStore} />
               </div>
+              
+              {/* Store Currency Selector - only show when a specific store is selected */}
+              {selectedStore !== "all" && (
+                <div className="flex items-center gap-2">
+                  <StoreCurrencySelector 
+                    integrationId={selectedStore}
+                    currentCurrency={storeCurrency}
+                    onUpdate={() => {
+                      if (user) fetchProducts(user.id, true);
+                    }}
+                  />
+                  
+                  {/* Manual Currency Update Button */}
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-10 px-3"
+                          onClick={() => updateCurrencyForStore(selectedStore, true)}
+                          disabled={updatingCurrency}
+                        >
+                          <RefreshCw className={cn("h-4 w-4", updatingCurrency && "animate-spin")} />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Verificar e atualizar moeda da loja</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
 
               {/* Date Preset */}
               <Select value={datePreset} onValueChange={handleDatePresetChange}>
@@ -1080,6 +1357,22 @@ const Products = () => {
                   />
                 </PopoverContent>
               </Popover>
+
+              {/* Filter: Only Without Cost */}
+              <div className="flex items-center gap-2 h-10 px-3 border border-border rounded-md bg-card">
+                <Switch
+                  id="filter-without-cost"
+                  checked={showOnlyWithoutCost}
+                  onCheckedChange={setShowOnlyWithoutCost}
+                />
+                <Label 
+                  htmlFor="filter-without-cost" 
+                  className="text-sm cursor-pointer flex items-center gap-1.5"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                  {t('products.withoutCost')}
+                </Label>
+              </div>
             </div>
           </div>
         </motion.section>
@@ -1162,7 +1455,7 @@ const Products = () => {
                             </div>
                             <div className="text-left flex-1 min-w-0">
                               <h3 className="text-base font-semibold line-clamp-2 mb-1">{product.product_name}</h3>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xl font-bold text-primary">
                                   {product.quantity_sold}x
                                 </span>
@@ -1170,6 +1463,12 @@ const Products = () => {
                                   <Badge variant="outline" className="text-xs">
                                     <ShoppingBag className="w-3 h-3 mr-1" />
                                     Shopify
+                                  </Badge>
+                                )}
+                                {!product.cost_price && (
+                                  <Badge variant="destructive" className="text-xs animate-pulse">
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    {t('products.noCostPrice')}
                                   </Badge>
                                 )}
                               </div>
@@ -1184,8 +1483,16 @@ const Products = () => {
                       </CollapsibleTrigger>
 
                       <CollapsibleContent className="space-y-3">
-                        {product.sku && (
-                          <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                        {product.shopify_product_id && product.integrations?.metadata?.myshopify_domain && (
+                          <a 
+                            href={`https://${product.integrations.metadata.myshopify_domain}/admin/products/${product.shopify_product_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                          >
+                            {t('products.viewInShopify')}
+                            <Eye className="w-3 h-3" />
+                          </a>
                         )}
 
                         <div className="space-y-2.5 p-3 rounded-lg bg-background/30 border border-border/50">
@@ -1195,7 +1502,9 @@ const Products = () => {
                             {editingCost === product.id ? (
                               <div className="flex items-center gap-1.5">
                                 <div className="relative flex items-center">
-                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">€</span>
+                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">
+                                    {selectedCurrency.symbol}
+                                  </span>
                                   <input
                                     type="text"
                                     inputMode="decimal"
@@ -1249,7 +1558,7 @@ const Products = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-base font-semibold text-foreground">
                                   {product.cost_price !== null && product.cost_price !== 0 
-                                    ? `€${product.cost_price.toFixed(2)}`
+                                    ? formatAmount(convertBetween(product.cost_price, storeCurrency, selectedCurrency.code), selectedCurrency.code)
                                     : <span className="text-muted-foreground italic">Não definido</span>
                                   }
                                 </span>
@@ -1262,6 +1571,21 @@ const Products = () => {
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
+                                {(!product.cost_price || product.cost_price === 0) && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 gap-1.5 text-xs border-warning/40 text-warning hover:bg-warning/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setQuoteModalOpen(true);
+                                    }}
+                                    title="Solicitar cotação ao fornecedor"
+                                  >
+                                    <Send className="w-3.5 h-3.5" />
+                                    Cotação
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
@@ -1269,14 +1593,30 @@ const Products = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.totalRevenue')}</span>
                             <span className="text-lg font-bold text-green-600">
-                              €{product.total_revenue?.toFixed(2) || "0.00"}
+                              {formatAmount(convertBetween(product.total_revenue || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
-                            <span className="font-semibold">
-                              €{product.selling_price?.toFixed(2) || "0.00"}
-                            </span>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="font-semibold">
+                                {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                              </span>
+                              {storeCurrency !== selectedCurrency.code && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Badge variant="outline" className="text-xs font-normal">
+                                        {(product.selling_price || 0).toFixed(2)} {storeCurrency} → {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                                      </Badge>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Preço convertido de {storeCurrency} para {selectedCurrency.code}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.margin')}</span>
@@ -1292,9 +1632,16 @@ const Products = () => {
                           </div>
                           <div className="flex items-center justify-between pt-2">
                             <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
-                            <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                              €{calculateProfit(product).toFixed(2)}
-                            </span>
+                            {!product.cost_price || product.cost_price === 0 ? (
+                              <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-4 h-4 text-warning" />
+                                <span className="text-sm text-warning italic">{t('products.needsQuote')}</span>
+                              </div>
+                            ) : (
+                              <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatAmount(calculateProfit(product), storeCurrency)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </CollapsibleContent>

@@ -54,7 +54,8 @@ interface CurrencyContextType {
   selectedCurrency: Currency;
   setSelectedCurrency: (currency: Currency) => void;
   convertFromEUR: (amountInEUR: number) => number;
-  formatAmount: (amount: number) => string;
+  convertBetween: (amount: number, fromCurrency: string, toCurrency?: string) => number;
+  formatAmount: (amount: number, sourceCurrency?: string) => string;
   exchangeRates: Record<string, number>;
 }
 
@@ -81,7 +82,11 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const response = await fetch('https://open.er-api.com/v6/latest/EUR');
       const data = await response.json();
       if (data.result === 'success' && data.rates) {
-        setExchangeRates(data.rates);
+        // Always set BGN to fixed rate (pegged to EUR)
+        setExchangeRates({
+          ...data.rates,
+          'BGN': 1.9558, // Bulgarian Lev - fixed exchange rate to EUR
+        });
       }
     } catch (error) {
       console.error('Failed to fetch exchange rates:', error);
@@ -101,7 +106,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         'CZK': 25.0,
         'HUF': 400,
         'RON': 5.0,
-        'BGN': 1.96,
+        'BGN': 1.9558, // Bulgarian Lev - fixed exchange rate to EUR
         'HRK': 7.5,
         'RUB': 100,
         'TRY': 34.5,
@@ -141,13 +146,36 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return amountInEUR * rate;
   };
 
-  const formatAmount = (amount: number): string => {
+  const convertBetween = (amount: number, fromCurrency: string, toCurrency?: string): number => {
+    const targetCurrency = toCurrency || selectedCurrency.code;
+    
+    // If currencies are the same, no conversion needed
+    if (fromCurrency === targetCurrency) {
+      return amount;
+    }
+
+    // Convert from source currency to EUR first
+    const rateFrom = exchangeRates[fromCurrency] || 1;
+    const amountInEUR = amount / rateFrom;
+
+    // Then convert from EUR to target currency
+    const rateTo = exchangeRates[targetCurrency] || 1;
+    return amountInEUR * rateTo;
+  };
+
+  const formatAmount = (amount: number, sourceCurrency?: string): string => {
+    // If source currency is provided, convert from that currency
+    // Otherwise assume it's in EUR and convert from EUR
+    const convertedAmount = sourceCurrency 
+      ? convertBetween(amount, sourceCurrency, selectedCurrency.code)
+      : convertFromEUR(amount);
+      
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: selectedCurrency.code,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(amount);
+    }).format(convertedAmount);
   };
 
   return (
@@ -156,6 +184,7 @@ export const CurrencyProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         selectedCurrency,
         setSelectedCurrency,
         convertFromEUR,
+        convertBetween,
         formatAmount,
         exchangeRates,
       }}

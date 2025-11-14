@@ -30,12 +30,15 @@ import {
   Calendar,
   Edit2,
   Check,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { format, subDays, isWithinInterval } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Integration {
   id: string;
@@ -70,9 +73,10 @@ const ProfitSheet = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const { selectedCurrency, convertFromEUR, formatAmount } = useCurrency();
+  const { selectedCurrency, convertFromEUR, formatAmount, convertBetween } = useCurrency();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storeCurrency, setStoreCurrency] = useState<string>('EUR');
   
   // Selection state
   const [shopifyIntegrations, setShopifyIntegrations] = useState<Integration[]>([]);
@@ -106,6 +110,7 @@ const ProfitSheet = () => {
     adSpend: 0,
     avgRoas: 0,
   });
+  const [hasProductsWithoutCost, setHasProductsWithoutCost] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -191,32 +196,28 @@ const ProfitSheet = () => {
 
   const fetchAdAccounts = async () => {
     try {
-      console.log("📋 Fetching ad accounts...");
-      
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
       });
 
       if (error) {
-        console.error("❌ Error from edge function:", error);
-        throw error;
+        // Silently fail - don't show error toast for expected failures
+        console.log("⚠️ Could not fetch ad accounts (likely not connected or token expired)");
+        setAdAccounts([]);
+        return;
       }
-      
-      console.log("📊 Ad accounts response:", data);
       
       if (data?.adAccounts) {
         console.log("✅ Found", data.adAccounts.length, "ad accounts");
         setAdAccounts(data.adAccounts);
       } else {
         console.log("⚠️ No ad accounts in response");
+        setAdAccounts([]);
       }
     } catch (error: any) {
-      console.error("❌ Error fetching ad accounts:", error);
-      toast({
-        title: t('metaDashboard.errorLoadingAccounts'),
-        description: error.message || t('metaDashboard.noAccountsFound'),
-        variant: "destructive"
-      });
+      // Silently handle errors - don't show toast for expected failures
+      console.log("⚠️ Could not fetch ad accounts:", error.message);
+      setAdAccounts([]);
     }
   };
 
@@ -399,6 +400,19 @@ const ProfitSheet = () => {
     try {
       console.log('📊 Fetching profit data...');
 
+      // Check for products without cost_price
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, cost_price')
+        .eq('user_id', user.id)
+        .eq('integration_id', selectedShopify);
+
+      if (!productsError) {
+        const missingCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
+        setHasProductsWithoutCost(missingCost);
+        console.log('🏷️ Products without cost:', missingCost);
+      }
+
       const dateFrom = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : format(subDays(new Date(), 30), 'yyyy-MM-dd');
       const dateTo = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
 
@@ -417,6 +431,12 @@ const ProfitSheet = () => {
       }
 
       console.log('✅ Raw data received:', data);
+
+      // Set store currency
+      if (data.storeCurrency) {
+        setStoreCurrency(data.storeCurrency);
+        console.log('💱 Store currency set to:', data.storeCurrency);
+      }
 
       // Process and calculate all values
       const processedData: ProfitRow[] = data.data.map((day: any) => {
@@ -715,6 +735,18 @@ const ProfitSheet = () => {
                   </Button>
                 </div>
 
+                {/* Missing Cost Warning */}
+                {hasProductsWithoutCost && (
+                  <Link to="/products">
+                    <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                      <AlertDescription className="text-warning font-medium">
+                        {t('products.incompleteCosts')} - {t('dashboard.clickToAddQuotes')}
+                      </AlertDescription>
+                    </Alert>
+                  </Link>
+                )}
+
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                   <Card className="relative p-4 sm:p-6 glass-card rounded-2xl sm:rounded-3xl border-2 border-border/50 overflow-hidden group hover:shadow-glow transition-all duration-300">
@@ -726,22 +758,37 @@ const ProfitSheet = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalRevenue')}</p>
-                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.revenue))}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(totals.revenue, storeCurrency)}</h3>
                     </div>
                   </Card>
 
                   <Card className="relative p-4 sm:p-6 glass-card rounded-2xl sm:rounded-3xl border-2 border-border/50 overflow-hidden group hover:shadow-glow transition-all duration-300">
                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-primary/10 flex items-center justify-center group-hover:bg-gradient-primary transition-all">
-                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-all ${
+                        hasProductsWithoutCost 
+                          ? 'bg-warning/10 group-hover:bg-warning' 
+                          : 'bg-gradient-primary/10 group-hover:bg-gradient-primary'
+                      }`}>
+                        {hasProductsWithoutCost ? (
+                          <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-warning group-hover:text-primary-foreground transition-colors" />
+                        ) : (
+                          <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-primary group-hover:text-primary-foreground transition-colors" />
+                        )}
                       </div>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalProfit')}</p>
-                      <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatAmount(convertFromEUR(totals.profit))}
-                      </h3>
+                      {hasProductsWithoutCost ? (
+                        <div className="flex flex-col gap-1">
+                          <h3 className="text-xl sm:text-2xl font-bold text-warning">0.00</h3>
+                          <p className="text-xs text-warning">{t('products.incompleteCosts')}</p>
+                        </div>
+                      ) : (
+                        <h3 className={`text-2xl sm:text-3xl font-bold truncate ${totals.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatAmount(totals.profit, storeCurrency)}
+                        </h3>
+                      )}
                     </div>
                   </Card>
 
@@ -754,7 +801,7 @@ const ProfitSheet = () => {
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs sm:text-sm text-muted-foreground">{t('profitSheet.totalAdSpend')}</p>
-                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(convertFromEUR(totals.adSpend))}</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold truncate">{formatAmount(totals.adSpend, storeCurrency)}</h3>
                     </div>
                   </Card>
 
@@ -820,9 +867,9 @@ const ProfitSheet = () => {
                                 <td className="p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap sticky left-0 bg-card z-10">
                                   {format(new Date(row.date), 'dd/MM/yy')}
                                 </td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.revenue))}</td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.cog))}</td>
-                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(convertFromEUR(row.adSpend))}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.revenue, storeCurrency)}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.cog, storeCurrency)}</td>
+                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{formatAmount(row.adSpend, storeCurrency)}</td>
                                 <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">
                                   {editingRow === row.date ? (
                                     <Input
@@ -833,7 +880,7 @@ const ProfitSheet = () => {
                                       className="w-20 h-7 text-right text-xs"
                                     />
                                   ) : (
-                                    formatAmount(convertFromEUR(row.otherExpenses))
+                                    formatAmount(row.otherExpenses, storeCurrency)
                                   )}
                                 </td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm">
@@ -849,23 +896,23 @@ const ProfitSheet = () => {
                                     <div className="whitespace-nowrap">
                                       {row.shopifyRefunds > 0 && (
                                         <div className="text-[10px] sm:text-xs text-muted-foreground">
-                                          Shop: {formatAmount(convertFromEUR(row.shopifyRefunds))}
+                                          Shop: {formatAmount(row.shopifyRefunds, storeCurrency)}
                                         </div>
                                       )}
                                       {row.manualRefunds > 0 && (
                                         <div className="text-[10px] sm:text-xs text-blue-600">
-                                          Man: {formatAmount(convertFromEUR(row.manualRefunds))}
+                                          Man: {formatAmount(row.manualRefunds, storeCurrency)}
                                         </div>
                                       )}
-                                      <div className="font-medium">{formatAmount(convertFromEUR(row.totalRefunds))}</div>
+                                      <div className="font-medium">{formatAmount(row.totalRefunds, storeCurrency)}</div>
                                     </div>
                                   )}
                                </td>
                                 <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap text-muted-foreground">
-                                  {formatAmount(convertFromEUR(row.transactionFee))}
+                                  {formatAmount(row.transactionFee, storeCurrency)}
                                 </td>
                                 <td className={`text-right p-2 sm:p-4 text-xs sm:text-sm font-semibold whitespace-nowrap ${row.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                  {formatAmount(convertFromEUR(row.profit))}
+                                  {formatAmount(row.profit, storeCurrency)}
                                 </td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap">{row.roas.toFixed(2)}x</td>
                                <td className="text-right p-2 sm:p-4 text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">{row.profitMargin.toFixed(1)}%</td>

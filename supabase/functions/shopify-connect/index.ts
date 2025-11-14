@@ -12,6 +12,7 @@ interface ShopifyShop {
   email: string;
   domain: string;
   myshopify_domain: string;
+  currency: string;
 }
 
 Deno.serve(async (req) => {
@@ -154,10 +155,13 @@ Deno.serve(async (req) => {
             shop_name: shop.name,
             myshopify_domain: shop.myshopify_domain,
             connected_domain: successDomain,
+            store_currency: shop.currency,
           },
           connected_at: new Date().toISOString(),
         })
         .eq('id', existingStoreIntegration.id);
+      
+      console.log(`💱 Store currency set to: ${shop.currency}`);
 
       if (updateError) {
         console.error('❌ Error updating integration:', updateError);
@@ -183,8 +187,11 @@ Deno.serve(async (req) => {
             shop_name: shop.name,
             myshopify_domain: shop.myshopify_domain,
             connected_domain: successDomain,
+            store_currency: shop.currency,
           },
         });
+      
+      console.log(`💱 Store currency set to: ${shop.currency}`);
 
       if (insertError) {
         console.error('❌ Error inserting integration:', insertError);

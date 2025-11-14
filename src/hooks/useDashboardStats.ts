@@ -13,10 +13,12 @@ interface DashboardStats {
   totalSupplierCost: number;
   recentActivity: any[];
   dailyRoasData: any[];
+  storeCurrency?: string;
+  hasProductsWithoutCost?: boolean;
   loading: boolean;
 }
 
-export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; storeId?: string; refreshKey?: number }) => {
+export const useDashboardStats = (userId: string | undefined, filters?: { dateFrom?: Date; dateTo?: Date; campaignId?: string; platform?: string; productId?: string; storeId?: string; adAccountId?: string; refreshKey?: number }) => {
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     totalProducts: 0,
@@ -29,6 +31,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
     totalSupplierCost: 0,
     recentActivity: [],
     dailyRoasData: [],
+    hasProductsWithoutCost: false,
     loading: true,
   });
 
@@ -42,12 +45,88 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
       try {
         console.log('🔄 Fetching dashboard stats with filters:', filters);
         
-        // Build daily ROAS query - THIS IS THE SOURCE OF TRUTH
+        // Se temos storeId E adAccountId selecionados, buscar dados reais da Shopify + Facebook
+        if (filters?.storeId && filters.storeId !== 'all' && filters?.adAccountId && filters.adAccountId !== 'all') {
+          console.log('📊 Fetching real data from Shopify + Facebook Ads APIs');
+          
+          const dateFrom = filters.dateFrom 
+            ? new Date(filters.dateFrom).toISOString().split('T')[0]
+            : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          
+          const dateTo = filters.dateTo
+            ? new Date(filters.dateTo).toISOString().split('T')[0]
+            : new Date().toISOString().split('T')[0];
+          
+          const { data: realStats, error } = await supabase.functions.invoke('fetch-dashboard-stats', {
+            body: {
+              shopifyIntegrationId: filters.storeId,
+              adAccountId: filters.adAccountId,
+              dateFrom,
+              dateTo,
+            }
+          });
+          
+          if (error) {
+            console.error('❌ Error fetching real dashboard stats:', error);
+            throw error;
+          }
+          
+          console.log('✅ Real stats from APIs:', realStats);
+          
+          // Get campaigns and products count
+          const { data: campaigns } = await supabase
+            .from('campaigns')
+            .select('id, status')
+            .eq('user_id', userId);
+          
+          // Get products with conditional integration_id filter
+          let productsQuery = supabase
+            .from('products')
+            .select('id, cost_price')
+            .eq('user_id', userId);
+          
+          // Only filter by integration_id if a specific store is selected
+          if (filters.storeId && filters.storeId !== 'all') {
+            productsQuery = productsQuery.eq('integration_id', filters.storeId);
+          }
+          
+          const { data: products } = await productsQuery;
+          
+          const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
+          const hasProductsWithoutCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
+          
+          console.log(`📦 Products check: ${products?.length || 0} total, ${products?.filter(p => !p.cost_price || p.cost_price === 0).length || 0} without cost`);
+          
+        setStats({
+          totalCampaigns: campaigns?.length || 0,
+          totalProducts: products?.length || 0,
+          totalSpent: realStats.totalAdSpend,
+          totalRevenue: realStats.totalRevenue,
+          averageRoas: realStats.averageRoas,
+          activeCampaigns,
+          totalConversions: realStats.totalConversions,
+          averageCpc: realStats.averageCpc,
+          totalSupplierCost: realStats.totalSupplierCost,
+          recentActivity: [],
+          dailyRoasData: realStats.dailyData || [],
+          storeCurrency: realStats.storeCurrency || 'EUR',
+          hasProductsWithoutCost: products?.some(p => !p.cost_price || p.cost_price === 0) || false,
+          loading: false,
+        });
+          
+          return;
+        }
+        
+        // Fallback: usar daily_roas (dados históricos/sincronizados)
+        console.log('📊 Using daily_roas data (fallback)');
+        
+        // PERFORMANCE: Only select necessary fields
         let dailyRoasQuery = supabase
           .from('daily_roas')
           .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id, cpc')
           .eq('user_id', userId)
-          .order('date', { ascending: true });
+          .order('date', { ascending: true })
+          .limit(1000); // PERFORMANCE: Limit results
 
         // Apply date filters for daily_roas
         if (filters?.dateFrom) {
@@ -86,42 +165,29 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const uniqueCampaignIds = new Set((dailyRoas || []).map((d: any) => d.campaign_id));
         const totalCampaigns = uniqueCampaignIds.size;
 
-        // Calculate ALL metrics from daily_roas (SOURCE OF TRUTH)
-        // IMPORTANT: cog in daily_roas can be either total or per-unit depending on source
-        // We need to handle both cases - if cog seems too small, it might be per-unit
+        // ===== SINGLE SOURCE OF TRUTH: daily_roas para o timeframe selecionado =====
+        
+        // Total Ad Spend = soma de daily_roas.total_spent (vem do Ads Manager)
         const totalSpent = (dailyRoas || []).reduce((sum: number, d: any) => {
           return sum + (Number(d.total_spent) || 0);
         }, 0);
 
-        // Total Revenue = sum of (units_sold * product_price) from daily_roas
+        // Total Revenue = soma de (units_sold * product_price) do daily_roas
         const totalRevenue = (dailyRoas || []).reduce((sum: number, d: any) => {
           const unitsSold = Number(d.units_sold) || 0;
           const productPrice = Number(d.product_price) || 0;
           return sum + (unitsSold * productPrice);
         }, 0);
 
-        // Total Conversions = sum of purchases from daily_roas
+        // Total Conversions = soma de purchases do daily_roas
         const totalConversions = (dailyRoas || []).reduce((sum: number, d: any) => {
           return sum + (Number(d.purchases) || 0);
         }, 0);
 
-        // Total Supplier Cost = sum of cog from daily_roas
-        // NOTE: cog might be stored as total (units_sold * cost_price) or per-unit
-        // We check: if cog > 0 and units_sold > 0 and cog < (product_price * units_sold * 0.1), 
-        // it's likely per-unit, so multiply by units_sold
+        // Total Supplier Cost (COG) = soma de daily_roas.cog
+        // COG já está como valor total por dia no daily_roas
         const totalSupplierCost = (dailyRoas || []).reduce((sum: number, d: any) => {
-          const cog = Number(d.cog) || 0;
-          const unitsSold = Number(d.units_sold) || 0;
-          const productPrice = Number(d.product_price) || 0;
-          
-          // Heuristic: if cog is very small compared to revenue, it's likely per-unit
-          const revenue = unitsSold * productPrice;
-          if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
-            // Likely per-unit, multiply by units_sold
-            return sum + (cog * unitsSold);
-          }
-          // Otherwise assume it's already total
-          return sum + cog;
+          return sum + (Number(d.cog) || 0);
         }, 0);
 
         // Calculate total clicks from CPC and spent
@@ -138,40 +204,37 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         const averageRoas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
         const averageCpc = totalClicks > 0 ? totalSpent / totalClicks : 0;
 
-        // Get active campaigns count from campaigns table (for status)
-        let campaignsQuery = supabase
-          .from('campaigns')
-          .select('id, status')
-          .eq('user_id', userId);
+        // PERFORMANCE: Fetch campaigns and products in parallel
+        const [campaignsResult, productsResult] = await Promise.all([
+          // Get campaigns count
+          supabase
+            .from('campaigns')
+            .select('id, status', { count: 'exact', head: false })
+            .eq('user_id', userId)
+            .then(res => res),
+          
+          // Get products with cost_price check (conditional integration_id filter)
+          (async () => {
+            let productsQuery = supabase
+              .from('products')
+              .select('id, cost_price')
+              .eq('user_id', userId);
+            
+            // Only filter by integration_id if a specific store is selected
+            if (filters?.storeId && filters.storeId !== 'all') {
+              productsQuery = productsQuery.eq('integration_id', filters.storeId);
+            }
+            
+            return productsQuery;
+          })()
+        ]);
 
-        if (filters?.campaignId && filters.campaignId !== 'all') {
-          campaignsQuery = campaignsQuery.eq('id', filters.campaignId);
-        }
-        if (filters?.platform && filters.platform !== 'all') {
-          campaignsQuery = campaignsQuery.eq('platform', filters.platform);
-        }
-
-        const { data: campaigns } = await campaignsQuery;
-        const activeCampaigns = campaigns?.filter(c => c.status === 'active').length || 0;
-
-        // Build products query with filters
-        let productsQuery = supabase
-          .from('products')
-          .select('id, cost_price, selling_price, quantity_sold, integration_id')
-          .eq('user_id', userId);
-
-        if (filters?.productId && filters.productId !== 'all') {
-          productsQuery = productsQuery.eq('id', filters.productId);
-        }
-        if (filters?.storeId && filters.storeId !== 'all') {
-          productsQuery = productsQuery.eq('integration_id', filters.storeId);
-        }
-
-        const { data: products, error: productsError } = await productsQuery;
+        const campaigns = campaignsResult.data || [];
+        const products = productsResult.data || [];
+        const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+        const hasProductsWithoutCost = products.some(p => !p.cost_price || p.cost_price === 0);
         
-        if (productsError) {
-          console.error('❌ Error fetching products:', productsError);
-        }
+        console.log(`📦 Products fallback check: ${products.length} total, ${products.filter(p => !p.cost_price || p.cost_price === 0).length} without cost`);
         
         console.log('📦 Fetched products:', products?.length || 0);
 
@@ -199,6 +262,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
           totalSupplierCost,
           recentActivity: [],
           dailyRoasData: dailyRoas || [],
+          hasProductsWithoutCost,
           loading: false,
         });
       } catch (error) {
@@ -217,6 +281,7 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
     filters?.platform, 
     filters?.productId,
     filters?.storeId,
+    filters?.adAccountId,
     filters?.refreshKey
   ]);
 

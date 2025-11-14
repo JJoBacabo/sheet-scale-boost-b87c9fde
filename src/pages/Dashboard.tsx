@@ -8,6 +8,8 @@ import { useSubscriptionState } from "@/hooks/useSubscriptionState";
 import { SubscriptionStateBanner } from "@/components/SubscriptionStateBanner";
 import { ReadOnlyOverlay } from "@/components/ReadOnlyOverlay";
 import { PageLayout } from "@/components/PageLayout";
+import { CurrencySelector } from "@/components/CurrencySelector";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { SetupProgress } from "@/components/dashboard/SetupProgress";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
@@ -24,13 +26,16 @@ import {
   Store,
   Facebook, 
   RefreshCw,
-  Link as LinkIcon
+  Link as LinkIcon,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import { Button3D } from "@/components/ui/Button3D";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Select, 
   SelectContent, 
@@ -79,6 +84,8 @@ const Dashboard = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
   const { stateInfo, loading: stateLoading } = useSubscriptionState();
+  const { formatAmount } = useCurrency();
+  const [storeCurrency, setStoreCurrency] = useState<string>('EUR');
   
   // Filters
   const [timeframe, setTimeframe] = useState<TimeframeValue | undefined>(undefined);
@@ -190,7 +197,7 @@ const Dashboard = () => {
       const shopify = integrations?.filter(i => i.integration_type === 'shopify') || [];
       const facebook = integrations?.filter(i => i.integration_type === 'facebook_ads') || [];
 
-      setShopifyIntegrations(shopify);
+      setShopifyIntegrations(shopify as any);
       setHasFacebookIntegration(facebook.length > 0);
 
       if (facebook.length > 0) {
@@ -222,13 +229,14 @@ const Dashboard = () => {
         }
       }
 
-      // Fallback: call edge function
+      // Fallback: call edge function (silently fail if not connected or token expired)
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
       });
 
       if (error) {
-        console.error("Error fetching ad accounts:", error);
+        // Silently fail - don't log errors for expected failures (token expired, not connected)
+        setAdAccounts([]);
         return;
       }
       
@@ -236,7 +244,8 @@ const Dashboard = () => {
         setAdAccounts(data.adAccounts);
       }
     } catch (error) {
-      console.error("Error fetching ad accounts:", error);
+      // Silently handle errors - these are expected when Facebook is not connected
+      setAdAccounts([]);
     }
   }, [user]);
 
@@ -273,7 +282,8 @@ const Dashboard = () => {
     };
   }, [navigate, fetchIntegrations]);
 
-  // Auto-sync Facebook campaigns when integration detected
+  // Auto-sync Facebook campaigns when integration detected - DISABLED FOR PERFORMANCE
+  // Users can manually sync if needed
   useEffect(() => {
     if (!user?.id || autoSynced || !hasFacebookIntegration) return;
 
@@ -287,15 +297,9 @@ const Dashboard = () => {
           .maybeSingle();
 
         if (integration) {
-          try {
-            await supabase.functions.invoke('sync-facebook-campaigns', {
-              body: { datePreset: 'last_30d' },
-            });
-            setAutoSynced(true);
-          } catch (err) {
-            // Silent fail - user can manually sync if needed
-            console.error('Auto-sync failed:', err);
-          }
+          // PERFORMANCE: Don't auto-sync, just mark as checked
+          console.log('✅ Facebook integration detected - skipping auto-sync for performance');
+          setAutoSynced(true);
         }
       } catch (error) {
         console.error('Error checking integration:', error);
@@ -308,13 +312,28 @@ const Dashboard = () => {
   // Fetch Campaigns - Aggregate from daily_roas for accurate data
   const fetchCampaigns = useCallback(async () => {
     if (!user?.id) return;
+
+    // OTIMIZAÇÃO: Só carrega campanhas se há filtros específicos selecionados
+    // Evita carregar todas as campanhas de uma vez
+    const hasSpecificFilters = 
+      (selectedStore && selectedStore !== "all") || 
+      (selectedAdAccount && selectedAdAccount !== "all");
+
+    if (!hasSpecificFilters) {
+      console.log('⚠️ Selecione uma loja ou conta de anúncios para ver campanhas');
+      setCampaigns([]);
+      return;
+    }
     
     try {
+      console.log('🔄 Carregando campanhas com filtros específicos...');
+      
       // Get daily_roas data aggregated by campaign
       let dailyRoasQuery = supabase
         .from('daily_roas')
         .select('campaign_id, campaign_name, total_spent, units_sold, product_price, cog, purchases, cpc, date')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .limit(500); // OTIMIZAÇÃO: Limitar a 500 registros mais recentes
 
       if (timeframe?.dateFrom) {
         const df = new Date(timeframe.dateFrom);
@@ -425,7 +444,7 @@ const Dashboard = () => {
       console.error('Error in fetchCampaigns:', error);
       setCampaigns([]);
     }
-  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore]);
+  }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore, selectedAdAccount]);
 
   useEffect(() => {
     if (user?.id) {
@@ -438,11 +457,21 @@ const Dashboard = () => {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
     storeId: selectedStore !== "all" ? selectedStore : undefined,
+    adAccountId: selectedAdAccount !== "all" ? selectedAdAccount : undefined,
     refreshKey,
   } : { 
     storeId: selectedStore !== "all" ? selectedStore : undefined,
+    adAccountId: selectedAdAccount !== "all" ? selectedAdAccount : undefined,
     refreshKey 
   });
+
+  // Update store currency when stats change
+  useEffect(() => {
+    if (stats?.storeCurrency) {
+      setStoreCurrency(stats.storeCurrency);
+      console.log('💱 Store currency updated:', stats.storeCurrency);
+    }
+  }, [stats?.storeCurrency]);
 
   // Chart Data
   const chartData = useMemo(() => {
@@ -618,32 +647,36 @@ const Dashboard = () => {
         />
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-5 md:space-y-6">
         {/* Filters Section */}
-        <Card3D intensity="low" className="p-4 sm:p-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">{t('dashboard.filters') || 'Filtros'}</h2>
-              <Button3D
-                variant="glass"
-                size="sm"
-                onClick={handleRefresh}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                {t('dashboard.refresh') || 'Atualizar'}
-              </Button3D>
+        <Card3D intensity="low" className="p-3 sm:p-4 md:p-6">
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+              <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.filters') || 'Filtros'}</h2>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <CurrencySelector />
+                <Button3D
+                  variant="glass"
+                  size="sm"
+                  onClick={handleRefresh}
+                  className="gap-1.5 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden xs:inline">{t('dashboard.refresh') || 'Atualizar'}</span>
+                  <span className="xs:hidden">Refresh</span>
+                </Button3D>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {/* Shopify Store */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Store className="w-4 h-4" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2">
+                  <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {t('profitSheet.shopifyStore') || 'Loja Shopify'}
                 </label>
                 <Select value={selectedStore} onValueChange={setSelectedStore}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                     <SelectValue placeholder={t('profitSheet.selectShopify') || 'Selecionar loja'} />
                   </SelectTrigger>
                   <SelectContent>
@@ -655,12 +688,12 @@ const Dashboard = () => {
                       return (
                         <SelectItem key={integration.id} value={integration.id}>
                           <div className="flex items-center gap-2">
-                            {integration.metadata?.shop_name || 
-                             integration.metadata?.shop_domain || 
+                             {integration.metadata?.shop_name ||
+                             integration.metadata?.shop_domain ||
                              integration.metadata?.store_name ||
                              `Loja ${integration.id.slice(0, 8)}`}
                             {matchedAccount && (
-                              <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedAccount.name}`} />
+                              <LinkIcon className="w-3 h-3 text-primary" />
                             )}
                           </div>
                         </SelectItem>
@@ -671,22 +704,22 @@ const Dashboard = () => {
               </div>
 
               {/* Facebook Ad Account */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Facebook className="w-4 h-4" />
+              <div className="space-y-1.5 sm:space-y-2">
+                <label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2">
+                  <Facebook className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {t('profitSheet.adAccount') || 'Conta de Anúncios'}
                 </label>
                 {!hasFacebookIntegration ? (
-                  <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  <div className="text-xs sm:text-sm text-muted-foreground p-2 sm:p-3 bg-muted/50 rounded-lg">
                     {t('metaDashboard.connectDesc') || 'Conecte o Facebook Ads'}
                   </div>
                 ) : adAccounts.length === 0 ? (
-                  <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  <div className="text-xs sm:text-sm text-muted-foreground p-2 sm:p-3 bg-muted/50 rounded-lg">
                     {t('common.loading') || 'Carregando...'}
                   </div>
                 ) : (
                   <Select value={selectedAdAccount} onValueChange={setSelectedAdAccount}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full h-9 sm:h-10 text-xs sm:text-sm">
                       <SelectValue placeholder={t('profitSheet.selectAdAccount') || 'Selecionar conta'} />
                     </SelectTrigger>
                     <SelectContent>
@@ -700,7 +733,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-2">
                               {account.name || account.account_id}
                               {matchedStore && (
-                                <LinkIcon className="w-3 h-3 text-primary" title={`Correspondência automática: ${matchedStore.metadata?.shop_name || matchedStore.metadata?.shop_domain}`} />
+                                <LinkIcon className="w-3 h-3 text-primary" />
                               )}
                             </div>
                           </SelectItem>
@@ -712,8 +745,8 @@ const Dashboard = () => {
               </div>
 
               {/* Timeframe */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
+              <div className="space-y-1.5 sm:space-y-2">
+                <label className="text-xs sm:text-sm font-medium">
                   {t('dashboard.timeframe') || 'Período'}
                 </label>
                 <TimeframeSelector
@@ -726,17 +759,30 @@ const Dashboard = () => {
         </Card3D>
 
         {/* Stats Overview - 8 cards de métricas */}
-        {stats && <StatsOverview stats={stats} />}
+        {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
+
+        {/* Missing Cost Warning */}
+        {stats?.hasProductsWithoutCost && (
+          <Link to="/products">
+            <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-warning font-medium">
+                {t('products.incompleteCosts')} - {t('dashboard.clickToAddQuotes')}
+              </AlertDescription>
+            </Alert>
+          </Link>
+        )}
 
         {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
         {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
             {revenueChartData.length > 0 && (
               <CryptoChart
                 data={revenueChartData}
                 title={t('dashboard.dailyRevenue') || 'Receita Diária'}
                 color="#4AE9BD"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
             {profitChartData.length > 0 && (
@@ -745,6 +791,7 @@ const Dashboard = () => {
                 title={t('dashboard.dailyProfit') || 'Lucro Diário'}
                 color="#10B981"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
             {spendChartData.length > 0 && (
@@ -753,44 +800,61 @@ const Dashboard = () => {
                 title={t('dashboard.dailySpend') || 'Gasto Diário'}
                 color="#F59E0B"
                 showTrend={true}
+                storeCurrency={storeCurrency}
               />
             )}
           </div>
         )}
 
         {/* Campaigns Table */}
-        {campaigns.length > 0 && (
-          <Card3D intensity="medium" glow className="p-4 sm:p-6 overflow-hidden">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        {selectedStore === "all" && selectedAdAccount === "all" ? (
+          <Card3D intensity="medium" glow className="p-6 md:p-8 text-center">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Target className="w-8 h-8 text-primary" />
+              </div>
               <div>
-                <h2 className="text-xl font-bold gradient-text">{t('dashboard.activeCampaigns') || 'Campanhas Ativas'}</h2>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h3 className="text-lg font-semibold mb-2">
+                  {t('dashboard.selectFilters') || 'Selecione uma Loja ou Conta de Anúncios'}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('dashboard.selectFiltersDescription') || 'Para visualizar as campanhas, selecione uma loja Shopify ou conta de anúncios nos filtros acima.'}
+                </p>
+              </div>
+            </div>
+          </Card3D>
+        ) : campaigns.length > 0 ? (
+          <Card3D intensity="medium" glow className="p-3 sm:p-4 md:p-6 overflow-hidden">
+            <div className="mb-3 sm:mb-4 flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
+                <h2 className="text-lg sm:text-xl font-bold gradient-text">{t('dashboard.activeCampaigns') || 'Campanhas Ativas'}</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {displayedCampaigns.length} {t('dashboard.of') || 'de'} {filteredCampaigns.length} {t('dashboard.campaigns') || 'campanhas'}
                 </p>
               </div>
-              <div className="relative w-full sm:w-auto sm:min-w-[250px]">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <div className="relative w-full">
+                <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                 <Input
                   placeholder={t('dashboard.searchCampaigns') || 'Buscar campanhas...'}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 sm:pl-10 h-9 sm:h-10 text-xs sm:text-sm"
                 />
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto -mx-3 sm:mx-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('dashboard.campaign') || 'Campanha'}</TableHead>
-                    <TableHead className="hidden sm:table-cell">{t('dashboard.platform') || 'Plataforma'}</TableHead>
-                    <TableHead className="text-right">{t('dashboard.spent') || 'Gasto'}</TableHead>
-                    <TableHead className="text-right">{t('dashboard.revenue') || 'Receita'}</TableHead>
-                    <TableHead className="text-right">ROAS</TableHead>
-                    <TableHead className="text-right hidden md:table-cell">CPC</TableHead>
-                    <TableHead className="text-right hidden lg:table-cell">{t('dashboard.conversions') || 'Conversões'}</TableHead>
-                    <TableHead className="text-center hidden sm:table-cell">{t('dashboard.status') || 'Status'}</TableHead>
+                    <TableHead className="text-xs sm:text-sm">{t('dashboard.campaign') || 'Campanha'}</TableHead>
+                    <TableHead className="hidden sm:table-cell text-xs sm:text-sm">{t('dashboard.platform') || 'Plataforma'}</TableHead>
+                    <TableHead className="text-right text-xs sm:text-sm">{t('dashboard.spent') || 'Gasto'}</TableHead>
+                    <TableHead className="text-right text-xs sm:text-sm">{t('dashboard.revenue') || 'Receita'}</TableHead>
+                    <TableHead className="text-right text-xs sm:text-sm">ROAS</TableHead>
+                    <TableHead className="text-right hidden md:table-cell text-xs sm:text-sm">CPC</TableHead>
+                    <TableHead className="text-right hidden lg:table-cell text-xs sm:text-sm">{t('dashboard.conversions') || 'Conversões'}</TableHead>
+                    <TableHead className="text-center hidden sm:table-cell text-xs sm:text-sm">{t('dashboard.status') || 'Status'}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -822,41 +886,41 @@ const Dashboard = () => {
                           transition={{ delay: index * 0.05 }}
                           className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                         >
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium text-xs sm:text-sm">
                             <div className="flex flex-col gap-0.5">
-                              <span className="truncate max-w-[150px] sm:max-w-none">
+                              <span className="truncate max-w-[120px] sm:max-w-none">
                                 {campaign.campaign_name || (t('dashboard.noName') || 'Sem nome')}
                               </span>
-                              <span className="text-xs text-muted-foreground sm:hidden">
+                              <span className="text-[10px] sm:text-xs text-muted-foreground sm:hidden">
                                 {campaign.platform || 'facebook'}
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-muted-foreground hidden sm:table-cell">
+                          <TableCell className="text-muted-foreground hidden sm:table-cell text-xs sm:text-sm">
                             {campaign.platform || 'facebook'}
                           </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            €{totalSpent.toFixed(2)}
+                          <TableCell className="text-right font-semibold text-xs sm:text-sm">
+                            {formatAmount(totalSpent)}
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-emerald-500">
-                            €{totalRevenue.toFixed(2)}
+                          <TableCell className="text-right font-semibold text-emerald-500 text-xs sm:text-sm">
+                            {formatAmount(totalRevenue)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
+                            <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                               {isPositive ? (
-                                <ArrowUp className="w-4 h-4 text-emerald-500" />
+                                <ArrowUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
                               ) : (
-                                <ArrowDown className="w-4 h-4 text-red-500" />
+                                <ArrowDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                               )}
-                              <span className={`font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
+                              <span className={`font-bold text-xs sm:text-sm ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                                 {roas.toFixed(2)}x
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-right text-muted-foreground hidden md:table-cell">
-                            €{(Number(campaign.cpc) || 0).toFixed(2)}
+                          <TableCell className="text-right text-muted-foreground hidden md:table-cell text-xs sm:text-sm">
+                            {formatAmount(Number(campaign.cpc) || 0)}
                           </TableCell>
-                          <TableCell className="text-right hidden lg:table-cell">
+                          <TableCell className="text-right hidden lg:table-cell text-xs sm:text-sm">
                             {Number(campaign.conversions) || 0}
                           </TableCell>
                           <TableCell className="text-center hidden sm:table-cell">
@@ -889,7 +953,7 @@ const Dashboard = () => {
               </div>
             )}
           </Card3D>
-        )}
+        ) : null}
       </div>
     </PageLayout>
   );

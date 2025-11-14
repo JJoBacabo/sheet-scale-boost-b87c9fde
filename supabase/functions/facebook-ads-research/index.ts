@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
-import { decryptToken } from '../_shared/encryption.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,16 +14,12 @@ serve(async (req) => {
   try {
     const { 
       searchTerms,
-      accessToken,
       datePeriod = 30,
       minImpressions = 0, 
-      minDays = 0, 
-      maxDays = 365,
-      countries = [],
-      adTypes = []
+      countries = []
     } = await req.json();
 
-    // Initialize Supabase client
+    // Initialize Supabase client for authentication
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const authHeader = req.headers.get('Authorization');
@@ -33,70 +28,21 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader || '' } }
     });
 
-    // Priority: Custom token > Generated App Token > Fallback secret
-    let cleanToken: string | null = null;
-    let tokenSource = '';
-
-    // 1. Try custom token from request
-    if (accessToken) {
-      cleanToken = accessToken.trim();
-      tokenSource = 'custom token from request';
-      console.log('Using custom token from request');
-    } 
-    // 2. Generate App Access Token via Facebook Graph API
-    else {
-      const appId = Deno.env.get('FACEBOOK_APP_ID');
-      const appSecret = Deno.env.get('FACEBOOK_APP_SECRET');
-      
-      if (!appId || !appSecret) {
-        throw new Error('Facebook App ID and Secret must be configured');
-      }
-      
-      console.log('Generating App Access Token...');
-      
-      try {
-        // Get a proper app access token from Facebook
-        const tokenResponse = await fetch(
-          `https://graph.facebook.com/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&grant_type=client_credentials`
-        );
-        
-        if (!tokenResponse.ok) {
-          const errorText = await tokenResponse.text();
-          console.error('Failed to get app token:', errorText);
-          throw new Error(`Failed to get app access token: ${errorText}`);
-        }
-        
-        const tokenData = await tokenResponse.json();
-        cleanToken = tokenData.access_token;
-        tokenSource = 'Generated App Access Token from Facebook';
-        console.log('Successfully generated App Access Token');
-      } catch (error) {
-        console.error('Error generating app token:', error);
-        
-        // Fallback to secret token if app token generation fails
-        const secretToken = Deno.env.get('FACEBOOK_ADS_LIBRARY_TOKEN');
-        if (secretToken) {
-          cleanToken = secretToken.trim();
-          tokenSource = 'Supabase secret (fallback)';
-          console.log('Using fallback token from Supabase secrets');
-        } else {
-          throw new Error('Could not generate app token and no fallback token available');
-        }
-      }
-    }
+    // Get authenticated user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (!cleanToken) {
-      throw new Error('No valid token available');
+    if (userError || !user) {
+      throw new Error('User not authenticated');
     }
 
-    console.log('Token info:', { 
-      hasToken: true, 
-      tokenLength: cleanToken.length,
-      tokenStart: cleanToken.substring(0, 10),
-      tokenEnd: cleanToken.substring(cleanToken.length - 10),
-      source: tokenSource
-    });
-    console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, minDays, maxDays, countries, adTypes });
+    // Get Facebook Ads Library token from Supabase Secrets
+    const facebookToken = Deno.env.get('FACEBOOK_ADS_LIBRARY_TOKEN');
+    
+    if (!facebookToken) {
+      throw new Error('Facebook Ads Library token not configured. Please contact support.');
+    }
+
+    console.log('Searching ads with params:', { searchTerms, datePeriod, minImpressions, countries });
 
     const startDateThreshold = new Date();
     startDateThreshold.setDate(startDateThreshold.getDate() - datePeriod);
@@ -109,26 +55,29 @@ serve(async (req) => {
 
     do {
       const params = new URLSearchParams({
-        access_token: cleanToken!,
-        ad_active_status: 'ACTIVE',
-        search_terms: searchTerms || '',
-        ad_type: 'POLITICAL_AND_ISSUE_ADS', // Required for non-EU countries
-        fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions',
+        access_token: facebookToken,
+        ad_active_status: 'ALL',
+        fields: 'id,ad_creative_bodies,ad_creative_link_captions,ad_creative_link_titles,ad_creative_link_descriptions,ad_snapshot_url,ad_delivery_start_time,ad_delivery_stop_time,page_name,impressions,spend',
         limit: '100'
       });
 
+      // Add search_terms only if provided
+      if (searchTerms && searchTerms.trim()) {
+        params.append('search_terms', searchTerms.trim());
+      }
+
       if (countries.length > 0) {
-        params.append('ad_reached_countries', countries.join(','));
+        params.append('ad_reached_countries', JSON.stringify(countries));
       }
 
       if (nextCursor) {
         params.append('after', nextCursor);
       }
 
-      const url = `https://graph.facebook.com/v19.0/ads_archive?${params.toString()}`;
+      const url = `https://graph.facebook.com/v24.0/ads_archive?${params.toString()}`;
       
       console.log(`Fetching page ${pageCount + 1}...`);
-      console.log('Full URL (without token):', url.replace(cleanToken!, 'REDACTED'));
+      console.log('Full URL (without token):', url.replace(facebookToken, 'REDACTED'));
       
       const response = await fetch(url);
       
@@ -138,8 +87,19 @@ serve(async (req) => {
         console.error('Request details:', {
           status: response.status,
           statusText: response.statusText,
-          url: url.replace(cleanToken!, 'REDACTED')
+          url: url.replace(facebookToken, 'REDACTED')
         });
+        
+        // Parse error to provide more helpful message
+        try {
+          const errorJson = JSON.parse(errorText);
+          if (errorJson.error?.code === 1 || errorJson.error?.type === 'OAuthException') {
+            throw new Error('Facebook token is invalid or expired. Please reconnect your Facebook account in Integrations.');
+          }
+        } catch (parseError) {
+          // If can't parse, use original error
+        }
+        
         throw new Error(`Facebook API error: ${response.status} - ${errorText}`);
       }
 
@@ -174,33 +134,13 @@ serve(async (req) => {
           const startDate = new Date(ad.ad_delivery_start_time);
           const endDate = ad.ad_delivery_stop_time ? new Date(ad.ad_delivery_stop_time) : new Date();
           const daysActive = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          if (daysActive < minDays || daysActive > maxDays) {
-            return false;
-          }
-
           ad.days_active = daysActive;
         }
 
-        // Filter by ad type if specified
-        if (adTypes.length > 0) {
-          let adType = 'text';
-          
-          if (ad.ad_creative_bodies && ad.ad_creative_bodies.some((body: string) => 
-            body.includes('youtube.com') || body.includes('video') || body.includes('.mp4')
-          )) {
-            adType = 'video';
-          } else if (ad.ad_creative_link_captions && ad.ad_creative_link_captions.length > 1) {
-            adType = 'carousel';
-          } else if (ad.ad_snapshot_url) {
-            adType = 'image';
-          }
-
-          ad.ad_type = adType;
-
-          if (!adTypes.includes(adType)) {
-            return false;
-          }
+        // Calculate spend amount
+        if (ad.spend) {
+          const spendValue = parseInt(ad.spend.lower_bound || ad.spend.upper_bound || '0');
+          ad.spend_amount = spendValue;
         }
 
         return true;

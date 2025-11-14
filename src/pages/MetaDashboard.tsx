@@ -187,12 +187,12 @@ const CampaignCard = memo(({
           <div className="flex items-start justify-between gap-4 pr-10">
             <div className="flex-1">
               <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
-              <p className="text-xs text-muted-foreground">{campaign.objective}</p>
+              <p className="text-xs text-muted-foreground">{formatObjective(campaign.objective)}</p>
             </div>
           </div>
 
           {/* Key Metrics - Redesigned */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 rounded-xl bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10 border border-[#7BBCFE]/20 hover:border-[#7BBCFE]/40 transition-all">
               <p className="text-xs text-[#7BBCFE]/70 mb-2 font-medium">{t('metaDashboard.spent')}</p>
               <p className="text-xl font-bold text-white">€{insights.spend.toFixed(2)}</p>
@@ -211,21 +211,51 @@ const CampaignCard = memo(({
                 {insights.roas > 0 ? `${insights.roas.toFixed(2)}x` : "—"}
               </p>
             </div>
-            <div className="p-3 flex flex-col items-center justify-center gap-2">
+          </div>
+
+          {/* Budget Info and Status */}
+          <div className="flex items-center justify-between gap-4">
+            {/* Budget and Days */}
+            <div className="text-xs text-muted-foreground">
+              <span>{t("metaDashboard.budget")}: </span>
+              <span className="font-medium">
+                {campaign.daily_budget
+                  ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
+                  : campaign.lifetime_budget
+                    ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
+                    : "—"}
+              </span>
+              <span className="mx-2">•</span>
+              <span>{t("metaDashboard.activeDays")}: </span>
+              <span className="font-medium">
+                {(() => {
+                  const createdDate = new Date(campaign.created_time);
+                  const now = new Date();
+                  const diffTime = Math.abs(now.getTime() - createdDate.getTime());
+                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                  return diffDays;
+                })()}
+              </span>
+            </div>
+
+            {/* Status Badge and Actions */}
+            <div className="flex items-center gap-3">
               <Badge
                 className={
                   campaign.status === "ACTIVE"
                     ? "bg-success/20 text-success border-success/30"
                     : campaign.status === "PAUSED"
                       ? "bg-warning/20 text-warning border-warning/30"
-                      : "bg-muted/50 text-muted-foreground border-muted"
+                      : "bg-muted text-muted-foreground border-muted-foreground/30"
                 }
               >
-                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status === "PAUSED" ? t("metaDashboard.paused") : campaign.status}
+                {campaign.status === "ACTIVE" ? t("metaDashboard.active") : campaign.status}
               </Badge>
               {campaign.status === "ACTIVE" ? (
                 <Button
-                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground border-2 border-destructive shadow-[0_0_20px_rgba(239,68,68,0.4)] hover:shadow-[0_0_30px_rgba(239,68,68,0.6)] transition-all duration-300 font-bold w-full h-auto py-2"
+                  size="sm"
+                  variant="outline"
+                  className="border-warning/30 bg-warning/10 hover:bg-warning/20 hover:border-warning text-warning"
                   onClick={onPause}
                 >
                   <Pause className="w-4 h-4 mr-1.5" />
@@ -233,7 +263,9 @@ const CampaignCard = memo(({
                 </Button>
               ) : (
                 <Button
-                  className="bg-success/90 hover:bg-success text-success-foreground border-2 border-success shadow-lg hover:shadow-success/50 transition-all duration-300 font-semibold w-full h-auto py-2"
+                  size="sm"
+                  variant="outline"
+                  className="border-success/30 bg-success/10 hover:bg-success/20 hover:border-success text-success"
                   onClick={onActivate}
                 >
                   <Play className="w-4 h-4 mr-1.5" />
@@ -242,24 +274,40 @@ const CampaignCard = memo(({
               )}
             </div>
           </div>
-
-          {/* Budget Info */}
-          <div className="text-xs text-muted-foreground">
-            <span>{t("metaDashboard.budget")}: </span>
-            <span className="font-medium">
-              {campaign.daily_budget
-                ? `€${(parseFloat(campaign.daily_budget) / 100).toFixed(2)}${t("metaDashboard.perDay")}`
-                : campaign.lifetime_budget
-                  ? `€${(parseFloat(campaign.lifetime_budget) / 100).toFixed(2)} ${t("metaDashboard.total")}`
-                  : "—"}
-            </span>
-          </div>
         </div>
       </div>
     </Card>
   );
 });
 CampaignCard.displayName = 'CampaignCard';
+
+// Helper function to format campaign objective names
+const formatObjective = (objective: string) => {
+  const objectiveMap: Record<string, string> = {
+    'OUTCOME_SALES': 'Vendas',
+    'OUTCOME_LEADS': 'Leads',
+    'OUTCOME_ENGAGEMENT': 'Engajamento',
+    'OUTCOME_TRAFFIC': 'Tráfego',
+    'OUTCOME_AWARENESS': 'Reconhecimento',
+    'OUTCOME_APP_PROMOTION': 'Promoção de App',
+    'LINK_CLICKS': 'Cliques no Link',
+    'POST_ENGAGEMENT': 'Engajamento na Publicação',
+    'PAGE_LIKES': 'Curtidas na Página',
+    'CONVERSIONS': 'Conversões',
+    'VIDEO_VIEWS': 'Visualizações de Vídeo',
+    'REACH': 'Alcance',
+    'BRAND_AWARENESS': 'Reconhecimento da Marca',
+    'APP_INSTALLS': 'Instalações do App',
+    'LEAD_GENERATION': 'Geração de Leads',
+    'MESSAGES': 'Mensagens',
+    'STORE_VISITS': 'Visitas à Loja',
+  };
+  
+  return objectiveMap[objective] || objective.replace(/_/g, ' ').toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
 
 // Helper function for insight data (moved outside component)
 const getInsightData = (campaign: FacebookCampaign) => {
@@ -380,6 +428,41 @@ const MetaDashboard = () => {
   });
   const [showColumnSettings, setShowColumnSettings] = useState(false);
 
+  // Cache management
+  const CACHE_KEY = 'metaDashboard_campaigns_cache';
+  const CACHE_ACCOUNT_KEY = 'metaDashboard_selected_account';
+
+  const getCachedData = useCallback(() => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      const cachedAccount = localStorage.getItem(CACHE_ACCOUNT_KEY);
+      if (cached && cachedAccount) {
+        const parsed = JSON.parse(cached);
+        return { campaigns: parsed.campaigns, account: cachedAccount, timestamp: parsed.timestamp };
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error);
+    }
+    return null;
+  }, []);
+
+  const setCachedData = useCallback((campaigns: FacebookCampaign[], account: string) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        campaigns,
+        timestamp: Date.now()
+      }));
+      localStorage.setItem(CACHE_ACCOUNT_KEY, account);
+    } catch (error) {
+      console.error('Error saving cache:', error);
+    }
+  }, []);
+
+  const clearCache = useCallback(() => {
+    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(CACHE_ACCOUNT_KEY);
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -413,13 +496,32 @@ const MetaDashboard = () => {
 
     if (data && !error) {
       setIsConnected(true);
-      fetchAdAccounts();
+      
+      // Try to load from cache first
+      const cached = getCachedData();
+      if (cached && cached.campaigns && cached.campaigns.length > 0) {
+        console.log('✅ Loading campaigns from cache (', cached.campaigns.length, 'campaigns)');
+        setCampaigns(cached.campaigns);
+        setSelectedAdAccount(cached.account);
+        setLoading(false);
+        
+        // Still fetch ad accounts list in background (without fetching campaigns)
+        fetchAdAccounts(false);
+        
+        toast({
+          title: "Dados carregados do cache",
+          description: `${cached.campaigns.length} campanhas. Clique em Atualizar para buscar dados novos.`,
+        });
+      } else {
+        console.log('⚠️ No cache found, fetching fresh data');
+        fetchAdAccounts(true);
+      }
     } else {
       setIsConnected(false);
     }
   };
 
-  const fetchAdAccounts = async () => {
+  const fetchAdAccounts = async (shouldFetchCampaigns: boolean = true) => {
     setLoading(true);
     try {
       // 1) Try cached ad accounts from integrations.metadata to avoid FB API calls
@@ -438,9 +540,18 @@ const MetaDashboard = () => {
         if (cachedAccounts && cachedAccounts.length > 0) {
           setAdAccounts(cachedAccounts);
           const firstAccount = primaryId || cachedAccounts[0].id;
-          setSelectedAdAccount(firstAccount);
-          await fetchCampaigns(firstAccount);
-          setLoading(false);
+          
+          // Only set if not already set (to preserve cached account selection)
+          if (!selectedAdAccount) {
+            setSelectedAdAccount(firstAccount);
+          }
+          
+          // Only fetch campaigns if explicitly requested
+          if (shouldFetchCampaigns) {
+            await fetchCampaigns(firstAccount);
+          } else {
+            setLoading(false);
+          }
           return; // Skip calling edge function
         }
       }
@@ -451,27 +562,17 @@ const MetaDashboard = () => {
       });
 
       if (error) {
-        console.error("Edge Function error:", error);
-        // Check if it's a 500 error or network error
-        if (error.message?.includes("500") || error.message?.includes("non-2xx")) {
-          toast({
-            title: t("metaDashboard.errorLoadingAccounts"),
-            description: t("metaDashboard.serverError"),
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
+        // Silently fail for expected errors (token expired, not connected)
+        console.log("⚠️ Could not fetch ad accounts (likely not connected or token expired)");
+        setAdAccounts([]);
         setLoading(false);
         return;
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingAccounts"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Silently fail for API errors
+        console.log("⚠️ Facebook API error:", data.error);
+        setAdAccounts([]);
         setLoading(false);
         return;
       }
@@ -479,9 +580,18 @@ const MetaDashboard = () => {
       if (data?.adAccounts && data.adAccounts.length > 0) {
         setAdAccounts(data.adAccounts);
         const firstAccount = data.adAccounts[0].id;
-        setSelectedAdAccount(firstAccount);
-        // Fetch campaigns for the first account automatically
-        await fetchCampaigns(firstAccount);
+        
+        // Only set if not already set (to preserve cached account selection)
+        if (!selectedAdAccount) {
+          setSelectedAdAccount(firstAccount);
+        }
+        
+        // Only fetch campaigns if explicitly requested
+        if (shouldFetchCampaigns) {
+          await fetchCampaigns(firstAccount);
+        } else {
+          setLoading(false);
+        }
       } else {
         toast({
           title: t("metaDashboard.noAccountsFound"),
@@ -559,15 +669,32 @@ const MetaDashboard = () => {
       }
 
       if (data?.error) {
-        toast({
-          title: t("metaDashboard.errorLoadingCampaigns"),
-          description: data.error,
-          variant: "destructive",
-        });
+        // Check if it's a rate limit error (429)
+        if (data?.code === 80004 || data?.error?.includes("too many calls")) {
+          const retryAfter = data?.retryAfter || 60;
+          setRateLimitedUntil(Date.now() + (retryAfter * 1000));
+          toast({
+            title: "Facebook Rate Limit",
+            description: `Muitas requisições ao Facebook. Aguarde ${retryAfter} segundos antes de atualizar novamente.`,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: t("metaDashboard.errorLoadingCampaigns"),
+            description: data.error,
+            variant: "destructive",
+          });
+        }
         setCampaigns([]);
       } else {
         setCampaigns(data?.campaigns || []);
         console.log(`Loaded ${data?.campaigns?.length || 0} campaigns`);
+        
+        // Cache the campaigns data
+        if (data?.campaigns && data.campaigns.length > 0 && accountToUse) {
+          setCachedData(data.campaigns, accountToUse);
+          console.log('✅ Campaigns cached successfully');
+        }
       }
     } catch (error: any) {
       console.error("Error fetching campaigns:", error);
@@ -580,6 +707,21 @@ const MetaDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle explicit refresh - clears cache and fetches fresh data
+  const handleRefresh = async () => {
+    if (!selectedAdAccount) {
+      toast({
+        title: "Nenhuma conta selecionada",
+        description: "Selecione uma conta de anúncios primeiro",
+        variant: "destructive",
+      });
+      return;
+    }
+    console.log('🔄 Manual refresh triggered - clearing cache');
+    clearCache();
+    await fetchCampaigns(selectedAdAccount);
   };
 
   // Optimized filtering with useMemo
@@ -608,6 +750,26 @@ const MetaDashboard = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datePreset, selectedAdAccount]);
+
+  // Auto-clear rate limit when time expires
+  useEffect(() => {
+    if (rateLimitedUntil && Date.now() >= rateLimitedUntil) {
+      setRateLimitedUntil(null);
+      return;
+    }
+    
+    if (rateLimitedUntil) {
+      const timeout = setTimeout(() => {
+        setRateLimitedUntil(null);
+        toast({
+          title: "Rate Limit Expirado",
+          description: "Você pode atualizar as campanhas novamente.",
+        });
+      }, rateLimitedUntil - Date.now());
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [rateLimitedUntil, toast]);
 
   const handlePauseCampaign = async (campaignId: string) => {
     if (!campaignId) {
@@ -1070,7 +1232,7 @@ const MetaDashboard = () => {
         <div>
           <div className="font-semibold">{campaign.name}</div>
           <div className="text-xs text-muted-foreground">
-            ID: {campaign.id} • {campaign.objective}
+            ID: {campaign.id} • {formatObjective(campaign.objective)}
           </div>
         </div>
       ),
@@ -1326,6 +1488,21 @@ const MetaDashboard = () => {
       }
     >
       <div className="space-y-6">
+        {/* Rate Limit Warning Banner */}
+        {rateLimitedUntil && Date.now() < rateLimitedUntil && (
+          <Card className="p-4 bg-warning/10 border-warning/40">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              <div className="flex-1">
+                <h3 className="font-semibold text-warning">Facebook Rate Limit Ativo</h3>
+                <p className="text-sm text-muted-foreground">
+                  Muitas requisições foram feitas ao Facebook. Aguarde {Math.ceil((rateLimitedUntil - Date.now()) / 1000)} segundos antes de atualizar novamente.
+                </p>
+              </div>
+              <Clock className="w-5 h-5 text-warning animate-pulse" />
+            </div>
+          </Card>
+        )}
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className="p-4 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10">
@@ -1474,7 +1651,7 @@ const MetaDashboard = () => {
 
                 <Button 
                   className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] hover:opacity-90 text-white font-semibold shadow-lg shadow-[#7BBCFE]/30 transition-all duration-300 hover:scale-105" 
-                  onClick={() => fetchCampaigns()}
+                  onClick={handleRefresh}
                   disabled={loading}
                 >
                   <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -1698,7 +1875,7 @@ const MetaDashboard = () => {
                       {selectedCampaign.status}
                     </Badge>
                     <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">{selectedCampaign.objective}</span>
+                    <span className="text-muted-foreground">{formatObjective(selectedCampaign.objective)}</span>
                   </div>
                 </div>
 
