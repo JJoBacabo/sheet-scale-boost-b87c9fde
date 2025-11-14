@@ -20,7 +20,6 @@ import {
   Check,
   Menu,
   Settings,
-  Database,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -32,7 +31,6 @@ import { motion } from "framer-motion";
 import { Card3D } from "@/components/ui/Card3D";
 import { Button3D } from "@/components/ui/Button3D";
 import { Background3D } from "@/components/ui/Background3D";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Logo3D } from "@/components/Logo3D";
 
 // Features data for the Pinned Section
@@ -506,87 +504,11 @@ const Landing = () => {
               </div>
             </div>
 
-            {/* Right: Dashboard Card */}
+            {/* Right: 3D Logo */}
             <div ref={dashboardRef} className="relative">
               <Card className="bg-[#0A0E27]/90 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-white">Performance Overview</h3>
-
-                  {/* Chart */}
-                  <div className="h-48 -mx-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart
-                        data={[
-                          { name: "Mon", value: 2400 },
-                          { name: "Tue", value: 3200 },
-                          { name: "Wed", value: 2800 },
-                          { name: "Thu", value: 3900 },
-                          { name: "Fri", value: 4200 },
-                          { name: "Sat", value: 4800 },
-                          { name: "Sun", value: 5200 },
-                        ]}
-                      >
-                        <defs>
-                          <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#7BBCFE" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#7BBCFE" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(123, 188, 254, 0.2)" />
-                        <XAxis dataKey="name" stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
-                        <YAxis stroke="rgba(240, 244, 248, 0.5)" style={{ fontSize: "12px" }} />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "#0A0E27",
-                            border: "1px solid rgba(123, 188, 254, 0.3)",
-                            borderRadius: "8px",
-                            color: "#F0F4F8",
-                          }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="#7BBCFE"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorSales)"
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-
-                  {/* Metrics */}
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="bg-gradient-to-br from-[#7BBCFE] to-[#B8A8FE] rounded-xl p-4 border border-[#7BBCFE]/30">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Database className="w-4 h-4 text-white" />
-                        <span className="text-xs text-white/90 font-medium">Stores Connected</span>
-                      </div>
-                      <div className="text-3xl font-bold text-white">
-                        <span className="count-up" data-target="8">
-                          0
-                        </span>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <div className="text-xs text-gray-400 mb-1">Orders Processed</div>
-                        <div className="text-2xl font-bold text-white">
-                          <span className="count-up" data-target="2140">
-                            0
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-gray-400 mb-1">Efficiency Boost</div>
-                        <div className="text-2xl font-bold text-[#0066FF]">
-                          <span className="count-up" data-target="27" data-suffix="%">
-                            0
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="w-full h-[500px]">
+                  <Logo3D />
                 </div>
               </Card>
             </div>
@@ -1198,42 +1120,6 @@ const Landing = () => {
             </div>
           </Card>
         </div>
-      </section>
-
-      {/* 3D Logo Interactive Section */}
-      <section className="container mx-auto px-4 sm:px-6 py-20 relative">
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 50,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.8,
-          }}
-          className="max-w-4xl mx-auto"
-        >
-          <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-white">
-              {t("landing.interactiveLogo.title", "Interaja com o nosso logo 3D")}
-            </h2>
-            <p className="text-xl text-gray-400">
-              {t("landing.interactiveLogo.subtitle", "Arraste para rotacionar • Scroll para zoom • Clique e arraste para mover")}
-            </p>
-          </div>
-          
-          <Card3D intensity="high" glow className="p-8">
-            <div className="w-full h-[500px] md:h-[600px] lg:h-[700px] rounded-xl overflow-hidden bg-gradient-to-br from-[#0A0E27] to-[#050F2A]">
-              <Logo3D />
-            </div>
-          </Card3D>
-        </motion.div>
       </section>
 
       {/* FAQ Section */}
