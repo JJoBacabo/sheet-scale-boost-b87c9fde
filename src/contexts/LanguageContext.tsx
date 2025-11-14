@@ -480,6 +480,8 @@ const translations = {
       refreshed: 'Atualizado',
       dataRefreshed: 'Dados atualizados com sucesso',
       clickToAddQuotes: 'Clique para adicionar cotações',
+      selectFilters: 'Selecione Filtros para Ver Campanhas',
+      selectFiltersDescription: 'Para otimizar o carregamento, selecione uma loja ou conta de anúncios nos filtros acima para visualizar as campanhas.',
     },
     campaigns: {
       title: 'Campanhas',
@@ -1713,6 +1715,8 @@ const translations = {
       refreshed: 'Refreshed',
       dataRefreshed: 'Data refreshed successfully',
       clickToAddQuotes: 'Click to add quotes',
+      selectFilters: 'Select Filters to View Campaigns',
+      selectFiltersDescription: 'To optimize loading, select a store or ad account from the filters above to view campaigns.',
     },
     campaigns: {
       title: 'Campaigns',
