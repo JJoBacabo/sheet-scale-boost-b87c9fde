@@ -54,14 +54,15 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
     },
     {
       title: t("dashboard.profit"),
-      value: hasProductsWithoutCost ? t("products.incompleteCosts") : formatAmount(profit, storeCurrency),
+      value: hasProductsWithoutCost ? '0.00' : formatAmount(profit, storeCurrency),
       icon: hasProductsWithoutCost ? AlertTriangle : (profit >= 0 ? TrendingUp : TrendingDown),
       trend: hasProductsWithoutCost ? "neutral" : (profit >= 0 ? "up" : "down"),
       gradient: profit >= 0 ? "from-primary/20 to-primary-glow/20" : "from-destructive/20 to-red-500/20",
       iconBg: hasProductsWithoutCost ? "bg-warning/10" : (profit >= 0 ? "bg-primary/10" : "bg-destructive/10"),
       iconColor: hasProductsWithoutCost ? "text-warning" : (profit >= 0 ? "text-primary" : "text-destructive"),
       border: hasProductsWithoutCost ? "border-warning/40" : (profit >= 0 ? "border-primary/20" : "border-destructive/20"),
-      warning: hasProductsWithoutCost
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts')
     },
     {
       title: t("dashboard.averageRoas"),
@@ -109,14 +110,15 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
     },
     {
       title: t("dashboard.profitMargin"),
-      value: hasProductsWithoutCost ? t("products.incompleteCosts") : `${profitMargin.toFixed(1)}%`,
+      value: hasProductsWithoutCost ? '0.0%' : `${profitMargin.toFixed(1)}%`,
       icon: hasProductsWithoutCost ? AlertTriangle : (profitMargin >= 0 ? TrendingUp : TrendingDown),
       trend: hasProductsWithoutCost ? "neutral" : (profitMargin >= 20 ? "up" : "neutral"),
       gradient: "from-emerald-500/20 to-teal-500/20",
       iconBg: hasProductsWithoutCost ? "bg-warning/10" : "bg-emerald-500/10",
       iconColor: hasProductsWithoutCost ? "text-warning" : "text-emerald-500",
       border: hasProductsWithoutCost ? "border-warning/40" : "border-emerald-500/20",
-      warning: hasProductsWithoutCost
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts')
     }
   ];
 
