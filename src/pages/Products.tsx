@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye } from "lucide-react";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -1256,7 +1256,7 @@ const Products = () => {
                             </div>
                             <div className="text-left flex-1 min-w-0">
                               <h3 className="text-base font-semibold line-clamp-2 mb-1">{product.product_name}</h3>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xl font-bold text-primary">
                                   {product.quantity_sold}x
                                 </span>
@@ -1264,6 +1264,12 @@ const Products = () => {
                                   <Badge variant="outline" className="text-xs">
                                     <ShoppingBag className="w-3 h-3 mr-1" />
                                     Shopify
+                                  </Badge>
+                                )}
+                                {!product.cost_price && (
+                                  <Badge variant="destructive" className="text-xs animate-pulse">
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                    {t('products.noCostPrice')}
                                   </Badge>
                                 )}
                               </div>
@@ -1366,6 +1372,21 @@ const Products = () => {
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </Button>
+                                {(!product.cost_price || product.cost_price === 0) && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 gap-1.5 text-xs border-warning/40 text-warning hover:bg-warning/10"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setQuoteModalOpen(true);
+                                    }}
+                                    title="Solicitar cotação ao fornecedor"
+                                  >
+                                    <Send className="w-3.5 h-3.5" />
+                                    Cotação
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
