@@ -1036,60 +1036,117 @@ const Products = () => {
       }
     >
       <div className="space-y-6">
-        {/* Stats Cards - Compact */}
+        {/* Stats Cards - Modern Design */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {statsData.map((stat, index) => {
               const Icon = stat.icon;
               const isPositive = stat.change > 0;
               const isWarning = stat.warning;
               const isProfitStat = stat.label === (t('products.totalProfit') || "Total Profit");
               
+              // Define gradient backgrounds for each stat
+              const gradients = [
+                'bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-transparent',
+                'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-transparent',
+                'bg-gradient-to-br from-purple-500/10 via-purple-400/5 to-transparent',
+                'bg-gradient-to-br from-orange-500/10 via-orange-400/5 to-transparent',
+              ];
+              
               return (
                 <motion.div
                   key={stat.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ 
+                    delay: index * 0.1,
+                    type: "spring",
+                    stiffness: 100
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
                 >
-                  <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-colors relative overflow-hidden">
+                  <Card className={`
+                    relative overflow-hidden p-6 
+                    border border-border/50 
+                    backdrop-blur-sm
+                    ${gradients[index]}
+                    hover:border-primary/40 hover:shadow-lg
+                    transition-all duration-300
+                    group
+                  `}>
+                    {/* Background Glow Effect */}
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
+                    
+                    {/* Warning Triangle for Profit */}
                     {isWarning && isProfitStat && (
-                      <div className="absolute right-0 top-0 bottom-0 w-1/2 flex items-center justify-center">
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
                             <TooltipTrigger asChild>
-                              <div className="cursor-help">
-                                <AlertTriangle className="w-20 h-20 text-destructive/80 hover:text-destructive transition-colors" strokeWidth={1.5} />
+                              <div className="cursor-help relative">
+                                <div className="absolute inset-0 bg-destructive/20 rounded-full blur-xl animate-pulse" />
+                                <AlertTriangle className="w-16 h-16 text-destructive relative z-10 drop-shadow-lg" strokeWidth={2} />
                               </div>
                             </TooltipTrigger>
                             <TooltipContent side="left" className="bg-destructive text-destructive-foreground border-destructive max-w-xs">
-                              <p className="font-medium">{stat.warningMessage}</p>
+                              <p className="font-semibold">{stat.warningMessage}</p>
                               <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </div>
                     )}
-                    <div className="flex items-center justify-between mb-2">
-                      <div className={`w-8 h-8 rounded-lg bg-gradient-primary/10 flex items-center justify-center ${stat.color}`}>
-                        <Icon className="w-4 h-4" />
+                    
+                    {/* Icon and Change Badge */}
+                    <div className="flex items-start justify-between mb-4 relative z-10">
+                      <div className={`
+                        w-12 h-12 rounded-2xl 
+                        flex items-center justify-center
+                        ${stat.color}
+                        bg-gradient-to-br from-white/10 to-white/5
+                        shadow-lg
+                        group-hover:scale-110 group-hover:rotate-3
+                        transition-all duration-300
+                      `}>
+                        <Icon className="w-6 h-6" strokeWidth={2.5} />
                       </div>
+                      
                       {!isWarning && (
-                        <div className={`flex items-center gap-1 text-xs font-medium ${
-                          isPositive ? "text-emerald-500" : "text-red-500"
-                        }`}>
-                          {isPositive ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                        <div className={`
+                          flex items-center gap-1.5 
+                          px-2.5 py-1 rounded-full
+                          text-xs font-semibold
+                          ${isPositive 
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" 
+                            : "bg-red-500/10 text-red-600 dark:text-red-400"
+                          }
+                        `}>
+                          {isPositive ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />}
                           {Math.abs(stat.change)}%
                         </div>
                       )}
                     </div>
-                    <h3 className={`text-lg font-bold mb-0.5 ${isWarning && isProfitStat ? 'text-muted-foreground' : 'gradient-text'}`}>{stat.value}</h3>
-                    <p className="text-xs text-muted-foreground">{stat.label}</p>
-                  </Card3D>
+                    
+                    {/* Value and Label */}
+                    <div className="space-y-1 relative z-10">
+                      <h3 className={`
+                        text-2xl md:text-3xl font-bold 
+                        ${isWarning && isProfitStat 
+                          ? 'text-muted-foreground/60' 
+                          : 'bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent'
+                        }
+                      `}>
+                        {stat.value}
+                      </h3>
+                      <p className="text-sm text-muted-foreground font-medium">
+                        {stat.label}
+                      </p>
+                    </div>
+                  </Card>
                 </motion.div>
               );
             })}
