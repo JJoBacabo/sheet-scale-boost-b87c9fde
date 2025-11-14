@@ -506,11 +506,9 @@ const Landing = () => {
 
             {/* Right: 3D Logo */}
             <div ref={dashboardRef} className="relative">
-              <Card className="bg-[#0A0E27]/90 border border-[#7BBCFE]/20 p-6 rounded-2xl backdrop-blur-md shadow-xl">
-                <div className="w-full h-[500px]">
-                  <Logo3D />
-                </div>
-              </Card>
+              <div className="w-full h-[1500px]">
+                <Logo3D />
+              </div>
             </div>
           </div>
 

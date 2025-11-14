@@ -8,7 +8,7 @@ function Model() {
   return (
     <primitive 
       object={scene} 
-      scale={1.5} 
+      scale={4.5} 
       position={[0, 0, 0]}
     />
   );
