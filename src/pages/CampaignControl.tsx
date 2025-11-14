@@ -593,8 +593,10 @@ const CampaignControl = () => {
       });
 
       if (error) {
-        console.error("❌ Error from edge function:", error);
-        throw error;
+        // Silently fail - don't show error for expected failures
+        console.log("⚠️ Could not fetch ad accounts (likely not connected or token expired)");
+        setAdAccounts([]);
+        return;
       }
       
       console.log("📊 Ad accounts response:", data);
@@ -613,14 +615,12 @@ const CampaignControl = () => {
         }
       } else {
         console.log("⚠️ No ad accounts in response");
+        setAdAccounts([]);
       }
     } catch (error: any) {
-      console.error("❌ Error fetching ad accounts:", error);
-      toast({
-        title: t('metaDashboard.errorLoadingAccounts'),
-        description: error.message || t('metaDashboard.noAccountsFound'),
-        variant: "destructive"
-      });
+      // Silently handle errors - don't show toast for expected failures
+      console.log("⚠️ Could not fetch ad accounts:", error.message);
+      setAdAccounts([]);
     }
   };
 

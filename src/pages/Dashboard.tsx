@@ -229,13 +229,14 @@ const Dashboard = () => {
         }
       }
 
-      // Fallback: call edge function
+      // Fallback: call edge function (silently fail if not connected or token expired)
       const { data, error } = await supabase.functions.invoke('facebook-campaigns', {
         body: { action: 'listAdAccounts' }
       });
 
       if (error) {
-        console.error("Error fetching ad accounts:", error);
+        // Silently fail - don't log errors for expected failures (token expired, not connected)
+        setAdAccounts([]);
         return;
       }
       
@@ -243,7 +244,8 @@ const Dashboard = () => {
         setAdAccounts(data.adAccounts);
       }
     } catch (error) {
-      console.error("Error fetching ad accounts:", error);
+      // Silently handle errors - these are expected when Facebook is not connected
+      setAdAccounts([]);
     }
   }, [user]);
 
