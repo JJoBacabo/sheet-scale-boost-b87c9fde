@@ -1035,7 +1035,7 @@ const Products = () => {
     },
     {
       label: t('products.totalRevenue') || "Total Revenue",
-      value: formatAmount(totalStats.totalRevenue, storeCurrency),
+      value: formatAmount(convertBetween(totalStats.totalRevenue, storeCurrency, selectedCurrency.code), selectedCurrency.code),
       change: 12.5,
       icon: DollarSign,
       color: "text-emerald-500",
@@ -1044,7 +1044,7 @@ const Products = () => {
     },
     {
       label: t('products.totalProfit') || "Total Profit",
-      value: hasProductsWithoutCost ? '0.00' : formatAmount(totalStats.totalProfit, storeCurrency),
+      value: hasProductsWithoutCost ? '0.00' : formatAmount(convertBetween(totalStats.totalProfit, storeCurrency, selectedCurrency.code), selectedCurrency.code),
       change: 3.9,
       icon: hasProductsWithoutCost ? AlertTriangle : DollarSign,
       color: hasProductsWithoutCost ? "text-warning" : "text-green-500",
@@ -1558,7 +1558,7 @@ const Products = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-base font-semibold text-foreground">
                                   {product.cost_price !== null && product.cost_price !== 0 
-                                    ? formatAmount(product.cost_price, storeCurrency)
+                                    ? formatAmount(convertBetween(product.cost_price, storeCurrency, selectedCurrency.code), selectedCurrency.code)
                                     : <span className="text-muted-foreground italic">Não definido</span>
                                   }
                                 </span>
@@ -1593,21 +1593,21 @@ const Products = () => {
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.totalRevenue')}</span>
                             <span className="text-lg font-bold text-green-600">
-                              {formatAmount(product.total_revenue || 0, storeCurrency)}
+                              {formatAmount(convertBetween(product.total_revenue || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                             </span>
                           </div>
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
                             <div className="flex flex-col items-end gap-1">
                               <span className="font-semibold">
-                                {formatAmount(product.selling_price || 0, storeCurrency)}
+                                {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                               </span>
                               {storeCurrency !== selectedCurrency.code && (
                                 <TooltipProvider>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Badge variant="outline" className="text-xs font-normal">
-                                        {(product.selling_price || 0).toFixed(2)} {storeCurrency} → {formatAmount(product.selling_price || 0, storeCurrency)}
+                                        {(product.selling_price || 0).toFixed(2)} {storeCurrency} → {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                                       </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent>
