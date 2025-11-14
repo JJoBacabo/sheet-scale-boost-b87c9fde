@@ -999,10 +999,11 @@ const Products = () => {
       label: t('products.avgMargin') || "Avg Margin",
       value: hasProductsWithoutCost ? '0.0%' : `${totalStats.avgMargin.toFixed(1)}%`,
       change: 3.7,
-      icon: Activity,
-      color: "text-blue-500",
+      icon: hasProductsWithoutCost ? AlertTriangle : Activity,
+      color: hasProductsWithoutCost ? "text-warning" : "text-blue-500",
       warning: hasProductsWithoutCost,
-      warningMessage: t('products.incompleteCosts')
+      warningMessage: t('products.incompleteCosts'),
+      isAvgMargin: true
     }
   ];
 
@@ -1049,7 +1050,7 @@ const Products = () => {
               const isPositive = stat.change > 0;
               const isWarning = stat.warning;
               const isProfitStat = stat.label === (t('products.totalProfit') || "Total Profit");
-              const isAvgMarginStat = stat.label === (t('products.avgMargin') || "Avg Margin");
+              const isAvgMarginStat = stat.isAvgMargin;
               
               // Define gradient backgrounds for each stat
               const gradients = [
@@ -1083,8 +1084,8 @@ const Products = () => {
                     {/* Background Glow Effect */}
                     <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
                     
-                    {/* Warning Triangle for Profit and Avg Margin */}
-                    {isWarning && (isProfitStat || isAvgMarginStat) && (
+                    {/* Warning Triangle ONLY for Total Profit (right side, large) */}
+                    {isWarning && isProfitStat && !isAvgMarginStat && (
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
@@ -1105,17 +1106,43 @@ const Products = () => {
                     
                     {/* Icon and Change Badge */}
                     <div className="flex items-start justify-between mb-4 relative z-10">
-                      <div className={`
-                        w-12 h-12 rounded-2xl 
-                        flex items-center justify-center
-                        ${stat.color}
-                        bg-gradient-to-br from-white/10 to-white/5
-                        shadow-lg
-                        group-hover:scale-110 group-hover:rotate-3
-                        transition-all duration-300
-                      `}>
-                        <Icon className="w-6 h-6" strokeWidth={2.5} />
-                      </div>
+                      {/* Icon with tooltip for Avg Margin warning */}
+                      {isWarning && isAvgMarginStat ? (
+                        <TooltipProvider>
+                          <Tooltip delayDuration={0}>
+                            <TooltipTrigger asChild>
+                              <div className={`
+                                w-12 h-12 rounded-2xl 
+                                flex items-center justify-center
+                                ${stat.color}
+                                bg-gradient-to-br from-white/10 to-white/5
+                                shadow-lg
+                                group-hover:scale-110 group-hover:rotate-3
+                                transition-all duration-300
+                                cursor-help
+                              `}>
+                                <Icon className="w-6 h-6" strokeWidth={2.5} />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="bg-warning text-warning-foreground border-warning max-w-xs">
+                              <p className="font-semibold">{stat.warningMessage}</p>
+                              <p className="text-xs mt-1 opacity-90">{t('dashboard.clickToAddQuotes')}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <div className={`
+                          w-12 h-12 rounded-2xl 
+                          flex items-center justify-center
+                          ${stat.color}
+                          bg-gradient-to-br from-white/10 to-white/5
+                          shadow-lg
+                          group-hover:scale-110 group-hover:rotate-3
+                          transition-all duration-300
+                        `}>
+                          <Icon className="w-6 h-6" strokeWidth={2.5} />
+                        </div>
+                      )}
                       
                       {!isWarning && (
                         <div className={`
