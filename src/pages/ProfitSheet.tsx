@@ -30,12 +30,15 @@ import {
   Calendar,
   Edit2,
   Check,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { format, subDays, isWithinInterval } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Integration {
   id: string;
@@ -107,6 +110,7 @@ const ProfitSheet = () => {
     adSpend: 0,
     avgRoas: 0,
   });
+  const [hasProductsWithoutCost, setHasProductsWithoutCost] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -399,6 +403,19 @@ const ProfitSheet = () => {
     setIsFetchingData(true);
     try {
       console.log('📊 Fetching profit data...');
+
+      // Check for products without cost_price
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, cost_price')
+        .eq('user_id', user.id)
+        .eq('integration_id', selectedShopify);
+
+      if (!productsError) {
+        const missingCost = products?.some(p => !p.cost_price || p.cost_price === 0) || false;
+        setHasProductsWithoutCost(missingCost);
+        console.log('🏷️ Products without cost:', missingCost);
+      }
 
       const dateFrom = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : format(subDays(new Date(), 30), 'yyyy-MM-dd');
       const dateTo = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
@@ -721,6 +738,18 @@ const ProfitSheet = () => {
                     {t('profitSheet.changeSelection')}
                   </Button>
                 </div>
+
+                {/* Missing Cost Warning */}
+                {hasProductsWithoutCost && (
+                  <Link to="/products">
+                    <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+                      <AlertTriangle className="h-4 w-4 text-warning" />
+                      <AlertDescription className="text-warning font-medium">
+                        {t('products.incompleteCosts')} - {t('dashboard.clickToAddQuotes')}
+                      </AlertDescription>
+                    </Alert>
+                  </Link>
+                )}
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
