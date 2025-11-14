@@ -997,11 +997,12 @@ const Products = () => {
     },
     {
       label: t('products.avgMargin') || "Avg Margin",
-      value: hasProductsWithoutCost ? t('products.incompleteCosts') : `${totalStats.avgMargin.toFixed(1)}%`,
+      value: hasProductsWithoutCost ? '0.0%' : `${totalStats.avgMargin.toFixed(1)}%`,
       change: 3.7,
-      icon: hasProductsWithoutCost ? AlertTriangle : Activity,
-      color: hasProductsWithoutCost ? "text-warning" : "text-blue-500",
-      warning: hasProductsWithoutCost
+      icon: Activity,
+      color: "text-blue-500",
+      warning: hasProductsWithoutCost,
+      warningMessage: t('products.incompleteCosts')
     }
   ];
 
@@ -1048,6 +1049,7 @@ const Products = () => {
               const isPositive = stat.change > 0;
               const isWarning = stat.warning;
               const isProfitStat = stat.label === (t('products.totalProfit') || "Total Profit");
+              const isAvgMarginStat = stat.label === (t('products.avgMargin') || "Avg Margin");
               
               // Define gradient backgrounds for each stat
               const gradients = [
@@ -1081,8 +1083,8 @@ const Products = () => {
                     {/* Background Glow Effect */}
                     <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all duration-500" />
                     
-                    {/* Warning Triangle for Profit */}
-                    {isWarning && isProfitStat && (
+                    {/* Warning Triangle for Profit and Avg Margin */}
+                    {isWarning && (isProfitStat || isAvgMarginStat) && (
                       <div className="absolute right-4 top-1/2 -translate-y-1/2">
                         <TooltipProvider>
                           <Tooltip delayDuration={0}>
@@ -1135,7 +1137,7 @@ const Products = () => {
                     <div className="space-y-1 relative z-10">
                       <h3 className={`
                         text-2xl md:text-3xl font-bold 
-                        ${isWarning && isProfitStat 
+                        ${isWarning && (isProfitStat || isAvgMarginStat)
                           ? 'text-muted-foreground/60' 
                           : 'bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent'
                         }
