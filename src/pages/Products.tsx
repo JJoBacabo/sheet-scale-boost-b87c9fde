@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send } from "lucide-react";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send, Filter } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -28,6 +28,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format, subDays, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 interface Product {
@@ -73,6 +75,7 @@ const Products = () => {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false);
   const [quoteRefreshTrigger, setQuoteRefreshTrigger] = useState(0);
   const [storeCurrency, setStoreCurrency] = useState<string>("EUR");
+  const [showOnlyWithoutCost, setShowOnlyWithoutCost] = useState(false);
   const { selectedCurrency, convertBetween, formatAmount } = useCurrency();
 
   const toggleProduct = (productId: string) => {
@@ -499,7 +502,10 @@ const Products = () => {
       const matchesDate = !dateRange.from || !dateRange.to || 
         isWithinInterval(new Date(soldDate), { start: dateRange.from, end: dateRange.to });
       
-      return matchesSearch && matchesDate;
+      // Cost filter - show only products without cost if filter is enabled
+      const matchesCostFilter = !showOnlyWithoutCost || !p.cost_price || p.cost_price === 0;
+      
+      return matchesSearch && matchesDate && matchesCostFilter;
     })
     .sort((a, b) => {
       // Sort by updated_at descending (most recent first)
@@ -1182,6 +1188,22 @@ const Products = () => {
                   />
                 </PopoverContent>
               </Popover>
+
+              {/* Filter: Only Without Cost */}
+              <div className="flex items-center gap-2 h-10 px-3 border border-border rounded-md bg-card">
+                <Switch
+                  id="filter-without-cost"
+                  checked={showOnlyWithoutCost}
+                  onCheckedChange={setShowOnlyWithoutCost}
+                />
+                <Label 
+                  htmlFor="filter-without-cost" 
+                  className="text-sm cursor-pointer flex items-center gap-1.5"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                  {t('products.withoutCost')}
+                </Label>
+              </div>
             </div>
           </div>
         </motion.section>
