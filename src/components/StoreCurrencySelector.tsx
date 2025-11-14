@@ -79,7 +79,7 @@ export function StoreCurrencySelector({
         onValueChange={handleCurrencyChange}
         disabled={updating}
       >
-        <SelectTrigger className="w-[100px] h-8 text-xs sm:text-sm bg-card border-primary/20">
+        <SelectTrigger className="w-[100px] h-10 text-xs sm:text-sm bg-card border-primary/20">
           {updating ? (
             <Loader2 className="w-3 h-3 animate-spin" />
           ) : (
