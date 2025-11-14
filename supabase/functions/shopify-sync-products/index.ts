@@ -83,8 +83,51 @@ async function syncProductsInBackground(
     .eq('id', integrationId)
     .single();
   
-  const storeCurrency = (integrationData?.metadata as any)?.store_currency || 'EUR';
-  console.log('💱 Store currency from integration:', storeCurrency);
+  let storeCurrency = (integrationData?.metadata as any)?.store_currency || 'EUR';
+  console.log('💱 Store currency from integration metadata:', storeCurrency);
+  
+  // Fetch real store currency from Shopify API and update if different
+  try {
+    const shopResponse = await fetch(
+      `https://${shopifyDomain}/admin/api/2024-01/shop.json`,
+      {
+        headers: {
+          'X-Shopify-Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (shopResponse.ok) {
+      const { shop } = await shopResponse.json();
+      const realStoreCurrency = shop.currency;
+      console.log('💱 Real store currency from Shopify:', realStoreCurrency);
+      
+      // Update integration metadata if currency changed or was missing
+      if (realStoreCurrency && realStoreCurrency !== storeCurrency) {
+        console.log(`🔄 Updating store currency from ${storeCurrency} to ${realStoreCurrency}`);
+        
+        const updatedMetadata = {
+          ...(integrationData?.metadata || {}),
+          store_currency: realStoreCurrency,
+        };
+        
+        const { error: updateError } = await supabase
+          .from('integrations')
+          .update({ metadata: updatedMetadata })
+          .eq('id', integrationId);
+        
+        if (updateError) {
+          console.error('❌ Failed to update store currency:', updateError);
+        } else {
+          storeCurrency = realStoreCurrency;
+          console.log('✅ Store currency updated successfully');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('⚠️ Could not fetch store currency from Shopify, using fallback:', error);
+  }
   
   // Step 1: Fetch all orders (with sales data)
   const allOrders: ShopifyOrder[] = [];
