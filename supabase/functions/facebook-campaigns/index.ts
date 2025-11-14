@@ -255,8 +255,9 @@ serve(async (req) => {
       // Fetch campaigns with detailed insights including all metrics
       // time_increment(1) gives us daily breakdown
       // Using limit=500 to get more campaigns per request and handle pagination
+      // Also fetch ads with creatives to get images
       let allCampaigns: any[] = [];
-      let nextUrl = `https://graph.facebook.com/v18.0/${targetAdAccountId}/campaigns?limit=500&fields=id,name,status,objective,daily_budget,lifetime_budget,spend_cap,created_time,updated_time,start_time,stop_time,insights${insightsParams}{date_start,date_stop,impressions,clicks,spend,actions,action_values,cpc,cpm,ctr,cpp,frequency,reach,social_spend,video_play_actions,cost_per_action_type,conversion_values,conversions}&access_token=${accessToken}`;
+      let nextUrl = `https://graph.facebook.com/v18.0/${targetAdAccountId}/campaigns?limit=500&fields=id,name,status,objective,daily_budget,lifetime_budget,spend_cap,created_time,updated_time,start_time,stop_time,ads.limit(1){creative{image_url,thumbnail_url}},insights${insightsParams}{date_start,date_stop,impressions,clicks,spend,actions,action_values,cpc,cpm,ctr,cpp,frequency,reach,social_spend,video_play_actions,cost_per_action_type,conversion_values,conversions}&access_token=${accessToken}`;
       
       // Fetch all pages of campaigns
       while (nextUrl) {
@@ -281,16 +282,16 @@ serve(async (req) => {
 
       console.log(`Successfully fetched ${allCampaigns.length} total campaigns`);
 
-      // Only fetch images if explicitly requested (to improve performance)
-      if (includeImages === true) {
-        console.log('⚠️ Image fetching requested - this may slow down the response');
-      } else {
-        console.log('✅ Skipping image fetch for better performance');
-      }
-
-      // PERFORMANCE OPTIMIZATION: Skip image fetching by default
-      // Images should be loaded on-demand when viewing campaign details
-      const campaignsWithImages = allCampaigns;
+      // Extract image URLs from ads creatives and add to campaign level
+      const campaignsWithImages = allCampaigns.map(campaign => {
+        const firstAd = campaign.ads?.data?.[0];
+        const creative = firstAd?.creative;
+        return {
+          ...campaign,
+          image_url: creative?.image_url,
+          thumbnail_url: creative?.thumbnail_url,
+        };
+      });
 
       return new Response(JSON.stringify({ 
         campaigns: campaignsWithImages,
