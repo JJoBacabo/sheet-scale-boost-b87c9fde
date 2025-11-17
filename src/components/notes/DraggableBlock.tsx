@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { SketchCanvas } from "./SketchCanvas";
+import { useSidebar } from "@/components/ui/sidebar";
 import type { Block } from "@/pages/Notes";
 
 interface DraggableBlockProps {
@@ -20,11 +21,19 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
   const nodeRef = useRef(null);
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartRef = useRef({ width: 0, height: 0, mouseX: 0, mouseY: 0 });
+  const { state: sidebarState } = useSidebar();
 
   const handleDragStop = (_e: any, data: any) => {
+    // Sidebar width: 256px (16rem) when expanded, 48px (3rem) when collapsed
+    const sidebarWidth = sidebarState === "expanded" ? 256 : 48;
+    
+    // Constrain position to not overlap with sidebar
+    const minX = sidebarWidth + 20; // 20px margin from sidebar
+    const constrainedX = Math.max(minX, data.x);
+    
     onUpdate(block.id, {
-      position_x: data.x,
-      position_y: data.y,
+      position_x: constrainedX,
+      position_y: Math.max(20, data.y), // At least 20px from top
     });
   };
 
