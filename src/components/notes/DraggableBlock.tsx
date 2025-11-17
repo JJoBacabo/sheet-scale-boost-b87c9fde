@@ -263,6 +263,9 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
       onStop={handleDragStop}
       scale={zoom}
       handle=".drag-handle"
+      bounds={{
+        left: sidebarState === "expanded" ? 260 : 52,
+      }}
     >
       <div
         ref={nodeRef}
