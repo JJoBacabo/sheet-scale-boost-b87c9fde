@@ -4,7 +4,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Background3D } from "@/components/ui/Background3D";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PostItBlock } from "@/components/notes/PostItBlock";
@@ -37,6 +37,7 @@ const NotesBoard = memo(() => {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [isDraggingBlock, setIsDraggingBlock] = useState(false);
   const { toast } = useToast();
 
   const debouncedBlocks = useDebounce(blocks, 500);
@@ -127,18 +128,15 @@ const NotesBoard = memo(() => {
       });
     } else if (data) {
       setBlocks([...blocks, data as Block]);
-      setIsDialogOpen(false);
-      toast({
-        title: "Block created",
-        description: `${type} block has been created successfully.`,
-      });
     }
   };
 
   const updateBlock = useCallback((id: string, updates: Partial<Block>) => {
-    setBlocks(prev => prev.map(block => 
-      block.id === id ? { ...block, ...updates } : block
-    ));
+    setBlocks(blocks => 
+      blocks.map(block => 
+        block.id === id ? { ...block, ...updates } : block
+      )
+    );
   }, []);
 
   const deleteBlock = async (id: string) => {
@@ -154,46 +152,41 @@ const NotesBoard = memo(() => {
         variant: "destructive",
       });
     } else {
-      setBlocks(blocks.filter(b => b.id !== id));
-      toast({
-        title: "Block deleted",
-        description: "Block has been deleted successfully.",
-      });
+      setBlocks(blocks.filter(block => block.id !== id));
     }
   };
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.5));
-  const handleResetZoom = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  };
+  const handleZoomIn = () => setZoom(Math.min(zoom + 0.1, 2));
+  const handleZoomOut = () => setZoom(Math.max(zoom - 0.1, 0.5));
+  const handleResetZoom = () => setZoom(1);
 
   const handleOrganize = () => {
-    const GRID_SIZE = 350;
-    const MARGIN = 20;
-    
-    setBlocks(prev => prev.map((block, index) => ({
-      ...block,
-      position_x: (index % 4) * GRID_SIZE + MARGIN,
-      position_y: Math.floor(index / 4) * GRID_SIZE + MARGIN,
-    })));
+    const gridSize = 50;
+    const spacing = 20;
+    const blocksPerRow = 4;
 
-    toast({
-      title: "Blocks organized",
-      description: "All blocks have been arranged in a grid.",
+    blocks.forEach((block, index) => {
+      const row = Math.floor(index / blocksPerRow);
+      const col = index % blocksPerRow;
+      const x = col * (300 + spacing) + gridSize;
+      const y = row * (300 + spacing) + gridSize;
+
+      updateBlock(block.id, {
+        position_x: x,
+        position_y: y,
+      });
     });
   };
 
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !isDraggingBlock) {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
   };
 
   const handleCanvasMouseMove = (e: React.MouseEvent) => {
-    if (isPanning) {
+    if (isPanning && !isDraggingBlock) {
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
@@ -212,6 +205,8 @@ const NotesBoard = memo(() => {
       onUpdate: updateBlock,
       onDelete: deleteBlock,
       zoom,
+      onDragStart: () => setIsDraggingBlock(true),
+      onDragEnd: () => setIsDraggingBlock(false),
     };
 
     switch (block.type) {
@@ -231,77 +226,86 @@ const NotesBoard = memo(() => {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="min-h-screen w-full flex relative overflow-hidden">
+    <SidebarProvider>
+      <div className="relative w-full h-screen overflow-hidden">
         <Background3D />
-        
-        <div className="flex flex-1 relative z-10">
-          <AppSidebar />
-
-          <SidebarInset className="flex-1 transition-all duration-300 relative bg-background/20 backdrop-blur-[2px]">
-            <div className="relative w-full h-screen overflow-hidden bg-card">
-        {/* Canvas */}
-        <div
-          className="absolute inset-0 bg-background"
-          style={{
-            backgroundImage: `
-              linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-              linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)
-            `,
-            backgroundSize: `${20 * zoom}px ${20 * zoom}px`,
-            backgroundPosition: `${pan.x}px ${pan.y}px`,
-            cursor: isPanning ? 'grabbing' : 'grab',
-          }}
-          onMouseDown={handleCanvasMouseDown}
-          onMouseMove={handleCanvasMouseMove}
-          onMouseUp={handleCanvasMouseUp}
-          onMouseLeave={handleCanvasMouseUp}
-        >
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          {/* Main Canvas */}
           <div
+            className="relative w-full h-screen overflow-hidden"
+            onMouseDown={handleCanvasMouseDown}
+            onMouseMove={handleCanvasMouseMove}
+            onMouseUp={handleCanvasMouseUp}
+            onMouseLeave={handleCanvasMouseUp}
             style={{
-              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-              transformOrigin: '0 0',
-              width: '100%',
-              height: '100%',
-              position: 'relative',
+              cursor: isPanning ? 'grabbing' : 'grab',
+              backgroundImage: `
+                linear-gradient(rgba(var(--border-rgb, 200, 200, 200), 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(var(--border-rgb, 200, 200, 200), 0.1) 1px, transparent 1px)
+              `,
+              backgroundSize: `${50 * zoom}px ${50 * zoom}px`,
+              backgroundPosition: `${pan.x}px ${pan.y}px`,
             }}
           >
-            {blocks.map(renderBlock)}
-          </div>
-        </div>
+            {/* Canvas Controls */}
+            <CanvasControls
+              zoom={zoom}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onResetZoom={handleResetZoom}
+              onOrganize={handleOrganize}
+            />
 
-        {/* Controls */}
-        <CanvasControls
-          zoom={zoom}
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onResetZoom={handleResetZoom}
-          onOrganize={handleOrganize}
-        />
-
-        {/* FAB */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              size="lg"
-              className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-2xl z-50 hover:scale-110 transition-transform"
+            {/* Blocks */}
+            <div
+              style={{
+                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                transformOrigin: '0 0',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+              }}
             >
-              <Plus className="h-7 w-7" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Block</DialogTitle>
-            </DialogHeader>
-            <BlockCreationMenu onCreateBlock={createBlock} />
-          </DialogContent>
-        </Dialog>
+              {blocks.map(renderBlock)}
             </div>
-          </SidebarInset>
-        </div>
+          </div>
+
+          {/* Floating Action Button with Popover */}
+          <Popover open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                size="icon"
+                className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50 hover:scale-110 transition-transform"
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent 
+              side="top" 
+              align="end" 
+              className="w-[400px] p-4 mb-2 bg-background border-border"
+              sideOffset={8}
+            >
+              <div className="space-y-3">
+                <h3 className="font-semibold text-lg">Adicionar Elemento</h3>
+                <BlockCreationMenu
+                  onCreateBlock={(type) => {
+                    createBlock(type);
+                    setIsDialogOpen(false);
+                  }}
+                />
+              </div>
+            </PopoverContent>
+          </Popover>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );
 });
+
+NotesBoard.displayName = 'NotesBoard';
 
 export default NotesBoard;

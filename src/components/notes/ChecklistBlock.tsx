@@ -11,6 +11,8 @@ interface ChecklistBlockProps {
   onUpdate: (id: string, updates: Partial<Block>) => void;
   onDelete: (id: string) => void;
   zoom: number;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 interface ChecklistItem {
@@ -19,8 +21,9 @@ interface ChecklistItem {
   checked: boolean;
 }
 
-export const ChecklistBlock = ({ block, onUpdate, onDelete, zoom }: ChecklistBlockProps) => {
+export const ChecklistBlock = ({ block, onUpdate, onDelete, zoom, onDragStart, onDragEnd }: ChecklistBlockProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const items: ChecklistItem[] = block.content?.items || [];
   const title: string = block.content?.title || 'Checklist';
 
@@ -59,18 +62,44 @@ export const ChecklistBlock = ({ block, onUpdate, onDelete, zoom }: ChecklistBlo
 
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
+    onDragEnd?.();
     onUpdate(block.id, {
       position_x: block.position_x + info.offset.x / zoom,
       position_y: block.position_y + info.offset.y / zoom,
     });
   };
 
+  const handleResize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const startY = e.clientY;
+    const startHeight = block.height;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaY = (moveEvent.clientY - startY) / zoom;
+      const newHeight = Math.max(200, startHeight + deltaY);
+      onUpdate(block.id, { height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <motion.div
-      drag
+      drag={!isResizing}
       dragMomentum={false}
       dragElastic={0}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
