@@ -183,22 +183,22 @@ const NotesBoard = memo(() => {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
-  };
+  }, [isDraggingBlock, pan.x, pan.y]);
 
-  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+  const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanning && !isDraggingBlock) {
       setPan({
         x: e.clientX - panStart.x,
         y: e.clientY - panStart.y,
       });
     }
-  };
+  }, [isPanning, panStart.x, panStart.y]);
 
-  const handleCanvasMouseUp = () => {
+  const handleCanvasMouseUp = useCallback(() => {
     setIsPanning(false);
-  };
+  }, []);
 
-  const renderBlock = (block: Block) => {
+  const renderBlock = useCallback((block: Block) => {
     const commonProps = {
       key: block.id,
       block,
@@ -223,7 +223,10 @@ const NotesBoard = memo(() => {
       default:
         return null;
     }
-  };
+  }, [zoom, updateBlock, deleteBlock]);
+
+  // Memoize rendered blocks
+  const renderedBlocks = useMemo(() => blocks.map(renderBlock), [blocks, renderBlock]);
 
   return (
     <SidebarProvider>
