@@ -24,16 +24,9 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
   const { state: sidebarState } = useSidebar();
 
   const handleDragStop = (_e: any, data: any) => {
-    // Sidebar width: 256px (16rem) when expanded, 48px (3rem) when collapsed
-    const sidebarWidth = sidebarState === "expanded" ? 256 : 48;
-    
-    // Constrain position to not overlap with sidebar
-    const minX = sidebarWidth + 20; // 20px margin from sidebar
-    const constrainedX = Math.max(minX, data.x);
-    
     onUpdate(block.id, {
-      position_x: constrainedX,
-      position_y: Math.max(20, data.y), // At least 20px from top
+      position_x: data.x,
+      position_y: data.y,
     });
   };
 
@@ -270,6 +263,10 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
       onStop={handleDragStop}
       scale={zoom}
       handle=".drag-handle"
+      bounds={{
+        left: sidebarState === "expanded" ? 256 + 20 : 48 + 20,
+        top: 20,
+      }}
     >
       <div
         ref={nodeRef}
