@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { Canvas as FabricCanvas, PencilBrush } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Eraser, Pen, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Block } from "@/pages/Notes";
 
 interface SketchCanvasProps {
@@ -134,25 +141,19 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
           ))}
         </div>
 
-        {/* Brush Width */}
-        <div className="flex gap-1 border-l border-border pl-2">
-          {[1, 2, 4, 8].map((width) => (
-            <button
-              key={width}
-              onClick={() => setBrushWidth(width)}
-              className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 flex items-center justify-center ${
-                brushWidth === width ? 'border-primary bg-primary/10' : 'border-border'
-              }`}
-            >
-              <div 
-                className="rounded-full bg-foreground"
-                style={{ 
-                  width: `${width * 2}px`, 
-                  height: `${width * 2}px` 
-                }}
-              />
-            </button>
-          ))}
+        {/* Brush Width Dropdown */}
+        <div className="border-l border-border pl-2">
+          <Select value={String(brushWidth)} onValueChange={(value) => setBrushWidth(Number(value))}>
+            <SelectTrigger className="w-24 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border z-50">
+              <SelectItem value="1">Fino (1px)</SelectItem>
+              <SelectItem value="2">Médio (2px)</SelectItem>
+              <SelectItem value="4">Grosso (4px)</SelectItem>
+              <SelectItem value="8">Extra (8px)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Tools */}
