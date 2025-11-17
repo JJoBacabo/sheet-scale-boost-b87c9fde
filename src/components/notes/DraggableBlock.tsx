@@ -312,7 +312,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
         {/* Block content */}
         <div
           className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 relative"
-          style={{ backgroundColor: block.color || '#FFFFFF' }}
+          style={{ backgroundColor: block.type === 'postit' ? (block.color || '#FEF08A') : '#BFDBFE' }}
         >
           {renderContent()}
           
