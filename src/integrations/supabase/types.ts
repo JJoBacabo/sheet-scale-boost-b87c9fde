@@ -91,6 +91,48 @@ export type Database = {
           },
         ]
       }
+      blocks: {
+        Row: {
+          color: string | null
+          content: Json
+          created_at: string
+          height: number
+          id: string
+          position_x: number
+          position_y: number
+          type: string
+          updated_at: string
+          user_id: string
+          width: number
+        }
+        Insert: {
+          color?: string | null
+          content?: Json
+          created_at?: string
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          type: string
+          updated_at?: string
+          user_id: string
+          width?: number
+        }
+        Update: {
+          color?: string | null
+          content?: Json
+          created_at?: string
+          height?: number
+          id?: string
+          position_x?: number
+          position_y?: number
+          type?: string
+          updated_at?: string
+          user_id?: string
+          width?: number
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           campaign_name: string
