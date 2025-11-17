@@ -25,6 +25,13 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
   const [isEraser, setIsEraser] = useState(false);
 
   useEffect(() => {
+    const canvasEl = document.getElementById(canvasId) as HTMLCanvasElement;
+    if (!canvasEl) {
+      console.error("Canvas element not found:", canvasId);
+      return;
+    }
+
+    console.log("Creating canvas for:", canvasId);
     const canvas = new FabricCanvas(canvasId, {
       width: block.width - 32,
       height: block.height - 100,
@@ -32,11 +39,32 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
       isDrawingMode: true,
     });
 
+    console.log("Canvas created, isDrawingMode:", canvas.isDrawingMode);
+
     // Initialize the freeDrawingBrush
     const brush = new PencilBrush(canvas);
     brush.color = activeColor;
     brush.width = 2;
     canvas.freeDrawingBrush = brush;
+
+    console.log("Brush initialized:", {
+      color: brush.color,
+      width: brush.width,
+      hasBrush: !!canvas.freeDrawingBrush
+    });
+
+    // Add mouse event listeners for debug
+    canvas.on('mouse:down', (e) => {
+      console.log("Mouse down on canvas", e.pointer);
+    });
+
+    canvas.on('mouse:move', (e) => {
+      console.log("Mouse move on canvas", e.pointer);
+    });
+
+    canvas.on('mouse:up', (e) => {
+      console.log("Mouse up on canvas", e.pointer);
+    });
 
     // Load existing drawing if available
     if (block.content?.drawing) {
@@ -46,7 +74,8 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     }
 
     // Save drawing on change
-    canvas.on('path:created', () => {
+    canvas.on('path:created', (e) => {
+      console.log("Path created!", e);
       const json = canvas.toJSON();
       onUpdate(block.id, {
         content: { ...block.content, drawing: json }
@@ -56,6 +85,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     setFabricCanvas(canvas);
 
     return () => {
+      console.log("Disposing canvas");
       canvas.dispose();
     };
   }, [canvasId, block.width, block.height]);
@@ -135,11 +165,8 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
       {/* Canvas */}
       <div 
         className="flex-1 border border-border rounded overflow-hidden bg-white relative"
-        onMouseDown={(e) => e.stopPropagation()}
-        onTouchStart={(e) => e.stopPropagation()}
-        style={{ pointerEvents: 'auto' }}
       >
-        <canvas id={canvasId} style={{ display: 'block' }} />
+        <canvas id={canvasId} style={{ display: 'block', touchAction: 'none' }} />
       </div>
     </div>
   );
