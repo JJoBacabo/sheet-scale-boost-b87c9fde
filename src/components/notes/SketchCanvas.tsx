@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Canvas as FabricCanvas, PencilBrush } from "fabric";
 import { Button } from "@/components/ui/button";
 import { Eraser, Pen, Trash2 } from "lucide-react";
@@ -19,17 +19,13 @@ const COLORS = [
 ];
 
 export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasId = `canvas-${block.id}`;
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [isEraser, setIsEraser] = useState(false);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    console.log("Initializing canvas with dimensions:", block.width - 32, block.height - 100);
-
-    const canvas = new FabricCanvas(canvasRef.current, {
+    const canvas = new FabricCanvas(canvasId, {
       width: block.width - 32,
       height: block.height - 100,
       backgroundColor: "#ffffff",
@@ -42,8 +38,6 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     brush.width = 2;
     canvas.freeDrawingBrush = brush;
 
-    console.log("Canvas initialized, isDrawingMode:", canvas.isDrawingMode);
-
     // Load existing drawing if available
     if (block.content?.drawing) {
       canvas.loadFromJSON(block.content.drawing, () => {
@@ -53,7 +47,6 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
 
     // Save drawing on change
     canvas.on('path:created', () => {
-      console.log("Path created!");
       const json = canvas.toJSON();
       onUpdate(block.id, {
         content: { ...block.content, drawing: json }
@@ -65,7 +58,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     return () => {
       canvas.dispose();
     };
-  }, [block.width, block.height, block.id]);
+  }, [canvasId, block.width, block.height]);
 
   useEffect(() => {
     if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
@@ -146,7 +139,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
         onTouchStart={(e) => e.stopPropagation()}
         style={{ pointerEvents: 'auto' }}
       >
-        <canvas ref={canvasRef} style={{ display: 'block' }} />
+        <canvas id={canvasId} style={{ display: 'block' }} />
       </div>
     </div>
   );
