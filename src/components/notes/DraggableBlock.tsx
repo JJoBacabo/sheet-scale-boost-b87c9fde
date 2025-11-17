@@ -95,7 +95,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
                 content: { ...block.content, text: e.target.value } 
               })}
               placeholder="Escreva sua nota..."
-              className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 text-base text-foreground"
+              className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 text-base text-black placeholder:text-black/50"
             />
           </div>
         );
