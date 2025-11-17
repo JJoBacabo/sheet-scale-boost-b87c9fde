@@ -65,9 +65,6 @@ const Notes = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const colors = ['#FEF08A', '#FBC8D5', '#BFDBFE', '#BBF7D0', '#E5E7EB'];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
       const newBlock = {
         user_id: user.id,
         type,
@@ -75,7 +72,7 @@ const Notes = () => {
         position_y: 100 + Math.random() * 300,
         width: type === 'postit' ? 250 : type === 'sketch' ? 400 : 300,
         height: type === 'postit' ? 250 : type === 'sketch' ? 300 : 200,
-        color: type === 'postit' ? randomColor : '#FFFFFF',
+        color: '#FFFFFF',
         content: type === 'checklist' ? { items: [] } : {},
       };
 
