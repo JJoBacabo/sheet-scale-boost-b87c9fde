@@ -317,6 +317,77 @@ const Landing = () => {
           }
         });
 
+        // ========================================
+        // Feature Card Box 3D Animations
+        // ========================================
+        const featureCardBoxes = gsap.utils.toArray(".feature-card-box") as HTMLElement[];
+        
+        featureCardBoxes.forEach((box, index) => {
+          // Set initial 3D state
+          gsap.set(box, {
+            opacity: 0.3,
+            scale: 0.92,
+            rotateY: -8,
+            rotateX: 5,
+            z: -100,
+            transformPerspective: 1200,
+          });
+
+          // Animate on scroll
+          const boxTrigger = ScrollTrigger.create({
+            trigger: box,
+            start: "top 75%",
+            end: "top 25%",
+            scrub: 1,
+            onEnter: () => {
+              gsap.to(box, {
+                opacity: 1,
+                scale: 1,
+                rotateY: 0,
+                rotateX: 0,
+                z: 0,
+                duration: 1.2,
+                ease: "back.out(1.5)",
+                transformPerspective: 1200,
+              });
+            },
+            onLeave: () => {
+              gsap.to(box, {
+                opacity: 0.6,
+                scale: 0.95,
+                rotateY: 8,
+                rotateX: -5,
+                z: -50,
+                duration: 0.8,
+                ease: "power2.in",
+              });
+            },
+            onEnterBack: () => {
+              gsap.to(box, {
+                opacity: 1,
+                scale: 1,
+                rotateY: 0,
+                rotateX: 0,
+                z: 0,
+                duration: 1.2,
+                ease: "back.out(1.5)",
+              });
+            },
+            onLeaveBack: () => {
+              gsap.to(box, {
+                opacity: 0.3,
+                scale: 0.92,
+                rotateY: -8,
+                rotateX: 5,
+                z: -100,
+                duration: 0.8,
+                ease: "power2.in",
+              });
+            },
+          });
+          scrollTriggersRef.current.push(boxTrigger);
+        });
+
         // Refresh ScrollTrigger after setup
         ScrollTrigger.refresh();
       }, featuresRef);
