@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, memo } from "react";
+import { useState, useEffect, useCallback, memo, useMemo } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Background3D } from "@/components/ui/Background3D";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -178,7 +177,7 @@ const NotesBoard = memo(() => {
     });
   };
 
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+  const handleCanvasMouseDown = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget && !isDraggingBlock) {
       setIsPanning(true);
       setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
@@ -231,7 +230,6 @@ const NotesBoard = memo(() => {
   return (
     <SidebarProvider>
       <div className="relative w-full h-screen overflow-hidden">
-        <Background3D />
         <AppSidebar />
         <SidebarInset className="flex-1">
           {/* Main Canvas */}
