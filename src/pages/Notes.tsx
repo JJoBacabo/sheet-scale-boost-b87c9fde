@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Plus, StickyNote as StickyNoteIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { NoteCard } from "@/components/notes/NoteCard";
-import { motion } from "framer-motion";
+import { DraggableNote } from "@/components/notes/DraggableNote";
 
 interface Note {
   id: string;
@@ -25,6 +24,7 @@ interface Note {
 const Notes = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [zoom, setZoom] = useState(1);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const Notes = () => {
         .select('*')
         .eq('user_id', user.id)
         .eq('type', 'postit')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       if (data) setNotes(data as Note[]);
@@ -69,8 +69,8 @@ const Notes = () => {
       const newNote = {
         user_id: user.id,
         type: 'postit',
-        position_x: 0,
-        position_y: 0,
+        position_x: 100 + Math.random() * 300,
+        position_y: 100 + Math.random() * 300,
         width: 250,
         height: 250,
         color: randomColor,
@@ -85,10 +85,10 @@ const Notes = () => {
 
       if (error) throw error;
       if (data) {
-        setNotes(prev => [data as Note, ...prev]);
+        setNotes(prev => [...prev, data as Note]);
         toast({
           title: "Nota criada",
-          description: "Nova nota adicionada com sucesso",
+          description: "Arraste e edite sua nota",
         });
       }
     } catch (error: any) {
@@ -101,16 +101,20 @@ const Notes = () => {
     }
   };
 
-  const updateNote = async (id: string, text: string, color: string) => {
+  const updateNote = async (id: string, updates: Partial<Note>) => {
     setNotes(prev => prev.map(note => 
-      note.id === id ? { ...note, content: { text }, color } : note
+      note.id === id ? { ...note, ...updates } : note
     ));
 
     await supabase
       .from('blocks')
       .update({
-        content: { text },
-        color,
+        position_x: updates.position_x,
+        position_y: updates.position_y,
+        width: updates.width,
+        height: updates.height,
+        color: updates.color,
+        content: updates.content,
       })
       .eq('id', id);
   };
@@ -125,92 +129,95 @@ const Notes = () => {
       setNotes(prev => prev.filter(n => n.id !== id));
       toast({
         title: "Nota eliminada",
-        description: "A nota foi removida com sucesso",
+        description: "A nota foi removida",
       });
     }
   };
 
   return (
     <SidebarProvider>
-      <div className="flex w-full min-h-screen">
+      <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
-        <SidebarInset className="flex-1">
-          <div className="p-8 w-full">
-            {/* Header */}
-            <div className="max-w-7xl mx-auto mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-2 flex items-center gap-3">
-                    <StickyNoteIcon className="w-10 h-10 text-primary" />
-                    Minhas Notas
-                  </h1>
-                  <p className="text-muted-foreground">
-                    Crie e organize suas notas
-                  </p>
-                </div>
-                <Button
-                  onClick={createNote}
-                  size="lg"
-                  className="gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  Nova Nota
-                </Button>
+        <SidebarInset className="flex-1 relative">
+          {isLoading ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-background">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Carregando...</p>
               </div>
             </div>
-
-            {/* Loading State */}
-            {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Carregando notas...</p>
-                </div>
+          ) : (
+            <div
+              className="relative w-full h-full overflow-hidden bg-background"
+              style={{
+                backgroundImage: `
+                  linear-gradient(hsl(var(--border) / 0.1) 1px, transparent 1px),
+                  linear-gradient(90deg, hsl(var(--border) / 0.1) 1px, transparent 1px)
+                `,
+                backgroundSize: `${50 * zoom}px ${50 * zoom}px`,
+              }}
+            >
+              {/* Zoom controls */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setZoom(z => Math.min(z + 0.1, 2))}
+                  className="bg-background/95 backdrop-blur-sm"
+                >
+                  +
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setZoom(z => Math.max(z - 0.1, 0.5))}
+                  className="bg-background/95 backdrop-blur-sm"
+                >
+                  -
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setZoom(1)}
+                  className="bg-background/95 backdrop-blur-sm text-xs"
+                >
+                  100%
+                </Button>
               </div>
-            ) : (
-              <>
-                {/* Empty State */}
-                {notes.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-center">
-                    <StickyNoteIcon className="w-20 h-20 text-muted-foreground/20 mb-4" />
-                    <h3 className="text-xl font-semibold text-foreground mb-2">
-                      Nenhuma nota ainda
-                    </h3>
-                    <p className="text-muted-foreground mb-6">
-                      Crie sua primeira nota para começar
-                    </p>
-                    <Button onClick={createNote} size="lg" className="gap-2">
-                      <Plus className="w-5 h-5" />
-                      Criar Primeira Nota
-                    </Button>
-                  </div>
-                ) : (
-                  /* Notes Grid */
-                  <motion.div 
-                    className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {notes.map((note, index) => (
-                      <motion.div
-                        key={note.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                      >
-                        <NoteCard
-                          note={note}
-                          onUpdate={updateNote}
-                          onDelete={deleteNote}
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </>
-            )}
-          </div>
+
+              {/* Canvas with notes */}
+              <div
+                style={{
+                  transform: `scale(${zoom})`,
+                  transformOrigin: '0 0',
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                }}
+              >
+                {notes.map((note) => (
+                  <DraggableNote
+                    key={note.id}
+                    note={note}
+                    zoom={zoom}
+                    onUpdate={updateNote}
+                    onDelete={deleteNote}
+                  />
+                ))}
+              </div>
+
+              {/* Add button */}
+              <Button
+                size="lg"
+                onClick={createNote}
+                className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow z-50"
+              >
+                <Plus className="h-6 w-6" />
+              </Button>
+            </div>
+          )}
         </SidebarInset>
       </div>
     </SidebarProvider>
