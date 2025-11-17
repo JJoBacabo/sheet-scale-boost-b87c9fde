@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { SketchCanvas } from "./SketchCanvas";
 import type { Block } from "@/pages/Notes";
 
 interface DraggableBlockProps {
@@ -13,10 +15,6 @@ interface DraggableBlockProps {
   onUpdate: (id: string, updates: Partial<Block>) => void;
   onDelete: (id: string) => void;
 }
-
-const COLORS = [
-  '#FEF08A', '#FBC8D5', '#BFDBFE', '#BBF7D0', '#E5E7EB'
-];
 
 export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlockProps) => {
   const nodeRef = useRef(null);
@@ -33,16 +31,6 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
       case 'postit':
         return (
           <div className="w-full h-full flex flex-col gap-3">
-            <div className="flex gap-1">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  onClick={() => onUpdate(block.id, { color })}
-                  className="w-6 h-6 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform"
-                  style={{ backgroundColor: color }}
-                />
-              ))}
-            </div>
             <Textarea
               value={block.content?.text || ''}
               onChange={(e) => onUpdate(block.id, { 
@@ -135,23 +123,90 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
         );
 
       case 'file':
+        const fileUrl = block.content?.fileUrl;
+        const fileName = block.content?.fileName;
+        const fileType = block.content?.fileType;
+        
         return (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <p className="text-sm">Upload de ficheiro</p>
-              <p className="text-xs">Em desenvolvimento</p>
-            </div>
+          <div className="w-full h-full flex flex-col gap-3">
+            {fileUrl ? (
+              <div className="flex-1 flex flex-col items-center justify-center gap-2">
+                {fileType?.startsWith('image/') ? (
+                  <img 
+                    src={fileUrl} 
+                    alt={fileName} 
+                    className="max-w-full max-h-full object-contain rounded"
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm font-semibold">{fileName}</p>
+                    <a 
+                      href={fileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Abrir ficheiro
+                    </a>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center">
+                <label className="cursor-pointer flex flex-col items-center gap-2 hover:text-primary transition-colors">
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*,.pdf"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+                      
+                      const fileExt = file.name.split('.').pop();
+                      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                      
+                      const { data, error } = await supabase.storage
+                        .from('notes-files')
+                        .upload(fileName, file);
+                      
+                      if (error) {
+                        console.error('Error uploading file:', error);
+                        return;
+                      }
+                      
+                      const { data: publicData } = supabase.storage
+                        .from('notes-files')
+                        .getPublicUrl(fileName);
+                      
+                      onUpdate(block.id, {
+                        content: {
+                          fileUrl: publicData.publicUrl,
+                          fileName: file.name,
+                          fileType: file.type,
+                        }
+                      });
+                    }}
+                  />
+                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <span className="text-sm">Clique para fazer upload</span>
+                  <span className="text-xs text-muted-foreground">Imagens ou PDF</span>
+                </label>
+              </div>
+            )}
           </div>
         );
 
       case 'sketch':
         return (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            <div className="text-center">
-              <p className="text-sm">Desenho livre</p>
-              <p className="text-xs">Em desenvolvimento</p>
-            </div>
-          </div>
+          <SketchCanvas 
+            block={block}
+            onUpdate={onUpdate}
+          />
         );
 
       default:
@@ -192,12 +247,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
 
         {/* Block content */}
         <div
-          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border"
-          style={{ 
-            backgroundColor: block.type === 'postit' ? block.color : 
-                          block.type === 'checklist' ? '#F0F9FF' : 
-                          block.type === 'idea' ? '#FEF3C7' : '#FFFFFF'
-          }}
+          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border bg-white"
         >
           {renderContent()}
         </div>
