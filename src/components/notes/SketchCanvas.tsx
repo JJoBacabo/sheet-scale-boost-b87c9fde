@@ -23,6 +23,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
   const [activeColor, setActiveColor] = useState("#000000");
   const [isEraser, setIsEraser] = useState(false);
+  const [brushWidth, setBrushWidth] = useState(2);
 
   useEffect(() => {
     const canvasEl = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -95,12 +96,12 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
 
     if (isEraser) {
       fabricCanvas.freeDrawingBrush.color = "#ffffff";
-      fabricCanvas.freeDrawingBrush.width = 10;
+      fabricCanvas.freeDrawingBrush.width = brushWidth * 5; // Eraser is 5x thicker
     } else {
       fabricCanvas.freeDrawingBrush.color = activeColor;
-      fabricCanvas.freeDrawingBrush.width = 2;
+      fabricCanvas.freeDrawingBrush.width = brushWidth;
     }
-  }, [activeColor, isEraser, fabricCanvas]);
+  }, [activeColor, isEraser, fabricCanvas, brushWidth]);
 
   const handleClear = () => {
     if (!fabricCanvas) return;
@@ -130,6 +131,27 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
               }`}
               style={{ backgroundColor: color }}
             />
+          ))}
+        </div>
+
+        {/* Brush Width */}
+        <div className="flex gap-1 border-l border-border pl-2">
+          {[1, 2, 4, 8].map((width) => (
+            <button
+              key={width}
+              onClick={() => setBrushWidth(width)}
+              className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 flex items-center justify-center ${
+                brushWidth === width ? 'border-primary bg-primary/10' : 'border-border'
+              }`}
+            >
+              <div 
+                className="rounded-full bg-foreground"
+                style={{ 
+                  width: `${width * 2}px`, 
+                  height: `${width * 2}px` 
+                }}
+              />
+            </button>
           ))}
         </div>
 
