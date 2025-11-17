@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import Draggable from "react-draggable";
-import { Trash2, GripVertical } from "lucide-react";
+import { Trash2, GripVertical, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -18,12 +18,47 @@ interface DraggableBlockProps {
 
 export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlockProps) => {
   const nodeRef = useRef(null);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeStartRef = useRef({ width: 0, height: 0, mouseX: 0, mouseY: 0 });
 
   const handleDragStop = (_e: any, data: any) => {
     onUpdate(block.id, {
       position_x: data.x,
       position_y: data.y,
     });
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    resizeStartRef.current = {
+      width: block.width,
+      height: block.height,
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+    };
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = (moveEvent.clientX - resizeStartRef.current.mouseX) / zoom;
+      const deltaY = (moveEvent.clientY - resizeStartRef.current.mouseY) / zoom;
+      
+      const newWidth = Math.max(200, resizeStartRef.current.width + deltaX);
+      const newHeight = Math.max(150, resizeStartRef.current.height + deltaY);
+      
+      onUpdate(block.id, {
+        width: newWidth,
+        height: newHeight,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   const renderContent = () => {
@@ -246,9 +281,17 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
 
         {/* Block content */}
         <div
-          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 bg-card"
+          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 bg-card relative"
         >
           {renderContent()}
+          
+          {/* Resize handle */}
+          <div
+            onMouseDown={handleResizeStart}
+            className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+          >
+            <Maximize2 className="h-4 w-4 text-primary" />
+          </div>
         </div>
       </div>
     </Draggable>
