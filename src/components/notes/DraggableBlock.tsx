@@ -37,8 +37,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
                 content: { ...block.content, text: e.target.value } 
               })}
               placeholder="Escreva sua nota..."
-              className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 text-base"
-              style={{ color: '#000000' }}
+              className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 text-base text-foreground"
             />
           </div>
         );
@@ -247,7 +246,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
 
         {/* Block content */}
         <div
-          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border bg-white"
+          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 bg-card"
         >
           {renderContent()}
         </div>
