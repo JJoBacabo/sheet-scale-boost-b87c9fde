@@ -201,7 +201,7 @@ const Landing = () => {
     return () => ctx.revert();
   }, [gsapLoaded]);
 
-  // Features Sticky Stacking Section animation
+  // Features Sticky Stacking Section animation with 3D card stacking effect
   useEffect(() => {
     if (!featuresRef.current || !gsapLoaded || !gsapRef.current || !ScrollTriggerRef.current) return;
     let timeoutId: NodeJS.Timeout;
@@ -223,16 +223,25 @@ const Landing = () => {
           // Find text and image containers using specific classes
           const textSection = card.querySelector(".feature-text-content");
           const imageSection = card.querySelector(".feature-images-container");
+          const imageCards = card.querySelectorAll(".feature-image-card");
 
           if (textSection && imageSection) {
-            // Set initial state - slightly hidden for smooth entrance
+            // Set initial state for text section
             gsap.set(textSection, {
               opacity: 0,
               y: 50,
             });
-            gsap.set(imageSection, {
-              opacity: 0,
-              y: 50,
+
+            // Set initial state for image cards with stacking effect
+            imageCards.forEach((imageCard, imgIndex) => {
+              gsap.set(imageCard, {
+                opacity: 0,
+                scale: 0.8,
+                rotateY: imgIndex === 0 ? -15 : 15,
+                rotateX: 10,
+                z: -100 * (imgIndex + 1),
+                transformPerspective: 1000,
+              });
             });
 
             // Create scroll trigger for each card entrance
@@ -242,31 +251,65 @@ const Landing = () => {
               end: "bottom 20%",
               toggleActions: "play none none reverse",
               onEnter: () => {
-                // Animate text first, then images with delay
+                // Animate text first
                 gsap.to(textSection, {
                   opacity: 1,
                   y: 0,
                   duration: 0.9,
                   ease: "power3.out",
                 });
-                gsap.to(imageSection, {
-                  opacity: 1,
-                  y: 0,
-                  duration: 0.9,
-                  delay: 0.2,
-                  ease: "power3.out",
+
+                // Animate image cards with staggered 3D stacking effect
+                imageCards.forEach((imageCard, imgIndex) => {
+                  gsap.to(imageCard, {
+                    opacity: 1,
+                    scale: 1,
+                    rotateY: 0,
+                    rotateX: 0,
+                    z: 0,
+                    duration: 1.2,
+                    delay: 0.3 + imgIndex * 0.15,
+                    ease: "back.out(1.2)",
+                  });
                 });
               },
               onLeave: () => {
-                // Optional: fade out when leaving (can be removed for sticky effect)
+                // Keep cards visible for sticky effect
               },
               onEnterBack: () => {
                 // Animate when scrolling back up
-                gsap.to([textSection, imageSection], {
+                gsap.to(textSection, {
                   opacity: 1,
                   y: 0,
                   duration: 0.7,
                   ease: "power2.out",
+                });
+                
+                imageCards.forEach((imageCard, imgIndex) => {
+                  gsap.to(imageCard, {
+                    opacity: 1,
+                    scale: 1,
+                    rotateY: 0,
+                    rotateX: 0,
+                    z: 0,
+                    duration: 0.8,
+                    delay: imgIndex * 0.1,
+                    ease: "power2.out",
+                  });
+                });
+              },
+              onLeaveBack: () => {
+                // Fade out when scrolling back up past the trigger
+                imageCards.forEach((imageCard, imgIndex) => {
+                  gsap.to(imageCard, {
+                    opacity: 0,
+                    scale: 0.8,
+                    rotateY: imgIndex === 0 ? -15 : 15,
+                    rotateX: 10,
+                    z: -100 * (imgIndex + 1),
+                    duration: 0.6,
+                    ease: "power2.in",
+                  });
                 });
               },
             });
@@ -786,11 +829,15 @@ const Landing = () => {
                         </p>
                       </div>
 
-                      {/* Images - Side by side */}
+                      {/* Images - Side by side with 3D stacking effect */}
                       <div
                         className={`feature-images-container grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${
                           isEven ? "" : "md:col-start-1 md:row-start-1"
                         }`}
+                        style={{
+                          perspective: "1000px",
+                          transformStyle: "preserve-3d",
+                        }}
                       >
                         <div
                           onClick={() =>
@@ -798,7 +845,11 @@ const Landing = () => {
                               isZoomed && zoomedImage.imageIndex === 1 ? null : { featureIndex: index, imageIndex: 1 },
                             )
                           }
-                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
+                          className="feature-image-card aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
+                          style={{
+                            transformStyle: "preserve-3d",
+                            willChange: "transform",
+                          }}
                         >
                           <img
                             src={feature.images[0]}
@@ -821,7 +872,11 @@ const Landing = () => {
                               isZoomed && zoomedImage.imageIndex === 2 ? null : { featureIndex: index, imageIndex: 2 },
                             )
                           }
-                          className="aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
+                          className="feature-image-card aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
+                          style={{
+                            transformStyle: "preserve-3d",
+                            willChange: "transform",
+                          }}
                         >
                           <img
                             src={feature.images[1]}

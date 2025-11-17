@@ -680,6 +680,90 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_quote_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          password: string | null
+          supplier_email: string | null
+          supplier_name: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          password?: string | null
+          supplier_email?: string | null
+          supplier_name: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          password?: string | null
+          supplier_email?: string | null
+          supplier_name?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      supplier_quotes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          product_id: string
+          quoted_price: number | null
+          session_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          product_id: string
+          quoted_price?: number | null
+          session_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          product_id?: string
+          quoted_price?: number | null
+          session_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_quotes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_quotes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_quote_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_chats: {
         Row: {
           admin_id: string | null
@@ -832,6 +916,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_quote_token: { Args: { session_token: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"
