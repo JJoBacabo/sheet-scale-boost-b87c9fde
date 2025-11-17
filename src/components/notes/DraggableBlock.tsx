@@ -237,10 +237,16 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
 
       case 'sketch':
         return (
-          <SketchCanvas 
-            block={block}
-            onUpdate={onUpdate}
-          />
+          <div 
+            className="w-full h-full"
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+          >
+            <SketchCanvas 
+              block={block}
+              onUpdate={onUpdate}
+            />
+          </div>
         );
 
       default:
