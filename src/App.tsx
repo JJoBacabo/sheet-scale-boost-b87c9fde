@@ -38,7 +38,7 @@ import UltimateScroll from "./pages/UltimateScroll";
 import SimpleScroll from "./pages/SimpleScroll";
 import DashboardNew from "./pages/DashboardNew";
 import SupplierQuotePage from "./pages/SupplierQuotePage";
-import NotesBoard from "./pages/NotesBoard";
+import Notes from "./pages/Notes";
 
 const queryClient = new QueryClient();
 
@@ -76,7 +76,7 @@ const AppContent = () => {
         <Route path="/ultimate-scroll" element={<UltimateScroll />} />
         <Route path="/simple-scroll" element={<SimpleScroll />} />
         <Route path="/supplier-quote/:token" element={<SupplierQuotePage />} />
-        <Route path="/notes-board" element={<><TrialBanner /><NotesBoard /></>} />
+        <Route path="/notes" element={<><TrialBanner /><Notes /></>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
