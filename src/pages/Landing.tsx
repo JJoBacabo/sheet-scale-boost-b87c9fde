@@ -1168,111 +1168,118 @@ const Landing = () => {
         </div>
 
         {/* Feature Comparison Table */}
-        <div className="max-w-5xl mx-auto mt-16">
-          <h3 className="text-2xl font-bold text-center mb-4">{t("landing.pricing.featureComparison.title")}</h3>
-          <p className="text-center text-gray-400 text-sm mb-8">{t("landing.pricing.featureComparison.note")}</p>
-          <Card className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-gray-400 font-semibold">
-                      {t("landing.pricing.featureComparison.feature")}
-                    </th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.basic.name')}</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.standard.name')}</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.expert.name')}</th>
-                    <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.business.name')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    {
-                      key: "dailyRoas",
-                      basic: true,
-                      standard: true,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "profitSheet",
-                      basic: true,
-                      standard: true,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "quotation",
-                      basic: false,
-                      standard: true,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "campaigns",
-                      basic: false,
-                      standard: true,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "productResearch",
-                      basic: false,
-                      standard: false,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "prioritySupport",
-                      basic: false,
-                      standard: false,
-                      expert: true,
-                      business: true,
-                    },
-                    {
-                      key: "completeHistory",
-                      basic: false,
-                      standard: false,
-                      expert: true,
-                      business: true,
-                    },
-                  ].map((feature, i) => (
-                    <tr key={i} className="border-b border-white/10 last:border-0">
-                      <td className="p-4 text-gray-300">{t(`landing.pricing.featureComparison.${feature.key}`)}</td>
-                      <td className="p-4 text-center">
-                        {feature.basic ? (
-                          <Check className="w-5 h-5 text-primary mx-auto" />
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-center">
-                        {feature.standard ? (
-                          <Check className="w-5 h-5 text-primary mx-auto" />
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-center">
-                        {feature.expert ? (
-                          <Check className="w-5 h-5 text-primary mx-auto" />
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-center">
-                        {feature.business ? (
-                          <Check className="w-5 h-5 text-primary mx-auto" />
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="max-w-7xl mx-auto mt-16">
+          <div className="grid lg:grid-cols-[1fr,2fr] gap-12 items-start">
+            {/* Left: Title Section */}
+            <div className="space-y-4">
+              <h3 className="text-4xl sm:text-5xl font-bold">{t("landing.pricing.featureComparison.title")}</h3>
+              <p className="text-gray-400 text-base">{t("landing.pricing.featureComparison.note")}</p>
             </div>
-          </Card>
+
+            {/* Right: Table */}
+            <Card className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden max-w-3xl">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left p-4 text-gray-400 font-semibold">
+                        {t("landing.pricing.featureComparison.feature")}
+                      </th>
+                      <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.basic.name')}</th>
+                      <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.standard.name')}</th>
+                      <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.expert.name')}</th>
+                      <th className="text-center p-4 text-gray-400 font-semibold">{t('landing.pricing.business.name')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      {
+                        key: "dailyRoas",
+                        basic: true,
+                        standard: true,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "profitSheet",
+                        basic: true,
+                        standard: true,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "quotation",
+                        basic: false,
+                        standard: true,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "campaigns",
+                        basic: false,
+                        standard: true,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "productResearch",
+                        basic: false,
+                        standard: false,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "prioritySupport",
+                        basic: false,
+                        standard: false,
+                        expert: true,
+                        business: true,
+                      },
+                      {
+                        key: "completeHistory",
+                        basic: false,
+                        standard: false,
+                        expert: true,
+                        business: true,
+                      },
+                    ].map((feature, i) => (
+                      <tr key={i} className="border-b border-white/10 last:border-0">
+                        <td className="p-4 text-gray-300">{t(`landing.pricing.featureComparison.${feature.key}`)}</td>
+                        <td className="p-4 text-center">
+                          {feature.basic ? (
+                            <Check className="w-5 h-5 text-primary mx-auto" />
+                          ) : (
+                            <span className="text-gray-600">—</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {feature.standard ? (
+                            <Check className="w-5 h-5 text-primary mx-auto" />
+                          ) : (
+                            <span className="text-gray-600">—</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {feature.expert ? (
+                            <Check className="w-5 h-5 text-primary mx-auto" />
+                          ) : (
+                            <span className="text-gray-600">—</span>
+                          )}
+                        </td>
+                        <td className="p-4 text-center">
+                          {feature.business ? (
+                            <Check className="w-5 h-5 text-primary mx-auto" />
+                          ) : (
+                            <span className="text-gray-600">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </div>
         </div>
       </section>
 
