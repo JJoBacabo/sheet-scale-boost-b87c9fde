@@ -104,8 +104,8 @@ export const PostItBlock = ({ block, onUpdate, onDelete, zoom }: PostItBlockProp
           value={block.content?.text || ''}
           onChange={(e) => handleTextChange(e.target.value)}
           placeholder="Type your note..."
-          className="w-full h-full bg-transparent border-none resize-none focus-visible:ring-0 text-foreground placeholder:text-foreground/50"
-          style={{ fontSize: `${14 / zoom}px` }}
+          className="w-full h-full bg-transparent border-none resize-none focus-visible:ring-0 placeholder:text-gray-600"
+          style={{ fontSize: `${14 / zoom}px`, color: '#000000' }}
         />
       </div>
     </motion.div>
