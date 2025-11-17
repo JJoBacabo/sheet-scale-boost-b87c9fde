@@ -3,35 +3,38 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DraggableNote } from "@/components/notes/DraggableNote";
+import { DraggableBlock } from "@/components/notes/DraggableBlock";
+import { BlockTypeMenu } from "@/components/notes/BlockTypeMenu";
 
-interface Note {
+export interface Block {
   id: string;
   user_id: string;
-  type: string;
+  type: 'postit' | 'checklist' | 'idea' | 'file' | 'sketch';
   position_x: number;
   position_y: number;
   width: number;
   height: number;
   color: string;
-  content: { text?: string };
+  content: any;
   created_at: string;
   updated_at: string;
 }
 
 const Notes = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [blocks, setBlocks] = useState<Block[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [zoom, setZoom] = useState(1);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    loadNotes();
+    loadBlocks();
   }, []);
 
-  const loadNotes = async () => {
+  const loadBlocks = async () => {
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -41,15 +44,14 @@ const Notes = () => {
         .from('blocks')
         .select('*')
         .eq('user_id', user.id)
-        .eq('type', 'postit')
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      if (data) setNotes(data as Note[]);
+      if (data) setBlocks(data as Block[]);
     } catch (error: any) {
-      console.error('Error loading notes:', error);
+      console.error('Error loading blocks:', error);
       toast({
-        title: "Erro ao carregar notas",
+        title: "Erro ao carregar",
         description: error.message,
         variant: "destructive",
       });
@@ -58,7 +60,7 @@ const Notes = () => {
     }
   };
 
-  const createNote = async () => {
+  const createBlock = async (type: Block['type']) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -66,33 +68,34 @@ const Notes = () => {
       const colors = ['#FEF08A', '#FBC8D5', '#BFDBFE', '#BBF7D0', '#E5E7EB'];
       const randomColor = colors[Math.floor(Math.random() * colors.length)];
 
-      const newNote = {
+      const newBlock = {
         user_id: user.id,
-        type: 'postit',
+        type,
         position_x: 100 + Math.random() * 300,
         position_y: 100 + Math.random() * 300,
-        width: 250,
-        height: 250,
-        color: randomColor,
-        content: { text: '' },
+        width: type === 'postit' ? 250 : type === 'sketch' ? 400 : 300,
+        height: type === 'postit' ? 250 : type === 'sketch' ? 300 : 200,
+        color: type === 'postit' ? randomColor : '#FFFFFF',
+        content: type === 'checklist' ? { items: [] } : {},
       };
 
       const { data, error } = await supabase
         .from('blocks')
-        .insert([newNote])
+        .insert([newBlock])
         .select()
         .single();
 
       if (error) throw error;
       if (data) {
-        setNotes(prev => [...prev, data as Note]);
+        setBlocks(prev => [...prev, data as Block]);
+        setIsPopoverOpen(false);
         toast({
-          title: "Nota criada",
-          description: "Arraste e edite sua nota",
+          title: "Bloco criado",
+          description: "Arraste e edite o bloco",
         });
       }
     } catch (error: any) {
-      console.error('Error creating note:', error);
+      console.error('Error creating block:', error);
       toast({
         title: "Erro",
         description: error.message,
@@ -101,9 +104,9 @@ const Notes = () => {
     }
   };
 
-  const updateNote = async (id: string, updates: Partial<Note>) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id ? { ...note, ...updates } : note
+  const updateBlock = async (id: string, updates: Partial<Block>) => {
+    setBlocks(prev => prev.map(block => 
+      block.id === id ? { ...block, ...updates } : block
     ));
 
     await supabase
@@ -119,17 +122,17 @@ const Notes = () => {
       .eq('id', id);
   };
 
-  const deleteNote = async (id: string) => {
+  const deleteBlock = async (id: string) => {
     const { error } = await supabase
       .from('blocks')
       .delete()
       .eq('id', id);
 
     if (!error) {
-      setNotes(prev => prev.filter(n => n.id !== id));
+      setBlocks(prev => prev.filter(b => b.id !== id));
       toast({
-        title: "Nota eliminada",
-        description: "A nota foi removida",
+        title: "Bloco eliminado",
+        description: "O bloco foi removido",
       });
     }
   };
@@ -185,7 +188,7 @@ const Notes = () => {
                 </Button>
               </div>
 
-              {/* Canvas with notes */}
+              {/* Canvas with blocks */}
               <div
                 style={{
                   transform: `scale(${zoom})`,
@@ -197,25 +200,36 @@ const Notes = () => {
                   height: '100%',
                 }}
               >
-                {notes.map((note) => (
-                  <DraggableNote
-                    key={note.id}
-                    note={note}
+                {blocks.map((block) => (
+                  <DraggableBlock
+                    key={block.id}
+                    block={block}
                     zoom={zoom}
-                    onUpdate={updateNote}
-                    onDelete={deleteNote}
+                    onUpdate={updateBlock}
+                    onDelete={deleteBlock}
                   />
                 ))}
               </div>
 
-              {/* Add button */}
-              <Button
-                size="lg"
-                onClick={createNote}
-                className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow z-50"
-              >
-                <Plus className="h-6 w-6" />
-              </Button>
+              {/* Add button with menu */}
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    size="lg"
+                    className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow z-50"
+                  >
+                    <Plus className="h-6 w-6" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-80" 
+                  side="top" 
+                  align="end"
+                  sideOffset={10}
+                >
+                  <BlockTypeMenu onCreateBlock={createBlock} />
+                </PopoverContent>
+              </Popover>
             </div>
           )}
         </SidebarInset>
