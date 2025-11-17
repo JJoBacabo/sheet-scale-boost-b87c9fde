@@ -232,15 +232,11 @@ const Landing = () => {
               y: 50,
             });
 
-            // Set initial state for image cards with stacking effect
-            imageCards.forEach((imageCard, imgIndex) => {
+            // Set initial state for image cards
+            imageCards.forEach((imageCard) => {
               gsap.set(imageCard, {
                 opacity: 0,
-                scale: 0.8,
-                rotateY: imgIndex === 0 ? -15 : 15,
-                rotateX: 10,
-                z: -100 * (imgIndex + 1),
-                transformPerspective: 1000,
+                y: 30,
               });
             });
 
@@ -259,17 +255,14 @@ const Landing = () => {
                   ease: "power3.out",
                 });
 
-                // Animate image cards with staggered 3D stacking effect
+                // Animate image cards with fade in
                 imageCards.forEach((imageCard, imgIndex) => {
                   gsap.to(imageCard, {
                     opacity: 1,
-                    scale: 1,
-                    rotateY: 0,
-                    rotateX: 0,
-                    z: 0,
-                    duration: 1.2,
-                    delay: 0.3 + imgIndex * 0.15,
-                    ease: "back.out(1.2)",
+                    y: 0,
+                    duration: 0.8,
+                    delay: 0.2 + imgIndex * 0.1,
+                    ease: "power2.out",
                   });
                 });
               },
@@ -288,11 +281,8 @@ const Landing = () => {
                 imageCards.forEach((imageCard, imgIndex) => {
                   gsap.to(imageCard, {
                     opacity: 1,
-                    scale: 1,
-                    rotateY: 0,
-                    rotateX: 0,
-                    z: 0,
-                    duration: 0.8,
+                    y: 0,
+                    duration: 0.6,
                     delay: imgIndex * 0.1,
                     ease: "power2.out",
                   });
@@ -300,14 +290,11 @@ const Landing = () => {
               },
               onLeaveBack: () => {
                 // Fade out when scrolling back up past the trigger
-                imageCards.forEach((imageCard, imgIndex) => {
+                imageCards.forEach((imageCard) => {
                   gsap.to(imageCard, {
                     opacity: 0,
-                    scale: 0.8,
-                    rotateY: imgIndex === 0 ? -15 : 15,
-                    rotateX: 10,
-                    z: -100 * (imgIndex + 1),
-                    duration: 0.6,
+                    y: 30,
+                    duration: 0.4,
                     ease: "power2.in",
                   });
                 });
@@ -318,74 +305,44 @@ const Landing = () => {
         });
 
         // ========================================
-        // Feature Card Box 3D Animations
+        // Feature Cards Stacking Animation
         // ========================================
-        const featureCardBoxes = gsap.utils.toArray(".feature-card-box") as HTMLElement[];
+        const stickyCards = gsap.utils.toArray(".feature-sticky-card") as HTMLElement[];
         
-        featureCardBoxes.forEach((box, index) => {
-          // Set initial 3D state
-          gsap.set(box, {
-            opacity: 0.3,
-            scale: 0.92,
-            rotateY: -8,
-            rotateX: 5,
-            z: -100,
-            transformPerspective: 1200,
+        stickyCards.forEach((card, index) => {
+          const totalCards = stickyCards.length;
+          
+          // Set initial state
+          gsap.set(card, {
+            scale: 1,
+            y: 0,
           });
 
-          // Animate on scroll
-          const boxTrigger = ScrollTrigger.create({
-            trigger: box,
-            start: "top 75%",
-            end: "top 25%",
+          // Create scroll trigger for stacking effect
+          const stackTrigger = ScrollTrigger.create({
+            trigger: card,
+            start: "top top",
+            end: () => `+=${window.innerHeight * 1.2}`,
+            pin: true,
+            pinSpacing: false,
             scrub: 1,
-            onEnter: () => {
-              gsap.to(box, {
-                opacity: 1,
-                scale: 1,
-                rotateY: 0,
-                rotateX: 0,
-                z: 0,
-                duration: 1.2,
-                ease: "back.out(1.5)",
-                transformPerspective: 1200,
-              });
-            },
-            onLeave: () => {
-              gsap.to(box, {
-                opacity: 0.6,
-                scale: 0.95,
-                rotateY: 8,
-                rotateX: -5,
-                z: -50,
-                duration: 0.8,
-                ease: "power2.in",
-              });
-            },
-            onEnterBack: () => {
-              gsap.to(box, {
-                opacity: 1,
-                scale: 1,
-                rotateY: 0,
-                rotateX: 0,
-                z: 0,
-                duration: 1.2,
-                ease: "back.out(1.5)",
-              });
-            },
-            onLeaveBack: () => {
-              gsap.to(box, {
-                opacity: 0.3,
-                scale: 0.92,
-                rotateY: -8,
-                rotateX: 5,
-                z: -100,
-                duration: 0.8,
-                ease: "power2.in",
-              });
+            onUpdate: (self) => {
+              const progress = self.progress;
+              const nextCardIndex = index + 1;
+              
+              // Scale down and fade as next card comes
+              if (nextCardIndex < totalCards) {
+                gsap.to(card, {
+                  scale: 1 - (progress * 0.05),
+                  y: -progress * 30,
+                  opacity: 1 - (progress * 0.3),
+                  duration: 0.1,
+                  ease: "none",
+                });
+              }
             },
           });
-          scrollTriggersRef.current.push(boxTrigger);
+          scrollTriggersRef.current.push(stackTrigger);
         });
 
         // Refresh ScrollTrigger after setup
@@ -851,7 +808,7 @@ const Landing = () => {
         <div
           className="features-stacking-container relative"
           style={{
-            height: `${featuresData.length * 100}vh`,
+            height: `${featuresData.length * 120}vh`,
           }}
         >
           {/* Each feature card - 100vh sticky */}
@@ -878,12 +835,8 @@ const Landing = () => {
                   <div className="container mx-auto max-w-7xl w-full relative z-10">
                     {/* Feature Card Box with GSAP animation */}
                     <div
-                      className="feature-card-box rounded-3xl bg-[#0A0E27]/40 border border-primary/20 backdrop-blur-lg p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
+                      className="feature-card-box rounded-3xl bg-[#0A0E27]/60 border border-primary/20 backdrop-blur-lg p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
                       data-feature-box={index}
-                      style={{
-                        transformStyle: "preserve-3d",
-                        willChange: "transform",
-                      }}
                     >
                       <div
                         className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 items-center h-full min-h-[600px] ${
@@ -911,14 +864,10 @@ const Landing = () => {
 
                       {/* Images - Side by side with 3D stacking effect */}
                       <div
-                        className={`feature-images-container grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${
-                          isEven ? "" : "md:col-start-1 md:row-start-1"
-                        }`}
-                        style={{
-                          perspective: "1000px",
-                          transformStyle: "preserve-3d",
-                        }}
-                      >
+                          className={`feature-images-container grid grid-cols-2 gap-3 sm:gap-4 md:gap-5 order-2 md:order-none w-full ${
+                            isEven ? "" : "md:col-start-1 md:row-start-1"
+                          }`}
+                        >
                         <div
                           onClick={() =>
                             setZoomedImage(
@@ -926,10 +875,6 @@ const Landing = () => {
                             )
                           }
                           className="feature-image-card aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
-                          style={{
-                            transformStyle: "preserve-3d",
-                            willChange: "transform",
-                          }}
                         >
                           <img
                             src={feature.images[0]}
@@ -953,10 +898,6 @@ const Landing = () => {
                             )
                           }
                           className="feature-image-card aspect-square rounded-2xl sm:rounded-3xl bg-[#0A0E27]/60 border border-primary/30 backdrop-blur-md overflow-hidden shadow-xl cursor-pointer transition-all duration-300 active:scale-95 group hover:scale-105 hover:border-primary/50"
-                          style={{
-                            transformStyle: "preserve-3d",
-                            willChange: "transform",
-                          }}
                         >
                           <img
                             src={feature.images[1]}
