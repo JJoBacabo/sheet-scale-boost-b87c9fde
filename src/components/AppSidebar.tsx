@@ -1,4 +1,4 @@
-import { Home, TrendingUp, Package, Settings, LogOut, Sparkles, ChevronRight, BarChart3, Target, MessageCircle, MoreHorizontal, Shield, FileSpreadsheet, FileText, Lock } from "lucide-react";
+import { Home, TrendingUp, Package, Settings, LogOut, Sparkles, ChevronRight, BarChart3, Target, MessageCircle, MoreHorizontal, Shield, FileSpreadsheet, FileText, Lock, StickyNote } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { motion } from "framer-motion";
@@ -214,6 +214,12 @@ export function AppSidebar() {
                   className="w-56 z-[100] bg-popover border-border shadow-lg"
                 >
                   {/* Configurações */}
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/notes-board" className="cursor-pointer flex items-center">
+                      <StickyNote className="w-4 h-4 mr-2" />
+                      Notes Board
+                    </NavLink>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <NavLink to="/integrations" className="cursor-pointer flex items-center">
                       <Sparkles className="w-4 h-4 mr-2" />
