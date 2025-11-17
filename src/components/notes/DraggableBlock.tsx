@@ -194,7 +194,9 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
         <div
           className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border"
           style={{ 
-            backgroundColor: block.type === 'postit' ? block.color : '#FFFFFF'
+            backgroundColor: block.type === 'postit' ? block.color : 
+                          block.type === 'checklist' ? '#F0F9FF' : 
+                          block.type === 'idea' ? '#FEF3C7' : '#FFFFFF'
           }}
         >
           {renderContent()}
