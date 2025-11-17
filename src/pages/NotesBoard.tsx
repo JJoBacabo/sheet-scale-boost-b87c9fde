@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { PageLayout } from "@/components/PageLayout";
+import { useState, useEffect, useCallback, memo } from "react";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Background3D } from "@/components/ui/Background3D";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { PostItBlock } from "@/components/notes/PostItBlock";
@@ -28,9 +30,9 @@ export interface Block {
   updated_at: string;
 }
 
-const NotesBoard = () => {
+const NotesBoard = memo(() => {
   const [blocks, setBlocks] = useState<Block[]>([]);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -125,7 +127,7 @@ const NotesBoard = () => {
       });
     } else if (data) {
       setBlocks([...blocks, data as Block]);
-      setIsSheetOpen(false);
+      setIsDialogOpen(false);
       toast({
         title: "Block created",
         description: `${type} block has been created successfully.`,
@@ -229,11 +231,15 @@ const NotesBoard = () => {
   };
 
   return (
-    <PageLayout
-      title="Notes Board"
-      subtitle="Create and organize your ideas with drag & drop blocks"
-    >
-      <div className="relative w-full h-[calc(100vh-12rem)] overflow-hidden rounded-xl border border-border bg-card">
+    <SidebarProvider defaultOpen={true}>
+      <div className="min-h-screen w-full flex relative overflow-hidden">
+        <Background3D />
+        
+        <div className="flex flex-1 relative z-10">
+          <AppSidebar />
+
+          <SidebarInset className="flex-1 transition-all duration-300 relative bg-background/20 backdrop-blur-[2px]">
+            <div className="relative w-full h-screen overflow-hidden bg-card">
         {/* Canvas */}
         <div
           className="absolute inset-0 bg-background"
@@ -274,25 +280,28 @@ const NotesBoard = () => {
         />
 
         {/* FAB */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetTrigger asChild>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
             <Button
               size="lg"
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl z-50"
+              className="fixed bottom-8 right-8 h-16 w-16 rounded-full shadow-2xl z-50 hover:scale-110 transition-transform"
             >
-              <Plus className="h-6 w-6" />
+              <Plus className="h-7 w-7" />
             </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="h-auto">
-            <SheetHeader>
-              <SheetTitle>Create New Block</SheetTitle>
-            </SheetHeader>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create New Block</DialogTitle>
+            </DialogHeader>
             <BlockCreationMenu onCreateBlock={createBlock} />
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
+            </div>
+          </SidebarInset>
+        </div>
       </div>
-    </PageLayout>
+    </SidebarProvider>
   );
-};
+});
 
 export default NotesBoard;

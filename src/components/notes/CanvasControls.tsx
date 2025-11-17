@@ -17,43 +17,43 @@ export const CanvasControls = ({
   onOrganize,
 }: CanvasControlsProps) => {
   return (
-    <div className="absolute top-4 left-4 flex flex-col gap-2 z-40">
-      <div className="glass-card rounded-lg p-2 flex flex-col gap-1">
+    <div className="absolute top-4 left-4 flex flex-col gap-2 z-40 group">
+      <div className="glass-card rounded-lg p-1.5 flex flex-col gap-1 scale-75 group-hover:scale-100 transition-transform duration-200 origin-top-left">
         <Button
           size="icon"
           variant="ghost"
           onClick={onZoomIn}
-          className="h-8 w-8"
+          className="h-7 w-7"
         >
-          <ZoomIn className="h-4 w-4" />
+          <ZoomIn className="h-3.5 w-3.5" />
         </Button>
-        <div className="text-xs text-center font-mono text-muted-foreground px-1">
+        <div className="text-[10px] text-center font-mono text-muted-foreground px-1">
           {Math.round(zoom * 100)}%
         </div>
         <Button
           size="icon"
           variant="ghost"
           onClick={onZoomOut}
-          className="h-8 w-8"
+          className="h-7 w-7"
         >
-          <ZoomOut className="h-4 w-4" />
+          <ZoomOut className="h-3.5 w-3.5" />
         </Button>
         <Button
           size="icon"
           variant="ghost"
           onClick={onResetZoom}
-          className="h-8 w-8"
+          className="h-7 w-7"
         >
-          <Maximize2 className="h-4 w-4" />
+          <Maximize2 className="h-3.5 w-3.5" />
         </Button>
       </div>
       
       <Button
         variant="outline"
         onClick={onOrganize}
-        className="glass-card gap-2"
+        className="glass-card gap-2 scale-75 group-hover:scale-100 transition-transform duration-200 origin-top-left text-xs py-1 px-2 h-7"
       >
-        <Grid3x3 className="h-4 w-4" />
+        <Grid3x3 className="h-3.5 w-3.5" />
         Organize
       </Button>
     </div>
