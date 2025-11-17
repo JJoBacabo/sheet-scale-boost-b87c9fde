@@ -27,6 +27,8 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
+    console.log("Initializing canvas with dimensions:", block.width - 32, block.height - 100);
+
     const canvas = new FabricCanvas(canvasRef.current, {
       width: block.width - 32,
       height: block.height - 100,
@@ -35,10 +37,12 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     });
 
     // Initialize the freeDrawingBrush
-    if (canvas.freeDrawingBrush) {
-      canvas.freeDrawingBrush.color = activeColor;
-      canvas.freeDrawingBrush.width = 2;
-    }
+    const brush = new PencilBrush(canvas);
+    brush.color = activeColor;
+    brush.width = 2;
+    canvas.freeDrawingBrush = brush;
+
+    console.log("Canvas initialized, isDrawingMode:", canvas.isDrawingMode);
 
     // Load existing drawing if available
     if (block.content?.drawing) {
@@ -49,6 +53,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
 
     // Save drawing on change
     canvas.on('path:created', () => {
+      console.log("Path created!");
       const json = canvas.toJSON();
       onUpdate(block.id, {
         content: { ...block.content, drawing: json }
@@ -135,8 +140,13 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
       </div>
 
       {/* Canvas */}
-      <div className="flex-1 border border-border rounded overflow-hidden bg-white">
-        <canvas ref={canvasRef} />
+      <div 
+        className="flex-1 border border-border rounded overflow-hidden bg-white relative"
+        onMouseDown={(e) => e.stopPropagation()}
+        onTouchStart={(e) => e.stopPropagation()}
+        style={{ pointerEvents: 'auto' }}
+      >
+        <canvas ref={canvasRef} style={{ display: 'block' }} />
       </div>
     </div>
   );
