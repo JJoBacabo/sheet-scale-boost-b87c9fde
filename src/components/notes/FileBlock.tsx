@@ -10,10 +10,13 @@ interface FileBlockProps {
   onUpdate: (id: string, updates: Partial<Block>) => void;
   onDelete: (id: string) => void;
   zoom: number;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-export const FileBlock = ({ block, onUpdate, onDelete, zoom }: FileBlockProps) => {
+export const FileBlock = ({ block, onUpdate, onDelete, zoom, onDragStart, onDragEnd }: FileBlockProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const fileUrl: string = block.content?.fileUrl || '';
@@ -40,18 +43,66 @@ export const FileBlock = ({ block, onUpdate, onDelete, zoom }: FileBlockProps) =
 
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
+    onDragEnd?.();
     onUpdate(block.id, {
       position_x: block.position_x + info.offset.x / zoom,
       position_y: block.position_y + info.offset.y / zoom,
     });
   };
 
+  const handleResize = (e: React.MouseEvent, direction: 'se' | 'sw') => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = block.width;
+    const startHeight = block.height;
+    const startPosX = block.position_x;
+    const aspectRatio = startWidth / startHeight;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = (moveEvent.clientX - startX) / zoom;
+      const deltaY = (moveEvent.clientY - startY) / zoom;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newPosX = startPosX;
+
+      if (direction === 'se') {
+        newWidth = Math.max(200, startWidth + deltaX);
+        newHeight = newWidth / aspectRatio;
+      } else if (direction === 'sw') {
+        newWidth = Math.max(200, startWidth - deltaX);
+        newHeight = newWidth / aspectRatio;
+        newPosX = startPosX + (startWidth - newWidth);
+      }
+
+      onUpdate(block.id, {
+        width: newWidth,
+        height: newHeight,
+        position_x: newPosX,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <motion.div
-      drag
+      drag={!isResizing}
       dragMomentum={false}
       dragElastic={0}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
@@ -61,11 +112,12 @@ export const FileBlock = ({ block, onUpdate, onDelete, zoom }: FileBlockProps) =
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       className="group"
-      whileHover={{ scale: 1.02, zIndex: 1000 }}
+      whileHover={{ scale: 1.01, zIndex: 1000 }}
+      transition={{ duration: 0.15 }}
     >
       <div className="glass-card rounded-lg shadow-lg p-4">
         {/* Controls */}
-        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <Button
             size="icon"
             variant="destructive"
@@ -121,6 +173,24 @@ export const FileBlock = ({ block, onUpdate, onDelete, zoom }: FileBlockProps) =
           accept="image/*,.pdf"
           onChange={handleFileSelect}
           className="hidden"
+        />
+
+        {/* Resize Handles */}
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'se')}
+          style={{ 
+            background: 'linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderBottomRightRadius: '8px'
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'sw')}
+          style={{ 
+            background: 'linear-gradient(225deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderBottomLeftRadius: '8px'
+          }}
         />
       </div>
     </motion.div>

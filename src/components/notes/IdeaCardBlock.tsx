@@ -12,10 +12,13 @@ interface IdeaCardBlockProps {
   onUpdate: (id: string, updates: Partial<Block>) => void;
   onDelete: (id: string) => void;
   zoom: number;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
-export const IdeaCardBlock = ({ block, onUpdate, onDelete, zoom }: IdeaCardBlockProps) => {
+export const IdeaCardBlock = ({ block, onUpdate, onDelete, zoom, onDragStart, onDragEnd }: IdeaCardBlockProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [newTag, setNewTag] = useState('');
   
   const title: string = block.content?.title || '';
@@ -41,18 +44,44 @@ export const IdeaCardBlock = ({ block, onUpdate, onDelete, zoom }: IdeaCardBlock
 
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
+    onDragEnd?.();
     onUpdate(block.id, {
       position_x: block.position_x + info.offset.x / zoom,
       position_y: block.position_y + info.offset.y / zoom,
     });
   };
 
+  const handleResize = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const startY = e.clientY;
+    const startHeight = block.height;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaY = (moveEvent.clientY - startY) / zoom;
+      const newHeight = Math.max(200, startHeight + deltaY);
+      onUpdate(block.id, { height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <motion.div
-      drag
+      drag={!isResizing}
       dragMomentum={false}
       dragElastic={0}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
@@ -62,11 +91,12 @@ export const IdeaCardBlock = ({ block, onUpdate, onDelete, zoom }: IdeaCardBlock
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       className="group"
-      whileHover={{ scale: 1.02, zIndex: 1000 }}
+      whileHover={{ scale: 1.01, zIndex: 1000 }}
+      transition={{ duration: 0.15 }}
     >
-      <div className="glass-card rounded-lg shadow-lg p-4 space-y-3">
+      <div className="glass-card rounded-lg shadow-lg p-4 space-y-3" style={{ height: block.height }}>
         {/* Controls */}
-        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <Button
             size="icon"
             variant="destructive"
@@ -122,6 +152,16 @@ export const IdeaCardBlock = ({ block, onUpdate, onDelete, zoom }: IdeaCardBlock
             </Button>
           </div>
         </div>
+
+        {/* Resize Handle */}
+        <div
+          className="absolute bottom-0 right-0 w-6 h-6 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={handleResize}
+          style={{ 
+            background: 'linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderBottomRightRadius: '12px'
+          }}
+        />
       </div>
     </motion.div>
   );

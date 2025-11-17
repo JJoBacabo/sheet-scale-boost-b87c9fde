@@ -10,6 +10,8 @@ interface PostItBlockProps {
   onUpdate: (id: string, updates: Partial<Block>) => void;
   onDelete: (id: string) => void;
   zoom: number;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 const COLORS = [
@@ -20,8 +22,9 @@ const COLORS = [
   { name: 'gray', value: '#E5E7EB' },
 ];
 
-export const PostItBlock = ({ block, onUpdate, onDelete, zoom }: PostItBlockProps) => {
+export const PostItBlock = ({ block, onUpdate, onDelete, zoom, onDragStart, onDragEnd }: PostItBlockProps) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
 
   const handleTextChange = (text: string) => {
@@ -36,19 +39,75 @@ export const PostItBlock = ({ block, onUpdate, onDelete, zoom }: PostItBlockProp
 
   const handleDragEnd = (event: any, info: any) => {
     setIsDragging(false);
+    onDragEnd?.();
     onUpdate(block.id, {
       position_x: block.position_x + info.offset.x / zoom,
       position_y: block.position_y + info.offset.y / zoom,
     });
   };
 
+  const handleResize = (e: React.MouseEvent, direction: 'se' | 'sw' | 'ne' | 'nw') => {
+    e.stopPropagation();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startWidth = block.width;
+    const startHeight = block.height;
+    const startPosX = block.position_x;
+    const startPosY = block.position_y;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = (moveEvent.clientX - startX) / zoom;
+      const deltaY = (moveEvent.clientY - startY) / zoom;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newPosX = startPosX;
+      let newPosY = startPosY;
+
+      if (direction.includes('e')) {
+        newWidth = Math.max(150, startWidth + deltaX);
+      }
+      if (direction.includes('w')) {
+        newWidth = Math.max(150, startWidth - deltaX);
+        newPosX = startPosX + (startWidth - newWidth);
+      }
+      if (direction.includes('s')) {
+        newHeight = Math.max(150, startHeight + deltaY);
+      }
+      if (direction.includes('n')) {
+        newHeight = Math.max(150, startHeight - deltaY);
+        newPosY = startPosY + (startHeight - newHeight);
+      }
+
+      onUpdate(block.id, {
+        width: newWidth,
+        height: newHeight,
+        position_x: newPosX,
+        position_y: newPosY,
+      });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
   return (
     <motion.div
       ref={dragRef}
-      drag
+      drag={!isResizing}
       dragMomentum={false}
       dragElastic={0}
-      onDragStart={() => setIsDragging(true)}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDragStart?.();
+      }}
       onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
@@ -59,7 +118,8 @@ export const PostItBlock = ({ block, onUpdate, onDelete, zoom }: PostItBlockProp
         cursor: isDragging ? 'grabbing' : 'grab',
       }}
       className="group"
-      whileHover={{ scale: 1.02, zIndex: 1000 }}
+      whileHover={{ scale: 1.01, zIndex: 1000 }}
+      transition={{ duration: 0.15 }}
     >
       <div
         className="relative w-full h-full rounded-lg shadow-lg p-4 transition-shadow hover:shadow-xl"
@@ -104,8 +164,42 @@ export const PostItBlock = ({ block, onUpdate, onDelete, zoom }: PostItBlockProp
           value={block.content?.text || ''}
           onChange={(e) => handleTextChange(e.target.value)}
           placeholder="Type your note..."
-          className="w-full h-full bg-transparent border-none resize-none focus-visible:ring-0 placeholder:text-gray-600"
-          style={{ fontSize: `${14 / zoom}px`, color: '#000000' }}
+          className="w-full h-full bg-transparent border-none resize-none focus-visible:ring-0 placeholder:text-gray-600 text-foreground"
+          style={{ fontSize: `${Math.max(12, 14 / zoom)}px`, color: '#000000' }}
+        />
+
+        {/* Resize Handles */}
+        <div
+          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'se')}
+          style={{ 
+            background: 'linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderBottomRightRadius: '8px'
+          }}
+        />
+        <div
+          className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'sw')}
+          style={{ 
+            background: 'linear-gradient(225deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderBottomLeftRadius: '8px'
+          }}
+        />
+        <div
+          className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'ne')}
+          style={{ 
+            background: 'linear-gradient(45deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderTopRightRadius: '8px'
+          }}
+        />
+        <div
+          className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          onMouseDown={(e) => handleResize(e, 'nw')}
+          style={{ 
+            background: 'linear-gradient(315deg, transparent 50%, rgba(0,0,0,0.3) 50%)',
+            borderTopLeftRadius: '8px'
+          }}
         />
       </div>
     </motion.div>
