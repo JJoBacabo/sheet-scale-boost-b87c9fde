@@ -544,20 +544,20 @@ const Landing = () => {
         <div className="container mx-auto max-w-7xl relative z-10">
           <div ref={heroRef} className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: Hero Content */}
-            <div className="text-center">
-              <h1 className="hero-title text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight text-white">
+            <div>
+              <h1 className="hero-title text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight text-white">
                 {t('landing.hero.title1')} <br />{t('landing.hero.title2')}
               </h1>
-              <p className="hero-subtitle text-2xl sm:text-3xl text-gray-300 mb-4 leading-relaxed">
+              <p className="hero-subtitle text-xl text-gray-300 mb-4 leading-relaxed">
                 {t('landing.hero.subtitle')}
               </p>
-              <p className="hero-description text-xl sm:text-2xl text-gray-400 mb-10 leading-relaxed">
+              <p className="hero-description text-lg text-gray-400 mb-10 leading-relaxed">
                 ✓ {t('landing.hero.benefit1')}<br />
                 ✓ {t('landing.hero.benefit2')}<br />
                 ✓ {t('landing.hero.benefit3')}
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   onClick={() => navigate("/auth")}
                   size="lg"
@@ -1171,9 +1171,9 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto mt-16">
           <div className="grid lg:grid-cols-[1fr,2fr] gap-12 items-start">
             {/* Left: Title Section */}
-            <div className="space-y-4">
-              <h3 className="text-4xl sm:text-5xl font-bold">{t("landing.pricing.featureComparison.title")}</h3>
-              <p className="text-gray-400 text-base">{t("landing.pricing.featureComparison.note")}</p>
+            <div className="space-y-4 text-center lg:text-left">
+              <h3 className="text-5xl sm:text-6xl md:text-7xl font-bold">{t("landing.pricing.featureComparison.title")}</h3>
+              <p className="text-gray-400 text-xl sm:text-2xl">{t("landing.pricing.featureComparison.note")}</p>
             </div>
 
             {/* Right: Table */}
