@@ -158,7 +158,7 @@ const Notes = () => {
               }}
             >
               {/* Zoom controls */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2 z-50">
+              <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
                 <Button
                   size="sm"
                   variant="outline"
