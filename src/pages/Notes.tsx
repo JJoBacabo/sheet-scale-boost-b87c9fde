@@ -28,6 +28,9 @@ const Notes = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [zoom, setZoom] = useState(1);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const { toast } = useToast();
 
   useEffect(() => {
@@ -65,14 +68,18 @@ const Notes = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Calculate position accounting for pan and zoom
+      const baseX = (window.innerWidth / 2 - panOffset.x) / zoom;
+      const baseY = (window.innerHeight / 2 - panOffset.y) / zoom;
+
       const newBlock = {
         user_id: user.id,
         type,
-        position_x: 100 + Math.random() * 300,
-        position_y: 100 + Math.random() * 300,
+        position_x: baseX - 150,
+        position_y: baseY - 100,
         width: type === 'postit' ? 250 : type === 'sketch' ? 400 : 300,
         height: type === 'postit' ? 250 : type === 'sketch' ? 300 : 200,
-        color: '#FFFFFF',
+        color: '#FEF08A',
         content: type === 'checklist' ? { items: [] } : {},
       };
 
@@ -134,6 +141,27 @@ const Notes = () => {
     }
   };
 
+  const handleCanvasMouseDown = (e: React.MouseEvent) => {
+    // Only pan if clicking on the canvas background, not on a block
+    if (e.target === e.currentTarget) {
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - panOffset.x, y: e.clientY - panOffset.y });
+    }
+  };
+
+  const handleCanvasMouseMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPanOffset({
+        x: e.clientX - panStart.x,
+        y: e.clientY - panStart.y,
+      });
+    }
+  };
+
+  const handleCanvasMouseUp = () => {
+    setIsPanning(false);
+  };
+
   return (
     <SidebarProvider>
       <div className="flex w-full h-screen overflow-hidden">
@@ -148,13 +176,19 @@ const Notes = () => {
             </div>
           ) : (
             <div
-              className="relative w-full h-full overflow-auto bg-background"
+              className="relative w-full h-full overflow-hidden bg-background"
+              onMouseDown={handleCanvasMouseDown}
+              onMouseMove={handleCanvasMouseMove}
+              onMouseUp={handleCanvasMouseUp}
+              onMouseLeave={handleCanvasMouseUp}
               style={{
+                cursor: isPanning ? 'grabbing' : 'grab',
                 backgroundImage: `
                   linear-gradient(hsl(var(--border) / 0.1) 1px, transparent 1px),
                   linear-gradient(90deg, hsl(var(--border) / 0.1) 1px, transparent 1px)
                 `,
                 backgroundSize: `${50 * zoom}px ${50 * zoom}px`,
+                backgroundPosition: `${panOffset.x}px ${panOffset.y}px`,
               }}
             >
               {/* Zoom controls */}
@@ -188,11 +222,12 @@ const Notes = () => {
               {/* Canvas with blocks */}
               <div
                 style={{
-                  transform: `scale(${zoom})`,
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`,
                   transformOrigin: '0 0',
                   position: 'relative',
-                  minWidth: '5000px',
-                  minHeight: '5000px',
+                  width: '100%',
+                  height: '100%',
+                  pointerEvents: isPanning ? 'none' : 'auto',
                 }}
               >
                 {blocks.map((block) => (
