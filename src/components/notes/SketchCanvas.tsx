@@ -60,7 +60,7 @@ export const SketchCanvas = ({ block, onUpdate }: SketchCanvasProps) => {
     return () => {
       canvas.dispose();
     };
-  }, []);
+  }, [block.width, block.height, block.id]);
 
   useEffect(() => {
     if (!fabricCanvas || !fabricCanvas.freeDrawingBrush) return;
