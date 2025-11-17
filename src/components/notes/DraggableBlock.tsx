@@ -63,11 +63,32 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
     document.addEventListener('mouseup', handleMouseUp);
   };
 
+  const postitColors = [
+    { name: 'Amarelo', value: '#FEF08A' },
+    { name: 'Rosa', value: '#FBCFE8' },
+    { name: 'Verde', value: '#BBF7D0' },
+    { name: 'Azul', value: '#BFDBFE' },
+    { name: 'Laranja', value: '#FED7AA' },
+    { name: 'Roxo', value: '#DDD6FE' },
+    { name: 'Branco', value: '#FFFFFF' },
+  ];
+
   const renderContent = () => {
     switch (block.type) {
       case 'postit':
         return (
           <div className="w-full h-full flex flex-col gap-3">
+            <div className="flex gap-1 pb-2 border-b border-border/20">
+              {postitColors.map((color) => (
+                <button
+                  key={color.value}
+                  onClick={() => onUpdate(block.id, { color: color.value })}
+                  className="w-5 h-5 rounded-full border-2 border-border/40 hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color.value }}
+                  title={color.name}
+                />
+              ))}
+            </div>
             <Textarea
               value={block.content?.text || ''}
               onChange={(e) => onUpdate(block.id, { 
@@ -289,7 +310,8 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
 
         {/* Block content */}
         <div
-          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 bg-card relative"
+          className="w-full h-full rounded-lg shadow-lg p-4 transition-all hover:shadow-xl border border-primary/20 relative"
+          style={{ backgroundColor: block.color || '#FFFFFF' }}
         >
           {renderContent()}
           
