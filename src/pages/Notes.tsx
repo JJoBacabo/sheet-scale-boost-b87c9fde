@@ -190,11 +190,9 @@ const Notes = () => {
                 style={{
                   transform: `scale(${zoom})`,
                   transformOrigin: '0 0',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
+                  position: 'relative',
+                  minWidth: '5000px',
+                  minHeight: '5000px',
                 }}
               >
                 {blocks.map((block) => (
