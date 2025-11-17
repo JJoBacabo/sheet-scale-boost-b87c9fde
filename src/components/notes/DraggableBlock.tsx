@@ -24,15 +24,8 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
   const { state: sidebarState } = useSidebar();
 
   const handleDragStop = (_e: any, data: any) => {
-    // Sidebar width: 256px (16rem) when expanded, 48px (3rem) when collapsed
-    const sidebarWidth = sidebarState === "expanded" ? 256 : 48;
-    
-    // Only 1mm margin (~4px) from sidebar
-    const minX = sidebarWidth + 4;
-    const constrainedX = Math.max(minX, data.x);
-    
     onUpdate(block.id, {
-      position_x: constrainedX,
+      position_x: data.x,
       position_y: data.y,
     });
   };

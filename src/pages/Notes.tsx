@@ -138,7 +138,7 @@ const Notes = () => {
     <SidebarProvider>
       <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
-        <SidebarInset className="flex-1 relative">
+        <SidebarInset className="flex-1 relative p-0">
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-background">
               <div className="text-center">
@@ -148,7 +148,7 @@ const Notes = () => {
             </div>
           ) : (
             <div
-              className="relative w-full h-full overflow-hidden bg-background"
+              className="relative w-full h-full overflow-auto bg-background"
               style={{
                 backgroundImage: `
                   linear-gradient(hsl(var(--border) / 0.1) 1px, transparent 1px),
