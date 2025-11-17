@@ -288,6 +288,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
       <div
         ref={nodeRef}
         className="absolute group"
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           width: block.width,
           height: block.height,
