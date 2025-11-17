@@ -215,9 +215,9 @@ export function AppSidebar() {
                 >
                   {/* Configurações */}
                   <DropdownMenuItem asChild>
-                    <NavLink to="/notes-board" className="cursor-pointer flex items-center">
+                    <NavLink to="/notes" className="cursor-pointer flex items-center">
                       <StickyNote className="w-4 h-4 mr-2" />
-                      Notes Board
+                      Notas
                     </NavLink>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
