@@ -333,9 +333,9 @@ const Landing = () => {
               // Scale down and fade as next card comes
               if (nextCardIndex < totalCards) {
                 gsap.to(card, {
-                  scale: 1 - (progress * 0.05),
-                  y: -progress * 30,
-                  opacity: 1 - (progress * 0.3),
+                  scale: 1 - (progress * 0.08),
+                  y: -progress * 50,
+                  opacity: Math.max(0, 1 - (progress * 1.2)),
                   duration: 0.1,
                   ease: "none",
                 });
@@ -720,7 +720,7 @@ const Landing = () => {
       <section
         id="features"
         ref={featuresRef}
-        className="relative bg-transparent"
+        className="relative bg-transparent overflow-hidden"
         aria-label="Features that make the difference"
       >
         {/* Header - Fixed outside scroll container */}
@@ -768,11 +768,11 @@ const Landing = () => {
                   willChange: "transform",
                 }}
               >
-                <div className="h-full flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 relative">
+                <div className="h-full flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 relative bg-[#0A0E27]">
                   <div className="container mx-auto max-w-7xl w-full relative z-10">
                     {/* Feature Card Box with GSAP animation */}
                     <div
-                      className="feature-card-box rounded-3xl bg-[#0A0E27]/60 border border-primary/20 backdrop-blur-lg p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
+                      className="feature-card-box rounded-3xl bg-[#0A0E27]/95 border border-primary/20 backdrop-blur-lg p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
                       data-feature-box={index}
                     >
                       <div
