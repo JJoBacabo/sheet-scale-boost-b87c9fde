@@ -446,7 +446,7 @@ const Landing = () => {
 
             {/* Nav - Center (absolute positioning for true center) - Desktop Only */}
             <nav className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center gap-8">
-              {["what-is-it", "features", "pricing", "faq"].map((section, index) => (
+              {["features", "pricing", "faq"].map((section, index) => (
                 <motion.button
                   key={section}
                   onClick={() => scrollToSection(section)}
@@ -472,7 +472,7 @@ const Landing = () => {
                     type: "spring",
                   }}
                 >
-                  {t(`nav.${section === "what-is-it" ? "whatIsIt" : section}`)}
+                  {t(`nav.${section}`)}
                 </motion.button>
               ))}
             </nav>
@@ -495,12 +495,6 @@ const Landing = () => {
                 </SheetTrigger>
                 <SheetContent side="right" className="w-[300px] bg-black border-white/10">
                   <nav className="flex flex-col gap-6 mt-8">
-                    <button
-                      onClick={() => scrollToSection("what-is-it")}
-                      className="text-white hover:text-primary transition-colors text-left text-lg"
-                    >
-                      {t("nav.whatIsIt")}
-                    </button>
                     <button
                       onClick={() => scrollToSection("features")}
                       className="text-white hover:text-primary transition-colors text-left text-lg"
@@ -721,63 +715,6 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* What is it Section */}
-      <section id="what-is-it" className="container mx-auto px-4 sm:px-6 py-20 relative">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6">{t("landing.whatIsIt.title")}</h2>
-            <p className="text-xl text-gray-400 max-w-4xl mx-auto">{t("landing.whatIsIt.subtitle")}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {[
-              {
-                icon: Brain,
-                key: "smartAnalysis",
-              },
-              {
-                icon: Gauge,
-                key: "decisionAutomation",
-              },
-            ].map((item, index) => (
-              <motion.div
-                key={item.key}
-                initial={{
-                  opacity: 0,
-                  y: 50,
-                  rotateX: -15,
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  rotateX: 0,
-                }}
-                transition={{
-                  delay: index * 0.2,
-                  type: "spring",
-                  stiffness: 100,
-                }}
-              >
-                <Card3D intensity="medium" glow>
-                  <motion.div
-                    className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-glow"
-                    whileHover={{
-                      rotateY: 360,
-                    }}
-                    transition={{
-                      duration: 0.6,
-                    }}
-                  >
-                    <item.icon className="w-8 h-8 text-primary-foreground" />
-                  </motion.div>
-                  <h3 className="text-2xl font-bold mb-4">{t(`landing.whatIsIt.${item.key}.title`)}</h3>
-                  <p className="text-gray-400 leading-relaxed">{t(`landing.whatIsIt.${item.key}.description`)}</p>
-                </Card3D>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Features Section - Sticky Stacking Scroll */}
       <section
