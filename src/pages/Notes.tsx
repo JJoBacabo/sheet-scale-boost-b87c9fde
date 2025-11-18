@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DraggableBlock } from "@/components/notes/DraggableBlock";
 import { BlockTypeMenu } from "@/components/notes/BlockTypeMenu";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface Block {
   id: string;
@@ -32,6 +35,8 @@ const Notes = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     loadBlocks();
@@ -54,7 +59,7 @@ const Notes = () => {
     } catch (error: any) {
       console.error('Error loading blocks:', error);
       toast({
-        title: "Erro ao carregar",
+        title: t("notes.errorLoading"),
         description: error.message,
         variant: "destructive",
       });
@@ -94,14 +99,14 @@ const Notes = () => {
         setBlocks(prev => [...prev, data as Block]);
         setIsPopoverOpen(false);
         toast({
-          title: "Bloco criado",
-          description: "Arraste e edite o bloco",
+          title: t("notes.blockCreated"),
+          description: t("notes.dragAndEdit"),
         });
       }
     } catch (error: any) {
       console.error('Error creating block:', error);
       toast({
-        title: "Erro",
+        title: t("notes.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -167,11 +172,16 @@ const Notes = () => {
       <div className="flex w-full h-screen overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex-1 relative p-0">
+          {/* Header with Language Toggle */}
+          <div className="absolute top-4 right-4 z-50 flex gap-2">
+            <LanguageToggle />
+          </div>
+
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-background">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Carregando...</p>
+                <p className="text-muted-foreground">{t("notes.loading")}</p>
               </div>
             </div>
           ) : (
@@ -192,28 +202,31 @@ const Notes = () => {
               }}
             >
               {/* Zoom controls */}
-              <div className="fixed top-4 right-4 flex flex-col gap-2 z-50">
+              <div className={`fixed ${isMobile ? "top-16 right-4" : "top-16 right-4"} flex ${isMobile ? "flex-row" : "flex-col"} gap-2 z-40 bg-background/95 backdrop-blur-sm p-2 rounded-lg shadow-lg border border-border`}>
                 <Button
-                  size="sm"
+                  size={isMobile ? "icon" : "sm"}
                   variant="outline"
                   onClick={() => setZoom(z => Math.min(z + 0.1, 2))}
-                  className="bg-background/95 backdrop-blur-sm"
+                  title={t("notes.zoomIn")}
+                  className={isMobile ? "h-10 w-10" : ""}
                 >
                   +
                 </Button>
                 <Button
-                  size="sm"
+                  size={isMobile ? "icon" : "sm"}
                   variant="outline"
                   onClick={() => setZoom(z => Math.max(z - 0.1, 0.5))}
-                  className="bg-background/95 backdrop-blur-sm"
+                  title={t("notes.zoomOut")}
+                  className={isMobile ? "h-10 w-10" : ""}
                 >
                   -
                 </Button>
                 <Button
-                  size="sm"
+                  size={isMobile ? "icon" : "sm"}
                   variant="outline"
                   onClick={() => setZoom(1)}
-                  className="bg-background/95 backdrop-blur-sm text-xs"
+                  title={t("notes.resetZoom")}
+                  className={isMobile ? "h-10 w-10 text-xs" : "text-xs"}
                 >
                   100%
                 </Button>
@@ -246,13 +259,14 @@ const Notes = () => {
                 <PopoverTrigger asChild>
                   <Button
                     size="lg"
-                    className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow z-50"
+                    className={`fixed ${isMobile ? "bottom-4 right-4" : "bottom-8 right-8"} rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow z-50`}
+                    title={t("notes.createNew")}
                   >
                     <Plus className="h-6 w-6" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent 
-                  className="w-80" 
+                  className={isMobile ? "w-[90vw] max-w-sm" : "w-80"}
                   side="top" 
                   align="end"
                   sideOffset={10}
