@@ -1001,26 +1001,23 @@ const Landing = () => {
             >
               <Card3D
                 intensity={plan.popular ? "high" : "medium"}
-                glow={plan.popular}
-                className={`p-8 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(123,188,254,0.3)]" : ""}`}
+                glow={false}
+                className={`p-8 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary" : ""}`}
               >
                 {plan.popular && (
-                  <>
-                    <motion.div
-                      className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow"
-                      animate={{
-                        y: [0, -5, 0],
-                        scale: [1, 1.05, 1],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                      }}
-                    >
-                      {t("landing.pricing.popular")}
-                    </motion.div>
-                    <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-2xl pointer-events-none" />
-                  </>
+                  <motion.div
+                    className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10"
+                    animate={{
+                      y: [0, -5, 0],
+                      scale: [1, 1.05, 1],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                    }}
+                  >
+                    {t("landing.pricing.popular")}
+                  </motion.div>
                 )}
                 <div className="flex flex-col gap-6 h-full">
                   <div>
