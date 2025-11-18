@@ -30,6 +30,40 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
     });
   };
 
+  const getMinDimensions = () => {
+    // Define minimum sizes based on content type
+    let minWidth = 200;
+    let minHeight = 150;
+
+    switch (block.type) {
+      case 'postit':
+        minWidth = 200;
+        minHeight = 200;
+        break;
+      case 'checklist':
+        const items = block.content?.items || [];
+        minHeight = Math.max(200, 150 + items.length * 50);
+        minWidth = 250;
+        break;
+      case 'idea':
+        minWidth = 280;
+        minHeight = 250;
+        break;
+      case 'file':
+        if (block.content?.fileUrl) {
+          minWidth = 300;
+          minHeight = 300;
+        }
+        break;
+      case 'sketch':
+        minWidth = 350;
+        minHeight = 280;
+        break;
+    }
+
+    return { minWidth, minHeight };
+  };
+
   const handleResizeStart = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsResizing(true);
@@ -44,8 +78,9 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
       const deltaX = (moveEvent.clientX - resizeStartRef.current.mouseX) / zoom;
       const deltaY = (moveEvent.clientY - resizeStartRef.current.mouseY) / zoom;
       
-      const newWidth = Math.max(200, resizeStartRef.current.width + deltaX);
-      const newHeight = Math.max(150, resizeStartRef.current.height + deltaY);
+      const { minWidth, minHeight } = getMinDimensions();
+      const newWidth = Math.max(minWidth, resizeStartRef.current.width + deltaX);
+      const newHeight = Math.max(minHeight, resizeStartRef.current.height + deltaY);
       
       onUpdate(block.id, {
         width: newWidth,
