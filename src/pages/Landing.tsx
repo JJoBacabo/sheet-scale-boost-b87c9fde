@@ -957,7 +957,7 @@ const Landing = () => {
           </motion.div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto mb-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto mb-12">
           {[
             {
               key: "basic",
@@ -997,17 +997,17 @@ const Landing = () => {
                 type: "spring",
                 stiffness: 100,
               }}
-              className={plan.popular ? "lg:scale-110 lg:z-10" : ""}
+              className={plan.popular ? "lg:scale-105 lg:z-10 relative" : "relative"}
             >
               <Card3D
                 intensity={plan.popular ? "high" : "medium"}
                 glow={plan.popular}
-                className={`p-6 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(123,188,254,0.3)]" : ""}`}
+                className={`p-8 relative flex flex-col h-full ${plan.popular ? "border-2 border-primary shadow-[0_0_30px_rgba(123,188,254,0.3)]" : ""}`}
               >
                 {plan.popular && (
                   <>
                     <motion.div
-                      className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow"
+                      className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-1.5 bg-gradient-primary rounded-full text-sm font-bold text-primary-foreground z-10 shadow-glow"
                       animate={{
                         y: [0, -5, 0],
                         scale: [1, 1.05, 1],
@@ -1022,83 +1022,89 @@ const Landing = () => {
                     <div className="absolute inset-0 bg-gradient-primary opacity-5 rounded-2xl pointer-events-none" />
                   </>
                 )}
-                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? "text-primary" : ""}`}>
-                  {t(`landing.pricing.${plan.key}.name`)}
-                </h3>
+                <div className="flex flex-col gap-6 h-full">
+                  <div>
+                    <h3 className={`text-2xl font-bold mb-4 ${plan.popular ? "text-primary" : ""}`}>
+                      {t(`landing.pricing.${plan.key}.name`)}
+                    </h3>
 
-                {plan.isContactPlan ? (
-                  <>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold">{t(`landing.pricing.${plan.key}.price`)}</span>
-                    </div>
-                    <p className="text-gray-400 text-sm mb-6 min-h-[40px]">
-                      {t(`landing.pricing.${plan.key}.description`)}
-                    </p>
-                  </>
-                ) : billingPeriod === "monthly" ? (
-                  <>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold">{t(`landing.pricing.${plan.key}.price`)}</span>
-                      <span className="text-lg text-gray-400">{t(`landing.pricing.${plan.key}.perMonth`)}</span>
-                    </div>
-                    <p className="text-gray-400 text-sm mb-6 min-h-[40px]">
-                      {t(`landing.pricing.${plan.key}.description`)}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-2">
-                      <span className="text-2xl text-gray-500 line-through">
-                        {t(`landing.pricing.${plan.key}.annualOriginal`)}
-                      </span>
-                    </div>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold">{t(`landing.pricing.${plan.key}.annualPrice`)}</span>
-                      <span className="text-lg text-gray-400">{t(`landing.pricing.${plan.key}.perYear`)}</span>
-                    </div>
-                    <p className="text-primary text-sm mb-6 font-semibold">
-                      {t(`landing.pricing.${plan.key}.annualSavings`)}
-                    </p>
-                  </>
-                )}
+                    {plan.isContactPlan ? (
+                      <>
+                        <div className="mb-4">
+                          <span className="text-4xl font-bold">{t(`landing.pricing.${plan.key}.price`)}</span>
+                        </div>
+                        <p className="text-gray-400 text-sm min-h-[60px]">
+                          {t(`landing.pricing.${plan.key}.description`)}
+                        </p>
+                      </>
+                    ) : billingPeriod === "monthly" ? (
+                      <>
+                        <div className="mb-4">
+                          <span className="text-4xl font-bold">{t(`landing.pricing.${plan.key}.price`)}</span>
+                          <span className="text-lg text-gray-400">{t(`landing.pricing.${plan.key}.perMonth`)}</span>
+                        </div>
+                        <p className="text-gray-400 text-sm min-h-[60px]">
+                          {t(`landing.pricing.${plan.key}.description`)}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="mb-2">
+                          <span className="text-xl text-gray-500 line-through">
+                            {t(`landing.pricing.${plan.key}.annualOriginal`)}
+                          </span>
+                        </div>
+                        <div className="mb-4">
+                          <span className="text-4xl font-bold">{t(`landing.pricing.${plan.key}.annualPrice`)}</span>
+                          <span className="text-lg text-gray-400">{t(`landing.pricing.${plan.key}.perYear`)}</span>
+                        </div>
+                        <p className="text-primary text-sm font-semibold min-h-[60px]">
+                          {t(`landing.pricing.${plan.key}.annualSavings`)}
+                        </p>
+                      </>
+                    )}
+                  </div>
 
-                <ul className="space-y-2 mb-6 flex-1 min-h-[200px]">
-                  {["feature1", "feature2", "feature3", "feature4", "feature5", "feature6", "feature7"].map(
-                    (feat, i) => {
-                      const featureText = t(`landing.pricing.${plan.key}.${feat}`);
-                      if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
-                      return (
-                        <li key={i} className="flex items-start gap-2">
-                          <Check
-                            className={`w-4 h-4 mt-0.5 flex-shrink-0 ${plan.popular ? "text-primary" : "text-primary/80"}`}
-                          />
-                          <span className="text-xs text-gray-300">{featureText}</span>
-                        </li>
-                      );
-                    },
-                  )}
-                </ul>
+                  <div className="border-t border-border/30 pt-6 flex-1 flex flex-col">
+                    <ul className="space-y-3 mb-6 flex-1">
+                      {["feature1", "feature2", "feature3", "feature4", "feature5", "feature6", "feature7"].map(
+                        (feat, i) => {
+                          const featureText = t(`landing.pricing.${plan.key}.${feat}`);
+                          if (featureText === `landing.pricing.${plan.key}.${feat}`) return null;
+                          return (
+                            <li key={i} className="flex items-start gap-3">
+                              <Check
+                                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${plan.popular ? "text-primary" : "text-primary/80"}`}
+                              />
+                              <span className="text-sm text-gray-300 leading-relaxed">{featureText}</span>
+                            </li>
+                          );
+                        },
+                      )}
+                    </ul>
 
-                {plan.isContactPlan ? (
-                  <Button3D
-                    variant="glass"
-                    size="md"
-                    className="w-full mt-auto"
-                    onClick={() => navigate("/contact-business")}
-                  >
-                    {t(`landing.pricing.${plan.key}.contactUs`)}
-                  </Button3D>
-                ) : (
-                  <Button3D
-                    variant={plan.popular ? "gradient" : "glass"}
-                    size="md"
-                    glow={plan.popular}
-                    className="w-full mt-auto"
-                    onClick={() => navigate("/auth")}
-                  >
-                    {t("landing.pricing.choosePlan")}
-                  </Button3D>
-                )}
+                    {plan.isContactPlan ? (
+                      <Button3D
+                        variant="glass"
+                        size="lg"
+                        className="w-full mt-auto"
+                        onClick={() => navigate("/contact-business")}
+                      >
+                        {t(`landing.pricing.${plan.key}.contactUs`)}
+                      </Button3D>
+                    ) : (
+                      <Button3D
+                        variant={plan.popular ? "gradient" : "glass"}
+                        size="lg"
+                        glow={plan.popular}
+                        className="w-full mt-auto"
+                        onClick={() => navigate("/auth")}
+                      >
+                        {t("landing.pricing.choosePlan")}
+                      </Button3D>
+                    )}
+                  </div>
+                </div>
               </Card3D>
             </motion.div>
           ))}
