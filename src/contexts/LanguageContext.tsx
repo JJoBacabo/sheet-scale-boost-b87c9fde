@@ -1358,6 +1358,43 @@ const translations = {
     },
   },
   en: {
+    nav: {
+      whatIsIt: 'What is it',
+      features: 'Features',
+      pricing: 'Pricing',
+      faq: 'FAQ',
+    },
+    header: {
+      login: 'Login',
+      startFree: 'Start Free',
+      getStarted: 'Get Started',
+    },
+    landing: {
+      hero: {
+        title1: 'Automate your',
+        title2: 'Facebook Campaigns',
+        subtitle: 'Your intelligent platform for automatic metric calculation and action recommendations.',
+        benefit1: 'Automatically calculates metrics',
+        benefit2: 'CPC, ROAS, CPA, Profit Margin in real time',
+        benefit3: 'Smart recommendations: Stop, Scale, Maintain',
+        ctaPrimary: 'Start Free for 10 Days',
+        ctaSecondary: 'What Sheet Tools does for you',
+      },
+      features: {
+        automation: {
+          title: 'Complete Automation',
+          description: 'Save hours of manual analysis with intelligent automation',
+        },
+        metrics: {
+          title: 'Automatic Metrics',
+          description: 'ROAS, CPC, CPA, CTR, Conversion Rate calculated automatically',
+        },
+        secure: {
+          title: 'Secure Data',
+          description: 'Secure connection via OAuth, your data always protected',
+        },
+      },
+    },
     notes: {
       loading: "Loading notes...",
       errorLoading: "Error loading notes",
