@@ -9,8 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { SketchCanvas } from "./SketchCanvas";
 import { useSidebar } from "@/components/ui/sidebar";
 import type { Block } from "@/pages/Notes";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DraggableBlockProps {
   block: Block;
@@ -24,8 +22,6 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
   const [isResizing, setIsResizing] = useState(false);
   const resizeStartRef = useRef({ width: 0, height: 0, mouseX: 0, mouseY: 0 });
   const { state: sidebarState } = useSidebar();
-  const { t } = useLanguage();
-  const isMobile = useIsMobile();
 
   const handleDragStop = (_e: any, data: any) => {
     onUpdate(block.id, {
@@ -103,13 +99,13 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
   };
 
   const postitColors = [
-    { name: t("notes.colors.yellow"), value: '#FEF08A' },
-    { name: t("notes.colors.pink"), value: '#FBCFE8' },
-    { name: t("notes.colors.green"), value: '#BBF7D0' },
-    { name: t("notes.colors.blue"), value: '#BFDBFE' },
-    { name: t("notes.colors.orange"), value: '#FED7AA' },
-    { name: t("notes.colors.purple"), value: '#DDD6FE' },
-    { name: t("notes.colors.white"), value: '#FFFFFF' },
+    { name: 'Amarelo', value: '#FEF08A' },
+    { name: 'Rosa', value: '#FBCFE8' },
+    { name: 'Verde', value: '#BBF7D0' },
+    { name: 'Azul', value: '#BFDBFE' },
+    { name: 'Laranja', value: '#FED7AA' },
+    { name: 'Roxo', value: '#DDD6FE' },
+    { name: 'Branco', value: '#FFFFFF' },
   ];
 
   const renderContent = () => {
@@ -133,7 +129,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
               onChange={(e) => onUpdate(block.id, { 
                 content: { ...block.content, text: e.target.value } 
               })}
-              placeholder="Escreva a sua nota..."
+              placeholder="Escreva sua nota..."
               className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 text-base text-black placeholder:text-black/50"
             />
           </div>
@@ -148,7 +144,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
               onChange={(e) => onUpdate(block.id, {
                 content: { ...block.content, title: e.target.value }
               })}
-              placeholder={t("notes.checklist.title")}
+              placeholder="Título da lista"
               className="font-semibold"
             />
             <div className="flex-1 space-y-2 overflow-y-auto">
@@ -190,7 +186,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
                 }}
                 className="w-full"
               >
-                + {t("notes.checklist.addItem")}
+                + Adicionar item
               </Button>
             </div>
           </div>
@@ -204,7 +200,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
               onChange={(e) => onUpdate(block.id, {
                 content: { ...block.content, title: e.target.value }
               })}
-              placeholder={t("notes.idea.titlePlaceholder")}
+              placeholder="Título da ideia"
               className="font-bold text-lg"
             />
             <Textarea
@@ -212,7 +208,7 @@ export const DraggableBlock = ({ block, zoom, onUpdate, onDelete }: DraggableBlo
               onChange={(e) => onUpdate(block.id, {
                 content: { ...block.content, description: e.target.value }
               })}
-              placeholder={t("notes.idea.descriptionPlaceholder")}
+              placeholder="Descreva sua ideia..."
               className="flex-1 resize-none"
             />
           </div>

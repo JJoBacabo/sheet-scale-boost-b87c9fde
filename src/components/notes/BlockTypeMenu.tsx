@@ -1,51 +1,48 @@
 import { StickyNote, CheckSquare, Lightbulb, FileUp, Brush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Block } from "@/pages/Notes";
-import { useLanguage } from "@/contexts/LanguageContext";
 
 interface BlockTypeMenuProps {
   onCreateBlock: (type: Block['type']) => void;
 }
 
 export const BlockTypeMenu = ({ onCreateBlock }: BlockTypeMenuProps) => {
-  const { t } = useLanguage();
-
   const options = [
     {
       type: 'postit' as const,
       icon: StickyNote,
-      label: t("notes.blockTypes.postit"),
-      description: t("notes.blockTypes.postitDesc"),
+      label: 'Post-it',
+      description: 'Nota rápida com cor',
     },
     {
       type: 'checklist' as const,
       icon: CheckSquare,
-      label: t("notes.blockTypes.checklist"),
-      description: t("notes.blockTypes.checklistDesc"),
+      label: 'Checklist',
+      description: 'Lista de tarefas',
     },
     {
       type: 'idea' as const,
       icon: Lightbulb,
-      label: t("notes.blockTypes.idea"),
-      description: t("notes.blockTypes.ideaDesc"),
+      label: 'Ideia',
+      description: 'Card de ideia com tags',
     },
     {
       type: 'file' as const,
       icon: FileUp,
-      label: t("notes.blockTypes.file"),
-      description: t("notes.blockTypes.fileDesc"),
+      label: 'Ficheiro',
+      description: 'Upload de imagem/PDF',
     },
     {
       type: 'sketch' as const,
       icon: Brush,
-      label: t("notes.blockTypes.sketch"),
-      description: t("notes.blockTypes.sketchDesc"),
+      label: 'Desenho',
+      description: 'Desenho livre',
     },
   ];
 
   return (
     <div className="space-y-2">
-      <h3 className="font-semibold text-sm text-foreground mb-3">{t("notes.createBlock")}</h3>
+      <h3 className="font-semibold text-sm text-foreground mb-3">Criar novo bloco</h3>
       <div className="grid grid-cols-1 gap-2">
         {options.map((option) => (
           <Button
