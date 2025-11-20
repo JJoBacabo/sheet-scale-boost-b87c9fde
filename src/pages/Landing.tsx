@@ -771,11 +771,13 @@ const Landing = () => {
                 <div className="h-full flex items-center justify-center px-4 sm:px-6 py-8 sm:py-12 relative bg-[#0A0E27]">
                   <div className="container mx-auto max-w-7xl w-full relative z-10">
                     {/* Feature Card Box with GSAP animation */}
-                    <div
+                    <Card3D
+                      intensity="medium"
+                      glow={true}
                       className="feature-card-box rounded-3xl bg-[#0A0E27]/95 border border-primary/20 backdrop-blur-lg p-6 sm:p-8 md:p-10 lg:p-12 shadow-2xl"
-                      data-feature-box={index}
                     >
                       <div
+                        data-feature-box={index}
                         className={`grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 md:gap-12 lg:gap-16 items-center h-full min-h-[600px] ${
                           isEven ? "" : "md:grid-flow-dense"
                         }`}
@@ -852,9 +854,9 @@ const Landing = () => {
                           />
                         </div>
                       </div>
-                    </div>
+                      </div>
+                    </Card3D>
                   </div>
-                </div>
                 </div>
               </div>
             );
