@@ -132,9 +132,9 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
             <Card3D 
               intensity="medium" 
               glow={stat.trend === "up"}
-              className={stat.warning ? "cursor-pointer hover:border-warning/60 transition-colors" : ""}
+              className={stat.warning ? "h-full cursor-pointer hover:border-warning/60 transition-colors" : "h-full"}
             >
-              <div className="relative p-3 sm:p-4 md:p-6">
+              <div className="relative p-3 sm:p-4 md:p-6 h-full flex flex-col justify-between">
                 <div className="flex items-start justify-between mb-2 sm:mb-3">
                   {stat.warning ? (
                     <Tooltip>

@@ -130,7 +130,7 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, 
 
   if (!data.length) {
     return (
-      <Card3D intensity="low" className="p-6">
+      <Card3D intensity="low" className="p-6 h-full flex items-center justify-center">
         <p className="text-muted-foreground text-center">Sem dados disponíveis</p>
       </Card3D>
     );
@@ -143,7 +143,7 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, 
   const isPositive = change >= 0;
 
   return (
-    <Card3D intensity="low" className="p-3 sm:p-4 md:p-6">
+    <Card3D intensity="low" className="p-3 sm:p-4 md:p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
         <h3 className="text-sm sm:text-base md:text-lg font-semibold truncate flex-1">{title}</h3>
         {showTrend && (

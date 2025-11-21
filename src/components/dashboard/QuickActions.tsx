@@ -73,7 +73,7 @@ export const QuickActions = ({
         </div>
         <h3 className="text-lg font-semibold">Ações Rápidas</h3>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
         {actions.map((action, index) => {
           const Icon = action.icon;
           return (
@@ -88,7 +88,7 @@ export const QuickActions = ({
               <Card3D 
                 intensity="low" 
                 glow={action.connected}
-                className="p-6 text-left w-full"
+                className="p-6 text-left w-full h-full"
               >
                 <div className="relative flex flex-col items-center text-center gap-4">
                   <motion.div
