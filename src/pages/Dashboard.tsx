@@ -653,19 +653,6 @@ const Dashboard = () => {
           <div className="flex flex-col gap-3 sm:gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
               <h2 className="text-base sm:text-lg font-semibold">{t('dashboard.filters') || 'Filtros'}</h2>
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <CurrencySelector />
-                <Button3D
-                  variant="glass"
-                  size="sm"
-                  onClick={handleRefresh}
-                  className="gap-1.5 sm:gap-2 h-8 sm:h-9 text-xs sm:text-sm"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span className="hidden xs:inline">{t('dashboard.refresh') || 'Atualizar'}</span>
-                  <span className="xs:hidden">Refresh</span>
-                </Button3D>
-              </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
