@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Link } from "react-router-dom";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StatsOverviewProps {
   stats: {
@@ -123,24 +124,42 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      {statCards.map((stat, index) => {
-        const Icon = stat.icon;
-        const cardContent = (
-          <Card3D 
-            intensity="medium" 
-            glow={stat.trend === "up"}
-            className={stat.warning ? "cursor-pointer hover:border-warning/60 transition-colors" : ""}
-          >
-            <div className="relative p-3 sm:p-4 md:p-6">
-              <div className="flex items-start justify-between mb-2 sm:mb-3">
-                <motion.div
-                  className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl ${stat.iconBg}`}
-                  whileHover={{ rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
-                </motion.div>
+    <TooltipProvider>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {statCards.map((stat, index) => {
+          const Icon = stat.icon;
+          const cardContent = (
+            <Card3D 
+              intensity="medium" 
+              glow={stat.trend === "up"}
+              className={stat.warning ? "cursor-pointer hover:border-warning/60 transition-colors" : ""}
+            >
+              <div className="relative p-3 sm:p-4 md:p-6">
+                <div className="flex items-start justify-between mb-2 sm:mb-3">
+                  {stat.warning ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <motion.div
+                          className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl ${stat.iconBg}`}
+                          whileHover={{ rotate: 5 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
+                        </motion.div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{stat.warningMessage}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <motion.div
+                      className={`p-2 sm:p-2.5 md:p-3 rounded-lg sm:rounded-xl ${stat.iconBg}`}
+                      whileHover={{ rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} />
+                    </motion.div>
+                  )}
                 {stat.trend !== "neutral" && !stat.warning && (
                   <div
                     className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[10px] sm:text-xs font-medium ${
@@ -185,7 +204,8 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
             )}
           </motion.div>
         );
-      })}
-    </div>
+        })}
+      </div>
+    </TooltipProvider>
   );
 };
