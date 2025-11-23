@@ -1350,7 +1350,7 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Logo Column */}
             <div>
-              <img src={logo} alt="Sheet Tools" className="h-16 w-auto mb-4" />
+              <img src={logo} alt="Sheet Tools" className="h-24 w-auto mb-4" />
             </div>
 
             {/* Quick Links */}
