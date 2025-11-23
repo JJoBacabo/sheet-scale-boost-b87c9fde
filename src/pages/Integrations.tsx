@@ -312,10 +312,11 @@ export default function Integrations() {
 
   return (
     <SidebarProvider>
-      <div className="flex w-full min-h-screen">
+      <div className="flex w-full min-h-screen bg-background">
         <AppSidebar />
-        <SidebarInset className="flex-1">
-          <div className="h-screen flex items-center justify-center p-8 overflow-hidden">
+        <SidebarInset className="flex-1 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+          <div className="relative z-10 h-screen flex items-center justify-center p-8 overflow-hidden">
             <div className="w-full max-w-6xl">
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
