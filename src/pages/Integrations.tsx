@@ -16,7 +16,7 @@ import { UpsellModal } from "@/components/UpsellModal";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { MouseInteraction } from "@/components/ui/MouseInteraction";
+import { Background3D } from "@/components/ui/Background3D";
 import facebookLogo from "@/assets/facebook-logo.jpg";
 import shopifyLogo from "@/assets/shopify-logo.webp";
 
@@ -315,151 +315,156 @@ export default function Integrations() {
 
   return (
     <SidebarProvider>
-      <div className="flex w-full min-h-screen bg-background relative">
-        <MouseInteraction />
-        <AppSidebar />
-        <SidebarInset className="flex-1 relative overflow-hidden">
-          <div className="relative z-10 h-screen flex items-center justify-center p-8 overflow-hidden">
-            <div className="w-full max-w-6xl">
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center mb-12"
-              >
-                <h1 className="text-4xl font-bold mb-3">{t('settings.integrationsPage.title')}</h1>
-                <p className="text-muted-foreground text-lg">{t('settings.integrationsPage.subtitle')}</p>
-              </motion.div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                {/* Facebook Ads Card */}
+      <div className="min-h-screen w-full flex relative overflow-hidden">
+        <Background3D />
+        
+        <div className="flex flex-1 relative z-10">
+          <AppSidebar />
+          <SidebarInset className="flex-1 transition-all duration-300 relative bg-background/20 backdrop-blur-[2px]">
+            <div className="h-screen flex items-center justify-center p-8 overflow-hidden">
+              <div className="w-full max-w-6xl">
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center mb-12"
                 >
-                  <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 h-full">
-                    <div className="p-8 flex flex-col items-center text-center h-full justify-between">
-                      <div className="flex-1 flex flex-col items-center justify-center">
-                        <motion.div
-                          whileHover={{ scale: 1.05, rotate: 5 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                          className="mb-6"
-                        >
-                          <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-2xl overflow-hidden p-2">
-                            <img 
-                              src={facebookLogo} 
-                              alt="Facebook" 
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </motion.div>
-                        
-                        <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.facebookAdsTitle')}</h3>
-                        <p className="text-muted-foreground mb-6">{t('settings.integrationsPage.facebookAdsDesc')}</p>
-                        
-                        {facebookIntegrations.length > 0 && (
-                          <div className="flex items-center gap-2 text-emerald-500 mb-4">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <span className="font-medium">{t('settings.integrationsPage.connected')}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="w-full space-y-3">
-                        {facebookIntegrations.length === 0 ? (
-                          <Button
-                            onClick={handleConnectFacebook}
-                            disabled={connectingFacebook}
-                            className="w-full h-12 text-base"
-                            size="lg"
-                          >
-                            {connectingFacebook ? (
-                              <>
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                {t('settings.integrationsPage.connecting')}
-                              </>
-                            ) : (
-                              t('settings.integrationsPage.connectFacebook')
-                            )}
-                          </Button>
-                        ) : (
-                          <Button
-                            onClick={() => setDisconnectDialog({ type: 'facebook', id: facebookIntegrations[0].id })}
-                            variant="outline"
-                            className="w-full h-12 text-base"
-                            size="lg"
-                          >
-                            {t('settings.integrationsPage.disconnect')}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
+                  <h1 className="text-4xl font-bold mb-3">{t('settings.integrationsPage.title')}</h1>
+                  <p className="text-muted-foreground text-lg">{t('settings.integrationsPage.subtitle')}</p>
                 </motion.div>
 
-                {/* Shopify Card */}
-                <motion.div
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 h-full">
-                    <div className="p-8 flex flex-col items-center text-center h-full justify-between">
-                      <div className="flex-1 flex flex-col items-center justify-center">
-                        <motion.div
-                          whileHover={{ scale: 1.05, rotate: -5 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                          className="mb-6"
-                        >
-                          <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-2xl overflow-hidden p-2">
-                            <img 
-                              src={shopifyLogo} 
-                              alt="Shopify" 
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        </motion.div>
-                        
-                        <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.shopifyTitle')}</h3>
-                        <p className="text-muted-foreground mb-6">{t('settings.integrationsPage.shopifyDesc')}</p>
-                        
-                        {shopifyIntegrations.length > 0 && (
-                          <div className="flex items-center gap-2 text-emerald-500 mb-4">
-                            <CheckCircle2 className="w-5 h-5" />
-                            <span className="font-medium">
-                              {shopifyIntegrations.length} {shopifyIntegrations.length === 1 ? t('settings.integrationsPage.store') : t('settings.integrationsPage.stores')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                  {/* Facebook Ads Card */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 h-full">
+                      <div className="p-8 flex flex-col items-center text-center h-full justify-between">
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                          <motion.div
+                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            className="mb-6"
+                          >
+                            <div className="w-32 h-32 rounded-2xl bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden p-4 border border-border/50">
+                              <img 
+                                src={facebookLogo} 
+                                alt="Facebook" 
+                                className="w-full h-full object-contain"
+                                style={{ mixBlendMode: 'multiply' }}
+                              />
+                            </div>
+                          </motion.div>
+                          
+                          <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.facebookAdsTitle')}</h3>
+                          <p className="text-muted-foreground mb-6">{t('settings.integrationsPage.facebookAdsDesc')}</p>
+                          
+                          {facebookIntegrations.length > 0 && (
+                            <div className="flex items-center gap-2 text-emerald-500 mb-4">
+                              <CheckCircle2 className="w-5 h-5" />
+                              <span className="font-medium">{t('settings.integrationsPage.connected')}</span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="w-full space-y-3">
-                        <Button
-                          onClick={handleConnectShopify}
-                          className="w-full h-12 text-base"
-                          size="lg"
-                        >
-                          {t('settings.integrationsPage.connectShopify')}
-                        </Button>
-                        
-                        {shopifyIntegrations.length > 0 && (
+                        <div className="w-full space-y-3">
+                          {facebookIntegrations.length === 0 ? (
+                            <Button
+                              onClick={handleConnectFacebook}
+                              disabled={connectingFacebook}
+                              className="w-full h-12 text-base"
+                              size="lg"
+                            >
+                              {connectingFacebook ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  {t('settings.integrationsPage.connecting')}
+                                </>
+                              ) : (
+                                t('settings.integrationsPage.connectFacebook')
+                              )}
+                            </Button>
+                          ) : (
+                            <Button
+                              onClick={() => setDisconnectDialog({ type: 'facebook', id: facebookIntegrations[0].id })}
+                              variant="outline"
+                              className="w-full h-12 text-base"
+                              size="lg"
+                            >
+                              {t('settings.integrationsPage.disconnect')}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+
+                  {/* Shopify Card */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <Card className="relative overflow-hidden border-2 hover:border-primary/50 transition-all duration-300 h-full">
+                      <div className="p-8 flex flex-col items-center text-center h-full justify-between">
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                          <motion.div
+                            whileHover={{ scale: 1.05, rotate: -5 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                            className="mb-6"
+                          >
+                            <div className="w-32 h-32 rounded-2xl bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden p-4 border border-border/50">
+                              <img 
+                                src={shopifyLogo} 
+                                alt="Shopify" 
+                                className="w-full h-full object-contain"
+                                style={{ mixBlendMode: 'multiply' }}
+                              />
+                            </div>
+                          </motion.div>
+                          
+                          <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.shopifyTitle')}</h3>
+                          <p className="text-muted-foreground mb-6">{t('settings.integrationsPage.shopifyDesc')}</p>
+                          
+                          {shopifyIntegrations.length > 0 && (
+                            <div className="flex items-center gap-2 text-emerald-500 mb-4">
+                              <CheckCircle2 className="w-5 h-5" />
+                              <span className="font-medium">
+                                {shopifyIntegrations.length} {shopifyIntegrations.length === 1 ? t('settings.integrationsPage.store') : t('settings.integrationsPage.stores')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="w-full space-y-3">
                           <Button
-                            onClick={() => navigate('/products')}
-                            variant="outline"
+                            onClick={handleConnectShopify}
                             className="w-full h-12 text-base"
                             size="lg"
                           >
-                            {t('settings.integrationsPage.manageStores')}
+                            {t('settings.integrationsPage.connectShopify')}
                           </Button>
-                        )}
+                          
+                          {shopifyIntegrations.length > 0 && (
+                            <Button
+                              onClick={() => navigate('/products')}
+                              variant="outline"
+                              className="w-full h-12 text-base"
+                              size="lg"
+                            >
+                              {t('settings.integrationsPage.manageStores')}
+                            </Button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </motion.div>
+                    </Card>
+                  </motion.div>
+                </div>
               </div>
             </div>
-          </div>
-        </SidebarInset>
+          </SidebarInset>
+        </div>
       </div>
 
       {/* Shopify Dialog */}
