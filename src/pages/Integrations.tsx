@@ -347,13 +347,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
-                              <img 
-                                src={facebookLogo} 
-                                alt="Facebook" 
-                                className="w-24 h-24 object-contain"
-                              />
-                            </div>
+                            <img 
+                              src={facebookLogo} 
+                              alt="Facebook" 
+                              className="w-32 h-32 object-contain"
+                            />
                           </motion.div>
                           
                           <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.facebookAdsTitle')}</h3>
@@ -413,13 +411,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
-                              <img 
-                                src={shopifyLogo} 
-                                alt="Shopify" 
-                                className="w-24 h-24 object-contain"
-                              />
-                            </div>
+                            <img 
+                              src={shopifyLogo} 
+                              alt="Shopify" 
+                              className="w-32 h-32 object-contain"
+                            />
                           </motion.div>
                           
                           <h3 className="text-2xl font-bold mb-3">{t('settings.integrationsPage.shopifyTitle')}</h3>
@@ -441,7 +437,10 @@ export default function Integrations() {
                             className="w-full h-12 text-base"
                             size="lg"
                           >
-                            {t('settings.integrationsPage.connectShopify')}
+                            {shopifyIntegrations.length === 0 
+                              ? t('settings.integrationsPage.connectShopify')
+                              : t('settings.integrationsPage.connectShopify')
+                            }
                           </Button>
                           
                           {shopifyIntegrations.length > 0 && (
