@@ -1350,7 +1350,7 @@ const Landing = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Logo Column */}
             <div className="flex justify-center">
-              <img src={logo} alt="Sheet Tools" className="h-32 w-auto mb-4" />
+              <img src={logo} alt="Sheet Tools" className="h-40 w-auto mb-4" />
             </div>
 
             {/* Quick Links */}
