@@ -347,11 +347,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
+                            <div className="w-64 h-64 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
                               <img 
                                 src={facebookLogo} 
                                 alt="Facebook" 
-                                className="w-24 h-24 object-contain"
+                                className="w-56 h-56 object-contain"
                               />
                             </div>
                           </motion.div>
@@ -413,11 +413,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
+                            <div className="w-64 h-64 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
                               <img 
                                 src={shopifyLogo} 
                                 alt="Shopify" 
-                                className="w-24 h-24 object-contain"
+                                className="w-56 h-56 object-contain"
                               />
                             </div>
                           </motion.div>
