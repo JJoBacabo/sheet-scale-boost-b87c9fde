@@ -1349,8 +1349,8 @@ const Landing = () => {
         <div className="container mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Logo Column */}
-            <div>
-              <img src={logo} alt="Sheet Tools" className="h-24 w-auto mb-4" />
+            <div className="flex justify-center">
+              <img src={logo} alt="Sheet Tools" className="h-32 w-auto mb-4" />
             </div>
 
             {/* Quick Links */}
