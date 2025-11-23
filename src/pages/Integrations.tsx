@@ -17,8 +17,8 @@ import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Background3D } from "@/components/ui/Background3D";
-import facebookLogo from "@/assets/facebook-logo.jpg";
-import shopifyLogo from "@/assets/shopify-logo.webp";
+import facebookLogo from "@/assets/facebook-logo-clean.png";
+import shopifyLogo from "@/assets/shopify-logo-clean.png";
 
 interface Integration {
   id: string;
@@ -347,12 +347,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden p-4 border border-border/50">
+                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
                               <img 
                                 src={facebookLogo} 
                                 alt="Facebook" 
-                                className="w-full h-full object-contain"
-                                style={{ mixBlendMode: 'multiply' }}
+                                className="w-24 h-24 object-contain"
                               />
                             </div>
                           </motion.div>
@@ -414,12 +413,11 @@ export default function Integrations() {
                             transition={{ type: "spring", stiffness: 300 }}
                             className="mb-6"
                           >
-                            <div className="w-32 h-32 rounded-2xl bg-card/80 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden p-4 border border-border/50">
+                            <div className="w-32 h-32 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-2xl overflow-hidden border border-border/30">
                               <img 
                                 src={shopifyLogo} 
                                 alt="Shopify" 
-                                className="w-full h-full object-contain"
-                                style={{ mixBlendMode: 'multiply' }}
+                                className="w-24 h-24 object-contain"
                               />
                             </div>
                           </motion.div>
