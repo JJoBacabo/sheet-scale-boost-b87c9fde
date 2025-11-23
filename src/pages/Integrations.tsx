@@ -16,6 +16,9 @@ import { UpsellModal } from "@/components/UpsellModal";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { MouseInteraction } from "@/components/ui/MouseInteraction";
+import facebookLogo from "@/assets/facebook-logo.jpg";
+import shopifyLogo from "@/assets/shopify-logo.webp";
 
 interface Integration {
   id: string;
@@ -312,10 +315,10 @@ export default function Integrations() {
 
   return (
     <SidebarProvider>
-      <div className="flex w-full min-h-screen bg-background">
+      <div className="flex w-full min-h-screen bg-background relative">
+        <MouseInteraction />
         <AppSidebar />
         <SidebarInset className="flex-1 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
           <div className="relative z-10 h-screen flex items-center justify-center p-8 overflow-hidden">
             <div className="w-full max-w-6xl">
               <motion.div
@@ -342,10 +345,12 @@ export default function Integrations() {
                           transition={{ type: "spring", stiffness: 300 }}
                           className="mb-6"
                         >
-                          <div className="w-32 h-32 rounded-2xl bg-[#1877F2] flex items-center justify-center shadow-2xl">
-                            <svg className="w-16 h-16 text-white" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                            </svg>
+                          <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-2xl overflow-hidden p-2">
+                            <img 
+                              src={facebookLogo} 
+                              alt="Facebook" 
+                              className="w-full h-full object-contain"
+                            />
                           </div>
                         </motion.div>
                         
@@ -406,10 +411,12 @@ export default function Integrations() {
                           transition={{ type: "spring", stiffness: 300 }}
                           className="mb-6"
                         >
-                          <div className="w-32 h-32 rounded-2xl bg-[#96bf48] flex items-center justify-center shadow-2xl">
-                            <svg className="w-20 h-20 text-white" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M15.337 2.293c-.134.04-.235.106-.235.106s-1.565 1.56-2.382 2.376a.336.336 0 0 0-.087.173c-.52-.153-.966-.228-1.342-.228-1.048 0-1.776.317-2.163.944-.39.628-.46 1.478-.46 2.098 0 .04.003.077.006.115-1.142.357-1.928.605-1.928.605-.578.182-.595.2-.672.742-.055.4-1.528 11.789-1.528 11.789L16.934 22l6.066-1.338S17.112 2.36 17.07 2.318c-.042-.042-.116-.063-.187-.063-.07 0-.12.008-.12.008s-.85-.173-1.426.03zm-1.598 2.59c-.45.14-.945.295-1.474.46-.001-.242-.026-.578-.098-.934.244.066.49.147.72.234.22.083.595.195.852.24zm-.524-1.424c.102.29.147.733.147 1.14 0 .03-.002.06-.003.09-.462.145-.965.302-1.482.463-.003-.036-.006-.072-.006-.108 0-.658.133-1.185.387-1.585zm-3.55 4.01c.167-.049.343-.1.524-.152.18-.052.36-.103.54-.154.003.014.006.028.006.042 0 .596-.315 1.85-1.07 1.85-.13 0-.208-.015-.208-.015.164-1.17.208-1.57.208-1.57z"/>
-                            </svg>
+                          <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center shadow-2xl overflow-hidden p-2">
+                            <img 
+                              src={shopifyLogo} 
+                              alt="Shopify" 
+                              className="w-full h-full object-contain"
+                            />
                           </div>
                         </motion.div>
                         
