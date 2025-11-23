@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DraggableBlock } from "@/components/notes/DraggableBlock";
 import { BlockTypeMenu } from "@/components/notes/BlockTypeMenu";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export interface Block {
   id: string;
@@ -32,6 +33,7 @@ const Notes = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadBlocks();
@@ -54,7 +56,7 @@ const Notes = () => {
     } catch (error: any) {
       console.error('Error loading blocks:', error);
       toast({
-        title: "Erro ao carregar",
+        title: t('notes.errorLoading'),
         description: error.message,
         variant: "destructive",
       });
@@ -94,14 +96,14 @@ const Notes = () => {
         setBlocks(prev => [...prev, data as Block]);
         setIsPopoverOpen(false);
         toast({
-          title: "Bloco criado",
-          description: "Arraste e edite o bloco",
+          title: t('notes.blockCreated'),
+          description: t('notes.blockCreatedDesc'),
         });
       }
     } catch (error: any) {
       console.error('Error creating block:', error);
       toast({
-        title: "Erro",
+        title: t('notes.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -135,8 +137,8 @@ const Notes = () => {
     if (!error) {
       setBlocks(prev => prev.filter(b => b.id !== id));
       toast({
-        title: "Bloco eliminado",
-        description: "O bloco foi removido",
+        title: t('notes.blockDeleted'),
+        description: t('notes.blockDeletedDesc'),
       });
     }
   };
@@ -171,7 +173,7 @@ const Notes = () => {
             <div className="absolute inset-0 flex items-center justify-center bg-background">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Carregando...</p>
+                <p className="text-muted-foreground">{t('notes.loading')}</p>
               </div>
             </div>
           ) : (
