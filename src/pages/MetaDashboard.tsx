@@ -457,6 +457,22 @@ const MetaDashboard = () => {
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
 
+  // Test notification function
+  const handleTestNotification = () => {
+    // Play alert sound
+    const audio = new Audio('/notification.mp3');
+    audio.play().catch(() => {
+      console.log('No audio file found, showing visual notification only');
+    });
+    
+    // Show toast notification
+    toast({
+      title: "🔔 Alerta de Campanha Acionado!",
+      description: "A campanha 'Teste' atingiu o limite de CPC definido (€2.50)",
+      variant: "destructive",
+    });
+  };
+
   // Test API connection function
   const handleTestConnection = async () => {
     setIsTesting(true);
@@ -1768,6 +1784,15 @@ const MetaDashboard = () => {
                 </Button>
 
                 <Button 
+                  variant="outline"
+                  className="border-warning/30 hover:border-warning/50 hover:bg-warning/10" 
+                  onClick={handleTestNotification}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Test Alert
+                </Button>
+
+                <Button
                   className="bg-gradient-to-r from-[#7BBCFE] to-[#B8A8FE] hover:opacity-90 text-white font-semibold shadow-lg shadow-[#7BBCFE]/30 transition-all duration-300 hover:scale-105" 
                   onClick={handleRefresh}
                   disabled={loading}
