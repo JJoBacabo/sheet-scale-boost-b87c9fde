@@ -457,7 +457,7 @@ const MetaDashboard = () => {
   const [showColumnSettings, setShowColumnSettings] = useState(false);
 
   // Test notification function
-  const handleTestNotification = () => {
+  const handleTestNotification = async () => {
     // Play alert sound using Web Audio API
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -494,10 +494,76 @@ const MetaDashboard = () => {
     
     // Show toast notification
     toast({
-      title: "🔔 Alerta de Campanha Acionado!",
-      description: "A campanha 'Teste' atingiu o limite de CPC definido (€2.50)",
-      variant: "destructive",
+      title: "🔔 " + (t("metaDashboard.alertTriggered") || "Alerta de Campanha Acionado!"),
+      description: t("metaDashboard.sendingTestEmail") || "A enviar email de teste...",
     });
+
+    // Send test email
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.email) {
+        toast({
+          title: t("metaDashboard.error") || "Erro",
+          description: t("metaDashboard.notAuthenticated") || "Não autenticado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Get current language from localStorage or default to 'pt'
+      const currentLanguage = localStorage.getItem('language') || 'pt';
+
+      // Use first campaign or mock data for test
+      const testCampaign = campaigns[0] || {
+        id: "test-campaign-123",
+        name: "Campanha de Teste",
+        status: "ACTIVE",
+      };
+      const testInsights = campaigns[0] ? getInsightData(campaigns[0]) : {
+        spend: 125.50,
+        results: 45,
+        cpc: 2.79,
+        roas: 3.2,
+        impressions: 15000,
+        clicks: 450,
+      };
+
+      const { error } = await supabase.functions.invoke("send-campaign-alert-email", {
+        body: {
+          email: session.user.email,
+          language: currentLanguage as "pt" | "en",
+          campaign: {
+            id: testCampaign.id,
+            name: testCampaign.name,
+            status: testCampaign.status,
+            spent: testInsights.spend,
+            results: testInsights.results,
+            cpc: testInsights.cpc,
+            roas: testInsights.roas,
+            impressions: testInsights.impressions,
+            clicks: testInsights.clicks,
+          },
+          alertType: "cpc",
+          operator: ">=",
+          thresholdValue: 2.50,
+          currentValue: testInsights.cpc,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ " + (t("metaDashboard.emailSent") || "Email enviado!"),
+        description: (t("metaDashboard.checkInbox") || "Verifique a caixa de entrada:") + ` ${session.user.email}`,
+      });
+    } catch (error: any) {
+      console.error("Error sending test email:", error);
+      toast({
+        title: t("metaDashboard.error") || "Erro",
+        description: error.message || t("metaDashboard.emailError") || "Erro ao enviar email",
+        variant: "destructive",
+      });
+    }
   };
 
   // Cache management
