@@ -290,19 +290,38 @@ serve(async (req) => {
 
       console.log('📱 Fetching Facebook Ads data');
 
-      // Fetch insights with spend, clicks, and purchases
+      // Fetch insights with spend, clicks, and purchases (with retry for rate limiting)
       const insightsUrl = `https://graph.facebook.com/v18.0/${adAccountId}/insights?` +
         `fields=spend,clicks,actions,date_start&` +
         `time_range={"since":"${dateFrom}","until":"${dateTo}"}&` +
         `time_increment=1&` +
         `access_token=${facebookToken}`;
 
-      const fbResponse = await fetch(insightsUrl);
-      const fbData = await fbResponse.json();
+      let fbData: any = { data: [] };
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        const fbResponse = await fetch(insightsUrl);
+        fbData = await fbResponse.json();
 
-      if (fbData.error) {
-        console.error('Facebook API error:', fbData.error);
-        throw new Error(`Facebook API error: ${fbData.error.message}`);
+        if (fbData.error) {
+          // Check if it's a rate limit error (code 4 or is_transient)
+          if (fbData.error.code === 4 || fbData.error.is_transient) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+              const delay = Math.pow(2, retryCount) * 2000; // 4s, 8s, 16s
+              console.log(`⏳ Facebook rate limit, waiting ${delay}ms before retry ${retryCount}/${maxRetries}`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+          }
+          console.error('Facebook API error:', fbData.error);
+          // Don't throw - continue with empty data so Shopify data still shows
+          console.log('⚠️ Continuing without Facebook data due to API error');
+          fbData = { data: [] };
+        }
+        break;
       }
 
       console.log(`📊 Facebook API returned ${fbData.data?.length || 0} days of data`);
