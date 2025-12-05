@@ -455,7 +455,6 @@ const MetaDashboard = () => {
     return [];
   });
   const [showColumnSettings, setShowColumnSettings] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
 
   // Test notification function
   const handleTestNotification = () => {
@@ -499,81 +498,6 @@ const MetaDashboard = () => {
       description: "A campanha 'Teste' atingiu o limite de CPC definido (€2.50)",
       variant: "destructive",
     });
-  };
-
-  // Test API connection function
-  const handleTestConnection = async () => {
-    setIsTesting(true);
-    try {
-      // Get the auth session
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Erro",
-          description: "Não autenticado",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Check Facebook integration
-      const { data: integration, error: integrationError } = await supabase
-        .from("integrations")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .eq("integration_type", "facebook_ads")
-        .single();
-
-      if (integrationError || !integration) {
-        toast({
-          title: "Facebook não conectado",
-          description: "Vá às Integrações para conectar sua conta do Facebook",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Test Facebook API
-      const adAccountId = (integration.metadata as any)?.ad_account_id;
-      const token = integration.access_token;
-      
-      if (!adAccountId) {
-        toast({
-          title: "Ad Account não encontrado",
-          description: "Reconecte sua conta do Facebook",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const testUrl = `https://graph.facebook.com/v18.0/${adAccountId}?fields=name,account_status&access_token=${token}`;
-      const response = await fetch(testUrl);
-      const data = await response.json();
-
-      if (data.error) {
-        toast({
-          title: "Erro na API do Facebook",
-          description: data.error.message || "Erro desconhecido",
-          variant: "destructive",
-        });
-        console.error("Facebook API Error:", data.error);
-      } else {
-        toast({
-          title: "Conexão OK! ✅",
-          description: `Conta: ${data.name} | Status: ${data.account_status === 1 ? 'Ativa' : 'Inativa'}`,
-        });
-        console.log("Facebook API Response:", data);
-      }
-    } catch (error: any) {
-      toast({
-        title: "Erro no teste",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.error("Test error:", error);
-    } finally {
-      setIsTesting(false);
-    }
   };
 
   // Cache management
@@ -1796,20 +1720,6 @@ const MetaDashboard = () => {
                     </Popover>
                   </div>
                 )}
-
-                <Button 
-                  variant="outline"
-                  className="border-primary/30 hover:border-primary/50" 
-                  onClick={handleTestConnection}
-                  disabled={isTesting}
-                >
-                  {isTesting ? (
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Zap className="w-4 h-4 mr-2" />
-                  )}
-                  Test API
-                </Button>
 
                 <Button 
                   variant="outline"
