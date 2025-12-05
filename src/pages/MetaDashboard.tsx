@@ -158,21 +158,8 @@ const CampaignCard = memo(({
           <div className="absolute -top-2 -left-2 w-4 h-4 bg-destructive rounded-full animate-ping z-30" />
         )}
         
-        {/* Eye, Edit and Alert icons in top-right */}
+        {/* Eye and Edit icons in top-right */}
         <div className="absolute top-0 right-0 flex gap-1 z-10">
-          {userId && (
-            <AlertConfigPopup
-              campaignId={campaign.id}
-              campaignName={campaign.name}
-              userId={userId}
-              currentMetrics={{
-                results: insights.results,
-                spent: insights.spend,
-                cpc: insights.cpc,
-                roas: insights.roas,
-              }}
-            />
-          )}
           <Button
             size="icon"
             variant="ghost"
@@ -212,7 +199,22 @@ const CampaignCard = memo(({
         <div className="flex-1 space-y-3">
           <div className="flex items-start justify-between gap-4 pr-10">
             <div className="flex-1">
-              <h3 className="text-lg font-bold mb-1">{campaign.name}</h3>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-lg font-bold">{campaign.name}</h3>
+                {userId && (
+                  <AlertConfigPopup
+                    campaignId={campaign.id}
+                    campaignName={campaign.name}
+                    userId={userId}
+                    currentMetrics={{
+                      results: insights.results,
+                      spent: insights.spend,
+                      cpc: insights.cpc,
+                      roas: insights.roas,
+                    }}
+                  />
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">{formatObjective(campaign.objective)}</p>
             </div>
           </div>
