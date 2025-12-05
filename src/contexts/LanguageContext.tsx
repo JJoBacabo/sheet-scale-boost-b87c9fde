@@ -1197,6 +1197,10 @@ const translations = {
           annualPrice: '€449.91/ano',
           annualSavings: 'Poupe 149,97 €',
           features: ['Daily ROAS Profit Sheet', 'Campanhas', 'Cotação', 'Product Research', '4 lojas', 'Campanhas ilimitadas']
+        },
+        business: {
+          price: 'Personalizado',
+          features: ['Todas as funcionalidades Expert', 'Suporte dedicado', 'API personalizada', 'Formação incluída']
         }
       },
       dangerZone: {
@@ -2488,6 +2492,10 @@ const translations = {
           annualPrice: '€449.91/year',
           annualSavings: 'Save €149.97',
           features: ['Daily ROAS Profit Sheet', 'Campaigns', 'Quotation', 'Product Research', '4 stores', 'Unlimited campaigns']
+        },
+        business: {
+          price: 'Custom',
+          features: ['All Expert features', 'Dedicated support', 'Custom API', 'Training included']
         }
       },
       dangerZone: {
