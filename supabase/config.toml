@@ -101,3 +101,6 @@ verify_jwt = true
 
 [functions.update-store-currencies]
 verify_jwt = true
+
+[functions.send-campaign-alert-email]
+verify_jwt = true
