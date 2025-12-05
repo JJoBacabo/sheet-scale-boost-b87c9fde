@@ -50,6 +50,42 @@ async function getExchangeRates(): Promise<Record<string, number>> {
 const convertToEUR = (amount: number, currency: string, rates: Record<string, number>) => 
   amount * (rates[currency.toUpperCase()] || 1);
 
+// Retry helper with exponential backoff for rate limiting
+async function fetchWithRetry(
+  url: string, 
+  options: RequestInit, 
+  maxRetries = 3,
+  baseDelay = 2000
+): Promise<Response> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Handle rate limiting (429)
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        const delay = retryAfter ? parseInt(retryAfter) * 1000 : baseDelay * Math.pow(2, attempt);
+        console.log(`⏳ Rate limited, waiting ${delay}ms before retry ${attempt + 1}/${maxRetries}`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error as Error;
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`⚠️ Request failed, retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error('Max retries exceeded');
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -135,16 +171,16 @@ serve(async (req) => {
 
       console.log('🏪 Fetching orders from Shopify:', shopifyDomain);
 
-      // Fetch shop info to get currency
+      // Fetch shop info to get currency (with retry)
       const shopUrl = `https://${shopifyDomain}/admin/api/2024-01/shop.json`;
-      const shopResponse = await fetch(shopUrl, {
+      const shopResponse = await fetchWithRetry(shopUrl, {
         headers: {
           'X-Shopify-Access-Token': shopifyToken,
           'Content-Type': 'application/json',
         },
       });
 
-      if (!shopResponse.ok) {
+      if (!shopResponse.ok && shopResponse.status !== 429) {
         throw new Error(`Shopify API error: ${shopResponse.statusText}`);
       }
 
@@ -152,16 +188,16 @@ serve(async (req) => {
       const shopCurrency = shopData.shop?.currency || 'EUR';
       console.log('💱 Shop currency:', shopCurrency);
 
-      // Fetch orders
+      // Fetch orders (with retry)
       const ordersUrl = `https://${shopifyDomain}/admin/api/2024-01/orders.json?status=any&created_at_min=${dateFrom}T00:00:00Z&created_at_max=${dateTo}T23:59:59Z&limit=250&financial_status=paid`;
-      const ordersResponse = await fetch(ordersUrl, {
+      const ordersResponse = await fetchWithRetry(ordersUrl, {
         headers: {
           'X-Shopify-Access-Token': shopifyToken,
           'Content-Type': 'application/json',
         },
       });
 
-      if (!ordersResponse.ok) {
+      if (!ordersResponse.ok && ordersResponse.status !== 429) {
         throw new Error(`Shopify API error: ${ordersResponse.statusText}`);
       }
 
