@@ -28,7 +28,10 @@ import {
   Settings2,
   Pencil,
   Clock,
+  Bell,
 } from "lucide-react";
+import { AlertConfigPopup } from "@/components/campaign/AlertConfigPopup";
+import { useCampaignAlerts } from "@/hooks/useCampaignAlerts";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -121,6 +124,8 @@ const CampaignCard = memo(({
   onPause, 
   onActivate,
   isLoading,
+  userId,
+  hasTriggeredAlert,
   t 
 }: { 
   campaign: FacebookCampaign; 
@@ -130,12 +135,15 @@ const CampaignCard = memo(({
   onPause: () => void;
   onActivate: () => void;
   isLoading?: boolean;
+  userId?: string;
+  hasTriggeredAlert?: boolean;
   t: (key: string) => string;
 }) => {
   return (
     <Card className={cn(
       "p-6 glass-card hover:border-[#7BBCFE]/40 transition-all group relative border-2 border-[#7BBCFE]/10 bg-gradient-to-br from-[#0A0C14]/60 to-[#1a1f2e]/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-[#7BBCFE]/10",
-      isLoading && "opacity-50 pointer-events-none"
+      isLoading && "opacity-50 pointer-events-none",
+      hasTriggeredAlert && "border-warning/50 ring-2 ring-warning/30 animate-pulse"
     )}>
       <div className="flex flex-col lg:flex-row gap-6 relative">
         {/* Loading spinner overlay */}
@@ -144,9 +152,27 @@ const CampaignCard = memo(({
             <LoadingOverlay />
           </div>
         )}
+
+        {/* Alert indicator */}
+        {hasTriggeredAlert && (
+          <div className="absolute -top-2 -left-2 w-4 h-4 bg-destructive rounded-full animate-ping z-30" />
+        )}
         
-        {/* Eye and Edit icons in top-right */}
+        {/* Eye, Edit and Alert icons in top-right */}
         <div className="absolute top-0 right-0 flex gap-1 z-10">
+          {userId && (
+            <AlertConfigPopup
+              campaignId={campaign.id}
+              campaignName={campaign.name}
+              userId={userId}
+              currentMetrics={{
+                results: insights.results,
+                spent: insights.spend,
+                cpc: insights.cpc,
+                roas: insights.roas,
+              }}
+            />
+          )}
           <Button
             size="icon"
             variant="ghost"
@@ -1766,6 +1792,7 @@ const MetaDashboard = () => {
                         campaign={campaign}
                         insights={insights}
                         isLoading={loadingCampaignId === campaign.id}
+                        userId={user?.id}
                         onViewDetails={() => {
                           setSelectedCampaign(campaign);
                           setShowDetailsDialog(true);

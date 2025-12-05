@@ -133,6 +133,48 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_alerts: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          metric_type: string
+          notification_channels: string[]
+          operator: string
+          threshold_value: number
+          triggered_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_type: string
+          notification_channels?: string[]
+          operator: string
+          threshold_value: number
+          triggered_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          metric_type?: string
+          notification_channels?: string[]
+          operator?: string
+          threshold_value?: number
+          triggered_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           campaign_name: string
