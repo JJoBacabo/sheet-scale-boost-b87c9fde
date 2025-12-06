@@ -98,22 +98,11 @@ export function LoadingOverlay({ message, className }: LoadingOverlayProps) {
                           animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }} />
           
           {/* Logo image */}
-          <motion.img 
+          <img 
             src={logo} 
             alt="Sheet Tools" 
             className="relative w-32 h-32 object-contain z-10
                        drop-shadow-[0_0_30px_hsl(var(--primary)/0.5)]"
-            animate={{ 
-              y: [0, -10, 0],
-              scale: [1, 1.02, 1],
-              rotateY: [0, 180, 360]
-            }}
-            transition={{ 
-              duration: 3, 
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            style={{ transformStyle: 'preserve-3d' }}
           />
           
           {/* Enhanced orbiting dots with trail effect */}

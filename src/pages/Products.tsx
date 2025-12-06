@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
-import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, ChevronDown, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send, Filter } from "lucide-react";
+import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send, Filter } from "lucide-react";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
@@ -19,11 +19,6 @@ import { StoreCurrencySelector } from "@/components/StoreCurrencySelector";
 import { SupplierQuoteModal } from "@/components/SupplierQuoteModal";
 import { SupplierQuoteList } from "@/components/SupplierQuoteList";
 import { useCurrency } from "@/contexts/CurrencyContext";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -1377,7 +1372,7 @@ const Products = () => {
           </div>
         </motion.section>
 
-        {/* Products Grid */}
+        {/* Products List - Modern Table Layout */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1414,95 +1409,311 @@ const Products = () => {
               </div>
             </Card3D>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.25 + index * 0.03 }}
-                >
-                  <Collapsible
-                    open={expandedProducts.has(product.id)}
-                    onOpenChange={() => toggleProduct(product.id)}
-                  >
-                    <Card3D intensity="low" className="p-5 group hover:border-primary/30 transition-all">
-                      <CollapsibleTrigger className="w-full">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-12 h-12 rounded-lg bg-gradient-primary/10 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-colors flex-shrink-0">
-                  {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.product_name}
-                      className="w-full h-full object-cover rounded-lg"
-                      onError={(e) => {
-                        // Suppress console error and show fallback icon
-                        e.preventDefault();
-                        const target = e.currentTarget;
-                        target.style.display = 'none';
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl"><svg class="w-8 h-8 text-primary/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg></div>';
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Package className="w-6 h-6 text-primary/50" />
-                    </div>
-                  )}
+            <Card3D intensity="low" className="overflow-hidden">
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border/50 bg-muted/30">
+                      <th className="text-left p-4 text-sm font-semibold text-muted-foreground">Produto</th>
+                      <th className="text-center p-4 text-sm font-semibold text-muted-foreground">Quantidade</th>
+                      <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Custo</th>
+                      <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Preço Venda</th>
+                      <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Receita Total</th>
+                      <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Margem</th>
+                      <th className="text-right p-4 text-sm font-semibold text-muted-foreground">Lucro</th>
+                      <th className="text-center p-4 text-sm font-semibold text-muted-foreground">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.map((product, index) => (
+                      <motion.tr
+                        key={product.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        className="border-b border-border/30 hover:bg-muted/20 transition-colors group"
+                      >
+                        {/* Product Info */}
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-primary/10 flex items-center justify-center border border-primary/20 flex-shrink-0 overflow-hidden">
+                              {product.image_url ? (
+                                <img
+                                  src={product.image_url}
+                                  alt={product.product_name}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.preventDefault();
+                                    const target = e.currentTarget;
+                                    target.style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <Package className="w-6 h-6 text-primary/50" />
+                              )}
                             </div>
-                            <div className="text-left flex-1 min-w-0">
-                              <h3 className="text-base font-semibold line-clamp-2 mb-1">{product.product_name}</h3>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-xl font-bold text-primary">
-                                  {product.quantity_sold}x
-                                </span>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-semibold text-sm line-clamp-1 mb-1">{product.product_name}</h3>
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {product.shopify_product_id && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs h-5">
                                     <ShoppingBag className="w-3 h-3 mr-1" />
                                     Shopify
                                   </Badge>
                                 )}
                                 {!product.cost_price && (
-                                  <Badge variant="destructive" className="text-xs animate-pulse">
+                                  <Badge variant="destructive" className="text-xs h-5">
                                     <AlertTriangle className="w-3 h-3 mr-1" />
-                                    {t('products.noCostPrice')}
+                                    Sem custo
                                   </Badge>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <ChevronDown 
-                            className={`w-4 h-4 text-muted-foreground transition-transform flex-shrink-0 ${
-                              expandedProducts.has(product.id) ? 'rotate-180' : ''
-                            }`}
-                          />
-                        </div>
-                      </CollapsibleTrigger>
+                        </td>
 
-                      <CollapsibleContent className="space-y-3">
-                        {product.shopify_product_id && product.integrations?.metadata?.myshopify_domain && (
-                          <a 
-                            href={`https://${product.integrations.metadata.myshopify_domain}/admin/products/${product.shopify_product_id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                        {/* Quantity */}
+                        <td className="p-4 text-center">
+                          <span className="text-lg font-bold text-primary">{product.quantity_sold}</span>
+                        </td>
+
+                        {/* Cost - Editable */}
+                        <td className="p-4 text-right">
+                          {editingCost === product.id ? (
+                            <div className="flex items-center justify-end gap-1.5">
+                              <div className="relative flex items-center">
+                                <span className="absolute left-2 text-xs text-muted-foreground pointer-events-none">
+                                  {selectedCurrency.symbol}
+                                </span>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={tempCostPrice}
+                                  onChange={(e) => {
+                                    const value = e.target.value.replace(/[^0-9.]/g, '');
+                                    const parts = value.split('.');
+                                    if (parts.length > 2) return;
+                                    if (parts[1] && parts[1].length > 2) return;
+                                    setTempCostPrice(value);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleSaveCost(product.id);
+                                    } else if (e.key === 'Escape') {
+                                      e.preventDefault();
+                                      handleCancelEditCost();
+                                    }
+                                  }}
+                                  className="w-24 h-8 pl-6 pr-2 text-sm font-semibold bg-background border-2 border-primary/40 rounded-md focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                  placeholder="0.00"
+                                  autoFocus
+                                />
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-emerald-500/10 hover:text-emerald-600"
+                                onClick={() => handleSaveCost(product.id)}
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600"
+                                onClick={handleCancelEditCost}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="text-sm font-semibold">
+                                {product.cost_price !== null && product.cost_price !== 0 
+                                  ? formatAmount(convertBetween(product.cost_price, storeCurrency, selectedCurrency.code), selectedCurrency.code)
+                                  : <span className="text-muted-foreground italic text-xs">—</span>
+                                }
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary transition-opacity"
+                                onClick={() => handleEditCost(product.id, product.cost_price)}
+                                title="Editar custo"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Selling Price */}
+                        <td className="p-4 text-right">
+                          <div className="flex flex-col items-end">
+                            <span className="text-sm font-semibold">
+                              {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                            </span>
+                            {storeCurrency !== selectedCurrency.code && (
+                              <span className="text-xs text-muted-foreground">
+                                {(product.selling_price || 0).toFixed(2)} {storeCurrency}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Total Revenue */}
+                        <td className="p-4 text-right">
+                          <span className="text-sm font-bold text-green-600">
+                            {formatAmount(convertBetween(product.total_revenue || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                          </span>
+                        </td>
+
+                        {/* Margin */}
+                        <td className="p-4 text-right">
+                          <Badge
+                            className={
+                              (product.profit_margin || 0) > 40
+                                ? "bg-success/20 text-success border-success/30"
+                                : (product.profit_margin || 0) > 0
+                                ? "bg-warning/20 text-warning border-warning/30"
+                                : "bg-destructive/20 text-destructive border-destructive/30"
+                            }
                           >
-                            {t('products.viewInShopify')}
-                            <Eye className="w-3 h-3" />
-                          </a>
-                        )}
+                            {product.profit_margin?.toFixed(1) || 0}%
+                          </Badge>
+                        </td>
 
-                        <div className="space-y-2.5 p-3 rounded-lg bg-background/30 border border-border/50">
-                          {/* Cotação (Supplier Cost) - Editable */}
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm font-medium text-muted-foreground">{t('products.supplierQuote')}</span>
+                        {/* Profit */}
+                        <td className="p-4 text-right">
+                          {!product.cost_price || product.cost_price === 0 ? (
+                            <span className="text-xs text-warning italic">Sem custo</span>
+                          ) : (
+                            <span className={`text-sm font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatAmount(convertBetween(calculateProfit(product), storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="p-4">
+                          <div className="flex items-center justify-center gap-1">
+                            {product.shopify_product_id && product.integrations?.metadata?.myshopify_domain && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-primary/10 hover:text-primary transition-opacity"
+                                      asChild
+                                    >
+                                      <a
+                                        href={`https://${product.integrations.metadata.myshopify_domain}/admin/products/${product.shopify_product_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={t('products.viewInShopify')}
+                                      >
+                                        <Eye className="w-4 h-4" />
+                                      </a>
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{t('products.viewInShopify')}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                            {(!product.cost_price || product.cost_price === 0) && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-warning/10 hover:text-warning transition-opacity"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setQuoteModalOpen(true);
+                                      }}
+                                      title="Solicitar cotação"
+                                    >
+                                      <Send className="w-4 h-4" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Solicitar cotação ao fornecedor</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet Card View */}
+              <div className="lg:hidden space-y-3 p-4">
+                {filteredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    <Card3D intensity="low" className="p-4 hover:border-primary/30 transition-all">
+                      <div className="space-y-4">
+                        {/* Product Header */}
+                        <div className="flex items-start gap-3">
+                          <div className="w-16 h-16 rounded-lg bg-gradient-primary/10 flex items-center justify-center border border-primary/20 flex-shrink-0 overflow-hidden">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.product_name}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.preventDefault();
+                                  const target = e.currentTarget;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <Package className="w-8 h-8 text-primary/50" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm mb-1 line-clamp-2">{product.product_name}</h3>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-lg font-bold text-primary">{product.quantity_sold}x</span>
+                              {product.shopify_product_id && (
+                                <Badge variant="outline" className="text-xs">
+                                  <ShoppingBag className="w-3 h-3 mr-1" />
+                                  Shopify
+                                </Badge>
+                              )}
+                              {!product.cost_price && (
+                                <Badge variant="destructive" className="text-xs">
+                                  <AlertTriangle className="w-3 h-3 mr-1" />
+                                  Sem custo
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Product Stats Grid */}
+                        <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border/50">
+                          {/* Cost - Editable */}
+                          <div>
+                            <span className="text-xs text-muted-foreground block mb-1">Custo</span>
                             {editingCost === product.id ? (
                               <div className="flex items-center gap-1.5">
-                                <div className="relative flex items-center">
-                                  <span className="absolute left-2.5 text-sm text-muted-foreground pointer-events-none">
+                                <div className="relative flex-1">
+                                  <span className="absolute left-2 text-xs text-muted-foreground pointer-events-none">
                                     {selectedCurrency.symbol}
                                   </span>
                                   <input
@@ -1510,17 +1721,10 @@ const Products = () => {
                                     inputMode="decimal"
                                     value={tempCostPrice}
                                     onChange={(e) => {
-                                      // Allow only numbers and decimal point
                                       const value = e.target.value.replace(/[^0-9.]/g, '');
-                                      // Allow only one decimal point
                                       const parts = value.split('.');
-                                      if (parts.length > 2) {
-                                        return;
-                                      }
-                                      // Limit decimal places to 2
-                                      if (parts[1] && parts[1].length > 2) {
-                                        return;
-                                      }
+                                      if (parts.length > 2) return;
+                                      if (parts[1] && parts[1].length > 2) return;
                                       setTempCostPrice(value);
                                     }}
                                     onKeyDown={(e) => {
@@ -1532,7 +1736,7 @@ const Products = () => {
                                         handleCancelEditCost();
                                       }
                                     }}
-                                    className="w-28 h-9 pl-7 pr-2.5 text-sm font-semibold bg-background border-2 border-primary/40 rounded-lg focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                    className="w-full h-8 pl-6 pr-2 text-sm font-semibold bg-background border-2 border-primary/40 rounded-md focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                                     placeholder="0.00"
                                     autoFocus
                                   />
@@ -1540,7 +1744,7 @@ const Products = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-9 w-9 p-0 hover:bg-emerald-500/10 hover:text-emerald-600 rounded-lg transition-colors"
+                                  className="h-8 w-8 p-0 hover:bg-emerald-500/10 hover:text-emerald-600"
                                   onClick={() => handleSaveCost(product.id)}
                                 >
                                   <Check className="w-4 h-4" />
@@ -1548,7 +1752,7 @@ const Products = () => {
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-9 w-9 p-0 hover:bg-red-500/10 hover:text-red-600 rounded-lg transition-colors"
+                                  className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-600"
                                   onClick={handleCancelEditCost}
                                 >
                                   <X className="w-4 h-4" />
@@ -1556,100 +1760,104 @@ const Products = () => {
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                <span className="text-base font-semibold text-foreground">
+                                <span className="text-sm font-semibold">
                                   {product.cost_price !== null && product.cost_price !== 0 
                                     ? formatAmount(convertBetween(product.cost_price, storeCurrency, selectedCurrency.code), selectedCurrency.code)
-                                    : <span className="text-muted-foreground italic">Não definido</span>
+                                    : <span className="text-muted-foreground italic text-xs">—</span>
                                   }
                                 </span>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-8 w-8 p-0 hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                                  className="h-7 w-7 p-0 hover:bg-primary/10 hover:text-primary"
                                   onClick={() => handleEditCost(product.id, product.cost_price)}
-                                  title="Editar custo"
                                 >
-                                  <Edit2 className="w-4 h-4" />
+                                  <Edit2 className="w-3.5 h-3.5" />
                                 </Button>
-                                {(!product.cost_price || product.cost_price === 0) && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-8 gap-1.5 text-xs border-warning/40 text-warning hover:bg-warning/10"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setQuoteModalOpen(true);
-                                    }}
-                                    title="Solicitar cotação ao fornecedor"
-                                  >
-                                    <Send className="w-3.5 h-3.5" />
-                                    Cotação
-                                  </Button>
-                                )}
                               </div>
                             )}
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{t('products.totalRevenue')}</span>
-                            <span className="text-lg font-bold text-green-600">
+                          {/* Selling Price */}
+                          <div>
+                            <span className="text-xs text-muted-foreground block mb-1">Preço Venda</span>
+                            <span className="text-sm font-semibold">
+                              {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
+                            </span>
+                          </div>
+
+                          {/* Total Revenue */}
+                          <div>
+                            <span className="text-xs text-muted-foreground block mb-1">Receita Total</span>
+                            <span className="text-sm font-bold text-green-600">
                               {formatAmount(convertBetween(product.total_revenue || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{t('products.avgPrice')}</span>
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="font-semibold">
-                                {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
-                              </span>
-                              {storeCurrency !== selectedCurrency.code && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Badge variant="outline" className="text-xs font-normal">
-                                        {(product.selling_price || 0).toFixed(2)} {storeCurrency} → {formatAmount(convertBetween(product.selling_price || 0, storeCurrency, selectedCurrency.code), selectedCurrency.code)}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Preço convertido de {storeCurrency} para {selectedCurrency.code}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">{t('products.margin')}</span>
+
+                          {/* Margin */}
+                          <div>
+                            <span className="text-xs text-muted-foreground block mb-1">Margem</span>
                             <Badge
                               className={
                                 (product.profit_margin || 0) > 40
                                   ? "bg-success/20 text-success border-success/30"
-                                  : "bg-warning/20 text-warning border-warning/30"
+                                  : (product.profit_margin || 0) > 0
+                                  ? "bg-warning/20 text-warning border-warning/30"
+                                  : "bg-destructive/20 text-destructive border-destructive/30"
                               }
                             >
                               {product.profit_margin?.toFixed(1) || 0}%
                             </Badge>
                           </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <span className="text-sm text-muted-foreground">{t('products.profit')}</span>
+
+                          {/* Profit */}
+                          <div className="col-span-2">
+                            <span className="text-xs text-muted-foreground block mb-1">Lucro</span>
                             {!product.cost_price || product.cost_price === 0 ? (
                               <div className="flex items-center gap-2">
                                 <AlertTriangle className="w-4 h-4 text-warning" />
-                                <span className="text-sm text-warning italic">{t('products.needsQuote')}</span>
+                                <span className="text-sm text-warning italic">Sem custo definido</span>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 gap-1.5 text-xs border-warning/40 text-warning hover:bg-warning/10 ml-auto"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setQuoteModalOpen(true);
+                                  }}
+                                >
+                                  <Send className="w-3.5 h-3.5" />
+                                  Solicitar Cotação
+                                </Button>
                               </div>
                             ) : (
-                              <span className={`text-lg font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatAmount(calculateProfit(product), storeCurrency)}
+                              <span className={`text-base font-bold ${calculateProfit(product) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatAmount(convertBetween(calculateProfit(product), storeCurrency, selectedCurrency.code), selectedCurrency.code)}
                               </span>
                             )}
                           </div>
                         </div>
-                      </CollapsibleContent>
+
+                        {/* Actions */}
+                        {product.shopify_product_id && product.integrations?.metadata?.myshopify_domain && (
+                          <div className="pt-2 border-t border-border/50">
+                            <a 
+                              href={`https://${product.integrations.metadata.myshopify_domain}/admin/products/${product.shopify_product_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                            >
+                              {t('products.viewInShopify')}
+                              <Eye className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </Card3D>
-                  </Collapsible>
-                </motion.div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </div>
+            </Card3D>
           )}
         </motion.section>
       </div>

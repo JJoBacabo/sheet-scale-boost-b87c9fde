@@ -745,6 +745,18 @@ const Dashboard = () => {
           </div>
         </Card3D>
 
+        {/* Incomplete costs warning - above stats cards */}
+        {stats?.hasProductsWithoutCost && (
+          <Link to="/products">
+            <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+              <AlertTriangle className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-sm text-warning font-medium">
+                Incomplete costs - Click to add quotes
+              </AlertDescription>
+            </Alert>
+          </Link>
+        )}
+
         {/* Stats Overview - 8 cards de métricas */}
         {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
 
