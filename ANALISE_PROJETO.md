@@ -13,7 +13,7 @@
 
 ---
 
-NNNNNNIIIIIIGGGGAAAAA
+NNNNNNIIIIIIGGG
 
 ## 🛠️ Stack Tecnológico
 
