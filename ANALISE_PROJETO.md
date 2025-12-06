@@ -13,6 +13,8 @@
 
 ---
 
+NNNNNNIIIIIIGGGGAAAAA
+
 ## 🛠️ Stack Tecnológico
 
 ### Frontend
