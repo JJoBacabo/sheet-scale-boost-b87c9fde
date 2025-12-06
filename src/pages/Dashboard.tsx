@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { useSubscriptionState } from "@/hooks/useSubscriptionState";
 import { SubscriptionStateBanner } from "@/components/SubscriptionStateBanner";
 import { ReadOnlyOverlay } from "@/components/ReadOnlyOverlay";
@@ -618,10 +618,6 @@ const Dashboard = () => {
     });
   }, [fetchCampaigns, toast, t]);
 
-  if (loading || stateLoading || stats.loading) {
-    return <LoadingOverlay message={t('dashboard.loading') || 'Carregando...'} />;
-  }
-
   const { revenueChartData, profitChartData, spendChartData } = chartData;
 
   return (
@@ -629,7 +625,13 @@ const Dashboard = () => {
       title={t('dashboard.title') || 'Dashboard'}
       subtitle={t('dashboard.welcome') || 'Bem-vindo ao seu painel'}
     >
-      {stateInfo.showBanner && (
+      <div className="relative min-h-[400px]">
+        {(loading || stateLoading || stats.loading) && (
+          <LoadingContent message={t('dashboard.loading') || 'Carregando...'} />
+        )}
+        {!(loading || stateLoading || stats.loading) && (
+          <>
+        {stateInfo.showBanner && (
         <SubscriptionStateBanner
           state={stateInfo.state as 'expired' | 'suspended' | 'archived'}
           daysUntilSuspension={stateInfo.daysUntilSuspension}
@@ -944,6 +946,9 @@ const Dashboard = () => {
             )}
           </Card3D>
         ) : null}
+      </div>
+          </>
+        )}
       </div>
     </PageLayout>
   );

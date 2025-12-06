@@ -152,3 +152,96 @@ export function LoadingOverlay({ message, className }: LoadingOverlayProps) {
     </div>
   );
 }
+
+interface LoadingContentProps {
+  message?: string;
+  className?: string;
+}
+
+export function LoadingContent({ message, className }: LoadingContentProps) {
+  const { t } = useLanguage();
+  const loadingMessage = message || t('common.loading');
+  return (
+    <div className={cn(
+      "absolute inset-0 flex items-center justify-center min-h-[400px]",
+      "bg-gradient-to-br from-background/80 via-background/70 to-background/80",
+      "backdrop-blur-xl rounded-xl",
+      className
+    )}>
+      {/* Enhanced animated background particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-xl">
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" 
+             style={{ animationDuration: '4s' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/8 rounded-full blur-3xl animate-pulse" 
+             style={{ animationDuration: '5s', animationDelay: '1s' }} />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center gap-6">
+        {/* Logo with rotating rings */}
+        <div className="relative">
+          {/* Outer rotating ring */}
+          <div className="absolute -inset-4 rounded-full border-3 border-transparent 
+                          border-t-primary/50 border-r-primary/30 
+                          animate-spin"
+               style={{ animationDuration: '2s' }} />
+          
+          {/* Second rotating ring (counter-clockwise) */}
+          <div className="absolute -inset-6 rounded-full border-2 border-transparent 
+                          border-b-primary/40 border-l-primary/25 
+                          animate-spin"
+               style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+          
+          {/* Pulsing glow rings */}
+          <div className="absolute -inset-2 rounded-full bg-primary/20 blur-2xl 
+                          animate-pulse" style={{ animationDuration: '2s' }} />
+          
+          {/* Logo image */}
+          <img 
+            src={logo} 
+            alt="Sheet Tools" 
+            className="relative w-24 h-24 object-contain z-10
+                       drop-shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
+          />
+          
+          {/* Orbiting dots */}
+          {[0, 0.33, 0.66].map((delay, idx) => (
+            <div 
+              key={idx}
+              className="absolute inset-0 animate-spin"
+              style={{ 
+                animationDuration: '3s',
+                animationDelay: `${delay * 3}s`
+              }}
+            >
+              <div 
+                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 
+                           w-2.5 h-2.5 rounded-full 
+                           bg-gradient-to-br from-primary/80 to-primary/60 
+                           shadow-lg shadow-primary/50"
+              />
+            </div>
+          ))}
+        </div>
+        
+        {/* Loading text */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-lg font-bold bg-gradient-to-r 
+                       from-foreground via-primary to-foreground 
+                       bg-clip-text text-transparent
+                       bg-[length:200%_auto]
+                       animate-[gradient_3s_ease_infinite]
+                       tracking-tight">
+            {loadingMessage}
+          </p>
+        </div>
+      </div>
+      
+      <style>{`
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
+    </div>
+  );
+}
