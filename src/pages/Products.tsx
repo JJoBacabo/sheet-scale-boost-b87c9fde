@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import { Search, Package, DollarSign, TrendingUp, ShoppingBag, RefreshCw, Edit2, Check, X, Calendar, Download, ArrowUp, ArrowDown, Activity, Eye, AlertTriangle, Send, Filter } from "lucide-react";
@@ -1013,10 +1013,6 @@ const Products = () => {
     });
   };
 
-  if (loading) {
-    return <LoadingOverlay message={t('products.loading')} />;
-  }
-
   // Calcular estatísticas com mudanças
   const statsData = [
     {
@@ -1091,7 +1087,12 @@ const Products = () => {
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="relative min-h-[400px]">
+        {loading && (
+          <LoadingContent message={t('products.loading')} />
+        )}
+        {!loading && (
+          <div className="space-y-6">
         {/* Stats Cards - Modern Design */}
         <motion.section
           initial={{ opacity: 0, y: 10 }}
@@ -1860,6 +1861,8 @@ const Products = () => {
             </Card3D>
           )}
         </motion.section>
+          </div>
+        )}
       </div>
     </PageLayout>
   );

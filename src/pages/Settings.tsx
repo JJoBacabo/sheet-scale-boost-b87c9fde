@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import { User as UserIcon, Building2, CreditCard, Facebook, ShoppingBag, Check, ExternalLink, Sparkles, X, RefreshCw, Calendar } from "lucide-react";
@@ -687,15 +687,17 @@ const Settings = () => {
     },
   ];
 
-  if (loading) {
-    return <LoadingOverlay message={t('settings.loading')} />;
-  }
-
   return (
     <PageLayout
       title={t('settings.title')}
       subtitle={t('settings.integrationsPage.subtitle')}
     >
+      <div className="relative min-h-[400px]">
+        {loading && (
+          <LoadingContent message={t('settings.loading')} />
+        )}
+        {!loading && (
+          <>
       <div className="space-y-6">
               {/* Profile Section */}
               <Card3D intensity="low" className="p-6">
@@ -1073,6 +1075,9 @@ const Settings = () => {
             onOpenChange={setShowHistoryModal}
             history={subscriptionHistory}
           />
+          </>
+        )}
+      </div>
     </PageLayout>
   );
 };

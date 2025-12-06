@@ -164,19 +164,9 @@ export function LoadingContent({ message, className }: LoadingContentProps) {
   return (
     <div className={cn(
       "absolute inset-0 flex items-center justify-center min-h-[400px]",
-      "bg-gradient-to-br from-background/80 via-background/70 to-background/80",
-      "backdrop-blur-xl rounded-xl",
       className
     )}>
-      {/* Enhanced animated background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-xl">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/10 rounded-full blur-3xl animate-pulse" 
-             style={{ animationDuration: '4s' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-primary/8 rounded-full blur-3xl animate-pulse" 
-             style={{ animationDuration: '5s', animationDelay: '1s' }} />
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center gap-6">
+      <div className="flex flex-col items-center gap-6">
         {/* Logo with rotating rings */}
         <div className="relative">
           {/* Outer rotating ring */}

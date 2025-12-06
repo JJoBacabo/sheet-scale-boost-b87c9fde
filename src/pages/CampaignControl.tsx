@@ -9,7 +9,7 @@ import { Button3D } from "@/components/ui/Button3D";
 import { useToast } from "@/hooks/use-toast";
 import { PageLayout } from "@/components/PageLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { 
   Plus, 
   Download, 
@@ -1470,10 +1470,6 @@ const CampaignControl = () => {
     DESCALE: 0,
   };
 
-  if (loading) {
-    return <LoadingOverlay message={t('common.loading')} />;
-  }
-
   if (!hasFacebookIntegration || !hasShopifyIntegration) {
     return (
       <PageLayout
@@ -1514,7 +1510,12 @@ const CampaignControl = () => {
       title={t('dailyRoas.title')}
       subtitle={t('dailyRoas.subtitle')}
     >
-      <div className="space-y-4 sm:space-y-5 md:space-y-6">
+      <div className="relative min-h-[400px]">
+        {loading && (
+          <LoadingContent message={t('common.loading')} />
+        )}
+        {!loading && (
+          <div className="space-y-4 sm:space-y-5 md:space-y-6">
         {/* Controls Section - Modern Design */}
         <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
@@ -2057,6 +2058,8 @@ const CampaignControl = () => {
               )}
             </DialogContent>
           </Dialog>
+          </div>
+        )}
       </div>
     </PageLayout>
   );

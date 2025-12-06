@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -575,16 +575,18 @@ const ProfitSheet = () => {
     setEditingRow(null);
   };
 
-  if (loading) {
-    return <LoadingOverlay message={t('profitSheet.loading')} />;
-  }
-
   return (
     <PageLayout
       title={t('profitSheet.title')}
       subtitle={t('profitSheet.subtitle')}
       actions={<CurrencySelector />}
     >
+      <div className="relative min-h-[400px]">
+        {loading && (
+          <LoadingContent message={t('profitSheet.loading')} />
+        )}
+        {!loading && (
+          <>
             {!isConfirmed ? (
               <>
                 {/* Store and Ad Account Selection */}
@@ -958,6 +960,9 @@ const ProfitSheet = () => {
                 </Card>
               </>
             )}
+          </>
+        )}
+      </div>
     </PageLayout>
   );
 };

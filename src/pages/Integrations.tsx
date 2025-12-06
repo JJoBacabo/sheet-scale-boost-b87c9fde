@@ -13,7 +13,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
 import { UpsellModal } from "@/components/UpsellModal";
-import { LoadingOverlay } from "@/components/ui/loading-spinner";
+import { LoadingContent } from "@/components/ui/loading-spinner";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Background3D } from "@/components/ui/Background3D";
@@ -309,10 +309,6 @@ export default function Integrations() {
   const facebookIntegrations = integrations.filter(i => i.integration_type === 'facebook_ads');
   const shopifyIntegrations = integrations.filter(i => i.integration_type === 'shopify');
 
-  if (loading) {
-    return <LoadingOverlay message={t('settings.loading')} />;
-  }
-
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex relative overflow-hidden">
@@ -321,9 +317,13 @@ export default function Integrations() {
         <div className="flex flex-1 relative z-10">
           <AppSidebar />
           <SidebarInset className="flex-1 transition-all duration-300 relative bg-background/20 backdrop-blur-[2px]">
-            <div className="h-screen flex items-center justify-center p-8 overflow-hidden">
-              <div className="w-full max-w-6xl">
-                <motion.div
+            <div className="h-screen flex items-center justify-center p-8 overflow-hidden relative">
+              {loading && (
+                <LoadingContent message={t('settings.loading')} />
+              )}
+              {!loading && (
+                <div className="w-full max-w-6xl">
+                  <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center mb-12"
@@ -458,7 +458,7 @@ export default function Integrations() {
                     </Card>
                   </motion.div>
                 </div>
-              </div>
+              )}
             </div>
           </SidebarInset>
         </div>
