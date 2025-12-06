@@ -748,29 +748,20 @@ const Dashboard = () => {
         {/* Incomplete costs warning - above stats cards */}
         {stats?.hasProductsWithoutCost && (
           <Link to="/products">
-            <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
+            <div 
+              role="alert" 
+              className="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground text-foreground border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer"
+            >
               <AlertTriangle className="h-4 w-4 text-warning" />
-              <AlertDescription className="text-sm text-warning font-medium">
+              <div className="[&_p]:leading-relaxed text-sm text-warning font-medium">
                 Incomplete costs - Click to add quotes
-              </AlertDescription>
-            </Alert>
+              </div>
+            </div>
           </Link>
         )}
 
         {/* Stats Overview - 8 cards de métricas */}
         {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
-
-        {/* Missing Cost Warning */}
-        {stats?.hasProductsWithoutCost && (
-          <Link to="/products">
-            <Alert className="border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <AlertDescription className="text-warning font-medium">
-                {t('products.incompleteCosts')} - {t('dashboard.clickToAddQuotes')}
-              </AlertDescription>
-            </Alert>
-          </Link>
-        )}
 
         {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
         {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
