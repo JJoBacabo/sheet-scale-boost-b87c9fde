@@ -747,7 +747,7 @@ const Dashboard = () => {
 
         {/* Incomplete costs warning - above stats cards */}
         {stats?.hasProductsWithoutCost && (
-          <Link to="/products">
+          <Link to="/products" className="block">
             <div 
               role="alert" 
               className="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground text-foreground border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer"
