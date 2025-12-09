@@ -993,6 +993,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_product_for_quote: {
+        Args: { product_id: string }
+        Returns: {
+          id: string
+          image_url: string
+          product_name: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

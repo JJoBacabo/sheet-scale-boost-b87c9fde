@@ -101,17 +101,31 @@ const SupplierQuotePage = () => {
         .select("*")
         .eq("session_id", (sessionData as any).id);
 
-      // Get products for this session
+      // Get products for this session using the secure function
+      // This only returns product_name and image_url, not sensitive financial data
       const existingProductIds = quotesData?.map((q: any) => q.product_id) || [];
       
       if (existingProductIds.length > 0) {
-        const { data: productsData, error: productsError } = await supabase
-          .from("products")
-          .select("id, product_name, image_url, sku")
-          .in("id", existingProductIds);
+        // Use the secure function to get only safe product data
+        const productPromises = existingProductIds.map((productId: string) =>
+          supabase.rpc('get_product_for_quote', { product_id: productId })
+        );
+        
+        const productResults = await Promise.all(productPromises);
+        const productsData: Product[] = [];
+        
+        productResults.forEach((result) => {
+          if (result.data && result.data.length > 0) {
+            productsData.push({
+              id: result.data[0].id,
+              product_name: result.data[0].product_name,
+              image_url: result.data[0].image_url,
+              sku: null, // SKU is no longer exposed to suppliers
+            });
+          }
+        });
 
-        if (productsError) throw productsError;
-        setProducts(productsData || []);
+        setProducts(productsData);
 
         // Build quotes map
         const quotesMap: Record<string, SupplierQuote> = {};
