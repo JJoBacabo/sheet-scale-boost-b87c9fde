@@ -324,15 +324,15 @@ export default function Integrations() {
               {!loading && (
                 <div className="w-full max-w-6xl">
                   <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-center mb-12"
-                >
-                  <h1 className="text-4xl font-bold mb-3">{t('settings.integrationsPage.title')}</h1>
-                  <p className="text-muted-foreground text-lg">{t('settings.integrationsPage.subtitle')}</p>
-                </motion.div>
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-12"
+                  >
+                    <h1 className="text-4xl font-bold mb-3">{t('settings.integrationsPage.title')}</h1>
+                    <p className="text-muted-foreground text-lg">{t('settings.integrationsPage.subtitle')}</p>
+                  </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
                   {/* Facebook Ads Card */}
                   <motion.div
                     initial={{ opacity: 0, x: -50 }}
@@ -457,6 +457,7 @@ export default function Integrations() {
                       </div>
                     </Card>
                   </motion.div>
+                  </div>
                 </div>
               )}
             </div>

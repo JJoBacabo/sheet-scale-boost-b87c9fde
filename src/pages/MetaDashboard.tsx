@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LoadingContent } from "@/components/ui/loading-spinner";
+import { LoadingContent, LoadingOverlay } from "@/components/ui/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -1626,13 +1626,7 @@ const MetaDashboard = () => {
           <LoadingContent message={t("metaDashboard.loading")} />
         )}
         {!loading && (
-          <    >
-      <div className="relative min-h-[400px]">
-        {loading && (
-          <LoadingContent message={t("metaDashboard.loading")} />
-        )}
-        {!loading && (
-          <div className="space-y-6">
+          <>
         {/* Rate Limit Warning Banner */}
         {rateLimitedUntil && Date.now() < rateLimitedUntil && (
           <Card className="p-4 bg-warning/10 border-warning/40">
@@ -2009,11 +2003,10 @@ const MetaDashboard = () => {
                     );
                   })}
                 </div>
-                )}
-              </div>
-      </div>
+              )}
+            </div>
 
-      {/* Campaign Details Dialog */}
+            {/* Campaign Details Dialog */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
           <DialogContent className="glass-card max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
