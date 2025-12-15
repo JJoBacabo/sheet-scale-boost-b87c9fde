@@ -824,8 +824,13 @@ const Landing = () => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
                               if (target.parentElement) {
-                                target.parentElement.innerHTML =
-                                  '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 1</span></div>';
+                                const fallback = document.createElement('div');
+                                fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5';
+                                const span = document.createElement('span');
+                                span.className = 'text-gray-300/40 text-xs font-medium';
+                                span.textContent = 'Image 1';
+                                fallback.appendChild(span);
+                                target.parentElement.appendChild(fallback);
                               }
                             }}
                           />
@@ -847,8 +852,13 @@ const Landing = () => {
                               const target = e.target as HTMLImageElement;
                               target.style.display = "none";
                               if (target.parentElement) {
-                                target.parentElement.innerHTML =
-                                  '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5"><span class="text-gray-300/40 text-xs font-medium">Image 2</span></div>';
+                                const fallback = document.createElement('div');
+                                fallback.className = 'w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5';
+                                const span = document.createElement('span');
+                                span.className = 'text-gray-300/40 text-xs font-medium';
+                                span.textContent = 'Image 2';
+                                fallback.appendChild(span);
+                                target.parentElement.appendChild(fallback);
                               }
                             }}
                           />
