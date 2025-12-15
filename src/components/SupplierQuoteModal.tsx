@@ -135,24 +135,23 @@ export const SupplierQuoteModal = ({
     try {
       const token = generateToken();
 
-      // Create session
-      const { data: sessionData, error: sessionError } = await supabase
-        .from("supplier_quote_sessions" as any)
-        .insert({
-          user_id: userId,
-          token,
-          supplier_name: supplierName.trim(),
-          supplier_email: supplierEmail.trim() || null,
-          password: password.trim() || null,
-        })
-        .select()
-        .single();
+      // Create session using secure RPC (password will be hashed server-side)
+      const { data: sessionId, error: sessionError } = await supabase.rpc(
+        'create_supplier_session_with_hash',
+        {
+          p_user_id: userId,
+          p_token: token,
+          p_supplier_name: supplierName.trim(),
+          p_supplier_email: supplierEmail.trim() || null,
+          p_password: password.trim() || null,
+        }
+      );
 
       if (sessionError) throw sessionError;
 
       // Create quote entries for selected products
       const quoteEntries = Array.from(selectedProducts).map((productId) => ({
-        session_id: (sessionData as any).id,
+        session_id: sessionId,
         product_id: productId,
         quoted_price: null,
       }));

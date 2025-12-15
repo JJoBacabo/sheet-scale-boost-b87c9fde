@@ -993,12 +993,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_supplier_session_with_hash: {
+        Args: {
+          p_password: string
+          p_supplier_email: string
+          p_supplier_name: string
+          p_token: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_product_for_quote: {
         Args: { product_id: string }
         Returns: {
           id: string
           image_url: string
           product_name: string
+        }[]
+      }
+      get_supplier_session_info: {
+        Args: { session_token: string }
+        Returns: {
+          has_password: boolean
+          session_id: string
+          supplier_name: string
         }[]
       }
       has_role: {
@@ -1009,6 +1027,14 @@ export type Database = {
         Returns: boolean
       }
       validate_quote_token: { Args: { session_token: string }; Returns: string }
+      verify_supplier_session_password: {
+        Args: { input_password: string; session_token: string }
+        Returns: {
+          is_valid: boolean
+          session_id: string
+          supplier_name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
