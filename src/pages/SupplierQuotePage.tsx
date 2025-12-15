@@ -24,8 +24,7 @@ interface SupplierQuote {
 interface Session {
   id: string;
   supplier_name: string;
-  token: string;
-  password: string | null;
+  has_password: boolean;
 }
 
 const SupplierQuotePage = () => {
@@ -52,15 +51,11 @@ const SupplierQuotePage = () => {
 
   const loadSessionData = async () => {
     try {
-      // Get session
+      // Get session info using secure RPC (doesn't expose password)
       const { data: sessionData, error: sessionError } = await supabase
-        .from("supplier_quote_sessions" as any)
-        .select("*")
-        .eq("token", token)
-        .eq("is_active", true)
-        .maybeSingle();
+        .rpc('get_supplier_session_info', { session_token: token });
 
-      if (sessionError || !sessionData) {
+      if (sessionError || !sessionData || sessionData.length === 0) {
         toast({
           title: "Invalid Link",
           description: "This quotation link is invalid or expired.",
@@ -70,17 +65,22 @@ const SupplierQuotePage = () => {
         return;
       }
 
-      setSession(sessionData as any);
+      const sessionInfo = sessionData[0];
+      setSession({
+        id: sessionInfo.session_id,
+        supplier_name: sessionInfo.supplier_name,
+        has_password: sessionInfo.has_password,
+      });
 
       // Check if password protection is enabled
-      if ((sessionData as any).password) {
+      if (sessionInfo.has_password) {
         // Password is required, stop here until verified
         setLoading(false);
         return;
       }
 
       // No password, proceed to load quotes
-      await loadQuotes(sessionData as any);
+      await loadQuotes({ id: sessionInfo.session_id });
     } catch (error: any) {
       console.error("Error loading session:", error);
       toast({
@@ -153,17 +153,44 @@ const SupplierQuotePage = () => {
       return;
     }
 
-    if (passwordInput.trim() === session.password) {
-      setIsPasswordVerified(true);
-      setPasswordError(false);
-      setLoading(true);
-      await loadQuotes(session);
-      setLoading(false);
-    } else {
+    try {
+      // Verify password server-side using secure RPC
+      const { data, error } = await supabase.rpc('verify_supplier_session_password', {
+        session_token: token,
+        input_password: passwordInput.trim()
+      });
+
+      if (error) {
+        console.error("Password verification error:", error);
+        setPasswordError(true);
+        toast({
+          title: "Error",
+          description: "Failed to verify password. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data && data.length > 0 && data[0].is_valid) {
+        setIsPasswordVerified(true);
+        setPasswordError(false);
+        setLoading(true);
+        await loadQuotes({ id: data[0].session_id });
+        setLoading(false);
+      } else {
+        setPasswordError(true);
+        toast({
+          title: "Invalid Password",
+          description: "The password you entered is incorrect.",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error("Password verification error:", error);
       setPasswordError(true);
       toast({
-        title: "Invalid Password",
-        description: "The password you entered is incorrect.",
+        title: "Error",
+        description: "Failed to verify password. Please try again.",
         variant: "destructive",
       });
     }
@@ -261,7 +288,7 @@ const SupplierQuotePage = () => {
   }
 
   // Show password prompt if password is required and not yet verified
-  if (session?.password && !isPasswordVerified) {
+  if (session?.has_password && !isPasswordVerified) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
