@@ -1221,37 +1221,114 @@ const CampaignControl = () => {
             'data_campanha', 'Data Campanha', 'dia', 'Dia', 'DIA'
           ]) || new Date().toISOString().split('T')[0];
           
-          // Parse date - handle multiple formats
+          // Parse date - handle multiple formats with validation
           let date: string;
           try {
             if (typeof dateStr === 'number') {
               // Excel date serial number
               const excelDate = XLSX.SSF.parse_date_code(dateStr);
-              date = `${excelDate.y}-${String(excelDate.m).padStart(2, '0')}-${String(excelDate.d).padStart(2, '0')}`;
-            } else if (typeof dateStr === 'string') {
-              // Try different date formats
-              const dateStrClean = dateStr.trim();
-              // Format: DD/MM/YYYY or DD-MM-YYYY
-              if (dateStrClean.includes('/') || dateStrClean.includes('-')) {
-                const parts = dateStrClean.split(/[\/\-]/);
-                if (parts.length === 3) {
-                  // Assume DD/MM/YYYY
-                  const day = parts[0].padStart(2, '0');
-                  const month = parts[1].padStart(2, '0');
-                  const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+              if (excelDate && excelDate.y && excelDate.m && excelDate.d) {
+                const year = excelDate.y;
+                const month = String(excelDate.m).padStart(2, '0');
+                const day = String(excelDate.d).padStart(2, '0');
+                // Validate year is reasonable (1900-2100)
+                if (year >= 1900 && year <= 2100) {
                   date = `${year}-${month}-${day}`;
                 } else {
-                  const parsedDate = new Date(dateStrClean);
-                  if (!isNaN(parsedDate.getTime())) {
-                    date = parsedDate.toISOString().split('T')[0];
-                  } else {
-                    throw new Error('Invalid date format');
-                  }
+                  throw new Error(`Invalid year: ${year}`);
                 }
               } else {
+                throw new Error('Invalid Excel date');
+              }
+            } else if (typeof dateStr === 'string') {
+              const dateStrClean = dateStr.trim().replace(/\s+/g, '');
+              
+              // Check if it's already in YYYY-MM-DD format
+              if (/^\d{4}-\d{2}-\d{2}$/.test(dateStrClean)) {
+                const [year, month, day] = dateStrClean.split('-');
+                const yearNum = parseInt(year);
+                const monthNum = parseInt(month);
+                const dayNum = parseInt(day);
+                // Validate
+                if (yearNum >= 1900 && yearNum <= 2100 && monthNum >= 1 && monthNum <= 12 && dayNum >= 1 && dayNum <= 31) {
+                  date = dateStrClean;
+                } else {
+                  throw new Error(`Invalid date: ${dateStrClean}`);
+                }
+              }
+              // Format: DD/MM/YYYY or DD-MM-YYYY
+              else if (dateStrClean.includes('/') || dateStrClean.includes('-')) {
+                const parts = dateStrClean.split(/[\/\-]/).map(p => p.trim());
+                if (parts.length === 3) {
+                  let day: string, month: string, year: string;
+                  
+                  // Try to determine format by checking which part is > 12 (likely day or year)
+                  const part1 = parseInt(parts[0]);
+                  const part2 = parseInt(parts[1]);
+                  const part3 = parseInt(parts[2]);
+                  
+                  // If part3 is 4 digits, it's likely DD/MM/YYYY or MM/DD/YYYY
+                  if (parts[2].length === 4) {
+                    // If part1 > 12, it's likely DD/MM/YYYY
+                    if (part1 > 12) {
+                      day = parts[0].padStart(2, '0');
+                      month = parts[1].padStart(2, '0');
+                      year = parts[2];
+                    } else {
+                      // Could be MM/DD/YYYY
+                      month = parts[0].padStart(2, '0');
+                      day = parts[1].padStart(2, '0');
+                      year = parts[2];
+                    }
+                  } 
+                  // If part1 is 4 digits, it's YYYY/MM/DD or YYYY-MM-DD
+                  else if (parts[0].length === 4) {
+                    year = parts[0];
+                    month = parts[1].padStart(2, '0');
+                    day = parts[2].padStart(2, '0');
+                  }
+                  // Default: assume DD/MM/YYYY
+                  else {
+                    day = parts[0].padStart(2, '0');
+                    month = parts[1].padStart(2, '0');
+                    year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+                  }
+                  
+                  // Validate
+                  const yearNum = parseInt(year);
+                  const monthNum = parseInt(month);
+                  const dayNum = parseInt(day);
+                  
+                  if (yearNum < 1900 || yearNum > 2100) {
+                    throw new Error(`Invalid year: ${year}`);
+                  }
+                  if (monthNum < 1 || monthNum > 12) {
+                    throw new Error(`Invalid month: ${month}`);
+                  }
+                  if (dayNum < 1 || dayNum > 31) {
+                    throw new Error(`Invalid day: ${day}`);
+                  }
+                  
+                  // Create date and validate it's a real date
+                  const testDate = new Date(yearNum, monthNum - 1, dayNum);
+                  if (testDate.getFullYear() !== yearNum || testDate.getMonth() !== monthNum - 1 || testDate.getDate() !== dayNum) {
+                    throw new Error(`Invalid date: ${day}/${month}/${year}`);
+                  }
+                  
+                  date = `${year}-${month}-${day}`;
+                } else {
+                  throw new Error('Invalid date format');
+                }
+              } else {
+                // Try standard Date parsing
                 const parsedDate = new Date(dateStrClean);
                 if (!isNaN(parsedDate.getTime())) {
-                  date = parsedDate.toISOString().split('T')[0];
+                  const year = parsedDate.getFullYear();
+                  if (year >= 1900 && year <= 2100) {
+                    date = parsedDate.toISOString().split('T')[0];
+                  } else {
+                    throw new Error(`Invalid year: ${year}`);
+                  }
                 } else {
                   throw new Error('Invalid date format');
                 }
@@ -1259,8 +1336,23 @@ const CampaignControl = () => {
             } else {
               throw new Error('Invalid date type');
             }
-          } catch {
+            
+            // Final validation - ensure date is in correct format
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+              throw new Error(`Date format invalid: ${date}`);
+            }
+            
+            // Validate the date is reasonable
+            const [year, month, day] = date.split('-').map(Number);
+            if (year < 1900 || year > 2100 || month < 1 || month > 12 || day < 1 || day > 31) {
+              throw new Error(`Date out of range: ${date}`);
+            }
+            
+          } catch (error: any) {
+            console.warn(`Error parsing date "${dateStr}":`, error.message);
+            // Use today's date as fallback
             date = new Date().toISOString().split('T')[0];
+            errors.push(`Linha ${index + 2}: Data inválida "${dateStr}" - usando data atual`);
           }
 
           // Find numeric columns with multiple possible names
