@@ -1157,6 +1157,26 @@ const CampaignControl = () => {
     }
   };
 
+  // Intelligent column mapping function
+  const findColumn = (row: any, possibleNames: string[]): any => {
+    // Try exact matches first (case insensitive)
+    for (const name of possibleNames) {
+      // Try direct key access
+      if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
+        return row[name];
+      }
+      // Try case-insensitive search in all keys
+      const rowKeys = Object.keys(row);
+      const foundKey = rowKeys.find(key => 
+        key.toLowerCase().trim() === name.toLowerCase().trim()
+      );
+      if (foundKey && row[foundKey] !== undefined && row[foundKey] !== null && row[foundKey] !== '') {
+        return row[foundKey];
+      }
+    }
+    return null;
+  };
+
   const handleExcelImport = async (file: File) => {
     try {
       setIsImporting(true);
@@ -1164,7 +1184,10 @@ const CampaignControl = () => {
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+        defval: null,
+        raw: false 
+      });
 
       if (!jsonData || jsonData.length === 0) {
         toast({
@@ -1181,35 +1204,107 @@ const CampaignControl = () => {
 
       jsonData.forEach((row: any, index: number) => {
         try {
-          // Flexible column mapping
-          const campaignId = row.campaign_id || row['Campaign ID'] || row['campaign id'] || row['ID Campanha'] || `imported_${Date.now()}_${index}`;
-          const campaignName = row.campaign_name || row['Campaign Name'] || row['campaign name'] || row['Nome Campanha'] || 'Imported Campaign';
-          const dateStr = row.date || row.Date || row['Data'] || row['DATE'] || new Date().toISOString().split('T')[0];
+          // Intelligent column mapping with multiple possible names
+          const campaignId = findColumn(row, [
+            'campaign_id', 'Campaign ID', 'campaign id', 'ID Campanha', 'id campanha',
+            'campaignid', 'CampaignID', 'id', 'ID', 'Id'
+          ]) || `imported_${Date.now()}_${index}`;
+
+          const campaignName = findColumn(row, [
+            'campaign_name', 'Campaign Name', 'campaign name', 'Nome Campanha', 'nome campanha',
+            'campaignname', 'CampaignName', 'name', 'Name', 'Nome', 'nome',
+            'campaign', 'Campaign', 'Campanha', 'campanha'
+          ]) || 'Imported Campaign';
+
+          const dateStr = findColumn(row, [
+            'date', 'Date', 'DATE', 'Data', 'data', 'DATA',
+            'data_campanha', 'Data Campanha', 'dia', 'Dia', 'DIA'
+          ]) || new Date().toISOString().split('T')[0];
           
-          // Parse date
+          // Parse date - handle multiple formats
           let date: string;
           try {
             if (typeof dateStr === 'number') {
+              // Excel date serial number
               const excelDate = XLSX.SSF.parse_date_code(dateStr);
               date = `${excelDate.y}-${String(excelDate.m).padStart(2, '0')}-${String(excelDate.d).padStart(2, '0')}`;
-            } else {
-              const parsedDate = new Date(dateStr);
-              if (isNaN(parsedDate.getTime())) {
-                throw new Error('Invalid date');
+            } else if (typeof dateStr === 'string') {
+              // Try different date formats
+              const dateStrClean = dateStr.trim();
+              // Format: DD/MM/YYYY or DD-MM-YYYY
+              if (dateStrClean.includes('/') || dateStrClean.includes('-')) {
+                const parts = dateStrClean.split(/[\/\-]/);
+                if (parts.length === 3) {
+                  // Assume DD/MM/YYYY
+                  const day = parts[0].padStart(2, '0');
+                  const month = parts[1].padStart(2, '0');
+                  const year = parts[2].length === 2 ? `20${parts[2]}` : parts[2];
+                  date = `${year}-${month}-${day}`;
+                } else {
+                  const parsedDate = new Date(dateStrClean);
+                  if (!isNaN(parsedDate.getTime())) {
+                    date = parsedDate.toISOString().split('T')[0];
+                  } else {
+                    throw new Error('Invalid date format');
+                  }
+                }
+              } else {
+                const parsedDate = new Date(dateStrClean);
+                if (!isNaN(parsedDate.getTime())) {
+                  date = parsedDate.toISOString().split('T')[0];
+                } else {
+                  throw new Error('Invalid date format');
+                }
               }
-              date = parsedDate.toISOString().split('T')[0];
+            } else {
+              throw new Error('Invalid date type');
             }
           } catch {
             date = new Date().toISOString().split('T')[0];
           }
 
-          const totalSpent = safeNumber(row.total_spent || row['Total Spent'] || row['total spent'] || row['Gasto Total'] || row['Gasto'], 0);
-          const cpc = safeNumber(row.cpc || row.CPC || row['CPC'] || row['Custo por Clique'], 0);
-          const atc = safeNumber(row.atc || row.ATC || row['ATC'] || row['Add to Cart'], 0);
-          const purchases = safeNumber(row.purchases || row.Purchases || row['Purchases'] || row['Compras'], 0);
-          const productPrice = safeNumber(row.product_price || row['Product Price'] || row['product price'] || row['Preço Produto'] || row['Preço'], 0);
-          const cog = safeNumber(row.cog || row.COG || row['COG'] || row['Custo Produto'], 0);
-          const unitsSold = safeNumber(row.units_sold || row['Units Sold'] || row['units sold'] || row['Unidades Vendidas'], purchases);
+          // Find numeric columns with multiple possible names
+          const totalSpent = safeNumber(findColumn(row, [
+            'total_spent', 'Total Spent', 'total spent', 'Gasto Total', 'gasto total',
+            'Gasto', 'gasto', 'Spend', 'spend', 'spent', 'Spent',
+            'amount', 'Amount', 'valor', 'Valor', 'custo', 'Custo'
+          ]), 0);
+
+          const cpc = safeNumber(findColumn(row, [
+            'cpc', 'CPC', 'Custo por Clique', 'custo por clique',
+            'cost_per_click', 'Cost Per Click', 'custo/clique',
+            'preço clique', 'Preço Clique'
+          ]), 0);
+
+          const atc = safeNumber(findColumn(row, [
+            'atc', 'ATC', 'Add to Cart', 'add to cart',
+            'add_to_cart', 'adicionar ao carrinho', 'Adicionar ao Carrinho',
+            'carrinho', 'Carrinho'
+          ]), 0);
+
+          const purchases = safeNumber(findColumn(row, [
+            'purchases', 'Purchases', 'Compras', 'compras',
+            'vendas', 'Vendas', 'sales', 'Sales',
+            'conversões', 'Conversões', 'conversions', 'Conversions'
+          ]), 0);
+
+          const productPrice = safeNumber(findColumn(row, [
+            'product_price', 'Product Price', 'product price', 'Preço Produto', 'preço produto',
+            'Preço', 'preço', 'Price', 'price', 'preco', 'Preco',
+            'valor_produto', 'Valor Produto', 'selling_price', 'Selling Price'
+          ]), 0);
+
+          const cog = safeNumber(findColumn(row, [
+            'cog', 'COG', 'Custo Produto', 'custo produto',
+            'cost_of_goods', 'Cost of Goods', 'custo_mercadoria',
+            'Custo Mercadoria', 'custo', 'Custo', 'cost', 'Cost'
+          ]), 0);
+
+          const unitsSold = safeNumber(findColumn(row, [
+            'units_sold', 'Units Sold', 'units sold', 'Unidades Vendidas', 'unidades vendidas',
+            'Unidades', 'unidades', 'Units', 'units', 'quantidade', 'Quantidade',
+            'qty', 'Qty', 'quantity', 'Quantity'
+          ]), purchases); // Default to purchases if not found
 
           // Calculate metrics
           const revenue = unitsSold * productPrice;
@@ -1250,11 +1345,16 @@ const CampaignControl = () => {
         return;
       }
 
-      // Show preview
+      // Show preview with ALL data
       setImportPreview(mappedData);
       setShowImportDialog(true);
 
       if (errors.length > 0) {
+        toast({
+          title: "Aviso",
+          description: `${errors.length} linha(s) tiveram erros durante a importação. Verifique o console para detalhes.`,
+          variant: "default"
+        });
         console.warn('Import errors:', errors);
       }
     } catch (error: any) {
@@ -2333,78 +2433,97 @@ const CampaignControl = () => {
 
           {/* Import Excel Dialog */}
           <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <FileSpreadsheet className="w-5 h-5" />
                   Preview da Importação - {importPreview.length} registros
                 </DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1 flex flex-col min-h-0">
                 <p className="text-sm text-muted-foreground">
                   Revise os dados abaixo antes de confirmar a importação. Os dados serão adicionados ao Daily ROAS.
+                  <span className="block mt-1 font-semibold text-primary">
+                    Total: {importPreview.length} registros encontrados
+                  </span>
                 </p>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Campanha</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Gasto</TableHead>
-                        <TableHead>CPC</TableHead>
-                        <TableHead>Vendas</TableHead>
-                        <TableHead>ROAS</TableHead>
-                        <TableHead>Margem %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {importPreview.slice(0, 10).map((row, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{row.campaign_name}</TableCell>
-                          <TableCell>{row.date}</TableCell>
-                          <TableCell>€{row.total_spent.toFixed(2)}</TableCell>
-                          <TableCell>€{row.cpc.toFixed(2)}</TableCell>
-                          <TableCell>{row.purchases}</TableCell>
-                          <TableCell>{row.roas.toFixed(2)}</TableCell>
-                          <TableCell>{row.margin_percentage.toFixed(2)}%</TableCell>
+                <div className="border rounded-lg overflow-hidden flex-1 flex flex-col min-h-0">
+                  <div className="overflow-auto flex-1">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background z-10">
+                        <TableRow>
+                          <TableHead className="min-w-[150px]">Campanha</TableHead>
+                          <TableHead className="min-w-[100px]">Data</TableHead>
+                          <TableHead className="min-w-[80px]">Gasto</TableHead>
+                          <TableHead className="min-w-[70px]">CPC</TableHead>
+                          <TableHead className="min-w-[70px]">ATC</TableHead>
+                          <TableHead className="min-w-[70px]">Vendas</TableHead>
+                          <TableHead className="min-w-[80px]">Unidades</TableHead>
+                          <TableHead className="min-w-[80px]">Preço Prod.</TableHead>
+                          <TableHead className="min-w-[80px]">COG</TableHead>
+                          <TableHead className="min-w-[70px]">ROAS</TableHead>
+                          <TableHead className="min-w-[80px]">Margem €</TableHead>
+                          <TableHead className="min-w-[80px]">Margem %</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  {importPreview.length > 10 && (
-                    <p className="p-2 text-xs text-muted-foreground text-center">
-                      ... e mais {importPreview.length - 10} registros
-                    </p>
-                  )}
+                      </TableHeader>
+                      <TableBody>
+                        {importPreview.map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{row.campaign_name}</TableCell>
+                            <TableCell>{row.date}</TableCell>
+                            <TableCell>€{row.total_spent.toFixed(2)}</TableCell>
+                            <TableCell>€{row.cpc.toFixed(2)}</TableCell>
+                            <TableCell>{row.atc}</TableCell>
+                            <TableCell>{row.purchases}</TableCell>
+                            <TableCell>{row.units_sold}</TableCell>
+                            <TableCell>€{row.product_price.toFixed(2)}</TableCell>
+                            <TableCell>€{row.cog.toFixed(2)}</TableCell>
+                            <TableCell>{row.roas.toFixed(2)}</TableCell>
+                            <TableCell className={row.margin_euros >= 0 ? "text-green-500" : "text-red-500"}>
+                              €{row.margin_euros.toFixed(2)}
+                            </TableCell>
+                            <TableCell className={row.margin_percentage >= 0 ? "text-green-500" : "text-red-500"}>
+                              {row.margin_percentage.toFixed(2)}%
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowImportDialog(false);
-                      setImportPreview([]);
-                    }}
-                    disabled={isImporting}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={confirmImport}
-                    disabled={isImporting}
-                    className="btn-gradient"
-                  >
-                    {isImporting ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                        Importando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Confirmar Importação
-                      </>
-                    )}
-                  </Button>
+                <div className="flex justify-between items-center pt-2 border-t">
+                  <p className="text-xs text-muted-foreground">
+                    Mostrando todos os {importPreview.length} registros
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowImportDialog(false);
+                        setImportPreview([]);
+                      }}
+                      disabled={isImporting}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={confirmImport}
+                      disabled={isImporting}
+                      className="btn-gradient"
+                    >
+                      {isImporting ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Importando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Confirmar Importação ({importPreview.length} registros)
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </DialogContent>
