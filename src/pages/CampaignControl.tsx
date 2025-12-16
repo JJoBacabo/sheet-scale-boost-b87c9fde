@@ -1157,6 +1157,158 @@ const CampaignControl = () => {
     }
   };
 
+  const handleExcelImport = async (file: File) => {
+    try {
+      setIsImporting(true);
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      if (!jsonData || jsonData.length === 0) {
+        toast({
+          title: t('common.error'),
+          description: "O arquivo Excel está vazio ou não contém dados válidos",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Map Excel columns to DailyROASData
+      const mappedData: DailyROASData[] = [];
+      const errors: string[] = [];
+
+      jsonData.forEach((row: any, index: number) => {
+        try {
+          // Flexible column mapping
+          const campaignId = row.campaign_id || row['Campaign ID'] || row['campaign id'] || row['ID Campanha'] || `imported_${Date.now()}_${index}`;
+          const campaignName = row.campaign_name || row['Campaign Name'] || row['campaign name'] || row['Nome Campanha'] || 'Imported Campaign';
+          const dateStr = row.date || row.Date || row['Data'] || row['DATE'] || new Date().toISOString().split('T')[0];
+          
+          // Parse date
+          let date: string;
+          try {
+            if (typeof dateStr === 'number') {
+              const excelDate = XLSX.SSF.parse_date_code(dateStr);
+              date = `${excelDate.y}-${String(excelDate.m).padStart(2, '0')}-${String(excelDate.d).padStart(2, '0')}`;
+            } else {
+              const parsedDate = new Date(dateStr);
+              if (isNaN(parsedDate.getTime())) {
+                throw new Error('Invalid date');
+              }
+              date = parsedDate.toISOString().split('T')[0];
+            }
+          } catch {
+            date = new Date().toISOString().split('T')[0];
+          }
+
+          const totalSpent = safeNumber(row.total_spent || row['Total Spent'] || row['total spent'] || row['Gasto Total'] || row['Gasto'], 0);
+          const cpc = safeNumber(row.cpc || row.CPC || row['CPC'] || row['Custo por Clique'], 0);
+          const atc = safeNumber(row.atc || row.ATC || row['ATC'] || row['Add to Cart'], 0);
+          const purchases = safeNumber(row.purchases || row.Purchases || row['Purchases'] || row['Compras'], 0);
+          const productPrice = safeNumber(row.product_price || row['Product Price'] || row['product price'] || row['Preço Produto'] || row['Preço'], 0);
+          const cog = safeNumber(row.cog || row.COG || row['COG'] || row['Custo Produto'], 0);
+          const unitsSold = safeNumber(row.units_sold || row['Units Sold'] || row['units sold'] || row['Unidades Vendidas'], purchases);
+
+          // Calculate metrics
+          const revenue = unitsSold * productPrice;
+          const marginEuros = revenue - (unitsSold * cog) - totalSpent;
+          const marginPercentage = revenue > 0 ? (marginEuros / revenue) * 100 : 0;
+          const roas = totalSpent > 0 ? revenue / totalSpent : 0;
+
+          const dailyRoasEntry: DailyROASData = {
+            id: `import_${Date.now()}_${index}`,
+            user_id: user?.id || '',
+            campaign_id: String(campaignId),
+            campaign_name: String(campaignName),
+            date: date,
+            total_spent: totalSpent,
+            cpc: cpc,
+            atc: Math.floor(atc),
+            purchases: Math.floor(purchases),
+            product_price: productPrice,
+            cog: cog,
+            units_sold: Math.floor(unitsSold),
+            roas: parseFloat(roas.toFixed(2)),
+            margin_euros: parseFloat(marginEuros.toFixed(2)),
+            margin_percentage: parseFloat(marginPercentage.toFixed(2)),
+          };
+
+          mappedData.push(dailyRoasEntry);
+        } catch (error: any) {
+          errors.push(`Linha ${index + 2}: ${error.message}`);
+        }
+      });
+
+      if (mappedData.length === 0) {
+        toast({
+          title: t('common.error'),
+          description: "Nenhum dado válido foi encontrado no arquivo Excel",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Show preview
+      setImportPreview(mappedData);
+      setShowImportDialog(true);
+
+      if (errors.length > 0) {
+        console.warn('Import errors:', errors);
+      }
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: `Erro ao processar arquivo Excel: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const confirmImport = async () => {
+    try {
+      setIsImporting(true);
+
+      if (useMockData) {
+        // Add to local state when using mock data
+        setDailyData((prev) => [...importPreview, ...prev]);
+        toast({
+          title: "Importação concluída",
+          description: `${importPreview.length} registros adicionados ao Mock Data`,
+        });
+      } else {
+        // Insert into database
+        const { error } = await supabase
+          .from('daily_roas')
+          .insert(importPreview.map(({ id, ...rest }) => rest));
+
+        if (error) throw error;
+
+        toast({
+          title: "Importação concluída",
+          description: `${importPreview.length} registros importados com sucesso`,
+        });
+
+        // Refresh data
+        await fetchDailyData();
+      }
+
+      setShowImportDialog(false);
+      setImportPreview([]);
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: `Erro ao importar dados: ${error.message}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const exportToCSV = () => {
     const dataWithDecisions = dailyData.map(d => {
       const withMetrics = calculateMetrics(d);
