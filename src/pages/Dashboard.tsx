@@ -447,10 +447,10 @@ const Dashboard = () => {
   }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore, selectedAdAccount]);
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && (selectedStore !== "all" || selectedAdAccount !== "all")) {
       fetchCampaigns();
     }
-  }, [user?.id, fetchCampaigns]);
+  }, [user?.id, selectedStore, selectedAdAccount, fetchCampaigns]);
 
   // Dashboard Stats
   const stats = useDashboardStats(user?.id, timeframe ? {
