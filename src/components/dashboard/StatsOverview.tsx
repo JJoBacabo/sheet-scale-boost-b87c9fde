@@ -132,19 +132,19 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
             <Card3D 
               intensity="medium" 
               glow={stat.trend === "up"}
-              className={stat.warning ? "h-full cursor-pointer hover:border-warning/60 transition-colors" : "h-full"}
+              className={stat.warning ? "h-[24px] cursor-pointer hover:border-warning/60 transition-colors" : "h-[24px]"}
             >
-              <div className="relative p-2 sm:p-2.5 md:p-3 h-full flex flex-col justify-between">
-                <div className="flex items-start justify-between mb-1.5 sm:mb-2">
+              <div className="relative px-2 py-0.5 h-[24px] flex items-center justify-between gap-2 overflow-hidden">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
                   {stat.warning ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div
-                          className={`p-1 sm:p-1.5 md:p-1.5 rounded-lg ${stat.iconBg}`}
+                          className={`p-0.5 rounded ${stat.iconBg}`}
                           whileHover={{ rotate: 5 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                          <Icon className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${stat.iconColor}`} />
+                          <Icon className={`h-3 w-3 ${stat.iconColor}`} />
                         </motion.div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -153,41 +153,41 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                     </Tooltip>
                   ) : (
                     <motion.div
-                      className={`p-1 sm:p-1.5 md:p-1.5 rounded-lg ${stat.iconBg}`}
+                      className={`p-0.5 rounded ${stat.iconBg}`}
                       whileHover={{ rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <Icon className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${stat.iconColor}`} />
+                      <Icon className={`h-3 w-3 ${stat.iconColor}`} />
                     </motion.div>
                   )}
-                {stat.trend !== "neutral" && !stat.warning && (
-                  <div
-                    className={`px-1 py-0.5 rounded-md text-[10px] sm:text-xs font-medium ${
-                      stat.trend === "up" 
-                        ? "bg-primary/10 text-primary" 
-                        : "bg-destructive/10 text-destructive"
-                    }`}
+                  <p className="text-[10px] text-muted-foreground leading-none whitespace-nowrap">{stat.title}</p>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <motion.p
+                    className={`text-[10px] font-bold leading-none ${stat.iconColor} whitespace-nowrap`}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
                   >
-                    {stat.trend === "up" ? "↑" : "↓"}
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-0.5 sm:mb-1">{stat.title}</p>
-                <motion.p
-                  className={`text-base sm:text-lg md:text-xl font-bold ${stat.iconColor}`}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
-                >
-                  {stat.value}
-                </motion.p>
+                    {stat.value}
+                  </motion.p>
+                  {stat.trend !== "neutral" && !stat.warning && (
+                    <div
+                      className={`text-[10px] font-medium leading-none ${
+                        stat.trend === "up" 
+                          ? "text-primary" 
+                          : "text-destructive"
+                      }`}
+                    >
+                      {stat.trend === "up" ? "↑" : "↓"}
+                    </div>
+                  )}
+                </div>
                 {stat.warning && (
-                  <p className="text-[10px] sm:text-xs text-warning mt-1">{t("dashboard.clickToAddQuotes")}</p>
+                  <p className="text-[9px] text-warning leading-none whitespace-nowrap ml-1">{t("dashboard.clickToAddQuotes")}</p>
                 )}
               </div>
-            </div>
-          </Card3D>
+            </Card3D>
         );
 
         return (
