@@ -19,10 +19,13 @@ import {
   Minus,
   X,
   RefreshCw,
-  Settings2
+  Settings2,
+  Upload,
+  FileSpreadsheet
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import {
   LineChart,
   Line,
@@ -208,6 +211,9 @@ const CampaignControl = () => {
     const saved = localStorage.getItem("dailyRoas_useMockData");
     return saved === "true";
   });
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importPreview, setImportPreview] = useState<DailyROASData[]>([]);
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -1668,6 +1674,35 @@ const CampaignControl = () => {
                   <Download className="w-4 h-4 mr-2" />
                   {t('dailyRoas.exportReport')}
                 </Button3D>
+                <div className="w-full">
+                  <input
+                    type="file"
+                    id="excel-import-input"
+                    accept=".xlsx,.xls"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleExcelImport(file);
+                      }
+                      // Reset input
+                      e.target.value = '';
+                    }}
+                    disabled={isImporting}
+                  />
+                  <Button3D
+                    variant="glass"
+                    size="sm"
+                    className="w-full cursor-pointer"
+                    disabled={isImporting}
+                    onClick={() => {
+                      document.getElementById('excel-import-input')?.click();
+                    }}
+                  >
+                    <Upload className={`w-4 h-4 mr-2 ${isImporting ? 'animate-pulse' : ''}`} />
+                    {isImporting ? 'Importando...' : 'Importar Excel'}
+                  </Button3D>
+                </div>
               </div>
             </div>
           </div>
@@ -2141,6 +2176,85 @@ const CampaignControl = () => {
                   </div>
                 </div>
               )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Import Excel Dialog */}
+          <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+            <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <FileSpreadsheet className="w-5 h-5" />
+                  Preview da Importação - {importPreview.length} registros
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Revise os dados abaixo antes de confirmar a importação. Os dados serão adicionados ao Daily ROAS.
+                </p>
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Campanha</TableHead>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Gasto</TableHead>
+                        <TableHead>CPC</TableHead>
+                        <TableHead>Vendas</TableHead>
+                        <TableHead>ROAS</TableHead>
+                        <TableHead>Margem %</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {importPreview.slice(0, 10).map((row, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{row.campaign_name}</TableCell>
+                          <TableCell>{row.date}</TableCell>
+                          <TableCell>€{row.total_spent.toFixed(2)}</TableCell>
+                          <TableCell>€{row.cpc.toFixed(2)}</TableCell>
+                          <TableCell>{row.purchases}</TableCell>
+                          <TableCell>{row.roas.toFixed(2)}</TableCell>
+                          <TableCell>{row.margin_percentage.toFixed(2)}%</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  {importPreview.length > 10 && (
+                    <p className="p-2 text-xs text-muted-foreground text-center">
+                      ... e mais {importPreview.length - 10} registros
+                    </p>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowImportDialog(false);
+                      setImportPreview([]);
+                    }}
+                    disabled={isImporting}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={confirmImport}
+                    disabled={isImporting}
+                    className="btn-gradient"
+                  >
+                    {isImporting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                        Importando...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Confirmar Importação
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
           </div>
