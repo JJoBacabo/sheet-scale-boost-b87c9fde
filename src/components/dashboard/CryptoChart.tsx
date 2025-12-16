@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef, memo } from 'react';
 import { Card3D } from '@/components/ui/Card3D';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { useCurrency } from '@/contexts/CurrencyContext';
@@ -12,7 +11,7 @@ interface CryptoChartProps {
   storeCurrency?: string;
 }
 
-export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, storeCurrency = 'EUR' }: CryptoChartProps) => {
+export const CryptoChart = memo(({ data, title, color = '#4AE9BD', showTrend = true, storeCurrency = 'EUR' }: CryptoChartProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
   const progressRef = useRef(0);
@@ -107,18 +106,26 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, 
       }
     };
 
-    const animate = () => {
-      if (progressRef.current < 1) {
-        progressRef.current = Math.min(progressRef.current + 0.02, 1);
-        drawChart(progressRef.current);
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        drawChart(1);
-      }
-    };
+    // Performance: Skip animation on initial load, draw immediately
+    const shouldAnimate = data.length < 50; // Only animate for small datasets
+    
+    if (shouldAnimate) {
+      const animate = () => {
+        if (progressRef.current < 1) {
+          progressRef.current = Math.min(progressRef.current + 0.05, 1); // Faster animation
+          drawChart(progressRef.current);
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          drawChart(1);
+        }
+      };
 
-    progressRef.current = 0;
-    animate();
+      progressRef.current = 0;
+      animate();
+    } else {
+      // For large datasets, draw immediately without animation
+      drawChart(1);
+    }
 
     return () => {
       window.removeEventListener('resize', resizeCanvas);
@@ -182,5 +189,7 @@ export const CryptoChart = ({ data, title, color = '#4AE9BD', showTrend = true, 
       </div>
     </Card3D>
   );
-};
+});
+
+CryptoChart.displayName = 'CryptoChart';
 

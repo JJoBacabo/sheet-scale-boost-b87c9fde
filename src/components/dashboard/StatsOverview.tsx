@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target, ShoppingCart, Activity, AlertTriangle } from "lucide-react";
 import { Card3D } from "@/components/ui/Card3D";
-import { motion } from "framer-motion";
+import { memo, useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Link } from "react-router-dom";
@@ -23,14 +23,14 @@ interface StatsOverviewProps {
   storeCurrency?: string;
 }
 
-export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewProps) => {
+export const StatsOverview = memo(({ stats, storeCurrency = 'EUR' }: StatsOverviewProps) => {
   const { t } = useLanguage();
   const { formatAmount } = useCurrency();
   const profit = stats.totalRevenue - stats.totalSpent - stats.totalSupplierCost;
   const profitMargin = stats.totalRevenue > 0 ? (profit / stats.totalRevenue) * 100 : 0;
   const hasProductsWithoutCost = stats.hasProductsWithoutCost || false;
 
-  const statCards = [
+  const statCards = useMemo(() => [
     {
       title: t("dashboard.totalRevenue"),
       value: formatAmount(stats.totalRevenue, storeCurrency),
@@ -121,7 +121,7 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
       warning: hasProductsWithoutCost,
       warningMessage: t('products.incompleteCosts')
     }
-  ];
+  ], [stats, storeCurrency, hasProductsWithoutCost, profit, profitMargin, t, formatAmount]);
 
   return (
     <TooltipProvider>
@@ -139,26 +139,18 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                   {stat.warning ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <motion.div
-                          className={`p-1 rounded-md ${stat.iconBg}`}
-                          whileHover={{ rotate: 5 }}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                        >
+                        <div className={`p-1 rounded-md ${stat.iconBg}`}>
                           <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${stat.iconColor}`} />
-                        </motion.div>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>{stat.warningMessage}</p>
                       </TooltipContent>
                     </Tooltip>
                   ) : (
-                    <motion.div
-                      className={`p-1 rounded-md ${stat.iconBg}`}
-                      whileHover={{ rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    >
-                      <Icon className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${stat.iconColor}`} />
-                    </motion.div>
+                    <div className={`p-1 rounded-md ${stat.iconBg}`}>
+                      <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${stat.iconColor}`} />
+                    </div>
                   )}
                 {stat.trend !== "neutral" && !stat.warning && (
                   <div
@@ -174,14 +166,9 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
               </div>
               <div>
                 <p className="text-[10px] sm:text-xs text-muted-foreground mb-0.5">{stat.title}</p>
-                <motion.p
-                  className={`text-sm sm:text-base md:text-lg font-bold ${stat.iconColor}`}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
-                >
+                <p className={`text-sm sm:text-base md:text-lg font-bold ${stat.iconColor}`}>
                   {stat.value}
-                </motion.p>
+                </p>
                 {stat.warning && (
                   <p className="text-[9px] sm:text-[10px] text-warning mt-0.5">{t("dashboard.clickToAddQuotes")}</p>
                 )}
@@ -191,21 +178,18 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
         );
 
         return (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 30, rotateX: -10 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
-          >
+          <div key={index}>
             {stat.warning ? (
               <Link to="/products">{cardContent}</Link>
             ) : (
               cardContent
             )}
-          </motion.div>
+          </div>
         );
         })}
       </div>
     </TooltipProvider>
   );
-};
+});
+
+StatsOverview.displayName = 'StatsOverview';

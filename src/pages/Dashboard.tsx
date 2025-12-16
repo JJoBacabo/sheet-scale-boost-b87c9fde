@@ -16,7 +16,7 @@ import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { CryptoChart } from "@/components/dashboard/CryptoChart";
 import { TimeframeSelector, type TimeframeValue } from "@/components/dashboard/TimeframeSelector";
 import { Card3D } from "@/components/ui/Card3D";
-import { motion } from "framer-motion";
+import { useDebounce } from "@/hooks/useDebounce";
 import { 
   Target, 
   ArrowUp, 
@@ -473,7 +473,7 @@ const Dashboard = () => {
     }
   }, [stats?.storeCurrency]);
 
-  // Chart Data
+  // Chart Data - Optimized with early return and reduced calculations
   const chartData = useMemo(() => {
     const dailyData = stats?.dailyRoasData || [];
     
@@ -485,6 +485,9 @@ const Dashboard = () => {
       };
     }
 
+    // Limit data processing for performance (max 1000 items)
+    const limitedData = dailyData.slice(0, 1000);
+    
     const dataByDate = new Map<string, {
       total_spent: number;
       units_sold: number;
@@ -493,14 +496,16 @@ const Dashboard = () => {
       purchases: number;
     }>();
     
-    dailyData.forEach((item: any) => {
-      if (!item || !item.date) return;
+    // Optimized loop - avoid unnecessary operations
+    for (let i = 0; i < limitedData.length; i++) {
+      const item = limitedData[i];
+      if (!item?.date) continue;
       
       const dateKey = typeof item.date === 'string' 
         ? item.date.split('T')[0] 
         : String(item.date);
       
-      if (!dateKey) return;
+      if (!dateKey) continue;
       
       const existing = dataByDate.get(dateKey) || {
         total_spent: 0,
@@ -531,7 +536,7 @@ const Dashboard = () => {
         cog: avgCog,
         purchases: existing.purchases + itemPurchases,
       });
-    });
+    }
     
     const sortedData = Array.from(dataByDate.entries())
       .map(([date, values]) => ({
@@ -544,50 +549,45 @@ const Dashboard = () => {
         return isNaN(dateA) || isNaN(dateB) ? 0 : dateA - dateB;
       });
     
+    // Pre-format dates once
+    const formatDate = (dateStr: string) => {
+      try {
+        return format(new Date(dateStr), 'dd/MM');
+      } catch {
+        return dateStr;
+      }
+    };
+    
     return {
-      revenueChartData: sortedData.map((item) => {
-        try {
-          return {
-            date: format(new Date(item.date), 'dd/MM'),
-            value: (item.units_sold || 0) * (item.product_price || 0),
-          };
-        } catch {
-          return { date: item.date, value: 0 };
-        }
-      }).filter(item => item.value !== undefined),
+      revenueChartData: sortedData.map((item) => ({
+        date: formatDate(item.date),
+        value: (item.units_sold || 0) * (item.product_price || 0),
+      })).filter(item => item.value !== undefined),
       profitChartData: sortedData.map((item) => {
-        try {
-          const revenue = (item.units_sold || 0) * (item.product_price || 0);
-          const cog = Number(item.cog) || 0;
-          const unitsSold = Number(item.units_sold) || 0;
-          
-          // Handle cog: might be total or per-unit
-          let totalCog = cog;
-          if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
-            // Likely per-unit, multiply by units_sold
-            totalCog = cog * unitsSold;
-          }
-          
-          return {
-            date: format(new Date(item.date), 'dd/MM'),
-            value: revenue - (item.total_spent || 0) - totalCog,
-          };
-        } catch {
-          return { date: item.date, value: 0 };
+        const revenue = (item.units_sold || 0) * (item.product_price || 0);
+        const cog = Number(item.cog) || 0;
+        const unitsSold = Number(item.units_sold) || 0;
+        
+        // Handle cog: might be total or per-unit
+        let totalCog = cog;
+        if (cog > 0 && unitsSold > 0 && revenue > 0 && cog < revenue * 0.1) {
+          totalCog = cog * unitsSold;
         }
+        
+        return {
+          date: formatDate(item.date),
+          value: revenue - (item.total_spent || 0) - totalCog,
+        };
       }).filter(item => item.value !== undefined),
-      spendChartData: sortedData.map((item) => {
-        try {
-          return {
-            date: format(new Date(item.date), 'dd/MM'),
-            value: item.total_spent || 0,
-          };
-        } catch {
-          return { date: item.date, value: 0 };
-        }
-      }).filter(item => item.value !== undefined),
+      spendChartData: sortedData.map((item) => ({
+        date: formatDate(item.date),
+        value: item.total_spent || 0,
+      })).filter(item => item.value !== undefined),
     };
   }, [stats?.dailyRoasData]);
+
+  // Debounce search term for performance
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   // Filtered Campaigns
   const filteredCampaigns = useMemo(() => {
@@ -597,11 +597,11 @@ const Dashboard = () => {
       if (!campaign || campaign.status !== 'active') return false;
       
       const campaignName = campaign.campaign_name?.toLowerCase() || '';
-      const searchLower = searchTerm.toLowerCase();
+      const searchLower = debouncedSearchTerm.toLowerCase();
       
       return campaignName.includes(searchLower);
     });
-  }, [campaigns, searchTerm]);
+  }, [campaigns, debouncedSearchTerm]);
 
   const displayedCampaigns = useMemo(() => {
     if (!filteredCampaigns || filteredCampaigns.length === 0) return [];
@@ -864,18 +864,15 @@ const Dashboard = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    displayedCampaigns.map((campaign, index) => {
+                    displayedCampaigns.map((campaign) => {
                       const totalSpent = Number(campaign.total_spent) || 0;
                       const totalRevenue = Number(campaign.total_revenue) || 0;
                       const roas = totalSpent > 0 ? totalRevenue / totalSpent : 0;
                       const isPositive = roas >= 1;
                       
                       return (
-                        <motion.tr
+                        <TableRow
                           key={campaign.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
                           className="border-b border-border/30 hover:bg-muted/20 transition-colors"
                         >
                           <TableCell className="font-medium text-xs sm:text-sm">
@@ -923,7 +920,7 @@ const Dashboard = () => {
                               {campaign.status || 'active'}
                             </Badge>
                           </TableCell>
-                        </motion.tr>
+                        </TableRow>
                       );
                     })
                   )}
