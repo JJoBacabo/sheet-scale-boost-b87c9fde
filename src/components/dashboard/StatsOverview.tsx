@@ -132,19 +132,19 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
             <Card3D 
               intensity="medium" 
               glow={stat.trend === "up"}
-              className={stat.warning ? "h-[24px] cursor-pointer hover:border-warning/60 transition-colors" : "h-[24px]"}
+              className={stat.warning ? "h-full cursor-pointer hover:border-warning/60 transition-colors" : "h-full"}
             >
-              <div className="relative px-2 py-0.5 h-[24px] flex items-center justify-between gap-2 overflow-hidden">
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+              <div className="relative p-4 sm:p-5 md:p-6 h-full flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-3 sm:mb-4">
                   {stat.warning ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div
-                          className={`p-0.5 rounded ${stat.iconBg}`}
+                          className={`p-2.5 sm:p-3 md:p-3.5 rounded-lg sm:rounded-xl ${stat.iconBg}`}
                           whileHover={{ rotate: 5 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                          <Icon className={`h-3 w-3 ${stat.iconColor}`} />
+                          <Icon className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
                         </motion.div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -153,41 +153,41 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                     </Tooltip>
                   ) : (
                     <motion.div
-                      className={`p-0.5 rounded ${stat.iconBg}`}
+                      className={`p-2.5 sm:p-3 md:p-3.5 rounded-lg sm:rounded-xl ${stat.iconBg}`}
                       whileHover={{ rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <Icon className={`h-3 w-3 ${stat.iconColor}`} />
+                      <Icon className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
                     </motion.div>
                   )}
-                  <p className="text-[10px] text-muted-foreground leading-none whitespace-nowrap">{stat.title}</p>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <motion.p
-                    className={`text-[10px] font-bold leading-none ${stat.iconColor} whitespace-nowrap`}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
+                {stat.trend !== "neutral" && !stat.warning && (
+                  <div
+                    className={`px-2.5 py-1.5 rounded-md sm:rounded-lg text-sm sm:text-base font-medium ${
+                      stat.trend === "up" 
+                        ? "bg-primary/10 text-primary" 
+                        : "bg-destructive/10 text-destructive"
+                    }`}
                   >
-                    {stat.value}
-                  </motion.p>
-                  {stat.trend !== "neutral" && !stat.warning && (
-                    <div
-                      className={`text-[10px] font-medium leading-none ${
-                        stat.trend === "up" 
-                          ? "text-primary" 
-                          : "text-destructive"
-                      }`}
-                    >
-                      {stat.trend === "up" ? "↑" : "↓"}
-                    </div>
-                  )}
-                </div>
-                {stat.warning && (
-                  <p className="text-[9px] text-warning leading-none whitespace-nowrap ml-1">{t("dashboard.clickToAddQuotes")}</p>
+                    {stat.trend === "up" ? "↑" : "↓"}
+                  </div>
                 )}
               </div>
-            </Card3D>
+              <div>
+                <p className="text-base sm:text-lg text-muted-foreground mb-2 sm:mb-3">{stat.title}</p>
+                <motion.p
+                  className={`text-2xl sm:text-3xl md:text-4xl font-bold ${stat.iconColor}`}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
+                >
+                  {stat.value}
+                </motion.p>
+                {stat.warning && (
+                  <p className="text-sm sm:text-base text-warning mt-2 sm:mt-3">{t("dashboard.clickToAddQuotes")}</p>
+                )}
+              </div>
+            </div>
+          </Card3D>
         );
 
         return (
