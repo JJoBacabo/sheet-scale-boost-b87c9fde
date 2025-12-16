@@ -43,6 +43,8 @@ import { format, subDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { mockCampaigns, mockAdAccounts } from "@/mockData/mockCampaigns";
+import { Switch } from "@/components/ui/switch";
 
 interface FacebookCampaign {
   id: string;
@@ -454,6 +456,38 @@ const MetaDashboard = () => {
     // No need for defaults since main columns are always visible
     return [];
   });
+  const [useMockData, setUseMockData] = useState<boolean>(() => {
+    const saved = localStorage.getItem("metaDashboard_useMockData");
+    return saved === "true";
+  });
+
+  const toggleMockData = useCallback((enabled: boolean) => {
+    setUseMockData(enabled);
+    localStorage.setItem("metaDashboard_useMockData", enabled.toString());
+    if (enabled) {
+      // Load mock data immediately
+      setAdAccounts(mockAdAccounts as AdAccount[]);
+      if (mockAdAccounts.length > 0 && !selectedAdAccount) {
+        setSelectedAdAccount(mockAdAccounts[0].id);
+      }
+      setCampaigns(mockCampaigns);
+      setIsConnected(true);
+      setLoading(false);
+      toast({
+        title: "Mock Data Ativado",
+        description: "Usando dados de teste. Desative para usar dados reais do Facebook.",
+      });
+    } else {
+      // Reload real data
+      if (user) {
+        fetchAdAccounts(true);
+      }
+      toast({
+        title: "Dados Reais Ativados",
+        description: "Carregando dados reais do Facebook...",
+      });
+    }
+  }, [user, selectedAdAccount]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
 
   // Test notification function
@@ -624,7 +658,32 @@ const MetaDashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Load mock data on mount if enabled
+  useEffect(() => {
+    if (useMockData && user) {
+      setIsConnected(true);
+      setAdAccounts(mockAdAccounts as AdAccount[]);
+      if (mockAdAccounts.length > 0 && !selectedAdAccount) {
+        setSelectedAdAccount(mockAdAccounts[0].id);
+      }
+      setCampaigns(mockCampaigns);
+      setLoading(false);
+    }
+  }, [useMockData, user]);
+
   const checkConnection = async (userId: string) => {
+    // If using mock data, skip connection check
+    if (useMockData) {
+      setIsConnected(true);
+      setAdAccounts(mockAdAccounts as AdAccount[]);
+      if (mockAdAccounts.length > 0 && !selectedAdAccount) {
+        setSelectedAdAccount(mockAdAccounts[0].id);
+      }
+      setCampaigns(mockCampaigns);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("integrations")
       .select("*")
@@ -662,6 +721,22 @@ const MetaDashboard = () => {
   const fetchAdAccounts = async (shouldFetchCampaigns: boolean = true) => {
     setLoading(true);
     try {
+      // Use mock data if enabled
+      if (useMockData) {
+        console.log('🎭 Using mock data for ad accounts');
+        setAdAccounts(mockAdAccounts as AdAccount[]);
+        const firstAccount = mockAdAccounts[0].id;
+        if (!selectedAdAccount) {
+          setSelectedAdAccount(firstAccount);
+        }
+        if (shouldFetchCampaigns) {
+          await fetchCampaigns(firstAccount);
+        } else {
+          setLoading(false);
+        }
+        return;
+      }
+
       // 1) Try cached ad accounts from integrations.metadata to avoid FB API calls
       if (user) {
         const { data: integ } = await supabase
@@ -754,6 +829,18 @@ const MetaDashboard = () => {
       console.warn("No ad account selected, skipping campaign fetch");
       return;
     }
+
+    // Use mock data if enabled
+    if (useMockData) {
+      console.log('🎭 Using mock data for campaigns');
+      setLoading(true);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setCampaigns(mockCampaigns);
+      setLoading(false);
+      return;
+    }
+
     if (rateLimitedUntil && Date.now() < rateLimitedUntil) {
       const secs = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
       toast({
@@ -849,6 +936,16 @@ const MetaDashboard = () => {
 
   // Handle explicit refresh - clears cache and fetches fresh data
   const handleRefresh = async () => {
+    if (useMockData) {
+      // Reload mock data
+      setCampaigns([...mockCampaigns]);
+      toast({
+        title: "Mock Data Atualizado",
+        description: "Dados de teste recarregados.",
+      });
+      return;
+    }
+
     if (!selectedAdAccount) {
       toast({
         title: "Nenhuma conta selecionada",
@@ -1629,7 +1726,7 @@ const MetaDashboard = () => {
           <>
         {/* Rate Limit Warning Banner */}
         {rateLimitedUntil && Date.now() < rateLimitedUntil && (
-          <Card className="p-4 bg-warning/10 border-warning/40">
+          <Card className="p-4 bg-warning/10 border-warning/40 mb-6">
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-warning" />
               <div className="flex-1">
@@ -1642,6 +1739,34 @@ const MetaDashboard = () => {
             </div>
           </Card>
         )}
+
+        {/* Mock Data Toggle */}
+        <Card className="p-4 glass-card border-2 border-warning/20 bg-gradient-to-br from-warning/5 to-warning/10 backdrop-blur-xl mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-warning/20">
+                <Settings2 className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{useMockData ? "Usando Mock Data" : "Usando Dados Reais"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {useMockData ? "Dados de teste para desenvolvimento" : "Dados do Facebook Ads"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="mock-data-toggle" className="text-sm cursor-pointer">
+                {useMockData ? "Mock Data" : "Dados Reais"}
+              </Label>
+              <Switch
+                id="mock-data-toggle"
+                checked={useMockData}
+                onCheckedChange={toggleMockData}
+              />
+            </div>
+          </div>
+        </Card>
+
             {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <Card className="p-4 glass-card border-2 border-[#7BBCFE]/20 bg-gradient-to-br from-[#7BBCFE]/10 to-[#B8A8FE]/10">
