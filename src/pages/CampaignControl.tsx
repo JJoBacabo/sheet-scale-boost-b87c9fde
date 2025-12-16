@@ -18,7 +18,8 @@ import {
   TrendingDown,
   Minus,
   X,
-  RefreshCw
+  RefreshCw,
+  Settings2
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Papa from "papaparse";
@@ -56,6 +57,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { generateMockDailyRoas } from "@/mockData/mockDailyRoas";
 
 interface FacebookCampaign {
   id: string;
@@ -200,6 +204,10 @@ const CampaignControl = () => {
   const [hasShopifyIntegration, setHasShopifyIntegration] = useState(false);
   const [marketType, setMarketType] = useState<"low" | "mid" | "high">("low");
   const [campaignHistory, setCampaignHistory] = useState<DailyROASData[]>([]);
+  const [useMockData, setUseMockData] = useState<boolean>(() => {
+    const saved = localStorage.getItem("dailyRoas_useMockData");
+    return saved === "true";
+  });
 
   useEffect(() => {
     checkUser();
@@ -214,6 +222,14 @@ const CampaignControl = () => {
 
     const fetchCampaignHistory = async () => {
       try {
+        if (useMockData) {
+          // Use mock data filtered by campaign
+          const mockData = generateMockDailyRoas(user.id);
+          const filtered = mockData.filter(d => d.campaign_id === selectedCampaign);
+          setCampaignHistory(filtered);
+          return;
+        }
+
         // Use selectedCampaign directly as campaign_id - don't rely on facebookCampaigns state
         const { data: history, error } = await supabase
           .from('daily_roas')
@@ -236,7 +252,7 @@ const CampaignControl = () => {
     };
 
     fetchCampaignHistory();
-  }, [selectedCampaign, user?.id]); // Only depend on selectedCampaign and user.id
+  }, [selectedCampaign, user?.id, useMockData]); // Added useMockData dependency
 
   // Auto-load campaigns when ad account is selected
   useEffect(() => {
@@ -289,7 +305,7 @@ const CampaignControl = () => {
 
   // Real-time updates for daily_roas
   useEffect(() => {
-    if (!user) return;
+    if (!user || useMockData) return; // Skip real-time updates when using mock data
     
     const channel = supabase
       .channel('daily-roas-realtime-updates')
@@ -322,7 +338,7 @@ const CampaignControl = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, useMockData]);
 
    // Função para recalcular Daily ROAS quando produto é atualizado
   const recalculateDailyROASForProduct = async (updatedProduct: Product) => {
@@ -532,8 +548,24 @@ const CampaignControl = () => {
     }
   };
 
+  const toggleMockData = (enabled: boolean) => {
+    setUseMockData(enabled);
+    localStorage.setItem("dailyRoas_useMockData", enabled.toString());
+    // Reload data when toggling - useEffect will handle fetchCampaignHistory
+    if (user?.id) {
+      fetchDailyData();
+    }
+  };
+
   const fetchDailyData = async () => {
     try {
+      if (useMockData && user?.id) {
+        // Use mock data
+        const mockData = generateMockDailyRoas(user.id);
+        setDailyData(mockData);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('daily_roas')
         .select('*')
@@ -872,6 +904,15 @@ const CampaignControl = () => {
     }
 
     try {
+      if (useMockData) {
+        toast({
+          title: "Mock Data Ativo",
+          description: "Não é possível adicionar campanhas quando Mock Data está ativo. Desative o Mock Data para adicionar campanhas reais.",
+          variant: "default"
+        });
+        return;
+      }
+
       const campaign = facebookCampaigns.find(c => c.id === selectedCampaign);
       if (!campaign) return;
 
@@ -1056,6 +1097,13 @@ const CampaignControl = () => {
 
   const deleteCampaign = async (id: string) => {
     try {
+      if (useMockData) {
+        // When using mock data, just remove from local state
+        setDailyData((prev) => prev.filter((item) => item.id !== id));
+        toast({ title: "Mock Data: Campanha removida (apenas local)" });
+        return;
+      }
+
       const { error } = await supabase
         .from('daily_roas')
         .delete()
@@ -1076,6 +1124,16 @@ const CampaignControl = () => {
 
   const updateDailyData = async (id: string, field: keyof DailyROASData, value: any) => {
     try {
+      if (useMockData) {
+        // When using mock data, just update local state
+        setDailyData((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, [field]: value } : item
+          )
+        );
+        return;
+      }
+
       const { error } = await supabase
         .from('daily_roas')
         .update({ [field]: value })
@@ -1516,6 +1574,33 @@ const CampaignControl = () => {
         )}
         {!loading && (
           <div className="space-y-4 sm:space-y-5 md:space-y-6">
+        {/* Mock Data Toggle */}
+        <Card className="p-4 glass-card border-2 border-warning/20 bg-gradient-to-br from-warning/5 to-warning/10 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-warning/20">
+                <Settings2 className="w-4 h-4 text-warning" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{useMockData ? "Usando Mock Data" : "Usando Dados Reais"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {useMockData ? "Dados de teste para desenvolvimento" : "Dados do Daily ROAS"}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="daily-roas-mock-toggle" className="text-sm cursor-pointer">
+                {useMockData ? "Mock Data" : "Dados Reais"}
+              </Label>
+              <Switch
+                id="daily-roas-mock-toggle"
+                checked={useMockData}
+                onCheckedChange={toggleMockData}
+              />
+            </div>
+          </div>
+        </Card>
+
         {/* Controls Section - Modern Design */}
         <Card3D intensity="medium" glow className="p-4 sm:p-5 md:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
