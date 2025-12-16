@@ -134,17 +134,17 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
               glow={stat.trend === "up"}
               className={stat.warning ? "h-full cursor-pointer hover:border-warning/60 transition-colors" : "h-full"}
             >
-              <div className="relative p-4 sm:p-5 md:p-6 h-full flex flex-col justify-between">
-                <div className="flex items-start justify-between mb-3 sm:mb-4">
+              <div className="relative p-2 sm:p-2.5 md:p-3 h-full flex flex-col justify-between">
+                <div className="flex items-start justify-between mb-1.5 sm:mb-2">
                   {stat.warning ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div
-                          className={`p-2.5 sm:p-3 md:p-3.5 rounded-lg sm:rounded-xl ${stat.iconBg}`}
+                          className={`p-1.5 sm:p-2 md:p-2 rounded-lg ${stat.iconBg}`}
                           whileHover={{ rotate: 5 }}
                           transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                          <Icon className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
+                          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 md:h-5 md:w-5 ${stat.iconColor}`} />
                         </motion.div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -153,16 +153,16 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                     </Tooltip>
                   ) : (
                     <motion.div
-                      className={`p-2.5 sm:p-3 md:p-3.5 rounded-lg sm:rounded-xl ${stat.iconBg}`}
+                      className={`p-1.5 sm:p-2 md:p-2 rounded-lg ${stat.iconBg}`}
                       whileHover={{ rotate: 5 }}
                       transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
-                      <Icon className={`h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
+                      <Icon className={`h-4 w-4 sm:h-4.5 sm:w-4.5 md:h-5 md:w-5 ${stat.iconColor}`} />
                     </motion.div>
                   )}
                 {stat.trend !== "neutral" && !stat.warning && (
                   <div
-                    className={`px-2.5 py-1.5 rounded-md sm:rounded-lg text-sm sm:text-base font-medium ${
+                    className={`px-1.5 py-1 rounded-md text-xs sm:text-sm font-medium ${
                       stat.trend === "up" 
                         ? "bg-primary/10 text-primary" 
                         : "bg-destructive/10 text-destructive"
@@ -173,9 +173,9 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                 )}
               </div>
               <div>
-                <p className="text-base sm:text-lg text-muted-foreground mb-2 sm:mb-3">{stat.title}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1 sm:mb-1.5">{stat.title}</p>
                 <motion.p
-                  className={`text-2xl sm:text-3xl md:text-4xl font-bold ${stat.iconColor}`}
+                  className={`text-lg sm:text-xl md:text-2xl font-bold ${stat.iconColor}`}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2 + index * 0.1, type: "spring" }}
@@ -183,7 +183,7 @@ export const StatsOverview = ({ stats, storeCurrency = 'EUR' }: StatsOverviewPro
                   {stat.value}
                 </motion.p>
                 {stat.warning && (
-                  <p className="text-sm sm:text-base text-warning mt-2 sm:mt-3">{t("dashboard.clickToAddQuotes")}</p>
+                  <p className="text-xs sm:text-sm text-warning mt-1 sm:mt-1.5">{t("dashboard.clickToAddQuotes")}</p>
                 )}
               </div>
             </div>
