@@ -181,6 +181,11 @@
     }
   }
 
+  /* Disable background animations on dashboard for performance */
+  body.dashboard-page::before {
+    animation: none !important;
+  }
+
   @keyframes shimmer {
     0% {
       transform: translateX(-100%);

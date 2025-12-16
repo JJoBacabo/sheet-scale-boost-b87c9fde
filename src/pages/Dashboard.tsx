@@ -620,6 +620,14 @@ const Dashboard = () => {
 
   const { revenueChartData, profitChartData, spendChartData } = chartData;
 
+  // Disable background animations on dashboard for performance
+  useEffect(() => {
+    document.body.classList.add('dashboard-page');
+    return () => {
+      document.body.classList.remove('dashboard-page');
+    };
+  }, []);
+
   return (
     <PageLayout
       title={t('dashboard.title') || 'Dashboard'}
