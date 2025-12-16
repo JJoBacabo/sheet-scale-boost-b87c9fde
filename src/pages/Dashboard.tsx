@@ -320,20 +320,17 @@ const Dashboard = () => {
       (selectedAdAccount && selectedAdAccount !== "all");
 
     if (!hasSpecificFilters) {
-      console.log('⚠️ Selecione uma loja ou conta de anúncios para ver campanhas');
       setCampaigns([]);
       return;
     }
     
     try {
-      console.log('🔄 Carregando campanhas com filtros específicos...');
-      
-      // Get daily_roas data aggregated by campaign
+      // Get daily_roas data aggregated by campaign - heavily limited for performance
       let dailyRoasQuery = supabase
         .from('daily_roas')
         .select('campaign_id, campaign_name, total_spent, units_sold, product_price, cog, purchases, cpc, date')
         .eq('user_id', user.id)
-        .limit(500); // OTIMIZAÇÃO: Limitar a 500 registros mais recentes
+        .limit(100); // PERFORMANCE: Aggressively reduced to 100
 
       if (timeframe?.dateFrom) {
         const df = new Date(timeframe.dateFrom);
@@ -348,20 +345,7 @@ const Dashboard = () => {
         dailyRoasQuery = dailyRoasQuery.lte('date', dateToStr);
       }
 
-      // Apply store filter if selected
-      if (selectedStore !== "all") {
-        // Filter by integration_id in products table, then match to campaigns
-        const { data: products } = await supabase
-          .from('products')
-          .select('shopify_product_id, sku')
-          .eq('integration_id', selectedStore)
-          .eq('user_id', user.id);
-
-        if (products && products.length > 0) {
-          // This is a simplified filter - in production you'd need to match products to campaigns
-          // For now, we'll just apply the date filter
-        }
-      }
+      // PERFORMANCE: Removed unnecessary products query - not used for filtering
 
       const { data: dailyRoasData, error: dailyRoasError } = await dailyRoasQuery;
       
@@ -412,12 +396,13 @@ const Dashboard = () => {
         campaignMap.set(campaignId, existing);
       });
 
-      // Get campaign status from campaigns table
+      // Get campaign status from campaigns table - limit for performance
       const { data: campaignsStatus } = await supabase
         .from('campaigns')
         .select('id, campaign_name, platform, status')
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .limit(50); // PERFORMANCE: Limit active campaigns query
 
       // Combine aggregated data with status
       const aggregatedCampaigns: Campaign[] = Array.from(campaignMap.values()).map(agg => {
@@ -446,14 +431,24 @@ const Dashboard = () => {
     }
   }, [user?.id, timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore, selectedAdAccount]);
 
+  // Throttle fetchCampaigns to avoid excessive calls
   useEffect(() => {
-    if (user?.id && (selectedStore !== "all" || selectedAdAccount !== "all")) {
-      fetchCampaigns();
+    if (!user?.id) return;
+    if (selectedStore === "all" && selectedAdAccount === "all") {
+      setCampaigns([]);
+      return;
     }
-  }, [user?.id, selectedStore, selectedAdAccount, fetchCampaigns]);
+    
+    const timeoutId = setTimeout(() => {
+      fetchCampaigns();
+    }, 500); // Debounce 500ms for better performance
+    
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, selectedStore, selectedAdAccount]);
 
-  // Dashboard Stats
-  const stats = useDashboardStats(user?.id, timeframe ? {
+  // Dashboard Stats - memoize filters to prevent unnecessary re-renders
+  const statsFilters = useMemo(() => timeframe ? {
     dateFrom: timeframe.dateFrom,
     dateTo: timeframe.dateTo,
     storeId: selectedStore !== "all" ? selectedStore : undefined,
@@ -463,7 +458,9 @@ const Dashboard = () => {
     storeId: selectedStore !== "all" ? selectedStore : undefined,
     adAccountId: selectedAdAccount !== "all" ? selectedAdAccount : undefined,
     refreshKey 
-  });
+  }, [timeframe?.dateFrom?.getTime(), timeframe?.dateTo?.getTime(), selectedStore, selectedAdAccount, refreshKey]);
+
+  const stats = useDashboardStats(user?.id, statsFilters);
 
   // Update store currency when stats change
   useEffect(() => {
@@ -485,8 +482,8 @@ const Dashboard = () => {
       };
     }
 
-    // Limit data processing for performance (max 1000 items)
-    const limitedData = dailyData.slice(0, 1000);
+    // Limit data processing for performance (max 200 items)
+    const limitedData = dailyData.slice(0, 200);
     
     const dataByDate = new Map<string, {
       total_spent: number;
@@ -773,33 +770,33 @@ const Dashboard = () => {
         {/* Stats Overview - 8 cards de métricas */}
         {stats && <StatsOverview stats={stats} storeCurrency={storeCurrency} />}
 
-        {/* Charts - 3 gráficos: Receita, Lucro, Gasto */}
-        {(revenueChartData.length > 0 || profitChartData.length > 0 || spendChartData.length > 0) && (
+        {/* Charts - 3 gráficos: Receita, Lucro, Gasto - Only show if significant data */}
+        {(revenueChartData.length > 5 || profitChartData.length > 5 || spendChartData.length > 5) && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-            {revenueChartData.length > 0 && (
+            {revenueChartData.length > 5 && (
               <CryptoChart
                 data={revenueChartData}
                 title={t('dashboard.dailyRevenue') || 'Receita Diária'}
                 color="#4AE9BD"
-                showTrend={true}
+                showTrend={false}
                 storeCurrency={storeCurrency}
               />
             )}
-            {profitChartData.length > 0 && (
+            {profitChartData.length > 5 && (
               <CryptoChart
                 data={profitChartData}
                 title={t('dashboard.dailyProfit') || 'Lucro Diário'}
                 color="#10B981"
-                showTrend={true}
+                showTrend={false}
                 storeCurrency={storeCurrency}
               />
             )}
-            {spendChartData.length > 0 && (
+            {spendChartData.length > 5 && (
               <CryptoChart
                 data={spendChartData}
                 title={t('dashboard.dailySpend') || 'Gasto Diário'}
                 color="#F59E0B"
-                showTrend={true}
+                showTrend={false}
                 storeCurrency={storeCurrency}
               />
             )}

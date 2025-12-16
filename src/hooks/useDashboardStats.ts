@@ -120,13 +120,13 @@ export const useDashboardStats = (userId: string | undefined, filters?: { dateFr
         // Fallback: usar daily_roas (dados históricos/sincronizados)
         console.log('📊 Using daily_roas data (fallback)');
         
-        // PERFORMANCE: Only select necessary fields, limit to 500 for better performance
+        // PERFORMANCE: Only select necessary fields, limit to 200 for maximum performance
         let dailyRoasQuery = supabase
           .from('daily_roas')
           .select('date, total_spent, units_sold, product_price, cog, purchases, campaign_id, cpc')
           .eq('user_id', userId)
           .order('date', { ascending: false })
-          .limit(500); // PERFORMANCE: Reduced limit for better performance
+          .limit(200); // PERFORMANCE: Aggressively reduced limit for maximum performance
 
         // Apply date filters for daily_roas
         if (filters?.dateFrom) {

@@ -42,8 +42,8 @@ export const Background3D = ({ frozen = false }: Background3DProps) => {
 
     // If frozen, draw static background only
     if (shouldFreeze) {
-      // Draw static particles once
-      const particleCount = 30;
+      // Draw static particles once - reduced for performance
+      const particleCount = 15;
       particlesRef.current = Array.from({ length: particleCount }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
