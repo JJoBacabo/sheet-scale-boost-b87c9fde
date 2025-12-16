@@ -752,10 +752,10 @@ const Dashboard = () => {
           <Link to="/products" className="block">
             <div 
               role="alert" 
-              className="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground text-foreground border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer"
+              className="relative w-full rounded-lg border p-4 flex items-center gap-3 text-foreground border-warning/50 bg-warning/10 hover:bg-warning/20 transition-colors cursor-pointer"
             >
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <div className="[&_p]:leading-relaxed text-sm text-warning font-medium">
+              <AlertTriangle className="h-4 w-4 text-warning flex-shrink-0" />
+              <div className="text-sm text-warning font-medium">
                 Incomplete costs - Click to add quotes
               </div>
             </div>
