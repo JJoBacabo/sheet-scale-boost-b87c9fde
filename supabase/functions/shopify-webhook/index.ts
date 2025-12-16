@@ -63,13 +63,20 @@ Deno.serve(async (req) => {
     // Read body as text for signature verification
     const bodyText = await req.text();
     
-    // TODO: In production, verify webhook signature with app secret
-    // For now, we'll skip verification in development
-    // const isValid = await verifyWebhook(bodyText, hmac, Deno.env.get('SHOPIFY_WEBHOOK_SECRET') || '');
-    // if (!isValid) {
-    //   console.error('❌ Invalid webhook signature');
-    //   return new Response('Invalid signature', { status: 401, headers: corsHeaders });
-    // }
+    // Verify webhook signature using HMAC-SHA256
+    const webhookSecret = Deno.env.get('SHOPIFY_WEBHOOK_SECRET');
+    if (!webhookSecret) {
+      console.error('❌ SHOPIFY_WEBHOOK_SECRET not configured - rejecting request for security');
+      return new Response('Webhook secret not configured', { status: 500, headers: corsHeaders });
+    }
+    
+    const isValid = await verifyWebhook(bodyText, hmac, webhookSecret);
+    if (!isValid) {
+      console.error('❌ Invalid webhook signature - potential attack attempt from:', shopDomain);
+      return new Response('Invalid signature', { status: 401, headers: corsHeaders });
+    }
+    
+    console.log('✅ Webhook signature verified successfully');
 
     const webhookData: ShopifyOrderWebhook = JSON.parse(bodyText);
 
